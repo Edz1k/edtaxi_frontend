@@ -23,11 +23,7 @@ export default defineConfig({
   plugins: [
     VueRouter({
       dts: 'src/route-map.d.ts',
-      importMode(filepath) {
-        return filepath.replaceAll('\\', '/').endsWith('/src/pages/map.vue')
-          ? 'sync'
-          : 'async'
-      },
+      importMode: 'sync',
     }),
 
     VueMacros({ plugins: { vue: Vue() } }),
