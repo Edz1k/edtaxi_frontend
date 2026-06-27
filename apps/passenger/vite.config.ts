@@ -21,7 +21,10 @@ export default defineConfig({
   },
 
   plugins: [
-    VueRouter({ dts: 'src/route-map.d.ts' }),
+    VueRouter({
+      dts: 'src/route-map.d.ts',
+      importMode: 'sync',
+    }),
 
     VueMacros({ plugins: { vue: Vue() } }),
 
