@@ -1,0 +1,101 @@
+button:
+  about: About
+  back: Back
+  go: GO
+  home: Home
+  toggle_dark: Toggle dark mode
+  toggle_langs: Change languages
+intro:
+  desc: Opinionated Vite Starter Template
+  dynamic-route: Demo of dynamic route
+  hi: Hi, {name}!
+  aka: Also known as
+  whats-your-name: What's your name?
+not-found: Not found
+nav:
+  home: Home
+  platform: Platform
+  apps: Mini Apps
+  token: Token
+  fleets: For Fleets
+  investment: Investment
+  roadmap: Roadmap
+  contact: Contacts
+  cta: Contact us
+brand:
+  name: Telegram Taxi
+  subtitle: Mobility OS
+hero:
+  badge: Digital mobility ecosystem
+  title: Telegram Taxi
+  description: An innovative ecosystem for passengers, drivers, and taxi fleets. Ride ordering, driver management, and service growth directly inside Telegram Mini Apps.
+  primary: Learn more ->
+  secondary: View token
+  cardNetwork: Telegram Taxi network
+  cardTitle: Mobility OS
+  passengersLabel: Passengers
+  passengersValue: Connected
+  driversLabel: Drivers
+  driversValue: Online
+  marketLabel: Market
+  marketValue: Kazakhstan
+  tokenLabel: Token
+  tokenValue: TAXI
+platform:
+  eyebrow: Platform
+  title: Platform
+  description: Telegram Taxi brings together the passenger app, driver app, order system, ratings, payments, analytics, and future token economy.
+apps:
+  eyebrow: Mini Apps
+  title: Two apps inside Telegram
+  passengerTitle: Passenger Mini App
+  passengerText: Ride ordering, address selection, fares, trip history, and live driver tracking.
+  driverTitle: Driver Mini App
+  driverText: Online status, order acceptance, profile, vehicle, and trip management.
+token:
+  eyebrow: Ecosystem Token
+  title: TAXI Token
+  description: A utility token for driver rewards, passenger loyalty programs, referral rewards, discounts, promotional campaigns, and future ecosystem features.
+fleets:
+  eyebrow: For Taxi Fleets
+  title: Solution for taxi fleets
+  description: 'Centralized fleet management: bulk driver registration, order distribution, monitoring, and analytics.'
+  managementLabel: Management
+  managementValue: Fleet
+  statsLabel: Statistics
+  statsValue: Reporting
+  brandLabel: Brand
+  brandValue: White label
+investment:
+  eyebrow: Investment Token
+  title: TAXI Token - investor brief
+  description: 'TAXI is a utility token on BNB Smart Chain (BEP-20). Total supply: 7,000,000,000 TAXI. The token is used for driver incentives, passenger loyalty programs, referral rewards, discounts, and marketing campaigns. Minting is disabled after deployment; a burn policy may be introduced by company decision.'
+  issuerLabel: Issuer
+  issuerValue: City Flow Mobility Ltd.
+  jurisdictionLabel: Jurisdiction
+  jurisdictionValue: AIFC, Kazakhstan
+  docsTitle: Documents
+  docIncorporation: Certificate of Incorporation (AIFC)
+  docWhitePaper: White Paper
+  docPresentation: Investor Presentation
+  note: 'Important: the token does not grant company shares without a separate legal clause. Before publishing sale terms, we recommend checking AIFC/AFSA requirements.'
+roadmap:
+  eyebrow: Roadmap
+  title: Development roadmap
+  phase1: Phase 1
+  phase1Title: Development
+  phase2: Phase 2
+  phase2Title: Kazakhstan Launch
+  phase3: Phase 3
+  phase3Title: Central Asia
+  phase4: Phase 4
+  phase4Title: International
+contact:
+  title: Contact us
+  description: 'Fast contact: email, website, or Telegram. For partnerships and investment requests, please write separately.'
+  websiteLabel: Website
+  websiteValue: telegramtaxi.kz
+  emailLabel: Email
+  telegramLabel: Telegram
+  telegramValue: "{'@'}telegramtaxi"
+  note: For investor documents and requests, include "Investment" in the email subject.

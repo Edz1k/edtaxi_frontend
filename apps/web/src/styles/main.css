@@ -1,0 +1,90 @@
+@import './markdown.css';
+
+:root {
+  --app-safe-area-top: max(
+    env(safe-area-inset-top, 0px),
+    var(--tg-viewport-safe-area-inset-top, 0px),
+    var(--tg-viewport-content-safe-area-inset-top, 0px)
+  );
+  --app-safe-area-right: max(
+    env(safe-area-inset-right, 0px),
+    var(--tg-viewport-safe-area-inset-right, 0px),
+    var(--tg-viewport-content-safe-area-inset-right, 0px)
+  );
+  --app-safe-area-bottom: max(
+    env(safe-area-inset-bottom, 0px),
+    var(--tg-viewport-safe-area-inset-bottom, 0px),
+    var(--tg-viewport-content-safe-area-inset-bottom, 0px)
+  );
+  --app-safe-area-left: max(
+    env(safe-area-inset-left, 0px),
+    var(--tg-viewport-safe-area-inset-left, 0px),
+    var(--tg-viewport-content-safe-area-inset-left, 0px)
+  );
+  --app-navbar-top-gap: 2rem;
+  --app-viewport-height: var(--tg-viewport-height, 100vh);
+}
+
+:root.tg-fullscreen {
+  --app-navbar-top-gap: 3rem;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.tg-safe-screen {
+  min-height: var(--app-viewport-height);
+  padding: calc(1.5rem + var(--app-safe-area-top)) calc(1.25rem + var(--app-safe-area-right))
+    calc(1.5rem + var(--app-safe-area-bottom)) calc(1.25rem + var(--app-safe-area-left));
+}
+
+.tg-safe-panel {
+  padding: calc(2.75rem + var(--app-safe-area-top)) calc(1.25rem + var(--app-safe-area-right))
+    calc(1.25rem + var(--app-safe-area-bottom)) calc(1.25rem + var(--app-safe-area-left));
+}
+
+.tg-viewport-screen {
+  height: var(--app-viewport-height);
+}
+
+.tg-safe-x {
+  padding-left: calc(1rem + var(--app-safe-area-left));
+  padding-right: calc(1rem + var(--app-safe-area-right));
+}
+
+.tg-safe-top {
+  padding-top: calc(1rem + var(--app-safe-area-top));
+}
+
+.tg-safe-top-relaxed {
+  padding-top: calc(var(--app-navbar-top-gap) + var(--app-safe-area-top));
+}
+
+.tg-safe-bottom {
+  padding-bottom: calc(1rem + var(--app-safe-area-bottom));
+}
+
+html.dark {
+  background: #121212;
+  color-scheme: dark;
+}
+
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: #e6ad2e;
+  opacity: 0.75;
+  position: fixed;
+  z-index: 1031;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+}

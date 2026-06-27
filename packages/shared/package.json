@@ -1,0 +1,24 @@
+{
+  "name": "@edtaxi/shared",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./api/client": "./src/api/client.ts",
+    "./api/errors": "./src/api/errors.ts",
+    "./composables/auth/phone": "./src/composables/auth/phone.ts",
+    "./composables/useToast": "./src/composables/useToast.ts",
+    "./components/auth/*": "./src/components/auth/*.vue",
+    "./types/auth": "./src/types/auth.ts",
+    "./uno.base": "./src/uno.base.ts"
+  },
+  "dependencies": {
+    "axios": "catalog:build",
+    "pinia": "catalog:frontend",
+    "reka-ui": "catalog:frontend",
+    "maska": "catalog:frontend",
+    "vue": "catalog:frontend",
+    "unocss": "catalog:build",
+    "@unocss/preset-web-fonts": "catalog:frontend",
+    "@iconify-json/mdi": "catalog:dev"
+  }
+}

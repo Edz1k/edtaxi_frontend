@@ -1,0 +1,178 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.30.2'
+
+jobs:
+  build-passenger:
+    name: Build Passenger
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm --filter @edtaxi/passenger build
+        env:
+          VITE_API_URL: /api/v1
+          VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-passenger
+          path: apps/passenger/dist
+          retention-days: 1
+
+  build-driver:
+    name: Build Driver
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm --filter @edtaxi/driver build
+        env:
+          VITE_API_URL: /api/v1
+          VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-driver
+          path: apps/driver/dist
+          retention-days: 1
+
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm --filter @edtaxi/web build
+        env:
+          VITE_API_URL: /api/v1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-web
+          path: apps/web/dist
+          retention-days: 1
+
+  build-share:
+    name: Build Share
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm --filter @edtaxi/share build
+        env:
+          VITE_API_URL: /api/v1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-share
+          path: apps/share/dist
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    needs: [build-passenger, build-driver, build-web, build-share]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-passenger
+          path: dist/passenger
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-driver
+          path: dist/driver
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-web
+          path: dist/web
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-share
+          path: dist/share
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create remote directories
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo mkdir -p /var/www/{passenger,driver,web,share} && \
+             sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /var/www"
+
+      - name: Deploy passenger
+        run: rsync -avz --delete dist/passenger/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/passenger/
+
+      - name: Deploy driver
+        run: rsync -avz --delete dist/driver/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/driver/
+
+      - name: Deploy web
+        run: rsync -avz --delete dist/web/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/web/
+
+      - name: Deploy share
+        run: rsync -avz --delete dist/share/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/share/
