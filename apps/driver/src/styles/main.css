@@ -51,6 +51,7 @@ body,
 
 .tg-viewport-screen {
   height: var(--app-viewport-height);
+  min-height: 100dvh;
 }
 
 .tg-safe-x {

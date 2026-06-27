@@ -52,7 +52,13 @@ export const install: UserModule = ({ router }) => {
     if (to.meta.requiresAuth || to.meta.requiredRole || to.meta.guestOnly || to.meta.requiresPendingPhone) {
       const routeRole = to.meta.requiredRole ?? to.meta.guestOnlyRole
       const preferredRole = Array.isArray(routeRole) ? routeRole[0] : routeRole
-      await auth.restoreSession({ preferredRole })
+      try {
+        await auth.restoreSession({ preferredRole })
+      }
+      catch {
+        if (to.meta.requiresAuth || to.meta.requiredRole)
+          return to.meta.authRedirect ?? '/login'
+      }
     }
 
     if (to.meta.requiresPendingPhone && !auth.pendingPhone)
