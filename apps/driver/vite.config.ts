@@ -75,6 +75,12 @@ export default defineConfig({
         secure: true,
         cookieDomainRewrite: 'localhost',
       },
+      '/ws': {
+        target: 'wss://ws.telegramtaxi.kz',
+        changeOrigin: true,
+        secure: true,
+        ws: true,
+      },
     },
   },
 
