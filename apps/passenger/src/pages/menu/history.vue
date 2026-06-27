@@ -15,7 +15,7 @@ let observer: IntersectionObserver | undefined
 
 definePage({
   meta: {
-    authRedirect: '/passenger/login',
+    authRedirect: '/login',
     layout: 'passenger',
     requiresAuth: true,
     requiredRole: 'passenger',
@@ -208,7 +208,7 @@ onBeforeUnmount(() => {
         </p>
         <RouterLink
           class="mt-5 h-12 inline-flex items-center justify-center rounded-2xl bg-main-500 px-5 text-sm text-white font-900 shadow-[0_12px_30px_rgba(230,173,46,0.28)]"
-          to="/passenger"
+          to="/map"
         >
           Заказать такси
         </RouterLink>

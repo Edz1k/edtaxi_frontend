@@ -7,7 +7,7 @@ const amount = ref(2000)
 
 definePage({
   meta: {
-    authRedirect: '/passenger/login',
+    authRedirect: '/login',
     layout: 'passenger',
     requiresAuth: true,
     requiredRole: 'passenger',

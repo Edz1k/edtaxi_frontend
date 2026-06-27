@@ -56,15 +56,15 @@ export const install: UserModule = ({ router }) => {
     }
 
     if (to.meta.requiresPendingPhone && !auth.pendingPhone)
-      return to.meta.authRedirect ?? '/passenger/login'
+      return to.meta.authRedirect ?? '/login'
 
     if (to.meta.guestOnly && auth.isAuthenticated && canAccessRole(auth.role, to.meta.guestOnlyRole))
       return to.meta.guestRedirect ?? '/'
 
     if (to.meta.requiresAuth && !auth.isAuthenticated)
-      return to.meta.authRedirect ?? '/passenger/login'
+      return to.meta.authRedirect ?? '/login'
 
     if (to.meta.requiredRole && !canAccessRole(auth.role, to.meta.requiredRole))
-      return to.meta.roleRedirect ?? to.meta.authRedirect ?? '/'
+      return to.meta.roleRedirect ?? to.meta.authRedirect ?? '/login'
   })
 }

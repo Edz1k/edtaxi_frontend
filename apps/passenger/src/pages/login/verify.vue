@@ -19,10 +19,10 @@ const deliveryMethodLabel = computed(() =>
 
 definePage({
   meta: {
-    authRedirect: '/passenger/login',
+    authRedirect: '/login',
     guestOnly: true,
     guestOnlyRole: 'passenger',
-    guestRedirect: '/passenger',
+    guestRedirect: '/map',
     requiresPendingPhone: true,
   },
 })
@@ -37,7 +37,7 @@ async function submitOtp() {
 
   try {
     await auth.confirmPassengerOtp(code.value)
-    await router.replace('/passenger')
+    await router.replace('/map')
   }
   catch {
     shake()
@@ -45,7 +45,7 @@ async function submitOtp() {
 }
 
 function backToPhone() {
-  router.replace('/passenger/login')
+  router.replace('/login')
 }
 </script>
 

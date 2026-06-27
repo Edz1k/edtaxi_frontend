@@ -69,7 +69,7 @@ const tripStep = computed(() => {
 
 definePage({
   meta: {
-    authRedirect: '/driver/login',
+    authRedirect: '/login',
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
@@ -277,7 +277,7 @@ watch(liveCoordinates, () => throttledApproachRebuild())
         <RouterLink
           v-if="!onboarding.hasVehicle"
           class="mt-3 h-12 flex items-center justify-center rounded-2xl bg-white/8 text-sm text-main-100 font-900"
-          to="/driver/menu/vehicle"
+          to="/menu/vehicle"
         >
           Добавить автомобиль
         </RouterLink>

@@ -6,7 +6,7 @@ const topUpAmount = ref(2000)
 
 definePage({
   meta: {
-    authRedirect: '/driver/login',
+    authRedirect: '/login',
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',

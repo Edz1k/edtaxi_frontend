@@ -11,7 +11,7 @@ const messagesEl = ref<HTMLElement | null>(null)
 
 definePage({
   meta: {
-    authRedirect: '/passenger/login',
+    authRedirect: '/login',
     layout: 'passenger',
     requiresAuth: true,
     requiredRole: 'passenger',

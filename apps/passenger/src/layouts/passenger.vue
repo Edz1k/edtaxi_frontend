@@ -9,28 +9,28 @@ const navItems = [
   {
     icon: 'i-mdi-view-grid-outline',
     label: 'Меню',
-    to: '/passenger/menu',
+    to: '/menu',
   },
   {
     icon: 'i-mdi-map-marker-path',
     label: 'Линия',
-    to: '/passenger',
+    to: '/map',
   },
   {
     icon: 'i-mdi-wallet-outline',
     label: 'Кошелек',
-    to: '/passenger/wallet',
+    to: '/wallet',
   },
 ]
-const tabRoutes = new Set(['/passenger', '/passenger/menu', '/passenger/wallet'])
-const normalizedPath = computed(() => route.path.replace(/\/$/, '') || '/passenger')
+const tabRoutes = new Set(['/map', '/menu', '/wallet'])
+const normalizedPath = computed(() => route.path.replace(/\/$/, '') || '/map')
 const isPassengerTabRoute = computed(() => tabRoutes.has(normalizedPath.value))
-const shouldShowBackHeader = computed(() => normalizedPath.value.startsWith('/passenger/') && !isPassengerTabRoute.value)
+const shouldShowBackHeader = computed(() => normalizedPath.value.startsWith('/menu/') && !isPassengerTabRoute.value)
 const backTitle = computed(() => typeof route.meta.screenTitle === 'string' ? route.meta.screenTitle : 'Пассажир')
 const backSubtitle = computed(() => typeof route.meta.screenSubtitle === 'string' ? route.meta.screenSubtitle : 'Назад в меню')
 
 function goToPassengerMenu() {
-  router.push('/passenger/menu')
+  router.push('/menu')
 }
 </script>
 

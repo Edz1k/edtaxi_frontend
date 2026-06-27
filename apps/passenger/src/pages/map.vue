@@ -25,7 +25,7 @@ const {
 
 definePage({
   meta: {
-    authRedirect: '/passenger/login',
+    authRedirect: '/login',
     layout: 'passenger',
     requiresAuth: true,
     requiredRole: 'passenger',

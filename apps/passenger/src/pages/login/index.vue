@@ -19,13 +19,13 @@ const canSubmit = computed(() => isKazakhstanPhoneComplete(phoneInput.value))
 definePage({
   meta: {
     guestOnly: true,
-    guestOnlyRole: 'driver',
-    guestRedirect: '/driver',
+    guestOnlyRole: 'passenger',
+    guestRedirect: '/map',
   },
 })
 
 useHead({
-  title: 'Вход водителя | EdTaxi',
+  title: 'Вход | Telegram Taxi',
 })
 
 onMounted(() => {
@@ -37,8 +37,8 @@ async function submitPhone() {
     return
 
   try {
-    await auth.requestDriverOtp(toKazakhstanE164(phoneInput.value), otpDeliveryMethod.value)
-    await router.push('/driver/login/verify')
+    await auth.requestPassengerOtp(toKazakhstanE164(phoneInput.value), otpDeliveryMethod.value)
+    await router.push('/login/verify')
   }
   catch {}
 }
@@ -46,9 +46,9 @@ async function submitPhone() {
 
 <template>
   <AuthScreen
-    description="Введите номер телефона, чтобы получить код подтверждения."
-    icon="i-mdi-steering"
-    title="EdTaxi Driver"
+    description="Быстрый заказ такси прямо через Telegram. Введите номер телефона, чтобы получить код подтверждения."
+    icon="i-mdi-taxi"
+    title="Telegram Taxi"
   >
     <form class="mt-8 space-y-5" @submit.prevent="submitPhone">
       <AuthError :message="auth.errorMessage" />
@@ -64,7 +64,7 @@ async function submitPhone() {
     </form>
 
     <template #footer>
-      Доступ к водительскому приложению выдаёт администратор
+      Продолжая, вы соглашаетесь с условиями сервиса
     </template>
   </AuthScreen>
 </template>

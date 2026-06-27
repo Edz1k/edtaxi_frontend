@@ -9,28 +9,28 @@ const navItems = [
   {
     icon: 'i-mdi-view-grid-outline',
     label: 'Меню',
-    to: '/driver/menu',
+    to: '/menu',
   },
   {
     icon: 'i-mdi-steering',
     label: 'Линия',
-    to: '/driver',
+    to: '/map',
   },
   {
     icon: 'i-mdi-cash-multiple',
     label: 'Доход',
-    to: '/driver/earnings',
+    to: '/earnings',
   },
 ]
-const tabRoutes = new Set(['/driver', '/driver/menu', '/driver/earnings'])
-const normalizedPath = computed(() => route.path.replace(/\/$/, '') || '/driver')
+const tabRoutes = new Set(['/map', '/menu', '/earnings'])
+const normalizedPath = computed(() => route.path.replace(/\/$/, '') || '/map')
 const isDriverTabRoute = computed(() => tabRoutes.has(normalizedPath.value))
-const shouldShowBackHeader = computed(() => normalizedPath.value.startsWith('/driver/') && !isDriverTabRoute.value)
+const shouldShowBackHeader = computed(() => normalizedPath.value.startsWith('/menu/') && !isDriverTabRoute.value)
 const backTitle = computed(() => typeof route.meta.screenTitle === 'string' ? route.meta.screenTitle : 'Водитель')
 const backSubtitle = computed(() => typeof route.meta.screenSubtitle === 'string' ? route.meta.screenSubtitle : 'Назад в меню')
 
 function goToDriverMenu() {
-  router.push('/driver/menu')
+  router.push('/menu')
 }
 </script>
 

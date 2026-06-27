@@ -7,7 +7,7 @@ const driver = useDriverOnboardingStore()
 
 definePage({
   meta: {
-    authRedirect: '/driver/login',
+    authRedirect: '/login',
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
@@ -44,7 +44,7 @@ async function submit() {
 
   try {
     await driver.doUploadFacePhoto(photoFile.value)
-    await router.replace('/driver/menu/onboarding')
+    await router.replace('/menu/onboarding')
   }
   catch {}
 }

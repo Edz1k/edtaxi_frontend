@@ -50,7 +50,7 @@ function prefillFromExisting() {
 
 definePage({
   meta: {
-    authRedirect: '/driver/login',
+    authRedirect: '/login',
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
@@ -88,7 +88,7 @@ async function submitVehicle() {
     else
       await driver.saveVehicle(payload)
 
-    await router.replace('/driver')
+    await router.replace('/map')
   }
   catch {}
 }

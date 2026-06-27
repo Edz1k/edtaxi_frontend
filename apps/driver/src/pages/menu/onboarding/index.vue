@@ -5,7 +5,7 @@ const driver = useDriverOnboardingStore()
 
 definePage({
   meta: {
-    authRedirect: '/driver/login',
+    authRedirect: '/login',
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
@@ -62,21 +62,21 @@ const items = computed<OnboardingItem[]>(() => [
     label: 'Фото лица',
     description: statusDescription(faceStatus.value, 'Загрузите селфи для идентификации'),
     icon: 'i-mdi-face-recognition',
-    to: '/driver/menu/onboarding/face-photo',
+    to: '/menu/onboarding/face-photo',
     status: faceStatus.value,
   },
   {
     label: 'Документы машины',
     description: statusDescription(vehicleStatus.value, 'Фото авто и техпаспорт'),
     icon: 'i-mdi-car-key',
-    to: '/driver/menu/onboarding/vehicle-docs',
+    to: '/menu/onboarding/vehicle-docs',
     status: vehicleStatus.value,
   },
   {
     label: 'Ежедневная проверка',
     description: statusDescription(dailyStatus.value, 'Ежедневное селфи перед выходом'),
     icon: 'i-mdi-calendar-check',
-    to: '/driver/menu/onboarding/daily-check',
+    to: '/menu/onboarding/daily-check',
     status: dailyStatus.value,
   },
 ])

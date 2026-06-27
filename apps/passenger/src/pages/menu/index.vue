@@ -7,15 +7,15 @@ const auth = useAuthStore()
 const passenger = usePassengerStore()
 
 const menuItems = [
-  { label: 'История', description: 'Поездки и оценки', icon: 'i-mdi-clock-outline', to: '/passenger/menu/history' },
-  { label: 'Избранные адреса', description: 'Сохранённые места', icon: 'i-mdi-heart-outline', to: '/passenger/menu/places' },
-  { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/passenger/menu/support' },
-  { label: 'Настройки', description: 'Профиль и приложение', icon: 'i-mdi-cog-outline', to: '/passenger/menu/settings' },
+  { label: 'История', description: 'Поездки и оценки', icon: 'i-mdi-clock-outline', to: '/menu/history' },
+  { label: 'Избранные адреса', description: 'Сохранённые места', icon: 'i-mdi-heart-outline', to: '/menu/places' },
+  { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support' },
+  { label: 'Настройки', description: 'Профиль и приложение', icon: 'i-mdi-cog-outline', to: '/menu/settings' },
 ]
 
 definePage({
   meta: {
-    authRedirect: '/passenger/login',
+    authRedirect: '/login',
     layout: 'passenger',
     requiresAuth: true,
     requiredRole: 'passenger',
@@ -28,7 +28,7 @@ useHead({
 
 async function logout() {
   await auth.logout()
-  await router.replace('/passenger/login')
+  await router.replace('/login')
 }
 
 onMounted(async () => {

@@ -24,15 +24,15 @@ const verificationOk = computed(() => {
 })
 
 const menuItems = computed(() => [
-  { label: 'Автомобиль', description: 'Данные машины и тариф', icon: 'i-mdi-car-info', to: '/driver/menu/vehicle', badge: false },
-  { label: 'Таксопарк', description: 'Принять приглашение', icon: 'i-mdi-office-building-marker', to: '/driver/menu/park-invite', badge: false },
-  { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/driver/menu/support', badge: false },
-  { label: 'Верификация', description: verificationOk.value ? 'Всё в порядке' : 'Требует внимания', icon: 'i-mdi-shield-check', to: '/driver/menu/onboarding', badge: !verificationOk.value },
+  { label: 'Автомобиль', description: 'Данные машины и тариф', icon: 'i-mdi-car-info', to: '/menu/vehicle', badge: false },
+  { label: 'Таксопарк', description: 'Принять приглашение', icon: 'i-mdi-office-building-marker', to: '/menu/park-invite', badge: false },
+  { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support', badge: false },
+  { label: 'Верификация', description: verificationOk.value ? 'Всё в порядке' : 'Требует внимания', icon: 'i-mdi-shield-check', to: '/menu/onboarding', badge: !verificationOk.value },
 ])
 
 definePage({
   meta: {
-    authRedirect: '/driver/login',
+    authRedirect: '/login',
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
@@ -45,7 +45,7 @@ useHead({
 
 async function logout() {
   await auth.logout()
-  await router.replace('/driver/login')
+  await router.replace('/login')
 }
 
 onMounted(async () => {

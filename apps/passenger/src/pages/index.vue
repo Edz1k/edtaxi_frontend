@@ -1,0 +1,22 @@
+<script setup lang="ts">
+import { useAuthStore } from '~/stores/auth'
+
+const router = useRouter()
+const auth = useAuthStore()
+
+useHead({
+  title: 'Telegram Taxi',
+})
+
+onMounted(async () => {
+  auth.loadSession()
+  await auth.restoreSession({ preferredRole: 'passenger' }).catch(() => {})
+  await router.replace(auth.role === 'passenger' ? '/map' : '/login')
+})
+</script>
+
+<template>
+  <main class="tg-safe-screen flex items-center justify-center bg-secondary-900 text-white">
+    <div class="h-10 w-10 animate-spin border-3 border-main-400 border-t-transparent rounded-full" />
+  </main>
+</template>
