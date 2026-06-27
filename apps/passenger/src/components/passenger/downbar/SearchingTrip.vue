@@ -120,7 +120,7 @@ const isSharing = ref(false)
 const shareError = ref(false)
 
 function getShareBaseUrl() {
-  const configuredUrl = import.meta.env.VITE_PUBLIC_SITE_URL as string | undefined
+  const configuredUrl = (import.meta.env.VITE_SHARE_URL || import.meta.env.VITE_PUBLIC_SITE_URL) as string | undefined
 
   if (configuredUrl)
     return configuredUrl.replace(/\/$/, '')

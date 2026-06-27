@@ -32,6 +32,7 @@ jobs:
         env:
           VITE_API_URL: /api/v1
           VITE_WS_URL: wss://ws.telegramtaxi.kz
+          VITE_SHARE_URL: https://share.telegramtaxi.kz
           VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
 
       - uses: actions/upload-artifact@v4
