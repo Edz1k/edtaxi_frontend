@@ -1,7 +1,6 @@
 import axios, { isAxiosError } from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL ?? '/api/v1'
-const WS_URL = import.meta.env.VITE_WS_URL ?? API_URL.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '')
 const MEDIA_BASE = API_URL.replace(/\/api\/v1\/?$/, '')
 
 // Dispatched when the refresh token is invalid/expired so auth stores
@@ -38,8 +37,29 @@ export interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
   skipAuthRefresh?: boolean
 }
 
+function getRuntimeOrigin() {
+  return typeof window === 'undefined'
+    ? 'http://localhost'
+    : window.location.origin
+}
+
+function toWsBaseUrl() {
+  const configuredWsUrl = import.meta.env.VITE_WS_URL as string | undefined
+
+  if (configuredWsUrl)
+    return configuredWsUrl
+
+  const httpBase = /^https?:\/\//i.test(API_URL)
+    ? API_URL
+    : new URL(API_URL, getRuntimeOrigin()).toString()
+
+  return httpBase
+    .replace(/^http/i, 'ws')
+    .replace(/\/api\/v1\/?$/, '')
+}
+
 export function buildWsUrl(path: string, params: Record<string, string> = {}) {
-  const url = new URL(path, WS_URL)
+  const url = new URL(path, toWsBaseUrl())
 
   Object.entries(params).forEach(([key, value]) => {
     if (value)
