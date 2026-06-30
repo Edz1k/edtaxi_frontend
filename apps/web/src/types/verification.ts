@@ -40,6 +40,21 @@ export interface DailyCheck {
   created_at: string
 }
 
+// Заявка на верификацию лица водителя (одноразовая): селфи + документ.
+export interface FaceVerification {
+  driver_id: string
+  driver_user_id: string
+  driver_name: string
+  driver_phone: string
+  face_photo_url: null | string
+  id_document_url: null | string
+  created_at: string
+}
+
+export interface FacesResponse {
+  faces: FaceVerification[]
+}
+
 export interface VehiclesResponse {
   vehicles: PendingVehicle[]
 }

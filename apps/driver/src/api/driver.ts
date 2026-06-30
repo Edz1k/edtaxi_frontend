@@ -152,9 +152,12 @@ export function uploadVehicleTechPassport(vehicleId: string, file: File) {
   })
 }
 
-export function uploadFacePhoto(file: File) {
+// uploadFaceVerification отправляет селфи + документ (удостоверение/паспорт) на
+// проверку поддержке (раньше грузилось только селфи и сразу считалось пройденным).
+export function uploadFaceVerification(selfie: File, idDocument: File) {
   const form = new FormData()
-  form.append('file', file)
+  form.append('selfie', selfie)
+  form.append('id_document', idDocument)
   return apiRequest<{ message: string }>('/driver/face-photo', {
     method: 'POST',
     body: form,

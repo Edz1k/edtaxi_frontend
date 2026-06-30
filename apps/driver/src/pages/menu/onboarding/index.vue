@@ -33,9 +33,16 @@ interface OnboardingItem {
 }
 
 const faceStatus = computed<ItemStatus>(() => {
-  if (!driver.verification)
+  const v = driver.verification
+  if (!v)
     return 'missing'
-  return driver.verification.face_verified ? 'ok' : 'missing'
+  if (v.face_status === 'approved')
+    return 'ok'
+  if (v.face_status === 'pending')
+    return 'pending'
+  if (v.face_status === 'rejected')
+    return 'rejected'
+  return 'missing'
 })
 
 const vehicleStatus = computed<ItemStatus>(() => {

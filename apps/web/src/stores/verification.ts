@@ -1,9 +1,11 @@
-import type { DailyCheck, PendingVehicle, VerificationStatus } from '~/types/verification'
+import type { DailyCheck, FaceVerification, PendingVehicle, VerificationStatus } from '~/types/verification'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import {
   listDailyChecks,
+  listPendingFaces,
   listPendingVehicles,
   reviewDailyCheck,
+  reviewFace,
   reviewVehicle,
 } from '~/api/verification'
 import { useStoreAction } from '~/composables/useStoreAction'
@@ -11,12 +13,29 @@ import { useStoreAction } from '~/composables/useStoreAction'
 export const useVerificationStore = defineStore('verification', () => {
   const vehicles = ref<PendingVehicle[]>([])
   const dailyChecks = ref<DailyCheck[]>([])
+  const faces = ref<FaceVerification[]>([])
   const isLoadingVehicles = ref(false)
   const isLoadingDailyChecks = ref(false)
+  const isLoadingFaces = ref(false)
   const isMutating = ref(false)
   const errorMessage = ref('')
 
   const { withLoading } = useStoreAction(errorMessage)
+
+  async function loadFaces() {
+    return withLoading(isLoadingFaces, async () => {
+      const response = await listPendingFaces({ limit: 100 })
+      faces.value = response.faces ?? []
+      return faces.value
+    }, 'Не удалось загрузить заявки на проверку лица.')
+  }
+
+  async function decideFace(driverId: string, approve: boolean) {
+    return withLoading(isMutating, async () => {
+      await reviewFace(driverId, approve)
+      faces.value = faces.value.filter(f => f.driver_id !== driverId)
+    }, 'Не удалось обновить статус верификации лица.')
+  }
 
   async function loadVehicles() {
     return withLoading(isLoadingVehicles, async () => {
@@ -51,8 +70,10 @@ export const useVerificationStore = defineStore('verification', () => {
   function clearVerificationState() {
     vehicles.value = []
     dailyChecks.value = []
+    faces.value = []
     isLoadingVehicles.value = false
     isLoadingDailyChecks.value = false
+    isLoadingFaces.value = false
     isMutating.value = false
     errorMessage.value = ''
   }
@@ -61,12 +82,16 @@ export const useVerificationStore = defineStore('verification', () => {
     clearVerificationState,
     dailyChecks,
     decideDailyCheck,
+    decideFace,
     decideVehicle,
     errorMessage,
+    faces,
     isLoadingDailyChecks,
+    isLoadingFaces,
     isLoadingVehicles,
     isMutating,
     loadDailyChecks,
+    loadFaces,
     loadVehicles,
     vehicles,
   }

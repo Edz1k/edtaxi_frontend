@@ -5,7 +5,7 @@ import { useVerificationStore } from '~/stores/verification'
 import { formatDate } from '~/utils/format'
 
 const verification = useVerificationStore()
-const tab = ref<'daily' | 'vehicles'>('vehicles')
+const tab = ref<'daily' | 'faces' | 'vehicles'>('vehicles')
 
 definePage({
   meta: {
@@ -22,6 +22,7 @@ useHead({
 onMounted(() => {
   verification.loadVehicles().catch(() => {})
   verification.loadDailyChecks('pending').catch(() => {})
+  verification.loadFaces().catch(() => {})
 })
 
 function photos(items: Array<{ label: string, url: null | string }>) {
@@ -45,6 +46,15 @@ function photos(items: Array<{ label: string, url: null | string }>) {
       >
         Машины
         <span v-if="verification.vehicles.length" class="ml-1 opacity-70">{{ verification.vehicles.length }}</span>
+      </button>
+      <button
+        class="h-10 rounded-xl px-4 text-sm font-900 transition"
+        :class="tab === 'faces' ? 'bg-cyan-300 text-#06142f' : 'text-white/60'"
+        type="button"
+        @click="tab = 'faces'"
+      >
+        Лица
+        <span v-if="verification.faces.length" class="ml-1 opacity-70">{{ verification.faces.length }}</span>
       </button>
       <button
         class="h-10 rounded-xl px-4 text-sm font-900 transition"
@@ -125,6 +135,79 @@ function photos(items: Array<{ label: string, url: null | string }>) {
         <p v-else class="mt-4 text-xs text-amber-300/80 font-700">
           Водитель не приложил фото машины.
         </p>
+      </article>
+    </div>
+
+    <!-- Faces -->
+    <div v-else-if="tab === 'faces'" class="mt-5 space-y-3">
+      <div v-if="verification.isLoadingFaces" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
+        Загружаем заявки...
+      </div>
+      <div v-else-if="!verification.faces.length" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
+        Нет заявок на проверку лица.
+      </div>
+
+      <article
+        v-for="face in verification.faces"
+        v-else
+        :key="face.driver_id"
+        class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="min-w-0">
+            <RouterLink
+              v-if="face.driver_user_id"
+              :to="`/drivers/${face.driver_user_id}`"
+              class="text-base text-cyan-200 font-950 hover:underline"
+            >
+              {{ face.driver_name }}
+            </RouterLink>
+            <p v-else class="text-base font-950">
+              {{ face.driver_name }}
+            </p>
+            <p class="mt-0.5 text-xs text-white/40">
+              {{ face.driver_phone }} · {{ formatDate(face.created_at) }}
+            </p>
+          </div>
+
+          <div class="flex shrink-0 gap-2">
+            <button
+              :disabled="verification.isMutating"
+              class="h-10 rounded-xl bg-emerald-400 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
+              type="button"
+              @click="verification.decideFace(face.driver_id, true)"
+            >
+              Одобрить
+            </button>
+            <button
+              :disabled="verification.isMutating"
+              class="h-10 rounded-xl bg-red-500/15 px-4 text-sm text-red-300 font-900 transition active:scale-[0.98] hover:bg-red-500/25 disabled:opacity-50"
+              type="button"
+              @click="verification.decideFace(face.driver_id, false)"
+            >
+              Отклонить
+            </button>
+          </div>
+        </div>
+
+        <div class="grid mt-4 gap-3 sm:grid-cols-2">
+          <figure v-if="face.face_photo_url">
+            <a :href="mediaUrl(face.face_photo_url)" rel="noopener" target="_blank">
+              <img alt="Селфи" class="h-52 w-full rounded-2xl bg-black/20 object-cover" :src="mediaUrl(face.face_photo_url)">
+            </a>
+            <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
+              Селфи
+            </figcaption>
+          </figure>
+          <figure v-if="face.id_document_url">
+            <a :href="mediaUrl(face.id_document_url)" rel="noopener" target="_blank">
+              <img alt="Документ" class="h-52 w-full rounded-2xl bg-black/20 object-cover" :src="mediaUrl(face.id_document_url)">
+            </a>
+            <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
+              Удостоверение / паспорт
+            </figcaption>
+          </figure>
+        </div>
       </article>
     </div>
 

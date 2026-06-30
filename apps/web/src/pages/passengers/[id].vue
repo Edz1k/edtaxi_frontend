@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PassengerOverview, PassengerTrip } from '~/types/passenger-overview'
 import { useRoute as useVueRoute } from 'vue-router'
+import { mediaUrl } from '~/api/client'
 import { getPassengerOverview } from '~/api/passenger'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { formatDate } from '~/utils/format'
@@ -97,7 +98,7 @@ function tripFare(t: PassengerTrip) {
         <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
           <div class="flex items-center gap-4">
             <div class="h-16 w-16 flex shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-cyan-500/15">
-              <img v-if="data.user.avatar_url" :src="data.user.avatar_url" alt="" class="h-full w-full object-cover">
+              <img v-if="data.user.avatar_url" :src="mediaUrl(data.user.avatar_url)" alt="" class="h-full w-full object-cover">
               <span v-else class="i-mdi-account text-8 text-cyan-300" />
             </div>
             <div class="min-w-0">

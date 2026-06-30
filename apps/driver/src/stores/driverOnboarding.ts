@@ -12,7 +12,7 @@ import {
   listDriverVehicles,
   submitDailyCheck,
   updateDriverVehicle,
-  uploadFacePhoto,
+  uploadFaceVerification,
   uploadVehiclePhoto,
   uploadVehicleTechPassport,
 } from '~/api/driver'
@@ -131,17 +131,19 @@ export const useDriverOnboardingStore = defineStore('driverOnboarding', () => {
     }
   }
 
-  async function doUploadFacePhoto(file: File) {
+  // doUploadFaceVerification отправляет селфи + документ на проверку поддержке.
+  // Лицо больше не подтверждается автоматически — статус становится pending.
+  async function doUploadFaceVerification(selfie: File, idDocument: File) {
     isLoading.value = true
     errorMessage.value = ''
 
     try {
-      await uploadFacePhoto(file)
+      await uploadFaceVerification(selfie, idDocument)
       if (verification.value)
-        verification.value = { ...verification.value, face_verified: true }
+        verification.value = { ...verification.value, face_verified: false, face_status: 'pending' }
     }
     catch (error) {
-      errorMessage.value = showErrorToast(error, 'Не удалось загрузить фото лица.')
+      errorMessage.value = showErrorToast(error, 'Не удалось отправить фото на проверку.')
       throw error
     }
     finally {
@@ -180,7 +182,7 @@ export const useDriverOnboardingStore = defineStore('driverOnboarding', () => {
   return {
     clearOnboardingState,
     doSubmitDailyCheck,
-    doUploadFacePhoto,
+    doUploadFaceVerification,
     doUploadTechPassport,
     doUploadVehiclePhoto,
     errorMessage,

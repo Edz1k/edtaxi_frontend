@@ -1,9 +1,21 @@
 import type {
   DailyChecksResponse,
+  FacesResponse,
   VehiclesResponse,
   VerificationStatus,
 } from '~/types/verification'
 import { apiRequest } from '~/api/client'
+
+export function listPendingFaces(params: { limit?: number, offset?: number } = {}) {
+  return apiRequest<FacesResponse>('/tech-support/verifications/faces', { params })
+}
+
+// reviewFace принимает driver_id (не vehicle id — верификация лица одна на водителя).
+export function reviewFace(driverId: string, approve: boolean) {
+  return apiRequest<{ message: string }>(`/tech-support/verifications/faces/${driverId}/${approve ? 'approve' : 'reject'}`, {
+    method: 'POST',
+  })
+}
 
 export function listPendingVehicles(params: { limit?: number, offset?: number } = {}) {
   return apiRequest<VehiclesResponse>('/tech-support/verifications/vehicles', { params })
