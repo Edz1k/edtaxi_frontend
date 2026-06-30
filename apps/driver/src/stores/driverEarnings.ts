@@ -2,8 +2,6 @@ import type { DriverEarnings, DriverWallet } from '~/types/driver'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { getDriverEarnings, getDriverWallet, topUpDriverWallet } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
-import { openExternalLink } from '~/composables/auth/telegram'
-import { useToast } from '~/composables/useToast'
 
 export const useDriverEarningsStore = defineStore('driverEarnings', () => {
   const earnings = ref<DriverEarnings | null>(null)
@@ -47,17 +45,15 @@ export const useDriverEarningsStore = defineStore('driverEarnings', () => {
     }
   }
 
-  // topUpWallet создаёт платёж в Freedom Pay и открывает окно оплаты картой.
-  // Баланс обновится не сразу, а после колбэка от Freedom — см. loadWallet.
+  // topUpWallet создаёт платёж в Freedom Pay и возвращает redirect_url —
+  // страница показывает его во встроенном фрейме. Баланс обновится не сразу,
+  // а после колбэка от Freedom — см. loadWallet (страница опрашивает его, пока фрейм открыт).
   async function topUpWallet(amount: number) {
     isMutatingWallet.value = true
     errorMessage.value = ''
 
     try {
-      const response = await topUpDriverWallet({ amount })
-      openExternalLink(response.redirect_url)
-      useToast().info('Окно оплаты открыто', 'После оплаты картой баланс обновится автоматически.')
-      return response
+      return await topUpDriverWallet({ amount })
     }
     catch (error) {
       errorMessage.value = showErrorToast(error, 'Не удалось пополнить баланс.')

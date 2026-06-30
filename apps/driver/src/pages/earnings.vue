@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import PaymentFrameModal from '~/components/PaymentFrameModal.vue'
 import { useDriverEarningsStore } from '~/stores/driverEarnings'
 
 const earnings = useDriverEarningsStore()
 const topUpAmount = ref(2000)
+const paymentUrl = ref('')
+let paymentPollTimer: ReturnType<typeof setInterval> | undefined
 
 definePage({
   meta: {
@@ -36,10 +39,31 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('visibilitychange', handleVisibilityChange)
+  stopPaymentPolling()
 })
 
+function startPaymentPolling() {
+  stopPaymentPolling()
+  paymentPollTimer = setInterval(refresh, 3000)
+}
+
+function stopPaymentPolling() {
+  if (paymentPollTimer) {
+    clearInterval(paymentPollTimer)
+    paymentPollTimer = undefined
+  }
+}
+
+function closePaymentFrame() {
+  paymentUrl.value = ''
+  stopPaymentPolling()
+  refresh()
+}
+
 async function submitTopUp() {
-  await earnings.topUpWallet(topUpAmount.value)
+  const response = await earnings.topUpWallet(topUpAmount.value)
+  paymentUrl.value = response.redirect_url
+  startPaymentPolling()
 }
 
 function formatMoney(value: number) {
@@ -135,5 +159,7 @@ function formatMoney(value: number) {
         </form>
       </section>
     </section>
+
+    <PaymentFrameModal v-if="paymentUrl" :url="paymentUrl" @close="closePaymentFrame" />
   </main>
 </template>

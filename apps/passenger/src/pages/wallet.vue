@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { WalletTransaction, WalletTransactionType } from '~/types/wallet'
+import PaymentFrameModal from '~/components/PaymentFrameModal.vue'
 import { useWalletStore } from '~/stores/wallet'
 
 const wallet = useWalletStore()
 const amount = ref(2000)
+const paymentUrl = ref('')
+let paymentPollTimer: ReturnType<typeof setInterval> | undefined
 
 definePage({
   meta: {
@@ -57,7 +60,26 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('visibilitychange', handleVisibilityChange)
+  stopPaymentPolling()
 })
+
+function startPaymentPolling() {
+  stopPaymentPolling()
+  paymentPollTimer = setInterval(refresh, 3000)
+}
+
+function stopPaymentPolling() {
+  if (paymentPollTimer) {
+    clearInterval(paymentPollTimer)
+    paymentPollTimer = undefined
+  }
+}
+
+function closePaymentFrame() {
+  paymentUrl.value = ''
+  stopPaymentPolling()
+  refresh()
+}
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat('ru-RU', {
@@ -77,7 +99,9 @@ function formatDate(value: string) {
 }
 
 async function submitTopUp() {
-  await wallet.topUp(amount.value)
+  const response = await wallet.topUp(amount.value)
+  paymentUrl.value = response.redirect_url
+  startPaymentPolling()
 }
 
 function getTransactionTitle(transaction: WalletTransaction) {
@@ -180,5 +204,7 @@ function getTransactionTitle(transaction: WalletTransaction) {
         </div>
       </section>
     </section>
+
+    <PaymentFrameModal v-if="paymentUrl" :url="paymentUrl" @close="closePaymentFrame" />
   </main>
 </template>

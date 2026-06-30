@@ -2,8 +2,6 @@ import type { Wallet, WalletTransaction } from '~/types/wallet'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { showErrorToast } from '~/api/errors'
 import { getWallet, getWalletHistory, topUpWallet } from '~/api/wallet'
-import { openExternalLink } from '~/composables/auth/telegram'
-import { useToast } from '~/composables/useToast'
 
 export const useWalletStore = defineStore('wallet', () => {
   const wallet = ref<Wallet | null>(null)
@@ -67,17 +65,15 @@ export const useWalletStore = defineStore('wallet', () => {
     return loadHistory(limit, offset.value, { append: true })
   }
 
-  // topUp создаёт платёж в Freedom Pay и открывает окно оплаты картой.
-  // Баланс обновится не сразу, а после колбэка от Freedom — см. wallet/history.
+  // topUp создаёт платёж в Freedom Pay и возвращает redirect_url — страница
+  // показывает его во встроенном фрейме. Баланс обновится не сразу, а после
+  // колбэка от Freedom — см. wallet/history (страница опрашивает их, пока фрейм открыт).
   async function topUp(amount: number) {
     isMutating.value = true
     errorMessage.value = ''
 
     try {
-      const response = await topUpWallet({ amount })
-      openExternalLink(response.redirect_url)
-      useToast().info('Окно оплаты открыто', 'После оплаты картой баланс обновится автоматически.')
-      return response
+      return await topUpWallet({ amount })
     }
     catch (error) {
       errorMessage.value = showErrorToast(error, 'Не удалось пополнить баланс.')
