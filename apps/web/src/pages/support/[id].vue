@@ -61,15 +61,27 @@ useHead({
   title: 'Чат поддержки | EdTaxi',
 })
 
-onMounted(async () => {
-  const room = await support.loadRoom(roomId.value).catch(() => null)
+async function openRoom(id: string) {
+  const room = await support.loadRoom(id).catch(() => null)
   if (!room) {
     await router.push('/support')
     return
   }
-  await support.loadMessages(roomId.value).catch(() => {})
+  await support.loadMessages(id).catch(() => {})
   scrollToBottom()
+}
+
+onMounted(async () => {
+  await openRoom(roomId.value)
   socket.connect()
+})
+
+// Компонент маршрута переиспользуется при переходе между обращениями
+// (меняется только :id, onMounted не срабатывает повторно) — иначе на экране
+// осталась бы переписка предыдущей комнаты до перезагрузки страницы.
+watch(roomId, (id, prev) => {
+  if (id && id !== prev)
+    openRoom(id)
 })
 
 watch(() => support.messages.length, scrollToBottom)
@@ -126,11 +138,19 @@ const isClosed = computed(() => support.currentRoom?.status === 'closed')
               <span :class="support.currentRoom?.participant_type === 'driver' ? 'i-mdi-steering' : 'i-mdi-account'" class="text-4 text-main-300" />
             </div>
             <div class="min-w-0">
-              <p class="truncate text-sm font-900">
-                {{ participantLabel }}
+              <RouterLink
+                v-if="support.currentRoom?.participant_type === 'driver' && support.currentRoom?.passenger_id"
+                :to="`/drivers/${support.currentRoom.passenger_id}`"
+                class="flex items-center gap-1 truncate text-sm text-cyan-200 font-900 hover:underline"
+              >
+                {{ support.currentRoom?.participant_name || participantLabel }}
+                <span class="i-mdi-open-in-new shrink-0 text-3.5 text-cyan-300/70" />
+              </RouterLink>
+              <p v-else class="truncate text-sm font-900">
+                {{ support.currentRoom?.participant_name || participantLabel }}
               </p>
               <p class="truncate text-[11px] text-slate-500 font-700">
-                {{ support.currentRoom?.passenger_id ?? roomId }}
+                {{ support.currentRoom?.participant_phone || support.currentRoom?.passenger_id || roomId }}
               </p>
             </div>
           </div>

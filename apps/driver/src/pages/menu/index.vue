@@ -23,11 +23,11 @@ const verificationOk = computed(() => {
   return v.face_verified && vehiclesOk && v.daily_check_valid
 })
 
+// Верификация перенесена в личный кабинет (/menu/profile) — здесь её больше нет.
 const menuItems = computed(() => [
   { label: 'Автомобиль', description: 'Данные машины и тариф', icon: 'i-mdi-car-info', to: '/menu/vehicle', badge: false },
   { label: 'Таксопарк', description: 'Принять приглашение', icon: 'i-mdi-office-building-marker', to: '/menu/park-invite', badge: false },
   { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support', badge: false },
-  { label: 'Верификация', description: verificationOk.value ? 'Всё в порядке' : 'Требует внимания', icon: 'i-mdi-shield-check', to: '/menu/onboarding', badge: !verificationOk.value },
 ])
 
 definePage({
@@ -57,12 +57,17 @@ onMounted(async () => {
 <template>
   <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+7.25rem)] pt-[calc(var(--app-safe-area-top)+1.35rem)] text-white">
     <section class="mx-auto max-w-sm">
-      <header class="flex items-center gap-4">
-        <div class="h-16 w-16 flex shrink-0 items-center justify-center rounded-3xl bg-main-500/16 text-main-200">
+      <RouterLink to="/menu/profile" class="flex items-center gap-4 transition active:scale-[0.98]">
+        <div class="relative h-16 w-16 flex shrink-0 items-center justify-center rounded-3xl bg-main-500/16 text-main-200">
           <span class="i-mdi-steering text-9" />
+          <span
+            v-if="!verificationOk"
+            class="absolute right-1 top-1 h-3.5 w-3.5 rounded-full bg-amber-400 ring-2 ring-secondary-900"
+            aria-label="Требует верификации"
+          />
         </div>
 
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
           <p class="text-xs text-main-300 font-900 uppercase">
             Водитель
           </p>
@@ -73,7 +78,9 @@ onMounted(async () => {
             {{ driverMeta }}
           </p>
         </div>
-      </header>
+
+        <span class="i-mdi-chevron-right shrink-0 text-7 text-slate-500" />
+      </RouterLink>
 
       <nav class="mt-8 space-y-3">
         <RouterLink
