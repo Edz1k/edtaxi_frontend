@@ -7,10 +7,12 @@ import { usePlacesStore } from '~/stores/places'
 
 const places = usePlacesStore()
 const isAdding = ref(false)
+const isAddressSearchOpen = ref(false)
 const editTarget = ref<FavoritePlace | null>(null)
 const name = ref('')
 const addressQuery = ref('')
 const selectedPlace = ref<GeoPlace | null>(null)
+const addressSearchInput = ref<HTMLInputElement | null>(null)
 
 const {
   clearSuggestions,
@@ -75,7 +77,23 @@ function openEdit(place: FavoritePlace) {
 
 function closeForm() {
   isAdding.value = false
+  isAddressSearchOpen.value = false
   editTarget.value = null
+}
+
+async function openAddressSearch() {
+  isAddressSearchOpen.value = true
+  await nextTick()
+  addressSearchInput.value?.focus()
+}
+
+function closeAddressSearch() {
+  isAddressSearchOpen.value = false
+}
+
+function selectFavoriteAddress(place: GeoPlace) {
+  selectPlace(place)
+  closeAddressSearch()
 }
 
 async function submit() {
@@ -239,23 +257,30 @@ async function submit() {
                   type="text"
                 >
               </label>
-              <label class="grid gap-1.5">
+              <div class="grid gap-1.5">
                 <span class="text-xs text-main-300 font-900 uppercase">Адрес</span>
-                <input
-                  v-model="addressQuery"
-                  autocomplete="off"
-                  class="h-12 w-full border border-white/10 rounded-2xl bg-white/6 px-4 text-sm outline-none focus:border-main-400"
-                  placeholder="Начните вводить адрес..."
-                  type="text"
+                <button
+                  class="min-h-12 w-full flex items-center gap-3 border border-white/10 rounded-2xl bg-white/6 px-4 py-3 text-left text-sm outline-none transition active:scale-[0.99]"
+                  type="button"
+                  @click="openAddressSearch()"
                 >
-              </label>
-
-              <AddressSuggestions
-                color="emerald"
-                :is-loading="isSearching"
-                :places="suggestions"
-                @select="selectPlace($event)"
-              />
+                  <span class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full bg-main-500/14 text-main-200">
+                    <span class="i-mdi-map-search-outline text-5" />
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span
+                      class="block truncate font-800"
+                      :class="selectedPlace ? 'text-white' : 'text-slate-400'"
+                    >
+                      {{ selectedPlace ? selectedPlace.address : 'Выбрать адрес' }}
+                    </span>
+                    <span v-if="selectedPlace" class="mt-0.5 block truncate text-xs text-slate-500 font-700">
+                      {{ selectedPlace.name }}
+                    </span>
+                  </span>
+                  <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-500" />
+                </button>
+              </div>
 
               <p v-if="!selectedPlace && addressQuery.length >= 3" class="px-1 text-xs text-amber-300/80 font-700">
                 Выберите адрес из списка подсказок.
@@ -274,6 +299,84 @@ async function submit() {
               {{ places.isMutating ? 'Сохраняем...' : (editTarget ? 'Сохранить' : 'Добавить') }}
             </button>
           </form>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0"
+        leave-active-class="transition duration-150 ease-in"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="isAddressSearchOpen"
+          class="fixed inset-0 z-70 flex items-end bg-black/68 px-4 pb-[calc(var(--app-safe-area-bottom)+1rem)]"
+          @click.self="closeAddressSearch()"
+        >
+          <section
+            class="relative mx-auto max-h-[min(82vh,calc(var(--app-viewport-height)-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))] max-w-sm min-h-0 w-full flex flex-col rounded-3xl bg-secondary-950 text-white shadow-2xl shadow-black/35"
+          >
+            <header class="shrink-0 border-b border-white/8 px-5 pb-4 pt-3">
+              <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-white/14" />
+              <div class="flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                  <p class="text-xs text-main-300 font-900 uppercase">
+                    Адрес
+                  </p>
+                  <h2 class="mt-0.5 text-2xl font-950">
+                    Выберите адрес
+                  </h2>
+                </div>
+                <button
+                  aria-label="Закрыть поиск адреса"
+                  class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-200 transition active:scale-[0.96]"
+                  type="button"
+                  @click="closeAddressSearch()"
+                >
+                  <span class="i-mdi-close text-6" />
+                </button>
+              </div>
+
+              <label class="mt-4 h-13 flex items-center gap-3 border border-white/10 rounded-2xl bg-white/6 px-4 transition focus-within:border-main-400">
+                <span class="i-mdi-magnify shrink-0 text-5 text-main-300" />
+                <input
+                  ref="addressSearchInput"
+                  v-model="addressQuery"
+                  autocomplete="off"
+                  class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-500"
+                  placeholder="Начните вводить адрес..."
+                  type="text"
+                >
+              </label>
+            </header>
+
+            <div class="[scrollbar-width:thin] relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 pt-2">
+              <AddressSuggestions
+                color="emerald"
+                :is-loading="isSearching"
+                :places="suggestions"
+                @select="selectFavoriteAddress($event)"
+              />
+
+              <p
+                v-if="!isSearching && addressQuery.trim().length < 3"
+                class="mt-6 rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-400 font-700 leading-5"
+              >
+                Введите минимум 3 символа, чтобы увидеть подсказки.
+              </p>
+
+              <p
+                v-else-if="!isSearching && addressQuery.trim().length >= 3 && !suggestions.length && !selectedPlace"
+                class="mt-6 rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-400 font-700 leading-5"
+              >
+                Адрес не найден. Попробуйте уточнить запрос.
+              </p>
+            </div>
+
+            <div class="pointer-events-none absolute inset-x-0 bottom-0 h-10 rounded-b-3xl from-secondary-950 to-transparent bg-gradient-to-t" />
+          </section>
         </div>
       </Transition>
     </Teleport>
