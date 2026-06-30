@@ -7,6 +7,7 @@ import PassengerMapPicker from '~/components/passenger/PassengerMapPicker.vue'
 import { useMapboxMap } from '~/composables/mapbox/useMapboxMap'
 import { useMapboxPicker } from '~/composables/mapbox/useMapboxPicker'
 import { useMapboxRoute } from '~/composables/mapbox/useMapboxRoute'
+import { loadCachedLocation } from '~/composables/mapbox/useUserLocation'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 interface PassengerMapPickerExpose {
@@ -251,6 +252,8 @@ watch(
 )
 
 onMounted(async () => {
+  const cachedCenter = loadCachedLocation()
+
   await initializeMap(() => {
     if (props.userCoordinates) {
       if (props.driverView)
@@ -278,7 +281,7 @@ onMounted(async () => {
     }
 
     syncFavoriteMarkers()
-  })
+  }, cachedCenter ?? undefined)
 })
 
 onBeforeUnmount(() => {

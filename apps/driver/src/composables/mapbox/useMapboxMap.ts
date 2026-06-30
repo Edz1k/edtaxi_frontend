@@ -53,7 +53,7 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
     resizeFrame = 0
   }
 
-  async function initializeMap(onLoad?: () => void) {
+  async function initializeMap(onLoad?: () => void, initialCenter?: [number, number]) {
     if (!mapContainer.value)
       return
 
@@ -67,7 +67,7 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
 
     map.value = new mapboxglModule.value.default.Map({
       attributionControl: false,
-      center: ALMATY_CENTER,
+      center: initialCenter ?? ALMATY_CENTER,
       container: mapContainer.value,
       pitch: 10,
       style: 'mapbox://styles/mapbox/streets-v12',
