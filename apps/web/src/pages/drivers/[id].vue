@@ -2,6 +2,7 @@
 import type { DriverOverview, DriverRatingEvent } from '~/types/driver-overview'
 import { useRoute as useVueRoute } from 'vue-router'
 import { getDriverOverview } from '~/api/driver'
+import { reviewVehicle } from '~/api/verification'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { formatDate } from '~/utils/format'
 
@@ -83,6 +84,25 @@ function eventLabel(e: DriverRatingEvent) {
   return RATING_EVENT_LABELS[e.type] ?? e.type
 }
 
+// Одобрение/отклонение машины прямо из кабинета — поддержке не нужно идти на
+// отдельную страницу верификаций, чтобы подтвердить заявку.
+const isReviewing = ref(false)
+async function decideVehicle(vehicleId: string, approve: boolean) {
+  if (isReviewing.value)
+    return
+  isReviewing.value = true
+  try {
+    await reviewVehicle(vehicleId, approve)
+    await load()
+  }
+  catch {
+    errorMessage.value = 'Не удалось сохранить решение по машине.'
+  }
+  finally {
+    isReviewing.value = false
+  }
+}
+
 const isBlocked = computed(() => {
   const until = data.value?.driver.blocked_until
   return Boolean(until) && new Date(until as string) > new Date()
@@ -91,7 +111,7 @@ const isBlocked = computed(() => {
 
 <template>
   <WebPageShell
-    back-label="← Поддержка"
+    back-label="Поддержка"
     back-to="/support"
     :title="fullName || 'Кабинет водителя'"
     eyebrow="Водитель"
@@ -198,6 +218,25 @@ const isBlocked = computed(() => {
               <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-900" :class="verificationClass(v.verification_status)">
                 {{ VERIFICATION_LABELS[v.verification_status] ?? v.verification_status }}
               </span>
+            </div>
+
+            <div v-if="v.verification_status === 'pending'" class="mt-3 flex gap-2">
+              <button
+                :disabled="isReviewing"
+                class="h-9 flex-1 rounded-xl bg-emerald-400 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
+                type="button"
+                @click="decideVehicle(v.id, true)"
+              >
+                Одобрить
+              </button>
+              <button
+                :disabled="isReviewing"
+                class="h-9 flex-1 rounded-xl bg-red-500/15 text-sm text-red-300 font-900 transition active:scale-[0.98] hover:bg-red-500/25 disabled:opacity-50"
+                type="button"
+                @click="decideVehicle(v.id, false)"
+              >
+                Отклонить
+              </button>
             </div>
           </div>
         </div>

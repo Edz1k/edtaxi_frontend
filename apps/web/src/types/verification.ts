@@ -3,6 +3,11 @@ export type VerificationStatus = 'approved' | 'pending' | 'rejected'
 export interface PendingVehicle {
   id: string
   driver_id: string
+  // driver_* подтягиваются бэкендом, чтобы показывать имя водителя вместо UUID
+  // и давать ссылку в его кабинет (driver_user_id).
+  driver_name?: string
+  driver_phone?: string
+  driver_user_id?: string
   category: string
   plate_number: string
   make: string
@@ -20,6 +25,9 @@ export interface PendingVehicle {
 export interface DailyCheck {
   id: string
   driver_id: string
+  driver_name?: string
+  driver_phone?: string
+  driver_user_id?: string
   vehicle_id: string
   selfie_url: null | string
   vehicle_photo_url: null | string
