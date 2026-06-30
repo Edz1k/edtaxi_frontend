@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { mediaUrl } from '~/api/client'
 import { useAuthStore } from '~/stores/auth'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
@@ -21,6 +22,12 @@ const verificationOk = computed(() => {
     return false
   const vehiclesOk = v.vehicles.length > 0 && v.vehicles.every(veh => veh.verification_status === 'approved')
   return v.face_verified && vehiclesOk && v.daily_check_valid
+})
+
+// После подтверждения лица селфи показывается как аватар вместо иконки руля.
+const faceAvatar = computed(() => {
+  const v = onboarding.verification
+  return v?.face_status === 'approved' ? mediaUrl(v.face_photo_url) : ''
 })
 
 // Верификация перенесена в личный кабинет (/menu/profile) — здесь её больше нет.
@@ -58,8 +65,9 @@ onMounted(async () => {
   <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+7.25rem)] pt-[calc(var(--app-safe-area-top)+1.35rem)] text-white">
     <section class="mx-auto max-w-sm">
       <RouterLink to="/menu/profile" class="flex items-center gap-4 transition active:scale-[0.98]">
-        <div class="relative h-16 w-16 flex shrink-0 items-center justify-center rounded-3xl bg-main-500/16 text-main-200">
-          <span class="i-mdi-steering text-9" />
+        <div class="relative h-16 w-16 flex shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-main-500/16 text-main-200">
+          <img v-if="faceAvatar" :src="faceAvatar" alt="" class="h-full w-full object-cover">
+          <span v-else class="i-mdi-steering text-9" />
           <span
             v-if="!verificationOk"
             class="absolute right-1 top-1 h-3.5 w-3.5 rounded-full bg-amber-400 ring-2 ring-secondary-900"

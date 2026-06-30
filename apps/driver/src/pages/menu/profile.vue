@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DriverOverview, DriverRatingEvent } from '~/types/driver-overview'
+import { mediaUrl } from '~/api/client'
 import { getDriverOverview } from '~/api/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
@@ -103,7 +104,7 @@ function formatDate(value: string) {
         <!-- Профиль -->
         <header class="flex items-center gap-4">
           <div class="h-16 w-16 flex shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-main-500/16 text-main-200">
-            <img v-if="data.driver.face_photo_url" :src="data.driver.face_photo_url" alt="" class="h-full w-full object-cover">
+            <img v-if="data.driver.face_photo_url" :src="mediaUrl(data.driver.face_photo_url)" alt="" class="h-full w-full object-cover">
             <span v-else class="i-mdi-steering text-9" />
           </div>
           <div class="min-w-0">

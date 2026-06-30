@@ -22,6 +22,10 @@ export interface DriverVehicleVerification {
 
 export interface DriverVerificationsResponse {
   face_verified: boolean
+  // face_status: none | pending | approved | rejected — статус проверки лица
+  // поддержкой. face_photo_url появляется после загрузки селфи.
+  face_status: 'approved' | 'none' | 'pending' | 'rejected'
+  face_photo_url: null | string
   daily_check_valid: boolean
   vehicles: DriverVehicleVerification[]
 }

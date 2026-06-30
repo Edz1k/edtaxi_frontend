@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DriverOverview, DriverRatingEvent } from '~/types/driver-overview'
 import { useRoute as useVueRoute } from 'vue-router'
+import { mediaUrl } from '~/api/client'
 import { getDriverOverview } from '~/api/driver'
 import { reviewVehicle } from '~/api/verification'
 import WebPageShell from '~/components/app/WebPageShell.vue'
@@ -130,7 +131,7 @@ const isBlocked = computed(() => {
         <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
           <div class="flex items-center gap-4">
             <div class="h-16 w-16 flex shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-cyan-500/15">
-              <img v-if="data.driver.face_photo_url" :src="data.driver.face_photo_url" alt="" class="h-full w-full object-cover">
+              <img v-if="data.driver.face_photo_url" :src="mediaUrl(data.driver.face_photo_url)" alt="" class="h-full w-full object-cover">
               <span v-else class="i-mdi-steering text-8 text-cyan-300" />
             </div>
             <div class="min-w-0">
