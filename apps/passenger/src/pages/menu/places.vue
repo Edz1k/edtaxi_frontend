@@ -234,11 +234,11 @@ async function submit() {
           @click.self="closeForm()"
         >
           <form
-            class="mx-auto max-w-sm w-full rounded-3xl bg-secondary-900 p-5 text-white shadow-2xl shadow-black/30"
+            class="mx-auto max-w-sm min-w-0 w-full overflow-hidden rounded-3xl bg-secondary-900 p-5 text-white shadow-2xl shadow-black/30"
             @submit.prevent="submit()"
           >
-            <div class="flex items-center justify-between gap-4">
-              <h2 class="text-2xl font-950">
+            <div class="min-w-0 flex items-center justify-between gap-4">
+              <h2 class="min-w-0 truncate text-2xl font-950">
                 {{ editTarget ? 'Редактировать' : 'Новое место' }}
               </h2>
               <button aria-label="Закрыть" class="h-11 w-11 flex items-center justify-center rounded-full bg-white/8" type="button" @click="closeForm()">
@@ -246,28 +246,28 @@ async function submit() {
               </button>
             </div>
 
-            <div class="grid mt-5 gap-3">
-              <label class="grid gap-1.5">
+            <div class="grid mt-5 min-w-0 gap-3">
+              <label class="grid min-w-0 gap-1.5">
                 <span class="text-xs text-main-300 font-900 uppercase">Название</span>
                 <input
                   v-model="name"
-                  class="h-12 w-full border border-white/10 rounded-2xl bg-white/6 px-4 text-sm outline-none focus:border-main-400"
+                  class="h-12 min-w-0 w-full border border-white/10 rounded-2xl bg-white/6 px-4 text-sm outline-none focus:border-main-400"
                   placeholder="Дом, Работа..."
                   required
                   type="text"
                 >
               </label>
-              <div class="grid gap-1.5">
+              <div class="grid min-w-0 gap-1.5">
                 <span class="text-xs text-main-300 font-900 uppercase">Адрес</span>
                 <button
-                  class="min-h-12 w-full flex items-center gap-3 border border-white/10 rounded-2xl bg-white/6 px-4 py-3 text-left text-sm outline-none transition active:scale-[0.99]"
+                  class="min-h-12 min-w-0 w-full flex items-center gap-3 overflow-hidden border border-white/10 rounded-2xl bg-white/6 px-4 py-3 text-left text-sm outline-none transition active:scale-[0.99]"
                   type="button"
                   @click="openAddressSearch()"
                 >
                   <span class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full bg-main-500/14 text-main-200">
                     <span class="i-mdi-map-search-outline text-5" />
                   </span>
-                  <span class="min-w-0 flex-1">
+                  <span class="min-w-0 flex-1 overflow-hidden">
                     <span
                       class="block truncate font-800"
                       :class="selectedPlace ? 'text-white' : 'text-slate-400'"
@@ -316,7 +316,7 @@ async function submit() {
           @click.self="closeAddressSearch()"
         >
           <section
-            class="relative mx-auto max-h-[min(82vh,calc(var(--app-viewport-height)-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))] max-w-sm min-h-0 w-full flex flex-col rounded-3xl bg-secondary-950 text-white shadow-2xl shadow-black/35"
+            class="relative mx-auto max-h-[min(82vh,calc(var(--app-viewport-height)-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))] max-w-sm min-h-0 min-w-0 w-full flex flex-col overflow-hidden rounded-3xl bg-secondary-950 text-white shadow-2xl shadow-black/35"
           >
             <header class="shrink-0 border-b border-white/8 px-5 pb-4 pt-3">
               <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-white/14" />
@@ -339,7 +339,7 @@ async function submit() {
                 </button>
               </div>
 
-              <label class="mt-4 h-13 flex items-center gap-3 border border-white/10 rounded-2xl bg-white/6 px-4 transition focus-within:border-main-400">
+              <label class="mt-4 h-13 min-w-0 flex items-center gap-3 border border-white/10 rounded-2xl bg-white/6 px-4 transition focus-within:border-main-400">
                 <span class="i-mdi-magnify shrink-0 text-5 text-main-300" />
                 <input
                   ref="addressSearchInput"
