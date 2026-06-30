@@ -109,10 +109,10 @@ function statusClass(value: SupportRoomStatus) {
       >
         <div class="min-w-0">
           <p class="truncate text-sm font-900">
-            {{ room.id }}
+            {{ room.participant_name || room.id }}
           </p>
           <p class="mt-0.5 truncate text-xs text-white/42">
-            {{ room.passenger_id }}
+            {{ room.participant_phone || room.passenger_id }}
           </p>
         </div>
 

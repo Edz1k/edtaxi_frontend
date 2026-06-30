@@ -14,12 +14,19 @@ import type {
   DriverWalletTopUpPayload,
   DriverWalletTopUpResponse,
 } from '~/types/driver'
+import type { DriverOverview } from '~/types/driver-overview'
 import type { ActiveTripResponse, Trip } from '~/types/trips'
 import { apiRequest } from '~/api/client'
 import { acceptParkInvite } from '~/api/park'
 
 export function getDriverProfile() {
   return apiRequest<DriverProfile>('/driver/profile')
+}
+
+// getDriverOverview — личный кабинет водителя о себе: анкета, машины, рейтинг
+// и история его снижения.
+export function getDriverOverview() {
+  return apiRequest<DriverOverview>('/driver/overview')
 }
 
 export function createDriverProfile() {

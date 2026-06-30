@@ -7,6 +7,11 @@ export interface SupportRoom {
   id: string
   participant_type: SupportParticipantType
   passenger_id: string
+  // participant_* подтягиваются бэкендом из анкеты участника, чтобы показывать
+  // имя вместо UUID. Могут отсутствовать, если анкета не найдена.
+  participant_name?: string
+  participant_phone?: string
+  participant_avatar_url?: null | string
   status: SupportRoomStatus
   updated_at: string
 }
