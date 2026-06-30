@@ -26,6 +26,25 @@ export interface CreateTripPayload extends EstimateTripPayload {
   pickup_lng: number
 }
 
+// TripDriver — данные назначенного водителя, которые видит пассажир, когда заказ
+// принят (бэкенд добавляет объект driver к поездке при наличии водителя).
+export interface TripDriverVehicle {
+  make: string
+  model: string
+  plate_number: string
+  color: string
+  category: string
+}
+
+export interface TripDriver {
+  name?: string
+  avatar_url?: null | string
+  phone?: string
+  rating: number
+  total_trips: number
+  vehicle?: TripDriverVehicle
+}
+
 export interface Trip {
   cancelled_at?: null | string
   cancelled_by?: null | string
@@ -33,6 +52,7 @@ export interface Trip {
   completed_at?: null | string
   created_at?: string
   distance_km: number
+  driver?: null | TripDriver
   driver_assigned_at?: null | string
   driver_id?: null | string
   dropoff_address: string
