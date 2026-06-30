@@ -22,6 +22,9 @@
     var(--tg-viewport-content-safe-area-inset-left, 0px)
   );
   --app-navbar-top-gap: 2rem;
+  --app-menu-home-top-gap: 2.6rem;
+  --app-menu-inner-top-gap: 7.75rem;
+  --app-route-header-top-gap: 2.25rem;
   --app-viewport-height: var(--tg-viewport-height, 100vh);
 }
 
@@ -64,6 +67,19 @@ body,
 
 .tg-safe-top-relaxed {
   padding-top: calc(var(--app-navbar-top-gap) + var(--app-safe-area-top));
+}
+
+.tg-route-header-safe {
+  padding-top: calc(var(--app-route-header-top-gap) + var(--app-safe-area-top));
+}
+
+.tg-menu-home-safe {
+  padding-top: calc(var(--app-menu-home-top-gap) + var(--app-safe-area-top));
+  padding-bottom: calc(7.25rem + var(--app-safe-area-bottom));
+}
+
+.tg-menu-inner-safe {
+  padding-top: calc(var(--app-menu-inner-top-gap) + var(--app-safe-area-top));
 }
 
 .tg-safe-bottom {

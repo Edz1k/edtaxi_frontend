@@ -14,7 +14,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <header class="tg-safe-top tg-safe-x pointer-events-none absolute inset-x-0 top-0 z-40">
+  <header class="tg-safe-x tg-route-header-safe pointer-events-none absolute inset-x-0 top-0 z-40">
     <div class="pointer-events-auto mx-auto h-15 max-w-sm flex items-center gap-3 border border-white/10 rounded-2xl bg-secondary-950/76 px-2 shadow-[0_14px_40px_rgba(0,0,0,0.24)] backdrop-blur-xl">
       <button
         :aria-label="backLabel"

@@ -37,7 +37,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+7.25rem)] pt-[calc(var(--app-safe-area-top)+1.35rem)] text-white">
+  <main class="tg-safe-x tg-menu-home-safe h-full overflow-y-auto bg-secondary-900 text-white">
     <section class="mx-auto max-w-sm">
       <header class="flex items-center gap-4">
         <Avatar

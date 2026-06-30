@@ -63,7 +63,7 @@ const isClosed = computed(() => support.room ? support.room.status !== 'open' : 
 </script>
 
 <template>
-  <main class="tg-safe-x h-full flex flex-col bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)] text-white">
+  <main class="tg-safe-x tg-menu-inner-safe h-full flex flex-col bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1rem)] text-white">
     <section class="mx-auto max-w-sm min-h-0 w-full flex flex-1 flex-col">
       <!-- Status -->
       <div class="mb-3 flex shrink-0 items-center gap-2">
