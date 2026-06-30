@@ -142,7 +142,7 @@ async function submit() {
         class="mt-10 rounded-3xl bg-white/5 px-5 py-8 text-center"
       >
         <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-main-500/16 text-main-200">
-          <span class="i-mdi-map-marker-heart-outline text-8" />
+          <span class="i-mdi:heart-outline text-8" />
         </div>
         <h2 class="mt-4 text-xl font-950">
           Избранных мест нет
