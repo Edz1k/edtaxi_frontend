@@ -49,6 +49,17 @@ const participantLabel = computed(() => {
   return support.currentRoom?.participant_type === 'driver' ? 'Водитель' : 'Пассажир'
 })
 
+// Ссылка в кабинет участника: водителя — /drivers/:id, пассажира — /passengers/:id
+// (passenger_id здесь — это user_id участника).
+const participantProfileLink = computed(() => {
+  const room = support.currentRoom
+  if (!room?.passenger_id)
+    return ''
+  return room.participant_type === 'driver'
+    ? `/drivers/${room.passenger_id}`
+    : `/passengers/${room.passenger_id}`
+})
+
 definePage({
   meta: {
     authRedirect: '/support/login',
@@ -139,8 +150,8 @@ const isClosed = computed(() => support.currentRoom?.status === 'closed')
             </div>
             <div class="min-w-0">
               <RouterLink
-                v-if="support.currentRoom?.participant_type === 'driver' && support.currentRoom?.passenger_id"
-                :to="`/drivers/${support.currentRoom.passenger_id}`"
+                v-if="participantProfileLink"
+                :to="participantProfileLink"
                 class="flex items-center gap-1 truncate text-sm text-cyan-200 font-900 hover:underline"
               >
                 {{ support.currentRoom?.participant_name || participantLabel }}

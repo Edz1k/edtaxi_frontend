@@ -80,8 +80,16 @@ function photos(items: Array<{ label: string, url: null | string }>) {
             <p class="mt-0.5 text-sm text-white/60 font-800">
               {{ vehicle.plate_number }} · {{ vehicle.color }} · {{ vehicle.category }}
             </p>
-            <p class="mt-0.5 text-xs text-white/40">
-              Водитель: {{ vehicle.driver_id }} · {{ formatDate(vehicle.created_at) }}
+            <p class="mt-1 text-xs text-white/45">
+              <RouterLink
+                v-if="vehicle.driver_user_id"
+                :to="`/drivers/${vehicle.driver_user_id}`"
+                class="text-cyan-200 font-800 hover:underline"
+              >
+                {{ vehicle.driver_name || 'Водитель' }}
+              </RouterLink>
+              <span v-else class="font-800">{{ vehicle.driver_name || 'Водитель' }}</span>
+              · {{ formatDate(vehicle.created_at) }}
             </p>
           </div>
 
@@ -140,8 +148,16 @@ function photos(items: Array<{ label: string, url: null | string }>) {
             <p class="text-base font-950">
               Ежедневная проверка
             </p>
-            <p class="mt-0.5 text-xs text-white/40">
-              Водитель: {{ check.driver_id }} · {{ formatDate(check.created_at) }}
+            <p class="mt-1 text-xs text-white/45">
+              <RouterLink
+                v-if="check.driver_user_id"
+                :to="`/drivers/${check.driver_user_id}`"
+                class="text-cyan-200 font-800 hover:underline"
+              >
+                {{ check.driver_name || 'Водитель' }}
+              </RouterLink>
+              <span v-else class="font-800">{{ check.driver_name || 'Водитель' }}</span>
+              · {{ formatDate(check.created_at) }}
             </p>
           </div>
 

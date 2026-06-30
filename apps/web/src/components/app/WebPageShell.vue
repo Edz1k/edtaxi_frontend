@@ -24,7 +24,12 @@ withDefaults(defineProps<{
     <section class="relative mx-auto max-w-1180px">
       <header class="flex flex-wrap items-center justify-between gap-4 border border-white/12 rounded-3xl bg-white/8 px-5 py-4 backdrop-blur-xl">
         <div>
-          <RouterLink v-if="backTo" class="text-sm text-cyan-200 font-900" :to="backTo">
+          <RouterLink
+            v-if="backTo"
+            class="mb-2 h-9 inline-flex items-center gap-1.5 border border-white/10 rounded-full bg-white/8 pl-2 pr-3.5 text-sm text-cyan-200 font-900 transition hover:bg-white/14"
+            :to="backTo"
+          >
+            <span class="i-mdi-arrow-left text-4.5" />
             {{ backLabel || eyebrow || 'Назад' }}
           </RouterLink>
           <p v-else-if="eyebrow" class="text-sm text-cyan-200 font-900">
