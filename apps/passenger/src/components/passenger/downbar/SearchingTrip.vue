@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { EstimateTripResponse, Trip, VehicleCategory } from '~/types/trips'
+import { mediaUrl } from '~/api/client'
 import { shareTripLink } from '~/api/share'
 import { formatFare, TARIFF_META } from '~/constants/tariffs'
 import { usePlacesStore } from '~/stores/places'
@@ -114,16 +115,21 @@ const fareText = computed(() => {
 
 const category = computed(() => props.activeTrip?.category ?? props.selectedCategory)
 
+// Водитель показывается, когда заказ принят (бэкенд добавляет объект driver).
+const driver = computed(() => props.activeTrip?.driver ?? null)
+
 const { share, isSupported: isShareSupported } = useShare()
 const { copy, copied: linkCopied } = useClipboard({ legacy: true })
 const isSharing = ref(false)
 const shareError = ref(false)
 
+const TRAILING_SLASH_RE = /\/$/
+
 function getShareBaseUrl() {
   const configuredUrl = (import.meta.env.VITE_SHARE_URL || import.meta.env.VITE_PUBLIC_SITE_URL) as string | undefined
 
   if (configuredUrl)
-    return configuredUrl.replace(/\/$/, '')
+    return configuredUrl.replace(TRAILING_SLASH_RE, '')
 
   return window.location.origin
 }
@@ -181,6 +187,36 @@ async function shareTrip() {
       <p class="mt-1 text-xs text-slate-400 font-700">
         {{ TARIFF_META[category].label }} · {{ fareText }}
       </p>
+    </div>
+
+    <!-- Карточка водителя — показывается после принятия заказа -->
+    <div v-if="driver" class="mt-3 flex items-center gap-3 rounded-2xl bg-white/5 px-3 py-3 text-left">
+      <div class="h-14 w-14 flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10">
+        <img v-if="driver.avatar_url" :src="mediaUrl(driver.avatar_url)" alt="" class="h-full w-full object-cover">
+        <span v-else class="i-mdi-account text-7 text-slate-400" />
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <p class="flex items-center gap-1.5 truncate text-sm font-900">
+          {{ driver.name || 'Водитель' }}
+          <span class="shrink-0 text-xs text-amber-300 font-800">★ {{ driver.rating.toFixed(1) }}</span>
+        </p>
+        <p v-if="driver.vehicle" class="mt-0.5 truncate text-xs text-slate-400 font-700">
+          {{ driver.vehicle.make }} {{ driver.vehicle.model }} · {{ driver.vehicle.color }}
+        </p>
+        <p v-if="driver.vehicle" class="mt-0.5 inline-block rounded-md bg-white/10 px-2 py-0.5 text-xs font-900 tracking-wide">
+          {{ driver.vehicle.plate_number }}
+        </p>
+      </div>
+
+      <a
+        v-if="driver.phone"
+        :href="`tel:${driver.phone}`"
+        class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full bg-main-500/20 text-main-300 transition active:scale-[0.95]"
+        aria-label="Позвонить водителю"
+      >
+        <span class="i-mdi-phone text-5" />
+      </a>
     </div>
 
     <label
