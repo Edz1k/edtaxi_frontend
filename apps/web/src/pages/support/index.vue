@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SupportParticipantType, SupportRoomStatus } from '~/types/support'
+import type { SupportParticipantType, SupportRoom, SupportRoomStatus } from '~/types/support'
 import AppSelectDropdown from '~/components/app/AppSelectDropdown.vue'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { useListFilter } from '~/composables/useListFilter'
@@ -9,6 +9,29 @@ import { formatDate } from '~/utils/format'
 const support = useSupportStore()
 const { value: participantType, model: participantFilter } = useListFilter<SupportParticipantType>('passenger')
 const { value: status, model: statusFilter } = useListFilter<SupportRoomStatus>('open')
+const query = ref('')
+
+// Поиск по имени и номеру телефона участника (по уже загруженному списку).
+const filteredRooms = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  if (!q)
+    return support.rooms
+  return support.rooms.filter((room) => {
+    const name = (room.participant_name || '').toLowerCase()
+    const phone = (room.participant_phone || '').toLowerCase()
+    return name.includes(q) || phone.includes(q)
+  })
+})
+
+// Ссылка в кабинет участника: водитель → /drivers/:id, пассажир → /passengers/:id
+// (passenger_id здесь — user_id участника).
+function profileLink(room: SupportRoom) {
+  if (!room.passenger_id)
+    return ''
+  return room.participant_type === 'driver'
+    ? `/drivers/${room.passenger_id}`
+    : `/passengers/${room.passenger_id}`
+}
 
 const statuses: Array<{ label: string, value: SupportRoomStatus | '' }> = [
   { label: 'Все', value: '' },
@@ -40,7 +63,7 @@ onMounted(() => {
 watch([participantType, status], () => loadRooms())
 
 function loadRooms() {
-  support.loadRooms({ participant_type: participantType.value || undefined, status: status.value || undefined }).catch(() => {})
+  support.loadRooms({ participant_type: participantType.value || undefined, status: status.value || undefined, limit: 100 }).catch(() => {})
 }
 
 function participantLabel(value: SupportParticipantType) {
@@ -84,7 +107,18 @@ function statusClass(value: SupportRoomStatus) {
       <AppSelectDropdown v-model="statusFilter" label="Статус" :options="statuses" />
     </template>
 
-    <div class="mt-5 overflow-hidden border border-white/10 rounded-3xl bg-white/8 backdrop-blur">
+    <div class="relative mt-5">
+      <span class="i-mdi-magnify absolute left-3.5 top-1/2 text-5 text-white/40 -translate-y-1/2" />
+      <input
+        v-model="query"
+        aria-label="Поиск по имени или номеру"
+        class="h-11 w-full border border-white/10 rounded-2xl bg-white/8 pl-11 pr-4 text-sm text-white outline-none transition focus:border-cyan-400/50"
+        placeholder="Поиск по имени или номеру телефона"
+        type="search"
+      >
+    </div>
+
+    <div class="mt-3 overflow-hidden border border-white/10 rounded-3xl bg-white/8 backdrop-blur">
       <div class="grid-cols-[minmax(180px,1fr)_120px_120px_150px_120px] hidden gap-3 border-b border-white/8 px-4 py-3 text-xs text-white/42 font-900 uppercase md:grid">
         <span>Обращение</span>
         <span>Тип</span>
@@ -97,18 +131,26 @@ function statusClass(value: SupportRoomStatus) {
         Загружаем обращения...
       </div>
 
-      <div v-else-if="!support.rooms.length" class="px-4 py-6 text-sm text-white/50">
-        Обращений нет.
+      <div v-else-if="!filteredRooms.length" class="px-4 py-6 text-sm text-white/50">
+        {{ query ? 'Ничего не найдено.' : 'Обращений нет.' }}
       </div>
 
       <div
-        v-for="room in support.rooms"
+        v-for="room in filteredRooms"
         v-else
         :key="room.id"
         class="grid gap-3 border-b border-white/6 px-4 py-4 md:grid-cols-[minmax(180px,1fr)_120px_120px_150px_120px] md:items-center last:border-b-0"
       >
         <div class="min-w-0">
-          <p class="truncate text-sm font-900">
+          <RouterLink
+            v-if="profileLink(room)"
+            :to="profileLink(room)"
+            class="flex items-center gap-1 truncate text-sm text-cyan-200 font-900 hover:underline"
+          >
+            {{ room.participant_name || room.id }}
+            <span class="i-mdi-open-in-new shrink-0 text-3.5 text-cyan-300/70" />
+          </RouterLink>
+          <p v-else class="truncate text-sm font-900">
             {{ room.participant_name || room.id }}
           </p>
           <p class="mt-0.5 truncate text-xs text-white/42">
