@@ -55,7 +55,6 @@ async function loadMore() {
     offset.value = nextOffset
   }
 }
-
 </script>
 
 <template>
@@ -111,7 +110,7 @@ async function loadMore() {
       <button
         v-if="hasMore"
         :disabled="admin.isLoadingTrips"
-        class="h-9 rounded-xl border border-white/12 bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12 disabled:opacity-50"
+        class="h-9 border border-white/12 rounded-xl bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12 disabled:opacity-50"
         type="button"
         @click="loadMore"
       >
@@ -144,6 +143,16 @@ async function loadMore() {
           <span class="mt-1 block">{{ admin.selectedTrip.dropoff_address }}</span>
         </p>
       </div>
+
+      <RouterLink
+        v-if="admin.selectedTrip.passenger_id"
+        :to="`/passengers/${admin.selectedTrip.passenger_id}`"
+        class="mt-3 inline-flex items-center gap-1.5 text-sm text-cyan-200 font-900 hover:underline"
+      >
+        <span class="i-mdi-account text-4.5" />
+        Кабинет пассажира
+        <span class="i-mdi-open-in-new text-3.5 text-cyan-300/70" />
+      </RouterLink>
     </section>
   </WebPageShell>
 </template>

@@ -96,6 +96,12 @@ function userRoles(user: AdminUser): AdminUserRole[] {
   return user.role ? [user.role] : []
 }
 
+// Кабинет пользователя: водителя открываем как /drivers/:id, остальных как
+// /passengers/:id (страница пассажира работает для любого пользователя).
+function profileLink(user: AdminUser) {
+  return userRoles(user).includes('driver') ? `/drivers/${user.id}` : `/passengers/${user.id}`
+}
+
 function roleLabel(role: AdminUserRole) {
   return roles.find(item => item.value === role)?.label ?? role
 }
@@ -151,9 +157,13 @@ function toggleRole(user: AdminUser, role: AdminAssignableRole) {
         class="grid gap-3 border-b border-white/6 px-4 py-4 md:grid-cols-[minmax(180px,1fr)_minmax(260px,1.25fr)_100px_130px] md:items-center last:border-b-0"
       >
         <div class="min-w-0">
-          <p class="truncate text-sm font-900">
+          <RouterLink
+            :to="profileLink(user)"
+            class="flex items-center gap-1 truncate text-sm text-cyan-200 font-900 hover:underline"
+          >
             {{ displayName(user) }}
-          </p>
+            <span class="i-mdi-open-in-new shrink-0 text-3.5 text-cyan-300/70" />
+          </RouterLink>
           <p class="mt-0.5 truncate text-xs text-white/42">
             {{ user.phone }}
           </p>
@@ -193,7 +203,7 @@ function toggleRole(user: AdminUser, role: AdminAssignableRole) {
                   :key="item.value"
                   :disabled="admin.isMutating || (!canGrantRole(user, item.value) && !canRevokeRole(user, item.value))"
                   :model-value="userRoles(user).includes(item.value)"
-                  class="relative flex cursor-pointer select-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/78 font-800 outline-none transition data-disabled:pointer-events-none data-highlighted:bg-white/10 data-highlighted:text-white data-disabled:opacity-45"
+                  class="data-disabled:pointer-events-none data-highlighted:bg-white/10 data-highlighted:text-white data-disabled:opacity-45 relative flex cursor-pointer select-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/78 font-800 outline-none transition"
                   @update:model-value="toggleRole(user, item.value)"
                 >
                   <span class="h-5 w-5 flex shrink-0 items-center justify-center border border-white/14 rounded-md bg-white/6">
@@ -244,7 +254,7 @@ function toggleRole(user: AdminUser, role: AdminAssignableRole) {
       <button
         v-if="hasMore"
         :disabled="admin.isLoadingUsers"
-        class="h-9 rounded-xl border border-white/12 bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12 disabled:opacity-50"
+        class="h-9 border border-white/12 rounded-xl bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12 disabled:opacity-50"
         type="button"
         @click="loadMore"
       >
