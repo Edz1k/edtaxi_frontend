@@ -26,6 +26,9 @@ const LIMIT = 20
 const offset = ref(0)
 const hasMore = computed(() => offset.value + LIMIT < admin.usersTotal)
 
+const searchInput = ref('')
+const search = refDebounced(searchInput, 350)
+
 const roles: Array<{ label: string, value: AdminUserRole | '' }> = [
   { label: 'Все', value: '' },
   { label: 'Суперадмины', value: 'superadmin' },
@@ -68,18 +71,18 @@ onMounted(() => {
   load()
 })
 
-watch(role, () => {
+watch([role, search], () => {
   offset.value = 0
   load()
 })
 
 function load() {
-  admin.loadUsers({ role: role.value || undefined, limit: LIMIT, offset: offset.value }).catch(() => {})
+  admin.loadUsers({ role: role.value || undefined, search: search.value || undefined, limit: LIMIT, offset: offset.value }).catch(() => {})
 }
 
 async function loadMore() {
   const nextOffset = offset.value + LIMIT
-  const response = await admin.loadUsers({ role: role.value || undefined, limit: LIMIT, offset: nextOffset }).catch(() => null)
+  const response = await admin.loadUsers({ role: role.value || undefined, search: search.value || undefined, limit: LIMIT, offset: nextOffset }).catch(() => null)
   if (response) {
     offset.value = nextOffset
   }
@@ -134,7 +137,18 @@ function toggleRole(user: AdminUser, role: AdminAssignableRole) {
       <AppSelectDropdown v-model="roleFilter" label="Фильтр ролей" :options="roles" />
     </template>
 
-    <div class="mt-5 overflow-hidden border border-white/10 rounded-3xl bg-white/8 backdrop-blur">
+    <div class="relative mt-5">
+      <span class="i-mdi-magnify absolute left-3.5 top-1/2 text-5 text-white/40 -translate-y-1/2" />
+      <input
+        v-model="searchInput"
+        aria-label="Поиск по имени или номеру"
+        class="h-11 w-full border border-white/10 rounded-2xl bg-white/8 pl-11 pr-4 text-sm text-white outline-none transition focus:border-cyan-400/50"
+        placeholder="Поиск по имени или номеру телефона"
+        type="search"
+      >
+    </div>
+
+    <div class="mt-3 overflow-hidden border border-white/10 rounded-3xl bg-white/8 backdrop-blur">
       <div class="grid-cols-[minmax(180px,1fr)_minmax(260px,1.25fr)_100px_130px] hidden gap-3 border-b border-white/8 px-4 py-3 text-xs text-white/42 font-900 uppercase md:grid">
         <span>Пользователь</span>
         <span>Роли</span>
@@ -147,7 +161,7 @@ function toggleRole(user: AdminUser, role: AdminAssignableRole) {
       </div>
 
       <div v-else-if="!admin.users.length" class="px-4 py-6 text-sm text-white/50">
-        Пользователей нет.
+        {{ search ? 'Ничего не найдено.' : 'Пользователей нет.' }}
       </div>
 
       <div
