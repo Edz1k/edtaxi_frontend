@@ -6,6 +6,7 @@ import type {
   AdminListTripsResponse,
   AdminListUsersParams,
   AdminListUsersResponse,
+  AdminSupportStats,
   AdminTechSupportNumber,
   AdminTechSupportNumberPayload,
   AdminUpdateUserRolesPayload,
@@ -70,6 +71,10 @@ export function createParkOwner(payload: CreateParkOwnerPayload) {
 
 export function listTechSupportNumbers() {
   return apiRequest<AdminListTechSupportNumbersResponse>('/admin/tech-support-numbers')
+}
+
+export function getSupportStats() {
+  return apiRequest<AdminSupportStats>('/admin/support/stats')
 }
 
 export function addTechSupportNumber(payload: AdminTechSupportNumberPayload) {

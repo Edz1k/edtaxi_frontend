@@ -39,7 +39,15 @@ async function send() {
   await support.sendMessage(message, 'driver')
 }
 
-const isClosed = computed(() => support.room ? support.room.status !== 'open' : false)
+async function confirmClose(resolved: boolean) {
+  if (support.isSending)
+    return
+  await support.sendMessage(resolved ? 'да' : 'Нет, проблема не решена', 'driver')
+}
+
+const isClosed = computed(() => support.room?.status === 'closed')
+const isPendingClose = computed(() => support.room?.status === 'pending_close')
+const agentLabel = computed(() => support.room?.agent_name ? `Техподдержка ${support.room.agent_name}` : 'открыто')
 </script>
 
 <template>
@@ -56,9 +64,34 @@ const isClosed = computed(() => support.room ? support.room.status !== 'open' : 
           Поддержка
         </h1>
         <p class="mt-1 text-sm text-slate-400">
-          Обращение {{ isClosed ? 'закрыто' : 'открыто' }}
+          {{ isClosed ? 'Обращение закрыто' : agentLabel }}
         </p>
       </header>
+
+      <!-- Подтверждение закрытия -->
+      <div v-if="isPendingClose" class="mt-4 shrink-0 rounded-2xl bg-amber-500/12 px-4 py-3">
+        <p class="text-sm text-amber-200 font-800">
+          Ваша проблема решена?
+        </p>
+        <div class="mt-2.5 flex gap-2">
+          <button
+            :disabled="support.isSending"
+            class="h-10 flex-1 rounded-xl bg-emerald-400 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-60"
+            type="button"
+            @click="confirmClose(true)"
+          >
+            Да, решена
+          </button>
+          <button
+            :disabled="support.isSending"
+            class="h-10 flex-1 rounded-xl bg-white/10 text-sm text-white font-900 transition active:scale-[0.98] disabled:opacity-60"
+            type="button"
+            @click="confirmClose(false)"
+          >
+            Нет
+          </button>
+        </div>
+      </div>
 
       <section class="mt-5 min-h-0 flex-1 overflow-y-auto rounded-3xl bg-white/5 p-4">
         <div v-if="support.isLoading && !support.messages.length" class="space-y-3">

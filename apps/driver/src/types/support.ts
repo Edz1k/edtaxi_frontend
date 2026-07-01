@@ -3,6 +3,7 @@ export type SupportRoomStatus = 'closed' | 'open' | 'pending_close'
 
 export interface SupportRoom {
   agent_id: null | string
+  agent_name?: null | string
   created_at: string
   id: string
   participant_type: SupportParticipantType

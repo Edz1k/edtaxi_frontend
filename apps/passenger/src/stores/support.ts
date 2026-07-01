@@ -1,7 +1,7 @@
 import type { SupportMessage, SupportParticipantType, SupportRoom } from '~/types/support'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { showErrorToast } from '~/api/errors'
-import { attachTripToSupport, closeSupportRoom, getSupportMessages, openSupportRoom, sendSupportMessage } from '~/api/support'
+import { attachTripToSupport, closeSupportRoom, getSupportMessages, getSupportRoom, openSupportRoom, sendSupportMessage } from '~/api/support'
 
 export const useSupportStore = defineStore('support', () => {
   const room = ref<SupportRoom | null>(null)
@@ -88,12 +88,25 @@ export const useSupportStore = defineStore('support', () => {
     return activeRoom
   }
 
+  // refreshRoom подтягивает актуальный статус/агента комнаты (напр. когда агент
+  // перевёл обращение в pending_close, чтобы показать кнопки «да/нет»).
+  async function refreshRoom() {
+    if (!room.value)
+      return
+    try {
+      room.value = await getSupportRoom(room.value.id)
+    }
+    catch {}
+  }
+
   function receiveMessage(message: SupportMessage & { room_id: string }) {
     if (!room.value || message.room_id !== room.value.id)
       return
     if (messages.value.some(m => m.id === message.id))
       return
     messages.value = [...messages.value, message]
+    // входящее от агента могло сменить статус (завершение) — обновим комнату.
+    refreshRoom()
   }
 
   async function closeRoom() {
@@ -138,6 +151,7 @@ export const useSupportStore = defineStore('support', () => {
     loadMessages,
     messages,
     receiveMessage,
+    refreshRoom,
     room,
     sendMessage,
   }
