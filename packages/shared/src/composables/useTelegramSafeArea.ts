@@ -1,3 +1,4 @@
+import { onMounted, readonly, ref } from 'vue'
 import { isTMA, viewport } from '@telegram-apps/sdk'
 import { initTelegramSdk } from './telegram/sdk'
 
@@ -57,4 +58,14 @@ export function useTelegramSafeArea() {
   return {
     isReady: readonly(isReady),
   }
+}
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    stopViewportCssVars?.()
+    stopFullscreenClassSync?.()
+    stopViewportCssVars = undefined
+    stopFullscreenClassSync = undefined
+    mountPromise = undefined
+  })
 }

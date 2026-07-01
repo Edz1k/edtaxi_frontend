@@ -53,7 +53,7 @@ declare global {
   const isShallow: typeof import('vue').isShallow
   const makeDestructurable: typeof import('@vueuse/core').makeDestructurable
   const markRaw: typeof import('vue').markRaw
-  const mountTelegramSafeArea: typeof import('./composables/useTelegramSafeArea').mountTelegramSafeArea
+  const mountTelegramSafeArea: typeof import('@edtaxi/shared/composables/useTelegramSafeArea').mountTelegramSafeArea
   const nextTick: typeof import('vue').nextTick
   const onActivated: typeof import('vue').onActivated
   const onBeforeMount: typeof import('vue').onBeforeMount
@@ -268,7 +268,7 @@ declare global {
   const useSupportStore: typeof import('./stores/support').useSupportStore
   const useSupported: typeof import('@vueuse/core').useSupported
   const useSwipe: typeof import('@vueuse/core').useSwipe
-  const useTelegramSafeArea: typeof import('./composables/useTelegramSafeArea').useTelegramSafeArea
+  const useTelegramSafeArea: typeof import('@edtaxi/shared/composables/useTelegramSafeArea').useTelegramSafeArea
   const useTemplateRef: typeof import('vue').useTemplateRef
   const useTemplateRefsList: typeof import('@vueuse/core').useTemplateRefsList
   const useTextDirection: typeof import('@vueuse/core').useTextDirection
@@ -384,7 +384,7 @@ declare module 'vue' {
     readonly isShallow: UnwrapRef<typeof import('vue')['isShallow']>
     readonly makeDestructurable: UnwrapRef<typeof import('@vueuse/core')['makeDestructurable']>
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
-    readonly mountTelegramSafeArea: UnwrapRef<typeof import('./composables/useTelegramSafeArea')['mountTelegramSafeArea']>
+    readonly mountTelegramSafeArea: UnwrapRef<typeof import('@edtaxi/shared/composables/useTelegramSafeArea')['mountTelegramSafeArea']>
     readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
     readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
     readonly onBeforeMount: UnwrapRef<typeof import('vue')['onBeforeMount']>
@@ -599,7 +599,7 @@ declare module 'vue' {
     readonly useSupportStore: UnwrapRef<typeof import('./stores/support')['useSupportStore']>
     readonly useSupported: UnwrapRef<typeof import('@vueuse/core')['useSupported']>
     readonly useSwipe: UnwrapRef<typeof import('@vueuse/core')['useSwipe']>
-    readonly useTelegramSafeArea: UnwrapRef<typeof import('./composables/useTelegramSafeArea')['useTelegramSafeArea']>
+    readonly useTelegramSafeArea: UnwrapRef<typeof import('@edtaxi/shared/composables/useTelegramSafeArea')['useTelegramSafeArea']>
     readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>
     readonly useTemplateRefsList: UnwrapRef<typeof import('@vueuse/core')['useTemplateRefsList']>
     readonly useTextDirection: UnwrapRef<typeof import('@vueuse/core')['useTextDirection']>

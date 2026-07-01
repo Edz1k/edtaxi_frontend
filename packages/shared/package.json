@@ -20,8 +20,10 @@
     "./types/wallet": "./src/types/wallet.ts",
     "./uno.base": "./src/uno.base.ts"
   },
+  "peerDependencies": {
+    "@telegram-apps/sdk": "catalog:frontend"
+  },
   "dependencies": {
-    "@telegram-apps/sdk": "catalog:frontend",
     "axios": "catalog:build",
     "pinia": "catalog:frontend",
     "reka-ui": "catalog:frontend",
