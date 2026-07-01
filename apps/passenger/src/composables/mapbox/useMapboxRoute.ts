@@ -1,7 +1,7 @@
 import type { GeoJSONSource, LngLatBoundsLike, Map, Marker } from 'mapbox-gl'
 import type { ComputedRef, ShallowRef } from 'vue'
 import type { MapboxModule } from '~/composables/mapbox/useMapboxMap'
-import type { GeoPlace, RouteCoordinate } from '~/types/geocoding'
+import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 
 interface UseMapboxRouteOptions {
   destinationPlace: ComputedRef<GeoPlace | null>

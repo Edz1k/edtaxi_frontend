@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { UserCoordinates } from '~/composables/mapbox/useUserLocation'
-import type { GeoPlace, RouteCoordinate } from '~/types/geocoding'
-import type { MapPickerMode } from '~/types/map'
+import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
+import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { PassengerDriverLocation } from '~/types/websocket'
 import PassengerMapPicker from '~/components/passenger/PassengerMapPicker.vue'
 import { useMapboxMap } from '~/composables/mapbox/useMapboxMap'

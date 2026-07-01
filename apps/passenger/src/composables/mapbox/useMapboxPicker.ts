@@ -1,8 +1,8 @@
 import type { Map } from 'mapbox-gl'
 import type { ComputedRef, Ref, ShallowRef } from 'vue'
 import type { UserCoordinates } from '~/composables/mapbox/useUserLocation'
-import type { GeoPlace, RouteCoordinate } from '~/types/geocoding'
-import type { MapPickerMode } from '~/types/map'
+import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
+import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import { reverseGeocodePlace } from '~/api/geocoding'
 
 interface UseMapboxPickerOptions {

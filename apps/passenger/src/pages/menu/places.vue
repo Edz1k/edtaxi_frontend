@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { GeoPlace } from '~/types/geocoding'
-import type { FavoritePlace } from '~/types/places'
+import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
+import type { FavoritePlace } from '@edtaxi/shared/types/places'
 import AddressSuggestions from '~/components/passenger/downbar/AddressSuggestions.vue'
 import { useAddressSearch } from '~/composables/passenger/useAddressSearch'
 import { usePlacesStore } from '~/stores/places'

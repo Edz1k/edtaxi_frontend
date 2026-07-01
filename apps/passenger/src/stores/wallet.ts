@@ -1,4 +1,4 @@
-import type { Wallet, WalletTransaction } from '~/types/wallet'
+import type { Wallet, WalletTransaction } from '@edtaxi/shared/types/wallet'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { showErrorToast } from '~/api/errors'
 import { getWallet, getWalletHistory, topUpWallet } from '~/api/wallet'

@@ -15,8 +15,8 @@ import {
   saveDeviceFingerprint,
   saveOtpDeliveryMethod,
   savePendingPhone,
-} from '~/composables/auth/session'
-import { getTelegramInitData, isTelegramWebApp } from '~/composables/auth/telegram'
+} from '@edtaxi/shared/composables/auth/session'
+import { getTelegramInitData, isTelegramWebApp } from '@edtaxi/shared/composables/auth/telegram'
 import { usePassengerStore } from '~/stores/passenger'
 import { useSupportStore } from '~/stores/support'
 import { useTripsStore } from '~/stores/trips'

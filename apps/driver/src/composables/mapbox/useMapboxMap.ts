@@ -1,6 +1,6 @@
 import type { Map, Marker } from 'mapbox-gl'
 import type { UserCoordinates } from '~/composables/mapbox/useUserLocation'
-import type { GeoPlace } from '~/types/geocoding'
+import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import type { PassengerDriverLocation } from '~/types/websocket'
 
 export type MapboxModule = typeof import('mapbox-gl')

@@ -1,4 +1,4 @@
-import type { GeoPlace } from '~/types/geocoding'
+import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import { searchPlaces } from '~/api/geocoding'
 
 interface UseAddressSearchOptions {

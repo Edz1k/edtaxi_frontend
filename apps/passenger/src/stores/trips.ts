@@ -1,5 +1,5 @@
-import type { GeoPlace, RouteCoordinate } from '~/types/geocoding'
-import type { MapPickerMode } from '~/types/map'
+import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
+import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, Trip, TripFlowState, VehicleCategory } from '~/types/trips'
 import type { PassengerDriverLocation } from '~/types/websocket'
 import { acceptHMRUpdate, defineStore } from 'pinia'

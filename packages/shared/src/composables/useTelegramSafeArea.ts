@@ -1,5 +1,5 @@
 import { isTMA, viewport } from '@telegram-apps/sdk'
-import { initTelegramSdk } from '~/composables/telegram/sdk'
+import { initTelegramSdk } from './telegram/sdk'
 
 let stopViewportCssVars: VoidFunction | undefined
 let stopFullscreenClassSync: VoidFunction | undefined

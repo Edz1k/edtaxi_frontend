@@ -5,7 +5,7 @@ import AuthError from '~/components/auth/AuthError.vue'
 import AuthScreen from '~/components/auth/AuthScreen.vue'
 import PhoneInput from '~/components/auth/PhoneInput.vue'
 import { isKazakhstanPhoneComplete, toKazakhstanE164 } from '~/composables/auth/phone'
-import { readyTelegramWebApp } from '~/composables/auth/telegram'
+import { readyTelegramWebApp } from '@edtaxi/shared/composables/auth/telegram'
 import { useAuthStore } from '~/stores/auth'
 
 const router = useRouter()

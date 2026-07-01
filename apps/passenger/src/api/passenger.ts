@@ -1,4 +1,4 @@
-import type { PassengerProfile, UpdatePassengerProfilePayload } from '~/types/passenger'
+import type { PassengerProfile, UpdatePassengerProfilePayload } from '@edtaxi/shared/types/passenger'
 import { apiRequest } from '~/api/client'
 
 export function getPassengerProfile() {

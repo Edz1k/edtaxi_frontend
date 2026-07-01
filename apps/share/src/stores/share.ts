@@ -1,4 +1,4 @@
-import type { GeoPlace, RouteCoordinate } from '~/types/geocoding'
+import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { Trip } from '~/types/trips'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'

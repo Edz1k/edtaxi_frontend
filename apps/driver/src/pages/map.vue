@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { GeoPlace, RouteCoordinate } from '~/types/geocoding'
+import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { DriverTripOffer } from '~/types/websocket'
 import { useThrottleFn } from '@vueuse/core'
 import { getDrivingRoute } from '~/api/geocoding'

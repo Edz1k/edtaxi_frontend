@@ -1,4 +1,4 @@
-import type { GeoPlace } from '~/types/geocoding'
+import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import { reverseGeocodePlace } from '~/api/geocoding'
 import { useToast } from '~/composables/useToast'
 

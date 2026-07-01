@@ -8,7 +8,7 @@ import type {
   RoutePayload,
   RouteResponse,
   TripRoute,
-} from '~/types/geocoding'
+} from '@edtaxi/shared/types/geocoding'
 import { apiRequest } from '~/api/client'
 
 function getSuggestResults(response: GeocodingSuggestResponse) {
