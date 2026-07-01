@@ -1,8 +1,8 @@
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { Trip } from '~/types/trips'
+import { getDrivingRoute } from '@edtaxi/shared/api/geocoding'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
-import { getDrivingRoute } from '~/api/geocoding'
 import { getSharedTrip } from '~/api/share'
 
 export const useShareStore = defineStore('share', () => {

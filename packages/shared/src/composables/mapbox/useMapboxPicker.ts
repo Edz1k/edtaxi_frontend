@@ -1,9 +1,10 @@
-import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
-import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { Map } from 'mapbox-gl'
 import type { ComputedRef, Ref, ShallowRef } from 'vue'
-import type { UserCoordinates } from '~/composables/mapbox/useUserLocation'
-import { reverseGeocodePlace } from '~/api/geocoding'
+import type { GeoPlace, RouteCoordinate } from '../../types/geocoding'
+import type { MapPickerMode } from '../../types/map'
+import type { UserCoordinates } from './useUserLocation'
+import { computed, nextTick, ref, watch } from 'vue'
+import { reverseGeocodePlace } from '../../api/geocoding'
 
 interface UseMapboxPickerOptions {
   clearRoute: () => void

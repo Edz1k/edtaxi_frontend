@@ -1,6 +1,7 @@
-import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
-import { reverseGeocodePlace } from '~/api/geocoding'
-import { useToast } from '~/composables/useToast'
+import type { GeoPlace } from '../../types/geocoding'
+import { onBeforeUnmount, ref } from 'vue'
+import { reverseGeocodePlace } from '../../api/geocoding'
+import { useToast } from '../useToast'
 
 export interface UserCoordinates {
   accuracy: number

@@ -1,7 +1,9 @@
-import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import type { Map, Marker } from 'mapbox-gl'
-import type { UserCoordinates } from '~/composables/mapbox/useUserLocation'
-import type { PassengerDriverLocation } from '~/types/websocket'
+import type { Ref } from 'vue'
+import type { GeoPlace } from '../../types/geocoding'
+import type { PassengerDriverLocation } from '../../types/websocket'
+import type { UserCoordinates } from './useUserLocation'
+import { ref, shallowRef } from 'vue'
 
 export type MapboxModule = typeof import('mapbox-gl')
 export const ALMATY_CENTER: [number, number] = [76.9286, 43.2389]

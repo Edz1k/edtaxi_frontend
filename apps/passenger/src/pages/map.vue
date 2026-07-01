@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
-import { useUserLocation } from '~/composables/mapbox/useUserLocation'
+import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { usePassengerTripSocket } from '~/composables/passenger/usePassengerTripSocket'
 import { usePassengerStore } from '~/stores/passenger'
 import { usePlacesStore } from '~/stores/places'

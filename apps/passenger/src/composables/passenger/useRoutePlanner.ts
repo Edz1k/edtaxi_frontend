@@ -1,5 +1,5 @@
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
-import { getDrivingRoute, searchPlaces } from '~/api/geocoding'
+import { getDrivingRoute, searchPlaces } from '@edtaxi/shared/api/geocoding'
 
 interface UseRoutePlannerOptions {
   destination: Ref<string>

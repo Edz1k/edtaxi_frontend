@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { UserCoordinates } from '~/composables/mapbox/useUserLocation'
+import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 
 withDefaults(defineProps<{
