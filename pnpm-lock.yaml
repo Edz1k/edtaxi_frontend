@@ -618,9 +618,15 @@ importers:
       '@unocss/preset-web-fonts':
         specifier: catalog:frontend
         version: 66.7.3
+      '@vueuse/core':
+        specifier: catalog:frontend
+        version: 14.3.0(vue@3.5.39(typescript@5.9.3))
       axios:
         specifier: catalog:build
         version: 1.18.1(debug@4.4.3)
+      mapbox-gl:
+        specifier: catalog:frontend
+        version: 3.25.0
       maska:
         specifier: catalog:frontend
         version: 3.2.0
