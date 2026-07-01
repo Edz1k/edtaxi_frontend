@@ -31,13 +31,14 @@
     "@shikijs/markdown-it": "catalog:build",
     "@types/markdown-it-link-attributes": "catalog:types",
     "@types/nprogress": "catalog:types",
-    "markdown-it-link-attributes": "catalog:build",
     "@unocss/eslint-config": "catalog:build",
     "@vitejs/plugin-vue": "catalog:build",
     "@vue-macros/volar": "catalog:dev",
     "@vue/test-utils": "catalog:dev",
+    "beasties": "catalog:build",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
+    "markdown-it-link-attributes": "catalog:build",
     "typescript": "catalog:dev",
     "unocss": "catalog:build",
     "unplugin-auto-import": "catalog:build",
@@ -49,6 +50,7 @@
     "vite-plugin-vue-devtools": "catalog:build",
     "vite-plugin-vue-layouts": "catalog:build",
     "vite-ssg": "catalog:build",
+    "vite-ssg-sitemap": "catalog:build",
     "vitest": "catalog:dev",
     "vue-tsc": "catalog:dev"
   }

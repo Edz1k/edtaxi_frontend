@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useTelegramSafeArea } from '~/composables/useTelegramSafeArea'
+import { useTelegramSafeArea } from '@edtaxi/shared/composables/useTelegramSafeArea'
 
 useTelegramSafeArea()
 

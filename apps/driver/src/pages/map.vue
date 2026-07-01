@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { GeoPlace, RouteCoordinate } from '~/types/geocoding'
+import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { DriverTripOffer } from '~/types/websocket'
 import { useThrottleFn } from '@vueuse/core'
-import { getDrivingRoute } from '~/api/geocoding'
+import { getDrivingRoute } from '@edtaxi/shared/api/geocoding'
 import { useDriverTrackingSocket } from '~/composables/driver/useDriverTrackingSocket'
-import { useUserLocation } from '~/composables/mapbox/useUserLocation'
+import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { offerToPlace } from '~/utils/geoPlace'
@@ -18,6 +18,7 @@ const {
 } = useUserLocation()
 const routeCoordinates = ref<RouteCoordinate[]>([])
 const isRouteLoading = ref(false)
+let routeVersion = 0
 
 const trackingLabel = computed(() => {
   if (tracking.status.value === 'open')
@@ -105,10 +106,13 @@ function coordsToPlace(lat: number, lng: number): GeoPlace {
 }
 
 async function resolveOfferRoute(offer: DriverTripOffer | null) {
+  const version = ++routeVersion
   routeCoordinates.value = []
 
-  if (!offer)
+  if (!offer) {
+    isRouteLoading.value = false
     return
+  }
 
   // Approaching pickup: route from driver's current position to pickup
   if (driver.activeTripStep === 'to_pickup' && liveCoordinates.value) {
@@ -120,16 +124,21 @@ async function resolveOfferRoute(offer: DriverTripOffer | null) {
     try {
       const from = coordsToPlace(liveCoordinates.value.lat, liveCoordinates.value.lng)
       const route = await getDrivingRoute(from, pickup)
+      if (version !== routeVersion)
+        return
       routeCoordinates.value = route.geometry
     }
     catch {
+      if (version !== routeVersion)
+        return
       routeCoordinates.value = [
         [liveCoordinates.value.lng, liveCoordinates.value.lat],
         [pickup.lng, pickup.lat],
       ]
     }
     finally {
-      isRouteLoading.value = false
+      if (version === routeVersion)
+        isRouteLoading.value = false
     }
     return
   }
@@ -143,16 +152,21 @@ async function resolveOfferRoute(offer: DriverTripOffer | null) {
   isRouteLoading.value = true
   try {
     const route = await getDrivingRoute(pickup, destination)
+    if (version !== routeVersion)
+      return
     routeCoordinates.value = route.geometry
   }
   catch {
+    if (version !== routeVersion)
+      return
     routeCoordinates.value = [
       [pickup.lng, pickup.lat],
       [destination.lng, destination.lat],
     ]
   }
   finally {
-    isRouteLoading.value = false
+    if (version === routeVersion)
+      isRouteLoading.value = false
   }
 }
 
@@ -186,11 +200,13 @@ async function toggleOnline() {
     tracking.close()
 }
 
-// Rebuild when offer changes
-watch(mapOffer, offer => resolveOfferRoute(offer), { immediate: true })
-
-// Rebuild when trip step changes (e.g. to_pickup → arrived switches route style)
-watch(() => driver.activeTripStep, () => resolveOfferRoute(mapOffer.value))
+// Rebuild when offer or trip step changes — single watch prevents double API call
+// when both change synchronously in the same store action (e.g. acceptOffer)
+watch(
+  [mapOffer, () => driver.activeTripStep],
+  ([offer]) => resolveOfferRoute(offer),
+  { immediate: true },
+)
 
 // Update approach route as driver moves
 watch(liveCoordinates, () => throttledApproachRebuild())

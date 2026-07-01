@@ -35,6 +35,8 @@ export default defineConfig({
         unheadVueComposablesImports,
         VueRouterAutoImports,
         { 'vue-router/auto': ['useLink'] },
+        { '@edtaxi/shared/composables/dark': ['isDark', 'preferredDark', 'toggleDark'] },
+        { '@edtaxi/shared/composables/useTelegramSafeArea': ['useTelegramSafeArea', 'mountTelegramSafeArea'] },
       ],
       dts: 'src/auto-imports.d.ts',
       dirs: ['src/composables', 'src/stores'],

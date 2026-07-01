@@ -1,5 +1,7 @@
 import type { TripStatus, VehicleCategory } from '~/types/trips'
 
+export type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
+
 export interface DriverTripOffer {
   category?: VehicleCategory
   distance_km?: number
@@ -12,13 +14,6 @@ export interface DriverTripOffer {
   pickup_lng?: number
   timeout_sec: number
   trip_id: string
-}
-
-export interface DriverLocationMessage {
-  heading?: number
-  lat: number
-  lng: number
-  speed?: number
 }
 
 export interface DriverTripOfferWireData {
@@ -61,13 +56,6 @@ export interface ChatMessageWireMessage {
 }
 
 export type DriverWebSocketMessage = ChatMessageWireMessage | DriverTripOfferWireMessage | TripStatusWireMessage
-
-export interface PassengerDriverLocation {
-  eta_sec?: number
-  heading?: number
-  lat: number
-  lng: number
-}
 
 export interface PassengerDriverLocationWireMessage {
   data: PassengerDriverLocation

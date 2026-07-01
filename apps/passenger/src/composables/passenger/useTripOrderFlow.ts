@@ -1,4 +1,4 @@
-import type { GeoPlace } from '~/types/geocoding'
+import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import { showErrorToast } from '~/api/errors'
 import { useRoutePlanner } from '~/composables/passenger/useRoutePlanner'
 import { formatFare } from '~/constants/tariffs'

@@ -1,4 +1,5 @@
-import { init, miniAppReady, openLink, retrieveRawInitData } from '@telegram-apps/sdk'
+import { miniAppReady, openLink, retrieveRawInitData } from '@telegram-apps/sdk'
+import { initTelegramSdk } from '../telegram/sdk'
 
 interface TelegramWebApp {
   expand?: () => void
@@ -6,22 +7,12 @@ interface TelegramWebApp {
   ready?: () => void
 }
 
-let isTelegramSdkInitialized = false
-
 declare global {
   interface Window {
     Telegram?: {
       WebApp?: TelegramWebApp
     }
   }
-}
-
-function initTelegramSdk() {
-  if (isTelegramSdkInitialized || typeof window === 'undefined')
-    return
-
-  init()
-  isTelegramSdkInitialized = true
 }
 
 export function getTelegramInitData() {
@@ -59,9 +50,8 @@ export function readyTelegramWebApp() {
   }
 }
 
-// openExternalLink открывает платёжную/прочую внешнюю ссылку (например окно
-// оплаты Freedom Pay) во внешнем браузере — внутри Telegram-вебвью платёжные
-// формы банков часто не работают корректно. Вне Telegram — обычный переход.
+// openExternalLink открывает внешнюю ссылку во внешнем браузере —
+// внутри Telegram-вебвью платёжные формы банков часто не работают корректно.
 export function openExternalLink(url: string) {
   if (typeof window === 'undefined')
     return

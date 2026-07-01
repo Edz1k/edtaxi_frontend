@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { WalletTransaction, WalletTransactionType } from '~/types/wallet'
+import type { WalletTransaction, WalletTransactionType } from '@edtaxi/shared/types/wallet'
 import PaymentFrameModal from '~/components/PaymentFrameModal.vue'
 import { useWalletStore } from '~/stores/wallet'
 

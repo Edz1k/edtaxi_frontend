@@ -1,4 +1,4 @@
-import type { PassengerProfile, UpdatePassengerProfilePayload } from '~/types/passenger'
+import type { PassengerProfile, UpdatePassengerProfilePayload } from '@edtaxi/shared/types/passenger'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { showErrorToast } from '~/api/errors'
 import { getPassengerProfile, updatePassengerProfile } from '~/api/passenger'

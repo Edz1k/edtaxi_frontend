@@ -1,4 +1,4 @@
-import type { CreatePlacePayload, FavoritePlace, UpdatePlacePayload } from '~/types/places'
+import type { CreatePlacePayload, FavoritePlace, UpdatePlacePayload } from '@edtaxi/shared/types/places'
 import { apiRequest } from '~/api/client'
 
 export function listPlaces() {

@@ -1,4 +1,4 @@
-import type { CreatePlacePayload, FavoritePlace, UpdatePlacePayload } from '~/types/places'
+import type { CreatePlacePayload, FavoritePlace, UpdatePlacePayload } from '@edtaxi/shared/types/places'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { createPlace, deletePlace, listPlaces, updatePlace } from '~/api/places'
 

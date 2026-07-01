@@ -1,5 +1,5 @@
-import type { GeoPlace } from '~/types/geocoding'
-import { searchPlaces } from '~/api/geocoding'
+import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
+import { searchPlaces } from '@edtaxi/shared/api/geocoding'
 
 interface UseAddressSearchOptions {
   query: Ref<string>

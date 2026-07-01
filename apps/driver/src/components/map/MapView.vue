@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { UserCoordinates } from '~/composables/mapbox/useUserLocation'
-import type { GeoPlace, RouteCoordinate } from '~/types/geocoding'
-import type { MapPickerMode } from '~/types/map'
-import type { PassengerDriverLocation } from '~/types/websocket'
+import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserLocation'
+import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
+import type { MapPickerMode } from '@edtaxi/shared/types/map'
+import type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
 import PassengerMapPicker from '~/components/passenger/PassengerMapPicker.vue'
-import { useMapboxMap } from '~/composables/mapbox/useMapboxMap'
-import { useMapboxPicker } from '~/composables/mapbox/useMapboxPicker'
-import { useMapboxRoute } from '~/composables/mapbox/useMapboxRoute'
-import { loadCachedLocation } from '~/composables/mapbox/useUserLocation'
+import { useMapboxMap } from '@edtaxi/shared/composables/mapbox/useMapboxMap'
+import { useMapboxPicker } from '@edtaxi/shared/composables/mapbox/useMapboxPicker'
+import { useMapboxRoute } from '@edtaxi/shared/composables/mapbox/useMapboxRoute'
+import { loadCachedLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 interface PassengerMapPickerExpose {

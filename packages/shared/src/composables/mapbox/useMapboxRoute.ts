@@ -1,7 +1,8 @@
 import type { GeoJSONSource, LngLatBoundsLike, Map, Marker } from 'mapbox-gl'
 import type { ComputedRef, ShallowRef } from 'vue'
-import type { MapboxModule } from '~/composables/mapbox/useMapboxMap'
-import type { GeoPlace, RouteCoordinate } from '~/types/geocoding'
+import type { GeoPlace, RouteCoordinate } from '../../types/geocoding'
+import type { MapboxModule } from './useMapboxMap'
+import { computed } from 'vue'
 
 interface UseMapboxRouteOptions {
   destinationPlace: ComputedRef<GeoPlace | null>
@@ -71,7 +72,7 @@ export function useMapboxRoute(options: UseMapboxRouteOptions) {
     if (options.destinationPlace.value)
       return [options.destinationPlace.value.lng, options.destinationPlace.value.lat]
 
-    return options.routeCoordinates.value[options.routeCoordinates.value.length - 1] ?? null
+    return options.routeCoordinates.value.at(-1) ?? null
   })
 
   function getRouteFeatureCollection() {

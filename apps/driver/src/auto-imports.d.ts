@@ -44,7 +44,7 @@ declare global {
   const inject: typeof import('vue').inject
   const injectHead: typeof import('@unhead/vue').injectHead
   const injectLocal: typeof import('@vueuse/core').injectLocal
-  const isDark: typeof import('./composables/dark').isDark
+  const isDark: typeof import('@edtaxi/shared/composables/dark').isDark
   const isDefined: typeof import('@vueuse/core').isDefined
   const isProxy: typeof import('vue').isProxy
   const isReactive: typeof import('vue').isReactive
@@ -53,7 +53,7 @@ declare global {
   const isShallow: typeof import('vue').isShallow
   const makeDestructurable: typeof import('@vueuse/core').makeDestructurable
   const markRaw: typeof import('vue').markRaw
-  const mountTelegramSafeArea: typeof import('./composables/useTelegramSafeArea').mountTelegramSafeArea
+  const mountTelegramSafeArea: typeof import('@edtaxi/shared/composables/useTelegramSafeArea').mountTelegramSafeArea
   const nextTick: typeof import('vue').nextTick
   const onActivated: typeof import('vue').onActivated
   const onBeforeMount: typeof import('vue').onBeforeMount
@@ -77,7 +77,7 @@ declare global {
   const onUpdated: typeof import('vue').onUpdated
   const onWatcherCleanup: typeof import('vue').onWatcherCleanup
   const pausableWatch: typeof import('@vueuse/core').pausableWatch
-  const preferredDark: typeof import('./composables/dark').preferredDark
+  const preferredDark: typeof import('@edtaxi/shared/composables/dark').preferredDark
   const provide: typeof import('vue').provide
   const provideLocal: typeof import('@vueuse/core').provideLocal
   const reactify: typeof import('@vueuse/core').reactify
@@ -108,7 +108,7 @@ declare global {
   const toRef: typeof import('vue').toRef
   const toRefs: typeof import('vue').toRefs
   const toValue: typeof import('vue').toValue
-  const toggleDark: typeof import('./composables/dark').toggleDark
+  const toggleDark: typeof import('@edtaxi/shared/composables/dark').toggleDark
   const triggerRef: typeof import('vue').triggerRef
   const tryOnBeforeMount: typeof import('@vueuse/core').tryOnBeforeMount
   const tryOnBeforeUnmount: typeof import('@vueuse/core').tryOnBeforeUnmount
@@ -226,7 +226,6 @@ declare global {
   const usePageLeave: typeof import('@vueuse/core').usePageLeave
   const useParallax: typeof import('@vueuse/core').useParallax
   const useParentElement: typeof import('@vueuse/core').useParentElement
-  const useParkStore: typeof import('./stores/park').useParkStore
   const usePerformanceObserver: typeof import('@vueuse/core').usePerformanceObserver
   const usePermission: typeof import('@vueuse/core').usePermission
   const usePointer: typeof import('@vueuse/core').usePointer
@@ -268,7 +267,7 @@ declare global {
   const useSupportStore: typeof import('./stores/support').useSupportStore
   const useSupported: typeof import('@vueuse/core').useSupported
   const useSwipe: typeof import('@vueuse/core').useSwipe
-  const useTelegramSafeArea: typeof import('./composables/useTelegramSafeArea').useTelegramSafeArea
+  const useTelegramSafeArea: typeof import('@edtaxi/shared/composables/useTelegramSafeArea').useTelegramSafeArea
   const useTemplateRef: typeof import('vue').useTemplateRef
   const useTemplateRefsList: typeof import('@vueuse/core').useTemplateRefsList
   const useTextDirection: typeof import('@vueuse/core').useTextDirection
@@ -373,7 +372,7 @@ declare module 'vue' {
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly injectHead: UnwrapRef<typeof import('@unhead/vue')['injectHead']>
     readonly injectLocal: UnwrapRef<typeof import('@vueuse/core')['injectLocal']>
-    readonly isDark: UnwrapRef<typeof import('./composables/dark')['isDark']>
+    readonly isDark: UnwrapRef<typeof import('@edtaxi/shared/composables/dark')['isDark']>
     readonly isDefined: UnwrapRef<typeof import('@vueuse/core')['isDefined']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
@@ -382,7 +381,7 @@ declare module 'vue' {
     readonly isShallow: UnwrapRef<typeof import('vue')['isShallow']>
     readonly makeDestructurable: UnwrapRef<typeof import('@vueuse/core')['makeDestructurable']>
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
-    readonly mountTelegramSafeArea: UnwrapRef<typeof import('./composables/useTelegramSafeArea')['mountTelegramSafeArea']>
+    readonly mountTelegramSafeArea: UnwrapRef<typeof import('@edtaxi/shared/composables/useTelegramSafeArea')['mountTelegramSafeArea']>
     readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
     readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
     readonly onBeforeMount: UnwrapRef<typeof import('vue')['onBeforeMount']>
@@ -406,7 +405,7 @@ declare module 'vue' {
     readonly onUpdated: UnwrapRef<typeof import('vue')['onUpdated']>
     readonly onWatcherCleanup: UnwrapRef<typeof import('vue')['onWatcherCleanup']>
     readonly pausableWatch: UnwrapRef<typeof import('@vueuse/core')['pausableWatch']>
-    readonly preferredDark: UnwrapRef<typeof import('./composables/dark')['preferredDark']>
+    readonly preferredDark: UnwrapRef<typeof import('@edtaxi/shared/composables/dark')['preferredDark']>
     readonly provide: UnwrapRef<typeof import('vue')['provide']>
     readonly provideLocal: UnwrapRef<typeof import('@vueuse/core')['provideLocal']>
     readonly reactify: UnwrapRef<typeof import('@vueuse/core')['reactify']>
@@ -437,7 +436,7 @@ declare module 'vue' {
     readonly toRef: UnwrapRef<typeof import('vue')['toRef']>
     readonly toRefs: UnwrapRef<typeof import('vue')['toRefs']>
     readonly toValue: UnwrapRef<typeof import('vue')['toValue']>
-    readonly toggleDark: UnwrapRef<typeof import('./composables/dark')['toggleDark']>
+    readonly toggleDark: UnwrapRef<typeof import('@edtaxi/shared/composables/dark')['toggleDark']>
     readonly triggerRef: UnwrapRef<typeof import('vue')['triggerRef']>
     readonly tryOnBeforeMount: UnwrapRef<typeof import('@vueuse/core')['tryOnBeforeMount']>
     readonly tryOnBeforeUnmount: UnwrapRef<typeof import('@vueuse/core')['tryOnBeforeUnmount']>
@@ -555,7 +554,6 @@ declare module 'vue' {
     readonly usePageLeave: UnwrapRef<typeof import('@vueuse/core')['usePageLeave']>
     readonly useParallax: UnwrapRef<typeof import('@vueuse/core')['useParallax']>
     readonly useParentElement: UnwrapRef<typeof import('@vueuse/core')['useParentElement']>
-    readonly useParkStore: UnwrapRef<typeof import('./stores/park')['useParkStore']>
     readonly usePerformanceObserver: UnwrapRef<typeof import('@vueuse/core')['usePerformanceObserver']>
     readonly usePermission: UnwrapRef<typeof import('@vueuse/core')['usePermission']>
     readonly usePointer: UnwrapRef<typeof import('@vueuse/core')['usePointer']>
@@ -584,7 +582,6 @@ declare module 'vue' {
     readonly useServerHeadSafe: UnwrapRef<typeof import('@unhead/vue')['useServerHeadSafe']>
     readonly useServerSeoMeta: UnwrapRef<typeof import('@unhead/vue')['useServerSeoMeta']>
     readonly useSessionStorage: UnwrapRef<typeof import('@vueuse/core')['useSessionStorage']>
-    readonly useShakeAnimation: UnwrapRef<typeof import('./composables/useShakeAnimation')['useShakeAnimation']>
     readonly useShare: UnwrapRef<typeof import('@vueuse/core')['useShare']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useSorted: UnwrapRef<typeof import('@vueuse/core')['useSorted']>
@@ -597,7 +594,7 @@ declare module 'vue' {
     readonly useSupportStore: UnwrapRef<typeof import('./stores/support')['useSupportStore']>
     readonly useSupported: UnwrapRef<typeof import('@vueuse/core')['useSupported']>
     readonly useSwipe: UnwrapRef<typeof import('@vueuse/core')['useSwipe']>
-    readonly useTelegramSafeArea: UnwrapRef<typeof import('./composables/useTelegramSafeArea')['useTelegramSafeArea']>
+    readonly useTelegramSafeArea: UnwrapRef<typeof import('@edtaxi/shared/composables/useTelegramSafeArea')['useTelegramSafeArea']>
     readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>
     readonly useTemplateRefsList: UnwrapRef<typeof import('@vueuse/core')['useTemplateRefsList']>
     readonly useTextDirection: UnwrapRef<typeof import('@vueuse/core')['useTextDirection']>

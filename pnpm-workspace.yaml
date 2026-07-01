@@ -11,17 +11,12 @@ catalogs:
     axios: ^1.16.1
     beasties: ^0.4.1
     markdown-it-link-attributes: ^4.0.1
-    rollup: ^4.59.0
-    shiki: ^3.23.0
     unocss: ^66.6.1
-    unplugin: ^2.3.11
     unplugin-auto-import: ^21.0.0
     unplugin-vue-components: ^31.0.0
     unplugin-vue-macros: ^2.14.5
     unplugin-vue-markdown: ^29.2.0
     vite: ^7.3.1
-    vite-bundle-visualizer: ^1.2.1
-    vite-plugin-inspect: ^11.3.3
     vite-plugin-pwa: ^1.2.0
     vite-plugin-vue-devtools: ^8.0.6
     vite-plugin-vue-layouts: ^0.11.0
@@ -30,7 +25,6 @@ catalogs:
 
   dev:
     '@antfu/eslint-config': ^7.6.1
-    '@iconify-json/carbon': ^1.2.18
     '@iconify-json/mdi': ^1.2.3
     '@vue-macros/volar': ^3.1.2
     '@vue/test-utils': ^2.4.6
@@ -39,7 +33,6 @@ catalogs:
     eslint: ^10.0.2
     eslint-plugin-cypress: ^6.1.0
     eslint-plugin-format: ^2.0.1
-    https-localhost: ^4.7.1
     lint-staged: ^16.2.7
     simple-git-hooks: ^2.13.1
     taze: ^19.9.2
@@ -50,8 +43,8 @@ catalogs:
   frontend:
     '@telegram-apps/sdk': ^3.11.8
     '@unhead/vue': ^2.1.7
-    '@unocss/reset': ^66.6.1
     '@unocss/preset-web-fonts': ^66.6.1
+    '@unocss/reset': ^66.6.1
     '@vueuse/core': ^14.2.1
     mapbox-gl: ^3.24.0
     maska: ^3.2.0

@@ -1,12 +1,46 @@
-import type { GeoPlace } from '~/types/geocoding'
-import { reverseGeocodePlace } from '~/api/geocoding'
-import { useToast } from '~/composables/useToast'
+import type { GeoPlace } from '../../types/geocoding'
+import { onBeforeUnmount, ref } from 'vue'
+import { reverseGeocodePlace } from '../../api/geocoding'
+import { useToast } from '../useToast'
 
 export interface UserCoordinates {
   accuracy: number
   heading: number | null
   lat: number
   lng: number
+}
+
+const LAST_KNOWN_LOCATION_KEY = 'edtaxi:last-known-location'
+
+// loadCachedLocation читает последнюю успешно полученную геопозицию из
+// localStorage — используется как начальный центр карты вместо захардкоженного
+// города, чтобы при открытии приложения карта не "пролетала" через всю страну
+// от дефолтного центра к настоящему местоположению пользователя.
+export function loadCachedLocation(): [number, number] | null {
+  try {
+    const raw = localStorage.getItem(LAST_KNOWN_LOCATION_KEY)
+    if (!raw)
+      return null
+
+    const parsed = JSON.parse(raw) as { lat?: number, lng?: number }
+    if (typeof parsed.lat !== 'number' || typeof parsed.lng !== 'number')
+      return null
+
+    return [parsed.lng, parsed.lat]
+  }
+  catch {
+    return null
+  }
+}
+
+function saveCachedLocation(lat: number, lng: number) {
+  try {
+    localStorage.setItem(LAST_KNOWN_LOCATION_KEY, JSON.stringify({ lat, lng }))
+  }
+  catch {
+    // localStorage недоступен (приватный режим/квота) — не критично, просто
+    // следующий запуск снова стартует с дефолтного центра.
+  }
 }
 
 function getCurrentPosition(options?: PositionOptions) {
@@ -51,6 +85,7 @@ export function useUserLocation() {
       lat: position.coords.latitude,
       lng: position.coords.longitude,
     }
+    saveCachedLocation(position.coords.latitude, position.coords.longitude)
   }
 
   async function locateUser() {

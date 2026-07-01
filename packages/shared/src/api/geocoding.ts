@@ -8,8 +8,8 @@ import type {
   RoutePayload,
   RouteResponse,
   TripRoute,
-} from '~/types/geocoding'
-import { apiRequest } from '~/api/client'
+} from '../types/geocoding'
+import { apiRequest } from './client'
 
 function getSuggestResults(response: GeocodingSuggestResponse) {
   return Array.isArray(response) ? response : response.results

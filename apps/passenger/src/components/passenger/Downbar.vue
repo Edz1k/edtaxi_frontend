@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { GeoPlace } from '~/types/geocoding'
-import type { MapPickerMode } from '~/types/map'
+import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
+import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import AddressForm from '~/components/passenger/downbar/AddressForm.vue'
 import SearchingTrip from '~/components/passenger/downbar/SearchingTrip.vue'
 import TariffList from '~/components/passenger/downbar/TariffList.vue'

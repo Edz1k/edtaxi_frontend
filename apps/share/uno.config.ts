@@ -1,5 +1,5 @@
-import { defineConfig } from 'unocss'
 import { unoColors, unoPresets, unoShortcuts, unoTransformers } from '@edtaxi/shared/uno.base'
+import { defineConfig } from 'unocss'
 
 export default defineConfig({
   shortcuts: [...unoShortcuts],

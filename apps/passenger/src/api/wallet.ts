@@ -1,4 +1,4 @@
-import type { Wallet, WalletHistoryResponse, WalletTopUpPayload, WalletTopUpResponse } from '~/types/wallet'
+import type { Wallet, WalletHistoryResponse, WalletTopUpPayload, WalletTopUpResponse } from '@edtaxi/shared/types/wallet'
 import { apiRequest } from '~/api/client'
 
 export function getWallet() {

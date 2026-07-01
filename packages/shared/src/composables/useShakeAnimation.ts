@@ -1,6 +1,7 @@
+import { ref } from 'vue'
+
 export function useShakeAnimation() {
   const shouldShake = ref(false)
-
   function shake() {
     shouldShake.value = false
     requestAnimationFrame(() => {
@@ -10,6 +11,5 @@ export function useShakeAnimation() {
       }, 380)
     })
   }
-
   return { shouldShake, shake }
 }
