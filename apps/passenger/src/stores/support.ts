@@ -1,7 +1,7 @@
 import type { SupportMessage, SupportParticipantType, SupportRoom } from '~/types/support'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { showErrorToast } from '~/api/errors'
-import { closeSupportRoom, getSupportMessages, openSupportRoom, sendSupportMessage } from '~/api/support'
+import { attachTripToSupport, closeSupportRoom, getSupportMessages, openSupportRoom, sendSupportMessage } from '~/api/support'
 
 export const useSupportStore = defineStore('support', () => {
   const room = ref<SupportRoom | null>(null)
@@ -81,6 +81,13 @@ export const useSupportStore = defineStore('support', () => {
     }
   }
 
+  // attachTrip открывает обращение и прикрепляет к нему поездку из истории.
+  async function attachTrip(tripId: string, participantType: SupportParticipantType = 'passenger') {
+    const activeRoom = await ensureRoom(participantType)
+    await attachTripToSupport(activeRoom.id, tripId)
+    return activeRoom
+  }
+
   function receiveMessage(message: SupportMessage & { room_id: string }) {
     if (!room.value || message.room_id !== room.value.id)
       return
@@ -121,6 +128,7 @@ export const useSupportStore = defineStore('support', () => {
   }
 
   return {
+    attachTrip,
     closeRoom,
     clearSupportState,
     ensureRoom,

@@ -2,10 +2,30 @@
 import type { Trip, TripStatus } from '~/types/trips'
 import { useToast } from '~/composables/useToast'
 import { formatFare, TARIFF_META } from '~/constants/tariffs'
+import { useSupportStore } from '~/stores/support'
 import { useTripsStore } from '~/stores/trips'
 
 const trips = useTripsStore()
+const support = useSupportStore()
+const router = useRouter()
 const toast = useToast()
+const attachingTripId = ref<string | null>(null)
+
+async function contactSupport(trip: Trip) {
+  if (attachingTripId.value)
+    return
+  attachingTripId.value = trip.id
+  try {
+    await support.attachTrip(trip.id, 'passenger')
+    await router.push('/menu/support')
+  }
+  catch {
+    toast.error('Ошибка', 'Не удалось открыть поддержку по поездке.')
+  }
+  finally {
+    attachingTripId.value = null
+  }
+}
 const scrollRoot = ref<HTMLElement | null>(null)
 const loadMoreSentinel = ref<HTMLElement | null>(null)
 const ratingTrip = ref<Trip | null>(null)
@@ -266,6 +286,16 @@ onBeforeUnmount(() => {
             @click="openRating(trip)"
           >
             Оценить поездку
+          </button>
+
+          <button
+            :disabled="attachingTripId === trip.id"
+            class="mt-2 h-11 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/6 text-sm text-slate-200 font-900 transition active:scale-[0.98] disabled:opacity-60"
+            type="button"
+            @click="contactSupport(trip)"
+          >
+            <span class="i-mdi-headset text-5" />
+            {{ attachingTripId === trip.id ? 'Открываем...' : 'Поддержка по поездке' }}
           </button>
         </article>
 

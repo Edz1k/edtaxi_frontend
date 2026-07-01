@@ -107,6 +107,10 @@ export async function getActiveDriverTrip(): Promise<null | Trip> {
   return response.trip
 }
 
+export function getDriverTripHistory(params: { limit?: number, offset?: number } = {}) {
+  return apiRequest<{ trips: Trip[] }>('/driver/trips/history', { params })
+}
+
 export function getDriverEarnings() {
   return apiRequest<DriverEarnings>('/driver/earnings')
 }

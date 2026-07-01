@@ -128,6 +128,30 @@ async function send() {
 }
 
 const isClosed = computed(() => support.currentRoom?.status === 'closed')
+
+// Прикреплённая к обращению поездка — чтобы агент видел, о какой поездке речь.
+const attachedTrip = computed(() => support.currentRoom?.trip ?? null)
+
+const TRIP_STATUS_LABELS: Record<string, string> = {
+  searching: 'Поиск',
+  driver_assigned: 'Водитель назначен',
+  driver_arriving: 'Водитель в пути',
+  in_progress: 'В пути',
+  completed: 'Завершена',
+  cancelled: 'Отменена',
+}
+
+const PAYMENT_LABELS: Record<string, string> = {
+  cash: 'Наличные',
+  card: 'Карта',
+  wallet: 'Кошелёк',
+  kaspi: 'Kaspi',
+}
+
+function tripFare(t: NonNullable<typeof attachedTrip.value>) {
+  const amount = t.final_fare ?? t.estimated_fare
+  return `${Math.round(amount).toLocaleString('ru-RU')} ₸`
+}
 </script>
 
 <template>
@@ -205,6 +229,32 @@ const isClosed = computed(() => support.currentRoom?.status === 'closed')
         Обращение уже взял другой агент. Только он может отвечать.
       </div>
     </header>
+
+    <!-- Прикреплённая поездка -->
+    <div v-if="attachedTrip" class="shrink-0 border-b border-white/8 bg-secondary-900/60 px-4 py-3">
+      <div class="mx-auto max-w-2xl border border-white/10 rounded-2xl bg-white/5 px-4 py-3">
+        <div class="flex items-center justify-between gap-3">
+          <p class="flex items-center gap-2 text-xs text-cyan-200 font-900 uppercase">
+            <span class="i-mdi-map-marker-path text-4" />
+            Поездка
+          </p>
+          <span class="rounded-full bg-white/8 px-2.5 py-0.5 text-xs text-slate-300 font-800">
+            {{ TRIP_STATUS_LABELS[attachedTrip.status] ?? attachedTrip.status }}
+          </span>
+        </div>
+
+        <p class="mt-2 truncate text-sm text-white/80 font-700">
+          {{ attachedTrip.pickup_address || '—' }} → {{ attachedTrip.dropoff_address || '—' }}
+        </p>
+
+        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 font-700">
+          <span>{{ tripFare(attachedTrip) }}</span>
+          <span>{{ PAYMENT_LABELS[attachedTrip.payment_method ?? ''] ?? attachedTrip.payment_method ?? '—' }}</span>
+          <span>{{ formatTime(attachedTrip.created_at) }}</span>
+          <span class="text-slate-500">ID: {{ attachedTrip.id.slice(0, 8) }}</span>
+        </div>
+      </div>
+    </div>
 
     <!-- Messages area -->
     <div
