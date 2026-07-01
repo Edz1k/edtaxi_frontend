@@ -154,116 +154,137 @@ function statusClass(s: TripStatus) {
       </button>
     </div>
 
-    <section v-if="admin.selectedTrip" class="mt-5 border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <p class="text-xs text-white/42 font-900 uppercase">
-            Детали поездки · {{ admin.selectedTrip.id.slice(0, 8) }}
-          </p>
-          <h2 class="mt-1 text-xl font-950">
-            {{ formatFare(admin.selectedTrip) }}
-          </h2>
-        </div>
-        <span class="shrink-0 rounded-full px-3 py-2 text-xs font-900" :class="statusClass(admin.selectedTrip.status)">
-          {{ STATUS_LABELS[admin.selectedTrip.status] ?? admin.selectedTrip.status }}
-        </span>
-      </div>
+    <!-- Детали поездки: всплывающее окно поверх страницы -->
+    <Teleport to="body">
+      <Transition enter-active-class="transition duration-150" enter-from-class="opacity-0" leave-active-class="transition duration-100" leave-to-class="opacity-0">
+        <div
+          v-if="admin.selectedTrip"
+          class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:items-center"
+          @click.self="admin.selectedTrip = null"
+        >
+          <section class="max-w-2xl w-full border border-white/10 rounded-3xl bg-#071a38 p-5 shadow-2xl">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <p class="truncate text-xs text-white/42 font-900 uppercase">
+                  Детали поездки · {{ admin.selectedTrip.id.slice(0, 8) }}
+                </p>
+                <h2 class="mt-1 text-xl font-950">
+                  {{ formatFare(admin.selectedTrip) }}
+                </h2>
+              </div>
+              <div class="flex shrink-0 items-center gap-2">
+                <span class="rounded-full px-3 py-2 text-xs font-900" :class="statusClass(admin.selectedTrip.status)">
+                  {{ STATUS_LABELS[admin.selectedTrip.status] ?? admin.selectedTrip.status }}
+                </span>
+                <button
+                  aria-label="Закрыть"
+                  class="h-9 w-9 flex items-center justify-center rounded-full bg-white/8 text-white/60 transition hover:bg-white/14 hover:text-white"
+                  type="button"
+                  @click="admin.selectedTrip = null"
+                >
+                  <span class="i-mdi-close text-5" />
+                </button>
+              </div>
+            </div>
 
-      <!-- Маршрут -->
-      <div class="grid mt-4 gap-3 sm:grid-cols-2">
-        <p class="rounded-2xl bg-black/14 p-3 text-sm">
-          <span class="block text-xs text-white/42 font-900 uppercase">Откуда</span>
-          <span class="mt-1 block">{{ admin.selectedTrip.pickup_address }}</span>
-        </p>
-        <p class="rounded-2xl bg-black/14 p-3 text-sm">
-          <span class="block text-xs text-white/42 font-900 uppercase">Куда</span>
-          <span class="mt-1 block">{{ admin.selectedTrip.dropoff_address }}</span>
-        </p>
-      </div>
+            <!-- Маршрут -->
+            <div class="grid mt-4 gap-3 sm:grid-cols-2">
+              <p class="rounded-2xl bg-black/14 p-3 text-sm">
+                <span class="block text-xs text-white/42 font-900 uppercase">Откуда</span>
+                <span class="mt-1 block">{{ admin.selectedTrip.pickup_address }}</span>
+              </p>
+              <p class="rounded-2xl bg-black/14 p-3 text-sm">
+                <span class="block text-xs text-white/42 font-900 uppercase">Куда</span>
+                <span class="mt-1 block">{{ admin.selectedTrip.dropoff_address }}</span>
+              </p>
+            </div>
 
-      <!-- Кто: пассажир и водитель -->
-      <div class="grid mt-3 gap-3 sm:grid-cols-2">
-        <div class="rounded-2xl bg-black/14 p-3 text-sm">
-          <span class="block text-xs text-white/42 font-900 uppercase">Пассажир</span>
-          <RouterLink
-            v-if="admin.selectedTrip.passenger_id"
-            :to="`/passengers/${admin.selectedTrip.passenger_id}`"
-            class="mt-1 flex items-center gap-1 text-cyan-200 font-800 hover:underline"
-          >
-            {{ admin.selectedTrip.passenger_name || 'Кабинет пассажира' }}
-            <span class="i-mdi-open-in-new shrink-0 text-3.5 text-cyan-300/70" />
-          </RouterLink>
-          <span v-if="admin.selectedTrip.passenger_phone" class="mt-0.5 block text-xs text-white/45">
-            {{ admin.selectedTrip.passenger_phone }}
-          </span>
-        </div>
+            <!-- Кто: пассажир и водитель -->
+            <div class="grid mt-3 gap-3 sm:grid-cols-2">
+              <div class="rounded-2xl bg-black/14 p-3 text-sm">
+                <span class="block text-xs text-white/42 font-900 uppercase">Пассажир</span>
+                <RouterLink
+                  v-if="admin.selectedTrip.passenger_id"
+                  :to="`/passengers/${admin.selectedTrip.passenger_id}`"
+                  class="mt-1 flex items-center gap-1 text-cyan-200 font-800 hover:underline"
+                >
+                  {{ admin.selectedTrip.passenger_name || 'Кабинет пассажира' }}
+                  <span class="i-mdi-open-in-new shrink-0 text-3.5 text-cyan-300/70" />
+                </RouterLink>
+                <span v-if="admin.selectedTrip.passenger_phone" class="mt-0.5 block text-xs text-white/45">
+                  {{ admin.selectedTrip.passenger_phone }}
+                </span>
+              </div>
 
-        <div class="rounded-2xl bg-black/14 p-3 text-sm">
-          <span class="block text-xs text-white/42 font-900 uppercase">Водитель</span>
-          <template v-if="admin.selectedTrip.driver">
-            <RouterLink
-              v-if="admin.selectedTrip.driver.user_id"
-              :to="`/drivers/${admin.selectedTrip.driver.user_id}`"
-              class="mt-1 flex items-center gap-1 text-cyan-200 font-800 hover:underline"
-            >
-              {{ admin.selectedTrip.driver.name || 'Кабинет водителя' }}
-              <span class="i-mdi-open-in-new shrink-0 text-3.5 text-cyan-300/70" />
-            </RouterLink>
-            <span v-else class="mt-1 block font-800">
-              {{ admin.selectedTrip.driver.name || 'Без имени' }}
-            </span>
-            <span class="mt-0.5 block text-xs text-white/45">
-              {{ admin.selectedTrip.driver.phone }}
-              <template v-if="admin.selectedTrip.driver.rating">
-                · ★ {{ admin.selectedTrip.driver.rating.toFixed(1) }}
-              </template>
-            </span>
-            <span v-if="admin.selectedTrip.driver.vehicle" class="mt-0.5 block text-xs text-white/45">
-              {{ admin.selectedTrip.driver.vehicle.make }} {{ admin.selectedTrip.driver.vehicle.model }} · {{ admin.selectedTrip.driver.vehicle.plate_number }}
-            </span>
-          </template>
-          <span v-else class="mt-1 block text-white/40">
-            Ещё не назначен
-          </span>
-        </div>
-      </div>
+              <div class="rounded-2xl bg-black/14 p-3 text-sm">
+                <span class="block text-xs text-white/42 font-900 uppercase">Водитель</span>
+                <template v-if="admin.selectedTrip.driver">
+                  <RouterLink
+                    v-if="admin.selectedTrip.driver.user_id"
+                    :to="`/drivers/${admin.selectedTrip.driver.user_id}`"
+                    class="mt-1 flex items-center gap-1 text-cyan-200 font-800 hover:underline"
+                  >
+                    {{ admin.selectedTrip.driver.name || 'Кабинет водителя' }}
+                    <span class="i-mdi-open-in-new shrink-0 text-3.5 text-cyan-300/70" />
+                  </RouterLink>
+                  <span v-else class="mt-1 block font-800">
+                    {{ admin.selectedTrip.driver.name || 'Без имени' }}
+                  </span>
+                  <span class="mt-0.5 block text-xs text-white/45">
+                    {{ admin.selectedTrip.driver.phone }}
+                    <template v-if="admin.selectedTrip.driver.rating">
+                      · ★ {{ admin.selectedTrip.driver.rating.toFixed(1) }}
+                    </template>
+                  </span>
+                  <span v-if="admin.selectedTrip.driver.vehicle" class="mt-0.5 block text-xs text-white/45">
+                    {{ admin.selectedTrip.driver.vehicle.make }} {{ admin.selectedTrip.driver.vehicle.model }} · {{ admin.selectedTrip.driver.vehicle.plate_number }}
+                  </span>
+                </template>
+                <span v-else class="mt-1 block text-white/40">
+                  Ещё не назначен
+                </span>
+              </div>
+            </div>
 
-      <!-- Сколько / параметры -->
-      <div class="grid grid-cols-2 mt-3 gap-3 sm:grid-cols-4">
-        <div class="rounded-2xl bg-black/14 p-3 text-sm">
-          <span class="block text-xs text-white/42 font-900 uppercase">Тариф</span>
-          <span class="mt-1 block font-800">{{ CATEGORY_LABELS[admin.selectedTrip.category] ?? admin.selectedTrip.category }}</span>
-        </div>
-        <div class="rounded-2xl bg-black/14 p-3 text-sm">
-          <span class="block text-xs text-white/42 font-900 uppercase">Оплата</span>
-          <span class="mt-1 block font-800">{{ PAYMENT_LABELS[admin.selectedTrip.payment_method ?? ''] ?? admin.selectedTrip.payment_method ?? '—' }}</span>
-        </div>
-        <div class="rounded-2xl bg-black/14 p-3 text-sm">
-          <span class="block text-xs text-white/42 font-900 uppercase">Расстояние</span>
-          <span class="mt-1 block font-800">{{ admin.selectedTrip.distance_km.toFixed(1) }} км</span>
-        </div>
-        <div class="rounded-2xl bg-black/14 p-3 text-sm">
-          <span class="block text-xs text-white/42 font-900 uppercase">Время в пути</span>
-          <span class="mt-1 block font-800">{{ Math.round(admin.selectedTrip.duration_min) }} мин</span>
-        </div>
-      </div>
+            <!-- Сколько / параметры -->
+            <div class="grid grid-cols-2 mt-3 gap-3 sm:grid-cols-4">
+              <div class="rounded-2xl bg-black/14 p-3 text-sm">
+                <span class="block text-xs text-white/42 font-900 uppercase">Тариф</span>
+                <span class="mt-1 block font-800">{{ CATEGORY_LABELS[admin.selectedTrip.category] ?? admin.selectedTrip.category }}</span>
+              </div>
+              <div class="rounded-2xl bg-black/14 p-3 text-sm">
+                <span class="block text-xs text-white/42 font-900 uppercase">Оплата</span>
+                <span class="mt-1 block font-800">{{ PAYMENT_LABELS[admin.selectedTrip.payment_method ?? ''] ?? admin.selectedTrip.payment_method ?? '—' }}</span>
+              </div>
+              <div class="rounded-2xl bg-black/14 p-3 text-sm">
+                <span class="block text-xs text-white/42 font-900 uppercase">Расстояние</span>
+                <span class="mt-1 block font-800">{{ admin.selectedTrip.distance_km.toFixed(1) }} км</span>
+              </div>
+              <div class="rounded-2xl bg-black/14 p-3 text-sm">
+                <span class="block text-xs text-white/42 font-900 uppercase">Время в пути</span>
+                <span class="mt-1 block font-800">{{ Math.round(admin.selectedTrip.duration_min) }} мин</span>
+              </div>
+            </div>
 
-      <!-- Когда: таймлайн -->
-      <div class="mt-3 rounded-2xl bg-black/14 p-3 text-sm">
-        <span class="block text-xs text-white/42 font-900 uppercase">Когда</span>
-        <div class="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-white/70">
-          <span v-if="admin.selectedTrip.created_at">Создана: {{ formatDate(admin.selectedTrip.created_at) }}</span>
-          <span v-if="admin.selectedTrip.driver_assigned_at">Назначен водитель: {{ formatDate(admin.selectedTrip.driver_assigned_at) }}</span>
-          <span v-if="admin.selectedTrip.started_at">Начало поездки: {{ formatDate(admin.selectedTrip.started_at) }}</span>
-          <span v-if="admin.selectedTrip.completed_at">Завершена: {{ formatDate(admin.selectedTrip.completed_at) }}</span>
-          <span v-if="admin.selectedTrip.cancelled_at" class="text-red-300">
-            Отменена: {{ formatDate(admin.selectedTrip.cancelled_at) }}
-            <template v-if="admin.selectedTrip.cancelled_by">
-              ({{ admin.selectedTrip.cancelled_by }})
-            </template>
-          </span>
+            <!-- Когда: таймлайн -->
+            <div class="mt-3 rounded-2xl bg-black/14 p-3 text-sm">
+              <span class="block text-xs text-white/42 font-900 uppercase">Когда</span>
+              <div class="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-white/70">
+                <span v-if="admin.selectedTrip.created_at">Создана: {{ formatDate(admin.selectedTrip.created_at) }}</span>
+                <span v-if="admin.selectedTrip.driver_assigned_at">Назначен водитель: {{ formatDate(admin.selectedTrip.driver_assigned_at) }}</span>
+                <span v-if="admin.selectedTrip.started_at">Начало поездки: {{ formatDate(admin.selectedTrip.started_at) }}</span>
+                <span v-if="admin.selectedTrip.completed_at">Завершена: {{ formatDate(admin.selectedTrip.completed_at) }}</span>
+                <span v-if="admin.selectedTrip.cancelled_at" class="text-red-300">
+                  Отменена: {{ formatDate(admin.selectedTrip.cancelled_at) }}
+                  <template v-if="admin.selectedTrip.cancelled_by">
+                    ({{ admin.selectedTrip.cancelled_by }})
+                  </template>
+                </span>
+              </div>
+            </div>
+          </section>
         </div>
-      </div>
-    </section>
+      </Transition>
+    </Teleport>
   </WebPageShell>
 </template>
