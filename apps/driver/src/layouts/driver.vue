@@ -28,9 +28,10 @@ const isDriverTabRoute = computed(() => tabRoutes.has(normalizedPath.value))
 const shouldShowBackHeader = computed(() => normalizedPath.value.startsWith('/menu/') && !isDriverTabRoute.value)
 const backTitle = computed(() => typeof route.meta.screenTitle === 'string' ? route.meta.screenTitle : 'Водитель')
 const backSubtitle = computed(() => typeof route.meta.screenSubtitle === 'string' ? route.meta.screenSubtitle : 'Назад в меню')
+const backTarget = computed(() => typeof route.meta.backTo === 'string' ? route.meta.backTo : '/menu')
 
-function goToDriverMenu() {
-  router.push('/menu')
+function goBack() {
+  router.push(backTarget.value)
 }
 </script>
 
@@ -45,7 +46,7 @@ function goToDriverMenu() {
       back-label="Назад в меню водителя"
       :subtitle="backSubtitle"
       :title="backTitle"
-      @back="goToDriverMenu"
+      @back="goBack"
     />
 
     <BottomNav

@@ -9,7 +9,8 @@ definePage({
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
-    screenSubtitle: 'Назад в меню',
+    backTo: '/menu/profile',
+    screenSubtitle: 'Назад в профиль',
     screenTitle: 'Верификация',
   },
 })
@@ -69,21 +70,21 @@ const items = computed<OnboardingItem[]>(() => [
     label: 'Фото лица',
     description: statusDescription(faceStatus.value, 'Загрузите селфи для идентификации'),
     icon: 'i-mdi-face-recognition',
-    to: '/menu/onboarding/face-photo',
+    to: '/menu/profile/onboarding/face-photo',
     status: faceStatus.value,
   },
   {
     label: 'Документы машины',
     description: statusDescription(vehicleStatus.value, 'Фото авто и техпаспорт'),
     icon: 'i-mdi-car-key',
-    to: '/menu/onboarding/vehicle-docs',
+    to: '/menu/profile/onboarding/vehicle-docs',
     status: vehicleStatus.value,
   },
   {
     label: 'Ежедневная проверка',
     description: statusDescription(dailyStatus.value, 'Ежедневное селфи перед выходом'),
     icon: 'i-mdi-calendar-check',
-    to: '/menu/onboarding/daily-check',
+    to: '/menu/profile/onboarding/daily-check',
     status: dailyStatus.value,
   },
 ])
@@ -138,7 +139,7 @@ function iconBg(status: ItemStatus) {
 </script>
 
 <template>
-  <main class="p h-full overflow-y-auto bg-secondary-900 text-white">
+  <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)]">
     <section class="mx-auto max-w-sm">
       <header>
         <p class="text-xs text-main-300 font-900 uppercase">

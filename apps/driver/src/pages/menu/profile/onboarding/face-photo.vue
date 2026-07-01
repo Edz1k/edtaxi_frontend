@@ -11,6 +11,7 @@ definePage({
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
+    backTo: '/menu/profile/onboarding',
     screenSubtitle: 'Назад',
     screenTitle: 'Фото лица',
   },
@@ -61,7 +62,7 @@ async function submit() {
 
   try {
     await driver.doUploadFaceVerification(selfieFile.value, idFile.value)
-    await router.replace('/menu/onboarding')
+    await router.replace('/menu/profile/onboarding')
   }
   catch {}
 }

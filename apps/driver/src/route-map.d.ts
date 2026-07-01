@@ -80,30 +80,9 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    '/menu/onboarding/': RouteRecordInfo<
-      '/menu/onboarding/',
-      '/menu/onboarding',
-      Record<never, never>,
-      Record<never, never>,
-      | never
-    >,
-    '/menu/onboarding/daily-check': RouteRecordInfo<
-      '/menu/onboarding/daily-check',
-      '/menu/onboarding/daily-check',
-      Record<never, never>,
-      Record<never, never>,
-      | never
-    >,
-    '/menu/onboarding/face-photo': RouteRecordInfo<
-      '/menu/onboarding/face-photo',
-      '/menu/onboarding/face-photo',
-      Record<never, never>,
-      Record<never, never>,
-      | never
-    >,
-    '/menu/onboarding/vehicle-docs': RouteRecordInfo<
-      '/menu/onboarding/vehicle-docs',
-      '/menu/onboarding/vehicle-docs',
+    '/menu/history': RouteRecordInfo<
+      '/menu/history',
+      '/menu/history',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -111,6 +90,48 @@ declare module 'vue-router/auto-routes' {
     '/menu/park-invite': RouteRecordInfo<
       '/menu/park-invite',
       '/menu/park-invite',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/menu/profile/': RouteRecordInfo<
+      '/menu/profile/',
+      '/menu/profile',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/menu/profile/onboarding/': RouteRecordInfo<
+      '/menu/profile/onboarding/',
+      '/menu/profile/onboarding',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/menu/profile/onboarding/daily-check': RouteRecordInfo<
+      '/menu/profile/onboarding/daily-check',
+      '/menu/profile/onboarding/daily-check',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/menu/profile/onboarding/face-photo': RouteRecordInfo<
+      '/menu/profile/onboarding/face-photo',
+      '/menu/profile/onboarding/face-photo',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/menu/profile/onboarding/vehicle-docs': RouteRecordInfo<
+      '/menu/profile/onboarding/vehicle-docs',
+      '/menu/profile/onboarding/vehicle-docs',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/menu/profile/rating-history': RouteRecordInfo<
+      '/menu/profile/rating-history',
+      '/menu/profile/rating-history',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -198,33 +219,9 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
-    'src/pages/menu/onboarding/index.vue': {
+    'src/pages/menu/history.vue': {
       routes:
-        | '/menu/onboarding/'
-      views:
-        | never
-      pathParamNames:
-        | never
-    }
-    'src/pages/menu/onboarding/daily-check.vue': {
-      routes:
-        | '/menu/onboarding/daily-check'
-      views:
-        | never
-      pathParamNames:
-        | never
-    }
-    'src/pages/menu/onboarding/face-photo.vue': {
-      routes:
-        | '/menu/onboarding/face-photo'
-      views:
-        | never
-      pathParamNames:
-        | never
-    }
-    'src/pages/menu/onboarding/vehicle-docs.vue': {
-      routes:
-        | '/menu/onboarding/vehicle-docs'
+        | '/menu/history'
       views:
         | never
       pathParamNames:
@@ -233,6 +230,54 @@ declare module 'vue-router/auto-routes' {
     'src/pages/menu/park-invite.vue': {
       routes:
         | '/menu/park-invite'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/profile/index.vue': {
+      routes:
+        | '/menu/profile/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/profile/onboarding/index.vue': {
+      routes:
+        | '/menu/profile/onboarding/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/profile/onboarding/daily-check.vue': {
+      routes:
+        | '/menu/profile/onboarding/daily-check'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/profile/onboarding/face-photo.vue': {
+      routes:
+        | '/menu/profile/onboarding/face-photo'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/profile/onboarding/vehicle-docs.vue': {
+      routes:
+        | '/menu/profile/onboarding/vehicle-docs'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/profile/rating-history.vue': {
+      routes:
+        | '/menu/profile/rating-history'
       views:
         | never
       pathParamNames:
