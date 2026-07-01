@@ -23,6 +23,7 @@ function buildListParams(params: AdminListTripsParams | AdminListUsersParams) {
     offset: params.offset,
     role: 'role' in params ? params.role || undefined : undefined,
     status: 'status' in params ? params.status || undefined : undefined,
+    search: 'search' in params ? params.search || undefined : undefined,
   }
 }
 

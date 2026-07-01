@@ -37,6 +37,8 @@ export interface AdminListUsersParams {
   limit?: number
   offset?: number
   role?: AdminUserRole | ''
+  // search — поиск по имени/фамилии/телефону/telegram-юзернейму (регистронезависимо).
+  search?: string
 }
 
 export interface AdminListUsersResponse {
