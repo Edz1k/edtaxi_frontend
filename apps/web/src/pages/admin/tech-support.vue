@@ -6,6 +6,7 @@ import { formatDate } from '~/utils/format'
 
 const admin = useAdminStore()
 const phone = ref('')
+const name = ref('')
 
 const canSubmit = computed(() => isKazakhstanPhoneComplete(phone.value) && !admin.isMutating)
 
@@ -23,14 +24,16 @@ useHead({
 
 onMounted(() => {
   admin.loadTechSupportNumbers().catch(() => {})
+  admin.loadSupportStats().catch(() => {})
 })
 
 async function submit() {
   if (!canSubmit.value)
     return
 
-  await admin.addTechSupportNumber(toKazakhstanE164(phone.value))
+  await admin.addTechSupportNumber(toKazakhstanE164(phone.value), name.value.trim())
   phone.value = ''
+  name.value = ''
 }
 </script>
 
@@ -41,8 +44,43 @@ async function submit() {
     description="Управляйте номерами, которым разрешён отдельный вход в кабинет техподдержки."
     title="Техподдержка"
   >
-    <form class="grid mt-6 gap-3 border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur md:grid-cols-[minmax(220px,1fr)_auto] md:items-end" @submit.prevent="submit">
+    <!-- Счётчик решённых обращений -->
+    <div v-if="admin.supportStats" class="grid mt-6 gap-3 sm:grid-cols-3">
+      <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
+        <p class="text-xs text-white/45 font-800 uppercase">
+          Решено
+        </p>
+        <p class="mt-1 text-2xl text-emerald-300 font-950">
+          {{ admin.supportStats.resolved }}/{{ admin.supportStats.total }}
+        </p>
+      </div>
+      <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
+        <p class="text-xs text-white/45 font-800 uppercase">
+          В работе
+        </p>
+        <p class="mt-1 text-2xl font-950" :class="admin.supportStats.open > 0 ? 'text-amber-300' : ''">
+          {{ admin.supportStats.open }}
+        </p>
+      </div>
+      <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
+        <p class="text-xs text-white/45 font-800 uppercase">
+          Всего обращений
+        </p>
+        <p class="mt-1 text-2xl font-950">
+          {{ admin.supportStats.total }}
+        </p>
+      </div>
+    </div>
+
+    <form class="grid mt-5 gap-3 border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur md:grid-cols-[minmax(200px,1fr)_minmax(160px,0.7fr)_auto] md:items-end" @submit.prevent="submit">
       <PhoneInput v-model="phone" />
+      <input
+        v-model="name"
+        aria-label="Имя сотрудника"
+        class="h-12 border border-white/10 rounded-2xl bg-white/6 px-4 text-sm text-white outline-none transition focus:border-cyan-400/50"
+        placeholder="Имя (напр. Олжас)"
+        type="text"
+      >
       <button
         :disabled="!canSubmit"
         class="h-12 inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-300 px-5 text-sm text-#06142f font-950 transition active:scale-[0.98] disabled:opacity-50"
@@ -76,10 +114,10 @@ async function submit() {
       >
         <div class="min-w-0">
           <p class="truncate text-sm font-900">
-            {{ number.phone }}
+            {{ number.name || number.phone }}
           </p>
-          <p v-if="number.added_by" class="mt-0.5 truncate text-xs text-white/42">
-            {{ number.added_by }}
+          <p class="mt-0.5 truncate text-xs text-white/42">
+            {{ number.name ? number.phone : (number.added_by || '—') }}
           </p>
         </div>
 

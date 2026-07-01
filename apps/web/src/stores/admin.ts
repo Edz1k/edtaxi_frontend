@@ -1,8 +1,8 @@
-import type { AdminAssignableRole, AdminListTripsParams, AdminListUsersParams, AdminTechSupportNumber, AdminUser, CreateParkOwnerPayload } from '~/types/admin'
+import type { AdminAssignableRole, AdminListTripsParams, AdminListUsersParams, AdminSupportStats, AdminTechSupportNumber, AdminUser, CreateParkOwnerPayload } from '~/types/admin'
 import type { ParkChatRoom, ParkStatus, TaxiPark } from '~/types/park'
 import type { Trip } from '~/types/trips'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, blockAdminUser, createParkOwner as createParkOwnerApi, getAdminTrip, listAdminTrips, listAdminUsers, listTechSupportNumbers, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi } from '~/api/admin'
+import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, blockAdminUser, createParkOwner as createParkOwnerApi, getAdminTrip, getSupportStats, listAdminTrips, listAdminUsers, listTechSupportNumbers, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi } from '~/api/admin'
 import { listAdminParkChats, listAdminParks, rejectAdminPark, verifyAdminPark } from '~/api/park'
 import { useStoreAction } from '~/composables/useStoreAction'
 
@@ -12,6 +12,8 @@ export const useAdminStore = defineStore('admin', () => {
   const parks = ref<TaxiPark[]>([])
   const parkChats = ref<ParkChatRoom[]>([])
   const techSupportNumbers = ref<AdminTechSupportNumber[]>([])
+  const supportStats = ref<AdminSupportStats | null>(null)
+  const isLoadingSupportStats = ref(false)
   const selectedTrip = ref<Trip | null>(null)
   const usersTotal = ref(0)
   const tripsTotal = ref(0)
@@ -116,17 +118,24 @@ export const useAdminStore = defineStore('admin', () => {
     }, 'Не удалось загрузить номера техподдержки.')
   }
 
-  async function addTechSupportNumber(phone: string) {
+  async function addTechSupportNumber(phone: string, name = '') {
     return withLoading(isMutating, async () => {
-      const response = await addTechSupportNumberApi({ phone })
+      const response = await addTechSupportNumberApi({ phone, name: name || undefined })
       if (!techSupportNumbers.value.some(item => item.phone === response.phone)) {
         techSupportNumbers.value = [
-          { added_by: null, created_at: new Date().toISOString(), phone: response.phone },
+          { added_by: null, created_at: new Date().toISOString(), name: response.name ?? name ?? null, phone: response.phone },
           ...techSupportNumbers.value,
         ]
       }
       return response
     }, 'Не удалось добавить номер техподдержки.')
+  }
+
+  async function loadSupportStats() {
+    return withLoading(isLoadingSupportStats, async () => {
+      supportStats.value = await getSupportStats()
+      return supportStats.value
+    }, 'Не удалось загрузить статистику обращений.')
   }
 
   async function removeTechSupportNumber(phone: string) {
@@ -158,6 +167,9 @@ export const useAdminStore = defineStore('admin', () => {
     addTechSupportNumber,
     clearAdminState,
     errorMessage,
+    isLoadingSupportStats,
+    loadSupportStats,
+    supportStats,
     isLoadingTrips,
     isLoadingParks,
     isLoadingParkChats,

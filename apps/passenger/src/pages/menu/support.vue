@@ -59,7 +59,18 @@ async function send() {
   scrollToBottom()
 }
 
-const isClosed = computed(() => support.room ? support.room.status !== 'open' : false)
+// pending_close — агент завершает обращение и ждёт подтверждения: «да» закрывает,
+// иначе диалог продолжается и возвращается в работу тому же агенту.
+async function confirmClose(resolved: boolean) {
+  if (support.isSending)
+    return
+  await support.sendMessage(resolved ? 'да' : 'Нет, проблема не решена')
+  scrollToBottom()
+}
+
+const isClosed = computed(() => support.room?.status === 'closed')
+const isPendingClose = computed(() => support.room?.status === 'pending_close')
+const agentLabel = computed(() => support.room?.agent_name ? `Техподдержка ${support.room.agent_name}` : 'Оператор онлайн')
 </script>
 
 <template>
@@ -72,8 +83,33 @@ const isClosed = computed(() => support.room ? support.room.status !== 'open' : 
           :class="isClosed ? 'bg-slate-500' : 'bg-emerald-400'"
         />
         <p class="text-xs text-slate-400 font-700">
-          {{ isClosed ? 'Обращение закрыто' : 'Оператор онлайн' }}
+          {{ isClosed ? 'Обращение закрыто' : agentLabel }}
         </p>
+      </div>
+
+      <!-- Подтверждение закрытия -->
+      <div v-if="isPendingClose" class="mb-3 shrink-0 rounded-2xl bg-amber-500/12 px-4 py-3">
+        <p class="text-sm text-amber-200 font-800">
+          Ваша проблема решена?
+        </p>
+        <div class="mt-2.5 flex gap-2">
+          <button
+            :disabled="support.isSending"
+            class="h-10 flex-1 rounded-xl bg-emerald-400 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-60"
+            type="button"
+            @click="confirmClose(true)"
+          >
+            Да, решена
+          </button>
+          <button
+            :disabled="support.isSending"
+            class="h-10 flex-1 rounded-xl bg-white/10 text-sm text-white font-900 transition active:scale-[0.98] disabled:opacity-60"
+            type="button"
+            @click="confirmClose(false)"
+          >
+            Нет
+          </button>
+        </div>
       </div>
 
       <!-- Messages -->

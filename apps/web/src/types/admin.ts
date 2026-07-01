@@ -7,7 +7,15 @@ export type AdminAssignableRole = Exclude<AuthRole, 'park' | 'superadmin' | 'tec
 export interface AdminTechSupportNumber {
   added_by: null | string
   created_at: string
+  name?: null | string
   phone: string
+}
+
+// Счётчик обращений для страницы техподдержки: решено / всего.
+export interface AdminSupportStats {
+  open: number
+  resolved: number
+  total: number
 }
 
 export interface AdminUser {
@@ -89,4 +97,5 @@ export interface AdminListTechSupportNumbersResponse {
 
 export interface AdminTechSupportNumberPayload {
   phone: string
+  name?: string
 }

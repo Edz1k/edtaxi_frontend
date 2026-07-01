@@ -13,6 +13,10 @@ export function openSupportRoom(payload: OpenSupportRoomPayload = {}) {
   })
 }
 
+export function getSupportRoom(id: string) {
+  return apiRequest<SupportRoom>(`/support/rooms/${id}`)
+}
+
 export function sendSupportMessage(id: string, payload: SupportSendMessagePayload) {
   return apiRequest<SupportMessagesResponse['messages'][number]>(`/support/rooms/${id}/messages`, {
     method: 'POST',
