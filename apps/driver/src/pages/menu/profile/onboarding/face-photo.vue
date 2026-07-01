@@ -30,6 +30,8 @@ const idPreview = ref('')
 // выбор файла/тыловая камера. В будущем селфи можно заменить на live-камеру.
 function pickSelfie() {
   pickImage('user', (file, url) => {
+    if (selfiePreview.value)
+      URL.revokeObjectURL(selfiePreview.value)
     selfieFile.value = file
     selfiePreview.value = url
   })
@@ -37,10 +39,19 @@ function pickSelfie() {
 
 function pickId() {
   pickImage('environment', (file, url) => {
+    if (idPreview.value)
+      URL.revokeObjectURL(idPreview.value)
     idFile.value = file
     idPreview.value = url
   })
 }
+
+onUnmounted(() => {
+  if (selfiePreview.value)
+    URL.revokeObjectURL(selfiePreview.value)
+  if (idPreview.value)
+    URL.revokeObjectURL(idPreview.value)
+})
 
 function pickImage(capture: string, onPick: (file: File, url: string) => void) {
   const input = document.createElement('input')

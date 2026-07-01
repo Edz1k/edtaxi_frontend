@@ -1,16 +1,9 @@
-import { init, isTMA, viewport } from '@telegram-apps/sdk'
+import { isTMA, viewport } from '@telegram-apps/sdk'
+import { initTelegramSdk } from '~/composables/telegram/sdk'
 
-let isTelegramSdkInitialized = false
 let stopViewportCssVars: VoidFunction | undefined
 let stopFullscreenClassSync: VoidFunction | undefined
 let mountPromise: Promise<void> | undefined
-
-function initTelegramSdk() {
-  if (!isTelegramSdkInitialized) {
-    init()
-    isTelegramSdkInitialized = true
-  }
-}
 
 function syncFullscreenClass(isFullscreen: boolean) {
   document.documentElement.classList.toggle('tg-fullscreen', isFullscreen)
@@ -27,7 +20,10 @@ export async function mountTelegramSafeArea() {
 
   if (!viewport.isMounted() && !viewport.isMounting()) {
     mountPromise = viewport.mount.isAvailable()
-      ? viewport.mount({ timeout: 3000 })
+      ? viewport.mount({ timeout: 3000 }).catch((err) => {
+          mountPromise = undefined
+          throw err
+        })
       : undefined
   }
 

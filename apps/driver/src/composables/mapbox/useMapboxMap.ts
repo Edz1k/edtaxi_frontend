@@ -13,11 +13,13 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
   const mapboxglModule = shallowRef<MapboxModule>()
   const driverMarker = shallowRef<Marker>()
   const pickupMarker = shallowRef<Marker>()
+  const destinationMarker = shallowRef<Marker>()
   const userMarker = shallowRef<Marker>()
   const favoriteMarkers: Marker[] = []
   const mapError = ref('')
   let resizeObserver: ResizeObserver | undefined
   let resizeFrame = 0
+  let initResizeTimer: number | undefined
 
   function resizeMap() {
     if (resizeFrame)
@@ -84,7 +86,7 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
     })
 
     syncMapResize()
-    window.setTimeout(resizeMap, 100)
+    initResizeTimer = window.setTimeout(resizeMap, 100)
   }
 
   function showCurrentPosition(clearRoute?: () => void) {
@@ -102,6 +104,9 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
 
   function hideCurrentMarker() {
     pickupMarker.value?.remove()
+    pickupMarker.value = undefined
+    destinationMarker.value?.remove()
+    destinationMarker.value = undefined
   }
 
   function hideDriverLocation() {
@@ -344,8 +349,8 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
     if (!map.value || !mapboxglModule.value)
       return
 
-    pickupMarker.value?.remove()
-    pickupMarker.value = new mapboxglModule.value.default.Marker({
+    destinationMarker.value?.remove()
+    destinationMarker.value = new mapboxglModule.value.default.Marker({
       anchor: 'bottom',
       element: createDestinationMarkerElement(),
     })
@@ -465,9 +470,14 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
   function destroyMap(cleanup?: () => void) {
     cleanup?.()
     stopMapResizeSync()
+    if (initResizeTimer !== undefined) {
+      window.clearTimeout(initResizeTimer)
+      initResizeTimer = undefined
+    }
     clearFavoriteLocations()
     driverMarker.value?.remove()
     pickupMarker.value?.remove()
+    destinationMarker.value?.remove()
     userMarker.value?.remove()
     map.value?.remove()
   }

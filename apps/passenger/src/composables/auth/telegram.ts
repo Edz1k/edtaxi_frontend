@@ -1,4 +1,5 @@
-import { init, miniAppReady, openLink, retrieveRawInitData } from '@telegram-apps/sdk'
+import { miniAppReady, openLink, retrieveRawInitData } from '@telegram-apps/sdk'
+import { initTelegramSdk } from '~/composables/telegram/sdk'
 
 interface TelegramWebApp {
   expand?: () => void
@@ -6,22 +7,12 @@ interface TelegramWebApp {
   ready?: () => void
 }
 
-let isTelegramSdkInitialized = false
-
 declare global {
   interface Window {
     Telegram?: {
       WebApp?: TelegramWebApp
     }
   }
-}
-
-function initTelegramSdk() {
-  if (isTelegramSdkInitialized || typeof window === 'undefined')
-    return
-
-  init()
-  isTelegramSdkInitialized = true
 }
 
 export function getTelegramInitData() {

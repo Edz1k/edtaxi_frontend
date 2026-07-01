@@ -53,16 +53,27 @@ function pickFile(type: 'selfie' | 'vehicle') {
       return
     const url = URL.createObjectURL(file)
     if (type === 'selfie') {
+      if (selfiePreview.value)
+        URL.revokeObjectURL(selfiePreview.value)
       selfieFile.value = file
       selfiePreview.value = url
     }
     else {
+      if (vehiclePhotoPreview.value)
+        URL.revokeObjectURL(vehiclePhotoPreview.value)
       vehiclePhotoFile.value = file
       vehiclePhotoPreview.value = url
     }
   }
   input.click()
 }
+
+onUnmounted(() => {
+  if (selfiePreview.value)
+    URL.revokeObjectURL(selfiePreview.value)
+  if (vehiclePhotoPreview.value)
+    URL.revokeObjectURL(vehiclePhotoPreview.value)
+})
 
 async function submit() {
   if (!canSubmit.value || driver.isLoading)

@@ -49,16 +49,27 @@ function pickFile(type: 'photo' | 'passport') {
       return
     const url = URL.createObjectURL(file)
     if (type === 'photo') {
+      if (vehiclePhotoPreview.value)
+        URL.revokeObjectURL(vehiclePhotoPreview.value)
       vehiclePhotoFile.value = file
       vehiclePhotoPreview.value = url
     }
     else {
+      if (techPassportPreview.value)
+        URL.revokeObjectURL(techPassportPreview.value)
       techPassportFile.value = file
       techPassportPreview.value = url
     }
   }
   input.click()
 }
+
+onUnmounted(() => {
+  if (vehiclePhotoPreview.value)
+    URL.revokeObjectURL(vehiclePhotoPreview.value)
+  if (techPassportPreview.value)
+    URL.revokeObjectURL(techPassportPreview.value)
+})
 
 async function submit() {
   if (!canSubmit.value || driver.isLoading)
