@@ -1,5 +1,3 @@
-
-
 :root {
   --app-safe-area-top: max(
     env(safe-area-inset-top, 0px),

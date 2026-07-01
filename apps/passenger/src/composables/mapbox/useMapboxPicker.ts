@@ -1,8 +1,8 @@
+import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
+import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { Map } from 'mapbox-gl'
 import type { ComputedRef, Ref, ShallowRef } from 'vue'
 import type { UserCoordinates } from '~/composables/mapbox/useUserLocation'
-import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
-import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import { reverseGeocodePlace } from '~/api/geocoding'
 
 interface UseMapboxPickerOptions {
@@ -65,7 +65,7 @@ export function useMapboxPicker(options: UseMapboxPickerOptions) {
 
     const coordinate = options.pickerMode.value === 'pickup'
       ? options.routeCoordinates.value[0]
-      : options.routeCoordinates.value[options.routeCoordinates.value.length - 1]
+      : options.routeCoordinates.value.at(-1)
 
     flyToPickerPoint(coordinate, 15)
   }

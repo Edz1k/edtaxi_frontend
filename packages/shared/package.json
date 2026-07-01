@@ -20,17 +20,15 @@
     "./types/wallet": "./src/types/wallet.ts",
     "./uno.base": "./src/uno.base.ts"
   },
-  "peerDependencies": {
-    "@telegram-apps/sdk": "catalog:frontend"
-  },
   "dependencies": {
+    "@iconify-json/mdi": "catalog:dev",
+    "@telegram-apps/sdk": "catalog:frontend",
+    "@unocss/preset-web-fonts": "catalog:frontend",
     "axios": "catalog:build",
+    "maska": "catalog:frontend",
     "pinia": "catalog:frontend",
     "reka-ui": "catalog:frontend",
-    "maska": "catalog:frontend",
-    "vue": "catalog:frontend",
     "unocss": "catalog:build",
-    "@unocss/preset-web-fonts": "catalog:frontend",
-    "@iconify-json/mdi": "catalog:dev"
+    "vue": "catalog:frontend"
   }
 }

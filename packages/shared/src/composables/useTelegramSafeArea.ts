@@ -1,5 +1,5 @@
-import { onMounted, readonly, ref } from 'vue'
 import { isTMA, viewport } from '@telegram-apps/sdk'
+import { onMounted, readonly, ref } from 'vue'
 import { initTelegramSdk } from './telegram/sdk'
 
 let stopViewportCssVars: VoidFunction | undefined

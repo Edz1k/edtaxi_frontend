@@ -554,7 +554,6 @@ declare module 'vue' {
     readonly usePageLeave: UnwrapRef<typeof import('@vueuse/core')['usePageLeave']>
     readonly useParallax: UnwrapRef<typeof import('@vueuse/core')['useParallax']>
     readonly useParentElement: UnwrapRef<typeof import('@vueuse/core')['useParentElement']>
-    readonly useParkStore: UnwrapRef<typeof import('./stores/park')['useParkStore']>
     readonly usePassengerStore: UnwrapRef<typeof import('./stores/passenger')['usePassengerStore']>
     readonly usePerformanceObserver: UnwrapRef<typeof import('@vueuse/core')['usePerformanceObserver']>
     readonly usePermission: UnwrapRef<typeof import('@vueuse/core')['usePermission']>
@@ -587,7 +586,6 @@ declare module 'vue' {
     readonly useSessionStorage: UnwrapRef<typeof import('@vueuse/core')['useSessionStorage']>
     readonly useShakeAnimation: UnwrapRef<typeof import('./composables/useShakeAnimation')['useShakeAnimation']>
     readonly useShare: UnwrapRef<typeof import('@vueuse/core')['useShare']>
-    readonly useShareStore: UnwrapRef<typeof import('./stores/share')['useShareStore']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useSorted: UnwrapRef<typeof import('@vueuse/core')['useSorted']>
     readonly useSpeechRecognition: UnwrapRef<typeof import('@vueuse/core')['useSpeechRecognition']>

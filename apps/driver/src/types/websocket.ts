@@ -14,13 +14,6 @@ export interface DriverTripOffer {
   trip_id: string
 }
 
-export interface DriverLocationMessage {
-  heading?: number
-  lat: number
-  lng: number
-  speed?: number
-}
-
 export interface DriverTripOfferWireData {
   category?: VehicleCategory
   distance_km?: number

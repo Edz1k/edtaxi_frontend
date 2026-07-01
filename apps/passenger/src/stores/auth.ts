@@ -1,8 +1,4 @@
 import type { AuthRole, AuthSession, OtpDeliveryMethod } from '~/types/auth'
-import { acceptHMRUpdate, defineStore } from 'pinia'
-import { getAuthSession, logout as logoutRequest, sendDriverAuthOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyOtp } from '~/api/auth'
-import { ApiError } from '~/api/client'
-import { showErrorToast } from '~/api/errors'
 import {
   AUTH_SESSION_CHANGED_EVENT,
   clearOtpDeliveryMethod,
@@ -17,6 +13,10 @@ import {
   savePendingPhone,
 } from '@edtaxi/shared/composables/auth/session'
 import { getTelegramInitData, isTelegramWebApp } from '@edtaxi/shared/composables/auth/telegram'
+import { acceptHMRUpdate, defineStore } from 'pinia'
+import { getAuthSession, logout as logoutRequest, sendDriverAuthOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyOtp } from '~/api/auth'
+import { ApiError } from '~/api/client'
+import { showErrorToast } from '~/api/errors'
 import { usePassengerStore } from '~/stores/passenger'
 import { useSupportStore } from '~/stores/support'
 import { useTripsStore } from '~/stores/trips'

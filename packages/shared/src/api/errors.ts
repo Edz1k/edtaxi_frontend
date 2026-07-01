@@ -1,5 +1,5 @@
-import { ApiError } from './client'
 import { useToast } from '../composables/useToast'
+import { ApiError } from './client'
 
 const ERROR_MESSAGES: Record<string, string> = {
   'access denied': 'Доступ запрещён.',

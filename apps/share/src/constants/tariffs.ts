@@ -1,4 +1,4 @@
-import type { EstimateTripResponse, VehicleCategory } from '~/types/trips'
+import type { VehicleCategory } from '~/types/trips'
 
 export const TARIFF_META: Record<VehicleCategory, {
   caption: string
@@ -25,8 +25,4 @@ export const TARIFF_META: Record<VehicleCategory, {
     icon: 'i-mdi-van-passenger',
     label: 'Минивэн',
   },
-}
-
-export function formatFare(estimate: EstimateTripResponse) {
-  return `${Math.round(estimate.estimated_fare).toLocaleString('ru-RU')} ₸`
 }
