@@ -31,3 +31,12 @@ export function closeSupportRoom(id: string) {
     method: 'POST',
   })
 }
+
+// attachTripToSupport прикрепляет поездку к обращению — поддержка увидит, о какой
+// поездке идёт речь.
+export function attachTripToSupport(roomId: string, tripId: string) {
+  return apiRequest<{ message: string }>(`/support/rooms/${roomId}/attach-trip`, {
+    method: 'POST',
+    body: { trip_id: tripId },
+  })
+}
