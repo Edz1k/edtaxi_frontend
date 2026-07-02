@@ -99,7 +99,14 @@ function buildHeaders(options: ApiRequestOptions) {
   return requestHeaders
 }
 
-async function refreshAuthToken(deviceFingerprint?: string) {
+// Concurrent 401s (several requests expiring at once) must not hit
+// /auth/token/refresh in parallel: the refresh token is single-use and
+// rotated server-side, so a second parallel call would receive an
+// already-invalidated token and force a logout even though the first call
+// just refreshed the session successfully. Dedupe into one in-flight call.
+let refreshPromise: Promise<boolean> | null = null
+
+async function performRefresh(deviceFingerprint?: string) {
   try {
     await refreshClient.post(
       '/auth/token/refresh',
@@ -119,6 +126,16 @@ async function refreshAuthToken(deviceFingerprint?: string) {
 
     return false
   }
+}
+
+function refreshAuthToken(deviceFingerprint?: string) {
+  if (!refreshPromise) {
+    refreshPromise = performRefresh(deviceFingerprint).finally(() => {
+      refreshPromise = null
+    })
+  }
+
+  return refreshPromise
 }
 
 async function request<T>(path: string, options: ApiRequestOptions) {
