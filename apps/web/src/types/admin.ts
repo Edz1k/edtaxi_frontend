@@ -2,7 +2,7 @@ import type { AuthRole } from '~/types/auth'
 import type { Trip, TripStatus } from '~/types/trips'
 
 export type AdminUserRole = AuthRole
-export type AdminAssignableRole = Exclude<AuthRole, 'park' | 'superadmin' | 'tech_support'>
+export type AdminAssignableRole = Exclude<AuthRole, 'superadmin'>
 
 export interface AdminTechSupportNumber {
   added_by: null | string

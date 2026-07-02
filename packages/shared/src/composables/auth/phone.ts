@@ -1,7 +1,8 @@
 export const KZ_PHONE_LENGTH = 10
+const NON_DIGIT_RE = /\D/g
 
 export function normalizeKazakhstanPhone(value: string) {
-  let digits = value.replace(/\D/g, '')
+  let digits = value.replace(NON_DIGIT_RE, '')
 
   if (digits.length > KZ_PHONE_LENGTH && ['7', '8'].includes(digits[0] ?? ''))
     digits = digits.slice(1)

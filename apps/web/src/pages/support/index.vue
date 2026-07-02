@@ -40,6 +40,7 @@ function profileLink(room: SupportRoom) {
 const statuses: Array<{ label: string, value: SupportRoomStatus | '' }> = [
   { label: 'Все', value: '' },
   { label: 'Открытые', value: 'open' },
+  { label: 'На закрытии', value: 'pending_close' },
   { label: 'Закрытые', value: 'closed' },
 ]
 

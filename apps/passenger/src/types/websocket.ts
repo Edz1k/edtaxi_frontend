@@ -1,3 +1,4 @@
+import type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
 import type { TripStatus, VehicleCategory } from '~/types/trips'
 
 export type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'

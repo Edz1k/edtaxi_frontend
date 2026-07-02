@@ -81,9 +81,9 @@ export const useSupportStore = defineStore('support', () => {
   async function closeRoom(room: SupportRoom) {
     return withLoading(isMutating, async () => {
       await closeTechSupportRoom(room.id)
-      room.status = 'closed'
+      room.status = 'pending_close'
       if (currentRoom.value?.id === room.id)
-        currentRoom.value.status = 'closed'
+        currentRoom.value.status = 'pending_close'
     }, 'Не удалось закрыть обращение.')
   }
 

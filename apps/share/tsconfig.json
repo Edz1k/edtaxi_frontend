@@ -7,7 +7,9 @@
       "@edtaxi/shared/*": ["../../packages/shared/src/*"]
     },
     "types": [
+      "node",
       "vite/client",
+      "vite-plugin-vue-layouts/client",
       "unplugin-vue-macros/macros-global"
     ]
   },
