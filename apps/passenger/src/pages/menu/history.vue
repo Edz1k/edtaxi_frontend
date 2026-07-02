@@ -31,6 +31,8 @@ const loadMoreSentinel = ref<HTMLElement | null>(null)
 const ratingTrip = ref<Trip | null>(null)
 const ratingScore = ref(5)
 const ratingComment = ref('')
+const complaintTrip = ref<Trip | null>(null)
+const complaintReason = ref('')
 let observer: IntersectionObserver | undefined
 
 definePage({
@@ -135,6 +137,33 @@ async function submitRating() {
   await trips.submitRating(ratingTrip.value.id, ratingScore.value, ratingComment.value)
   toast.success('Спасибо', 'Оценка отправлена.')
   closeRating()
+}
+
+// Пожаловаться можно только на завершённую поездку с назначенным водителем —
+// то же ограничение проверяет бэкенд.
+function canComplain(trip: Trip) {
+  return trip.status === 'completed' && Boolean(trip.driver || trip.driver_id)
+}
+
+const isComplaintReasonValid = computed(() => complaintReason.value.trim().length >= 3)
+
+function openComplaint(trip: Trip) {
+  complaintTrip.value = trip
+  complaintReason.value = ''
+}
+
+function closeComplaint() {
+  complaintTrip.value = null
+  complaintReason.value = ''
+}
+
+async function submitComplaint() {
+  if (!complaintTrip.value || !isComplaintReasonValid.value)
+    return
+
+  await trips.submitComplaint(complaintTrip.value.id, complaintReason.value.trim())
+  toast.success('Жалоба отправлена', 'Мы рассмотрим её и примем меры.')
+  closeComplaint()
 }
 
 function setupInfiniteScroll() {
@@ -297,6 +326,17 @@ onBeforeUnmount(() => {
             <span class="i-mdi-headset text-5" />
             {{ attachingTripId === trip.id ? 'Открываем...' : 'Поддержка по поездке' }}
           </button>
+
+          <button
+            v-if="canComplain(trip)"
+            :disabled="trips.isFilingComplaint"
+            class="mt-2 h-11 w-full flex items-center justify-center gap-2 rounded-2xl bg-red-500/10 text-sm text-red-300 font-900 transition active:scale-[0.98] disabled:opacity-60"
+            type="button"
+            @click="openComplaint(trip)"
+          >
+            <span class="i-mdi-alert-circle-outline text-5" />
+            Пожаловаться на водителя
+          </button>
         </article>
 
         <div ref="loadMoreSentinel" class="h-1" />
@@ -381,6 +421,61 @@ onBeforeUnmount(() => {
               @click="submitRating"
             >
               {{ trips.isRating ? 'Отправляем...' : 'Отправить оценку' }}
+            </button>
+          </section>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="complaintTrip"
+          class="fixed inset-0 z-60 flex items-end bg-black/65 px-4 pb-[calc(var(--app-safe-area-bottom)+1rem)]"
+          @click.self="closeComplaint"
+        >
+          <section class="mx-auto max-w-sm w-full rounded-3xl bg-secondary-900 p-5 text-white shadow-2xl shadow-black/30">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <p class="text-xs text-red-300 font-900 uppercase">
+                  Жалоба
+                </p>
+                <h2 class="mt-1 text-2xl font-950">
+                  Пожаловаться на водителя
+                </h2>
+              </div>
+              <button aria-label="Закрыть жалобу" class="h-11 w-11 flex items-center justify-center rounded-full bg-white/8" type="button" @click="closeComplaint">
+                <span class="i-mdi-close text-6" />
+              </button>
+            </div>
+
+            <p class="mt-3 text-sm text-slate-400 leading-5">
+              Опишите, что произошло. Жалобу рассмотрит служба поддержки.
+            </p>
+
+            <textarea
+              v-model="complaintReason"
+              aria-label="Причина жалобы"
+              class="mt-4 min-h-28 w-full resize-none border border-white/10 rounded-2xl bg-white/6 p-4 text-sm outline-none focus:border-red-400"
+              maxlength="1000"
+              name="complaint_reason"
+              placeholder="Например: водитель вёл себя грубо"
+            />
+
+            <button
+              :disabled="trips.isFilingComplaint || !isComplaintReasonValid"
+              class="mt-4 h-13 w-full rounded-2xl bg-red-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
+              type="button"
+              @click="submitComplaint"
+            >
+              {{ trips.isFilingComplaint ? 'Отправляем...' : 'Отправить жалобу' }}
             </button>
           </section>
         </div>

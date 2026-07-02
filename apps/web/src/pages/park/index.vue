@@ -302,6 +302,29 @@ async function copyToken(token: string) {
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p class="text-xs text-white/42 font-900 uppercase">
+              Финансы
+            </p>
+            <h2 class="mt-1 text-xl font-950">
+              Кошелёк парка
+            </h2>
+            <p class="mt-1 text-sm text-white/55">
+              Баланс, заявки на вывод средств и их статусы.
+            </p>
+          </div>
+          <RouterLink
+            class="h-10 inline-flex items-center gap-2 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 transition hover:bg-cyan-200"
+            to="/park/wallet"
+          >
+            <span class="i-mdi-wallet-outline text-4.5" />
+            Открыть кошелёк
+          </RouterLink>
+        </div>
+      </section>
+
+      <section class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs text-white/42 font-900 uppercase">
               Чат
             </p>
             <h2 class="mt-1 text-xl font-950">

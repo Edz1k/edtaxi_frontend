@@ -20,6 +20,7 @@ import { showErrorToast } from '~/api/errors'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverEarningsStore } from '~/stores/driverEarnings'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
+import { useParkChatStore } from '~/stores/parkChat'
 import { useSupportStore } from '~/stores/support'
 
 const ROLE_PRIORITY: AuthRole[] = ['passenger', 'driver', 'admin', 'superadmin', 'tech_support', 'park']
@@ -80,6 +81,7 @@ export const useAuthStore = defineStore('auth', () => {
     useDriverOnboardingStore().clearOnboardingState()
     useDriverEarningsStore().clearEarningsState()
     useSupportStore().clearSupportState()
+    useParkChatStore().clearParkChatState()
   }
 
   function clearLocalSession() {

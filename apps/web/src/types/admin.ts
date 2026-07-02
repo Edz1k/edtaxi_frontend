@@ -97,6 +97,29 @@ export interface AdminListTechSupportNumbersResponse {
   numbers: AdminTechSupportNumber[]
 }
 
+export interface PlatformSettingsLimitRange {
+  min: number
+  max: number
+}
+
+// Настройки платформы: комиссия (0 = акция «без комиссии») и коэффициент цены.
+// limits — допустимые диапазоны, бэкенд отдаёт их вместе со значениями.
+export interface PlatformSettings {
+  platform_commission_rate: number
+  price_coefficient: number
+  max_park_commission_rate: number
+  limits: {
+    platform_commission_rate: PlatformSettingsLimitRange
+    price_coefficient: PlatformSettingsLimitRange
+  }
+  updated_at: string
+}
+
+export interface PlatformSettingsUpdatePayload {
+  platform_commission_rate?: number
+  price_coefficient?: number
+}
+
 export interface AdminTechSupportNumberPayload {
   phone: string
   name?: string

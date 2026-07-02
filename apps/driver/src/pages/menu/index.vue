@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { mediaUrl } from '~/api/client'
+import { getDriverOverview } from '~/api/driver'
 import { useAuthStore } from '~/stores/auth'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
@@ -8,6 +9,10 @@ const router = useRouter()
 const auth = useAuthStore()
 const driver = useDriverStore()
 const onboarding = useDriverOnboardingStore()
+
+// park_id из обзора водителя — чтобы показать пункт «Чат с парком» только
+// состоящим в таксопарке.
+const parkId = ref<null | string>(null)
 
 const driverMeta = computed(() => {
   if (driver.profile)
@@ -20,8 +25,7 @@ const verificationOk = computed(() => {
   const v = onboarding.verification
   if (!v)
     return false
-  const vehiclesOk = v.vehicles.length > 0 && v.vehicles.every(veh => veh.verification_status === 'approved')
-  return v.face_verified && vehiclesOk && v.daily_check_valid
+  return v.face_verified && v.has_approved_vehicle && v.daily_check_valid
 })
 
 // После подтверждения лица селфи показывается как аватар вместо иконки руля.
@@ -35,6 +39,9 @@ const menuItems = computed(() => [
   { label: 'Автомобиль', description: 'Данные машины и тариф', icon: 'i-mdi-car-info', to: '/menu/vehicle', badge: false },
   { label: 'История поездок', description: 'Ваши заказы', icon: 'i-mdi-history', to: '/menu/history', badge: false },
   { label: 'Таксопарк', description: 'Принять приглашение', icon: 'i-mdi-office-building-marker', to: '/menu/park-invite', badge: false },
+  ...(parkId.value
+    ? [{ label: 'Чат с парком', description: 'Связь с вашим таксопарком', icon: 'i-mdi-message-text', to: '/menu/park-chat', badge: false }]
+    : []),
   { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support', badge: false },
 ])
 
@@ -57,6 +64,11 @@ async function logout() {
 }
 
 onMounted(async () => {
+  getDriverOverview()
+    .then((overview) => {
+      parkId.value = overview.driver.park_id
+    })
+    .catch(() => {})
   await driver.ensureProfile().catch(() => {})
   await onboarding.loadVerification().catch(() => {})
 })

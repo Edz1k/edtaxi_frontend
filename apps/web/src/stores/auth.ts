@@ -1,6 +1,7 @@
+import type { TelegramCodeFlow } from '~/api/auth'
 import type { AuthLoginFlow, AuthRole, AuthSession, OtpDeliveryMethod } from '~/types/auth'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { getAuthSession, logout as logoutRequest, sendOtp, verifyOtp } from '~/api/auth'
+import { getAuthSession, logout as logoutRequest, sendOtp, verifyOtp, verifyTelegramCode } from '~/api/auth'
 import { ApiError } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
 import {
@@ -238,6 +239,25 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Вход по коду из Telegram-бота: номер телефона не нужен, код сам
+  // идентифицирует пользователя.
+  async function confirmTelegramCode(code: string, flow: TelegramCodeFlow) {
+    isLoading.value = true
+    errorMessage.value = ''
+
+    try {
+      await verifyTelegramCode({ code, deviceFingerprint: getDeviceFingerprint() }, flow)
+      await restoreSessionAfterLogin()
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось подтвердить код. Попробуйте еще раз.')
+      throw error
+    }
+    finally {
+      isLoading.value = false
+    }
+  }
+
   async function logout() {
     isLoading.value = true
     errorMessage.value = ''
@@ -258,6 +278,7 @@ export const useAuthStore = defineStore('auth', () => {
     clearSession,
     clearPendingLogin,
     confirmOtp,
+    confirmTelegramCode,
     currentUser,
     errorMessage,
     getDeviceFingerprint,

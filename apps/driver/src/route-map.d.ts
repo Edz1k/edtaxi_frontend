@@ -87,6 +87,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/menu/park-chat': RouteRecordInfo<
+      '/menu/park-chat',
+      '/menu/park-chat',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/menu/park-invite': RouteRecordInfo<
       '/menu/park-invite',
       '/menu/park-invite',
@@ -97,6 +104,13 @@ declare module 'vue-router/auto-routes' {
     '/menu/profile/': RouteRecordInfo<
       '/menu/profile/',
       '/menu/profile',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/menu/profile/change-phone': RouteRecordInfo<
+      '/menu/profile/change-phone',
+      '/menu/profile/change-phone',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -227,6 +241,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    'src/pages/menu/park-chat.vue': {
+      routes:
+        | '/menu/park-chat'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     'src/pages/menu/park-invite.vue': {
       routes:
         | '/menu/park-invite'
@@ -238,6 +260,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/menu/profile/index.vue': {
       routes:
         | '/menu/profile/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/profile/change-phone.vue': {
+      routes:
+        | '/menu/profile/change-phone'
       views:
         | never
       pathParamNames:

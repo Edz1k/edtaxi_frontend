@@ -85,3 +85,13 @@ export interface RateTripPayload {
   comment?: string
   score: number
 }
+
+export interface FileTripComplaintPayload {
+  reason: string
+}
+
+export interface FileTripComplaintResponse {
+  id: string
+  status: string
+  message: string
+}

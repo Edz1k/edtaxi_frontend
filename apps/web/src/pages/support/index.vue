@@ -3,10 +3,14 @@ import type { SupportParticipantType, SupportRoom, SupportRoomStatus } from '~/t
 import AppSelectDropdown from '~/components/app/AppSelectDropdown.vue'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { useListFilter } from '~/composables/useListFilter'
+import { useAdminStore } from '~/stores/admin'
 import { useSupportStore } from '~/stores/support'
 import { formatDate } from '~/utils/format'
 
 const support = useSupportStore()
+// Статистика обращений живёт в admin-сторе; эндпоинт выбирается по роли,
+// поэтому работает и у tech_support, и у админа.
+const admin = useAdminStore()
 const { value: participantType, model: participantFilter } = useListFilter<SupportParticipantType>('passenger')
 const { value: status, model: statusFilter } = useListFilter<SupportRoomStatus>('open')
 const query = ref('')
@@ -58,6 +62,7 @@ useHead({
 
 onMounted(() => {
   loadRooms()
+  admin.loadSupportStats().catch(() => {})
 })
 
 watch([participantType, status], () => loadRooms())
@@ -106,6 +111,34 @@ function statusClass(value: SupportRoomStatus) {
       <AppSelectDropdown v-model="participantFilter" label="Тип" :options="participantTypes" />
       <AppSelectDropdown v-model="statusFilter" label="Статус" :options="statuses" />
     </template>
+
+    <!-- Счётчик обращений: решено / в работе / всего -->
+    <div v-if="admin.supportStats" class="grid mt-5 gap-3 sm:grid-cols-3">
+      <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
+        <p class="text-xs text-white/45 font-800 uppercase">
+          Решено
+        </p>
+        <p class="mt-1 text-2xl text-emerald-300 font-950">
+          {{ admin.supportStats.resolved }}/{{ admin.supportStats.total }}
+        </p>
+      </div>
+      <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
+        <p class="text-xs text-white/45 font-800 uppercase">
+          В работе
+        </p>
+        <p class="mt-1 text-2xl font-950" :class="admin.supportStats.open > 0 ? 'text-amber-300' : ''">
+          {{ admin.supportStats.open }}
+        </p>
+      </div>
+      <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
+        <p class="text-xs text-white/45 font-800 uppercase">
+          Всего обращений
+        </p>
+        <p class="mt-1 text-2xl font-950">
+          {{ admin.supportStats.total }}
+        </p>
+      </div>
+    </div>
 
     <div class="relative mt-5">
       <span class="i-mdi-magnify absolute left-3.5 top-1/2 text-5 text-white/40 -translate-y-1/2" />

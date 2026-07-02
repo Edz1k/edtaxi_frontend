@@ -2,6 +2,10 @@ import type {
   DailyCheck,
   DriverEarnings,
   DriverLocationPayload,
+  DriverPayoutPayload,
+  DriverPayoutsResponse,
+  DriverPhoneOtpResponse,
+  DriverPhoneVerifyResponse,
   DriverProfile,
   DriverStatusPayload,
   DriverStatusResponse,
@@ -13,6 +17,9 @@ import type {
   DriverWallet,
   DriverWalletTopUpPayload,
   DriverWalletTopUpResponse,
+  PayoutRequest,
+  RatePassengerPayload,
+  VerificationReminder,
 } from '~/types/driver'
 import type { DriverOverview } from '~/types/driver-overview'
 import type { ActiveTripResponse, Trip } from '~/types/trips'
@@ -123,6 +130,46 @@ export function topUpDriverWallet(payload: DriverWalletTopUpPayload) {
   return apiRequest<DriverWalletTopUpResponse>('/driver/wallet/topup', {
     method: 'POST',
     body: payload,
+  })
+}
+
+// requestDriverPayout создаёт заявку на вывод средств — админ обрабатывает её
+// вручную (paid/rejected), деньги переводятся вне системы.
+export function requestDriverPayout(payload: DriverPayoutPayload) {
+  return apiRequest<PayoutRequest>('/driver/wallet/payout', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export function getDriverPayouts(params: { limit?: number, offset?: number } = {}) {
+  return apiRequest<DriverPayoutsResponse>('/driver/wallet/payouts', { params })
+}
+
+// getVerificationReminder — показать ли водителю напоминание о верификации.
+// Бэкенд сам рейт-лимитит показ (не чаще 1 раза в 24 часа).
+export function getVerificationReminder() {
+  return apiRequest<VerificationReminder>('/driver/verification-reminder')
+}
+
+export function ratePassenger(tripId: string, payload: RatePassengerPayload) {
+  return apiRequest<{ message: string }>(`/driver/trips/${tripId}/rate-passenger`, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export function sendDriverPhoneOtp(phone: string) {
+  return apiRequest<DriverPhoneOtpResponse>('/driver/profile/phone/send', {
+    method: 'POST',
+    body: { phone },
+  })
+}
+
+export function verifyDriverPhone(phone: string, code: string) {
+  return apiRequest<DriverPhoneVerifyResponse>('/driver/profile/phone/verify', {
+    method: 'POST',
+    body: { phone, code },
   })
 }
 

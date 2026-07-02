@@ -3,8 +3,9 @@ import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, Trip, TripFlowState, VehicleCategory } from '~/types/trips'
 import type { PassengerDriverLocation } from '~/types/websocket'
 import { acceptHMRUpdate, defineStore } from 'pinia'
+import { ApiError } from '~/api/client'
 import { getUserErrorMessage, showErrorToast } from '~/api/errors'
-import { cancelTrip, createTrip, estimateTrip, getActiveTrip, getTrip, getTripHistory, rateTrip } from '~/api/trips'
+import { cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getTrip, getTripHistory, rateTrip } from '~/api/trips'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
 import { isTerminalTripStatus } from '~/utils/trip'
 
@@ -24,6 +25,7 @@ export const useTripsStore = defineStore('trips', () => {
   const isCreating = ref(false)
   const isCancelling = ref(false)
   const isRating = ref(false)
+  const isFilingComplaint = ref(false)
   const isLoadingHistory = ref(false)
   const isRestoringActiveTrip = ref(false)
   const isPollingActiveTrip = ref(false)
@@ -339,6 +341,12 @@ export const useTripsStore = defineStore('trips', () => {
     }
     catch (error) {
       errorMessage.value = showErrorToast(error, 'Не удалось создать поездку.')
+
+      // 409 — на бэке уже есть активная поездка (например, заказана с другого
+      // устройства): подтягиваем её, чтобы экран показал актуальное состояние.
+      if (error instanceof ApiError && error.status === 409)
+        await restoreActiveTrip().catch(() => {})
+
       throw error
     }
     finally {
@@ -426,6 +434,23 @@ export const useTripsStore = defineStore('trips', () => {
     }
   }
 
+  async function submitComplaint(tripId: string, reason: string) {
+    isFilingComplaint.value = true
+    errorMessage.value = ''
+
+    try {
+      const response = await fileTripComplaint(tripId, { reason })
+      return response
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось отправить жалобу.')
+      throw error
+    }
+    finally {
+      isFilingComplaint.value = false
+    }
+  }
+
   function resetHistory() {
     history.value = []
     historyHasMore.value = true
@@ -462,6 +487,7 @@ export const useTripsStore = defineStore('trips', () => {
     isCreating.value = false
     isCancelling.value = false
     isRating.value = false
+    isFilingComplaint.value = false
     isLoadingHistory.value = false
     isRestoringActiveTrip.value = false
   }
@@ -484,6 +510,7 @@ export const useTripsStore = defineStore('trips', () => {
     isCancelling,
     isCreating,
     isEstimating,
+    isFilingComplaint,
     isLoadingHistory,
     isMapPickerActive,
     isPollingActiveTrip,
@@ -520,6 +547,7 @@ export const useTripsStore = defineStore('trips', () => {
     startMapPicker,
     startActiveTripPolling,
     stopActiveTripPolling,
+    submitComplaint,
     submitRating,
   }
 })
