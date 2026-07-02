@@ -68,6 +68,9 @@ export function useMapboxPicker(options: UseMapboxPickerOptions) {
       ? options.routeCoordinates.value[0]
       : options.routeCoordinates.value.at(-1)
 
+    if (!coordinate)
+      return
+
     flyToPickerPoint(coordinate, 15)
   }
 

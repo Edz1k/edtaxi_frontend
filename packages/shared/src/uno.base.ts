@@ -1,4 +1,3 @@
-import type { UserConfig } from 'unocss'
 import mdiIcons from '@iconify-json/mdi/icons.json'
 import { createLocalFontProcessor } from '@unocss/preset-web-fonts/local'
 import {
@@ -38,14 +37,14 @@ export const unoColors = {
     900: '#07090d',
     950: '#050608',
   },
-} satisfies NonNullable<UserConfig['theme']>['colors']
+}
 
-export const unoShortcuts: UserConfig['shortcuts'] = [
+export const unoShortcuts: Array<[string, string]> = [
   ['btn', 'px-4 py-1 rounded inline-block bg-main-500 text-white cursor-pointer !outline-none hover:bg-main-600 disabled:cursor-default disabled:bg-gray-600 disabled:opacity-50'],
   ['icon-btn', 'inline-block cursor-pointer select-none opacity-75 transition duration-200 ease-in-out hover:opacity-100 hover:text-main-400'],
 ]
 
-export const unoPresets: UserConfig['presets'] = [
+export const unoPresets = [
   presetUno(),
   presetAttributify(),
   presetIcons({
@@ -65,7 +64,7 @@ export const unoPresets: UserConfig['presets'] = [
   }),
 ]
 
-export const unoTransformers: UserConfig['transformers'] = [
+export const unoTransformers = [
   transformerDirectives(),
   transformerVariantGroup(),
 ]

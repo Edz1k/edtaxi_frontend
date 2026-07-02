@@ -9,12 +9,13 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import VueMacros from 'unplugin-vue-macros/vite'
 import Markdown from 'unplugin-vue-markdown/vite'
-import { defineConfig } from 'vite'
 import VueDevTools from 'vite-plugin-vue-devtools'
 import Layouts from 'vite-plugin-vue-layouts'
+import { defineConfig } from 'vitest/config'
 import { VueRouterAutoImports } from 'vue-router/unplugin'
 import VueRouter from 'vue-router/vite'
-import 'vitest/config'
+
+const EXTERNAL_LINK_RE = /^https?:\/\//
 
 export default defineConfig({
   resolve: {
@@ -68,7 +69,7 @@ export default defineConfig({
       headEnabled: true,
       async markdownItSetup(md) {
         md.use(LinkAttributes, {
-          matcher: (link: string) => /^https?:\/\//.test(link),
+          matcher: (link: string) => EXTERNAL_LINK_RE.test(link),
           attrs: { target: '_blank', rel: 'noopener' },
         })
         md.use(await Shiki({

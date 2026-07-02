@@ -66,6 +66,27 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/admin/payouts': RouteRecordInfo<
+      '/admin/payouts',
+      '/admin/payouts',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/admin/settings': RouteRecordInfo<
+      '/admin/settings',
+      '/admin/settings',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/admin/support-rooms': RouteRecordInfo<
+      '/admin/support-rooms',
+      '/admin/support-rooms',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/admin/tech-support': RouteRecordInfo<
       '/admin/tech-support',
       '/admin/tech-support',
@@ -92,6 +113,13 @@ declare module 'vue-router/auto-routes' {
       '/dashboard',
       Record<never, never>,
       Record<never, never>,
+      | never
+    >,
+    '/drivers/[id]': RouteRecordInfo<
+      '/drivers/[id]',
+      '/drivers/:id',
+      { id: ParamValue<true> },
+      { id: ParamValue<false> },
       | never
     >,
     '/login': RouteRecordInfo<
@@ -134,6 +162,20 @@ declare module 'vue-router/auto-routes' {
       '/park/register',
       Record<never, never>,
       Record<never, never>,
+      | never
+    >,
+    '/park/wallet': RouteRecordInfo<
+      '/park/wallet',
+      '/park/wallet',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/passengers/[id]': RouteRecordInfo<
+      '/passengers/[id]',
+      '/passengers/:id',
+      { id: ParamValue<true> },
+      { id: ParamValue<false> },
       | never
     >,
     '/support/': RouteRecordInfo<
@@ -217,6 +259,30 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    'src/pages/admin/payouts.vue': {
+      routes:
+        | '/admin/payouts'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/admin/settings.vue': {
+      routes:
+        | '/admin/settings'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/admin/support-rooms.vue': {
+      routes:
+        | '/admin/support-rooms'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     'src/pages/admin/tech-support.vue': {
       routes:
         | '/admin/tech-support'
@@ -248,6 +314,14 @@ declare module 'vue-router/auto-routes' {
         | never
       pathParamNames:
         | never
+    }
+    'src/pages/drivers/[id].vue': {
+      routes:
+        | '/drivers/[id]'
+      views:
+        | never
+      pathParamNames:
+        | 'id'
     }
     'src/pages/login.vue': {
       routes:
@@ -296,6 +370,22 @@ declare module 'vue-router/auto-routes' {
         | never
       pathParamNames:
         | never
+    }
+    'src/pages/park/wallet.vue': {
+      routes:
+        | '/park/wallet'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/passengers/[id].vue': {
+      routes:
+        | '/passengers/[id]'
+      views:
+        | never
+      pathParamNames:
+        | 'id'
     }
     'src/pages/support/index.vue': {
       routes:

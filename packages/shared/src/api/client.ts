@@ -1,7 +1,10 @@
 import axios, { isAxiosError } from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL ?? '/api/v1'
-const MEDIA_BASE = API_URL.replace(/\/api\/v1\/?$/, '')
+const API_V1_SUFFIX_RE = /\/api\/v1\/?$/
+const HTTP_URL_RE = /^https?:\/\//i
+const HTTP_PREFIX_RE = /^http/i
+const MEDIA_BASE = API_URL.replace(API_V1_SUFFIX_RE, '')
 
 // Dispatched when the refresh token is invalid/expired so auth stores
 // can clear their in-memory session without needing to import this module.
@@ -49,13 +52,13 @@ function toWsBaseUrl() {
   if (configuredWsUrl)
     return configuredWsUrl
 
-  const httpBase = /^https?:\/\//i.test(API_URL)
+  const httpBase = HTTP_URL_RE.test(API_URL)
     ? API_URL
     : new URL(API_URL, getRuntimeOrigin()).toString()
 
   return httpBase
-    .replace(/^http/i, 'ws')
-    .replace(/\/api\/v1\/?$/, '')
+    .replace(HTTP_PREFIX_RE, 'ws')
+    .replace(API_V1_SUFFIX_RE, '')
 }
 
 export function buildWsUrl(path: string, params: Record<string, string> = {}) {
@@ -74,7 +77,7 @@ export function buildWsUrl(path: string, params: Record<string, string> = {}) {
 export function mediaUrl(path?: null | string) {
   if (!path)
     return ''
-  if (/^https?:\/\//.test(path))
+  if (HTTP_URL_RE.test(path))
     return path
   return `${MEDIA_BASE}${path.startsWith('/') ? '' : '/'}${path}`
 }

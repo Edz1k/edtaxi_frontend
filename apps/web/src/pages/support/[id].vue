@@ -128,6 +128,7 @@ async function send() {
 }
 
 const isClosed = computed(() => support.currentRoom?.status === 'closed')
+const isPendingClose = computed(() => support.currentRoom?.status === 'pending_close')
 
 // Прикреплённая к обращению поездка — чтобы агент видел, о какой поездке речь.
 const attachedTrip = computed(() => support.currentRoom?.trip ?? null)
@@ -210,7 +211,7 @@ function tripFare(t: NonNullable<typeof attachedTrip.value>) {
           </button>
 
           <button
-            v-if="isAssigned && !isClosed"
+            v-if="isAssigned && !isClosed && !isPendingClose"
             :disabled="support.isMutating"
             class="h-9 rounded-xl bg-red-500/15 px-3 text-sm text-red-300 font-900 transition active:scale-[0.98] hover:bg-red-500/25 disabled:opacity-50"
             type="button"
@@ -319,7 +320,7 @@ function tripFare(t: NonNullable<typeof attachedTrip.value>) {
           class="h-12 min-w-0 flex-1 border border-white/10 rounded-2xl bg-white/6 px-4 text-sm outline-none transition focus:border-main-400/60 focus:bg-white/8 disabled:opacity-40"
           maxlength="2000"
           name="support_reply"
-          :placeholder="isClosed ? 'Чат закрывается или закрыт' : isAssigned ? 'Написать ответ...' : support.currentRoom?.agent_id ? 'Взято другим агентом' : 'Возьмите обращение в работу'"
+          :placeholder="isClosed ? 'Чат закрыт' : isPendingClose ? 'Ждём подтверждение пользователя' : isAssigned ? 'Написать ответ...' : support.currentRoom?.agent_id ? 'Взято другим агентом' : 'Возьмите обращение в работу'"
           @keydown.enter.exact.prevent="send"
         >
         <button

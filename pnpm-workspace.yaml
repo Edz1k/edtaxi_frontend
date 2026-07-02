@@ -57,4 +57,5 @@ catalogs:
 
   types:
     '@types/markdown-it-link-attributes': ^3.0.5
+    '@types/node': ^24.10.2
     '@types/nprogress': ^0.2.3
