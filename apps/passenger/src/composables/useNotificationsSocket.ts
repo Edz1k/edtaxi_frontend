@@ -26,9 +26,11 @@ export function useNotificationsSocket() {
     support.receiveMessage({
       id: message.data.id,
       content: message.data.content,
+      image_url: message.data.image_url,
       sender_id: message.data.sender_id,
       sent_at: message.data.sent_at,
       room_id: message.data.room_id,
+      room_status: message.data.room_status,
     })
   }
 

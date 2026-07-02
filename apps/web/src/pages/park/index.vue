@@ -193,9 +193,18 @@ async function copyToken(token: string) {
             </p>
           </div>
 
-          <span class="rounded-xl px-3 py-2 text-xs font-900" :class="parkStore.park.is_verified ? 'bg-emerald-500/12 text-emerald-300' : 'bg-amber-500/12 text-amber-300'">
-            {{ parkStore.park.is_verified ? 'Проверен' : 'На проверке' }}
+          <span class="rounded-xl px-3 py-2 text-xs font-900" :class="parkStatusClasses[parkStatus]">
+            {{ parkStatusLabels[parkStatus] }}
           </span>
+        </div>
+
+        <div v-if="parkStatus === 'rejected'" class="mt-4 border border-red-400/18 rounded-2xl bg-red-500/8 p-4">
+          <p class="text-xs text-red-300/80 font-900 uppercase">
+            Заявка отклонена
+          </p>
+          <p class="mt-1 text-sm text-white/70 leading-5">
+            {{ parkStore.park.rejection_reason || 'Причина не указана. Свяжитесь с поддержкой или подайте заявку повторно.' }}
+          </p>
         </div>
       </section>
 

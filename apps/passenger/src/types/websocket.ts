@@ -56,7 +56,9 @@ export interface ChatMessageWireMessage {
   data: {
     content: string
     id: string
+    image_url?: null | string
     room_id: string
+    room_status?: 'closed' | 'open' | 'pending_close'
     sender_id: string
     sent_at: string
   }
