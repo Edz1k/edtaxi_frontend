@@ -1,10 +1,20 @@
 import type {
   OpenSupportRoomPayload,
+  SupportListRoomsResponse,
+  SupportMessage,
   SupportMessagesResponse,
+  SupportParticipantType,
   SupportRoom,
   SupportSendMessagePayload,
 } from '~/types/support'
 import { apiRequest } from '~/api/client'
+
+// listSupportRooms возвращает обращения текущего пользователя (тикеты).
+export function listSupportRooms(participantType: SupportParticipantType = 'driver') {
+  return apiRequest<SupportListRoomsResponse>('/support/rooms', {
+    params: { participant_type: participantType },
+  })
+}
 
 export function openSupportRoom(payload: OpenSupportRoomPayload = {}) {
   return apiRequest<SupportRoom>('/support/rooms', {
@@ -18,9 +28,19 @@ export function getSupportRoom(id: string) {
 }
 
 export function sendSupportMessage(id: string, payload: SupportSendMessagePayload) {
-  return apiRequest<SupportMessagesResponse['messages'][number]>(`/support/rooms/${id}/messages`, {
+  return apiRequest<SupportMessage>(`/support/rooms/${id}/messages`, {
     method: 'POST',
     body: payload,
+  })
+}
+
+// uploadSupportImage прикрепляет фотографию к обращению (multipart).
+export function uploadSupportImage(id: string, file: Blob) {
+  const form = new FormData()
+  form.append('file', file)
+  return apiRequest<SupportMessage>(`/support/rooms/${id}/image`, {
+    method: 'POST',
+    body: form,
   })
 }
 
