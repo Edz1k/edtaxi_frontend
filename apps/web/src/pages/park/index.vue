@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ParkStatus } from '~/types/park'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { useParkStore } from '~/stores/park'
 import { formatRevenue } from '~/utils/format'
@@ -9,6 +10,20 @@ const isEditing = ref(false)
 const editForm = reactive({ name: '', description: '', bin: '', phone: '', commission_rate_pct: 0 })
 const { copy, copied } = useClipboard({ legacy: true })
 const copiedToken = ref('')
+
+const parkStatusLabels: Record<ParkStatus, string> = {
+  approved: 'Проверен',
+  pending: 'Ожидает',
+  rejected: 'Отклонён',
+}
+
+const parkStatusClasses: Record<ParkStatus, string> = {
+  approved: 'bg-emerald-500/12 text-emerald-300',
+  pending: 'bg-amber-500/12 text-amber-300',
+  rejected: 'bg-red-500/12 text-red-300',
+}
+
+const parkStatus = computed<ParkStatus>(() => parkStore.park?.status ?? 'pending')
 
 definePage({
   meta: {
