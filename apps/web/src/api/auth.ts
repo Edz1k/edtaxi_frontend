@@ -25,6 +25,15 @@ const AUTH_FLOW_ENDPOINTS: Record<AuthLoginFlow, { send: string, verify: string 
   },
 }
 
+// Вход по коду из Telegram доступен только парку и техподдержке: код выдаёт
+// бот после подтверждения номера через request_contact.
+export type TelegramCodeFlow = Exclude<AuthLoginFlow, 'admin'>
+
+const TELEGRAM_CODE_VERIFY_ENDPOINTS: Record<TelegramCodeFlow, string> = {
+  park: '/park/auth/telegram-code/verify',
+  tech_support: '/tech-support/auth/telegram-code/verify',
+}
+
 export function sendOtp(payload: SendOtpPayload, flow: AuthLoginFlow = 'admin') {
   return apiRequest<SendOtpResponse>(AUTH_FLOW_ENDPOINTS[flow].send, {
     method: 'POST',
@@ -45,6 +54,21 @@ export function verifyOtp(payload: VerifyOtpPayload, flow: AuthLoginFlow = 'admi
     skipAuthRefresh: true,
     body: {
       phone: payload.phone,
+      code: payload.code,
+    },
+  })
+}
+
+export function verifyTelegramCode(
+  payload: { code: string, deviceFingerprint?: string },
+  flow: TelegramCodeFlow,
+) {
+  return apiRequest<AuthLoginResponse>(TELEGRAM_CODE_VERIFY_ENDPOINTS[flow], {
+    method: 'POST',
+    deviceFingerprint: payload.deviceFingerprint,
+    skipAuth: true,
+    skipAuthRefresh: true,
+    body: {
       code: payload.code,
     },
   })

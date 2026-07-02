@@ -14,6 +14,7 @@ import type {
   TaxiParkRegisterPayload,
   TaxiParkUpdatePayload,
 } from '~/types/park'
+import type { ParkWallet, PayoutCreatePayload, PayoutRequest, PayoutsResponse } from '~/types/payout'
 import { apiRequest } from '~/api/client'
 
 export function registerPark(payload: TaxiParkRegisterPayload) {
@@ -56,6 +57,22 @@ export function removeParkDriver(id: string) {
 
 export function getParkAnalytics() {
   return apiRequest<ParkAnalytics>('/park/analytics')
+}
+
+// Park wallet (park owner side)
+export function getParkWallet() {
+  return apiRequest<ParkWallet>('/park/wallet')
+}
+
+export function requestParkPayout(payload: PayoutCreatePayload) {
+  return apiRequest<PayoutRequest>('/park/wallet/payout', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export function listParkPayouts(params: { limit?: number, offset?: number } = {}) {
+  return apiRequest<PayoutsResponse>('/park/wallet/payouts', { params })
 }
 
 // Park chat (park owner side)

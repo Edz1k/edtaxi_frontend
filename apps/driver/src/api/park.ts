@@ -1,4 +1,4 @@
-import type { DriverAcceptInvitePayload } from '~/types/park'
+import type { AvailableParksResponse, DriverAcceptInvitePayload } from '~/types/park'
 import { apiRequest } from '~/api/client'
 
 export function acceptParkInvite(payload: DriverAcceptInvitePayload) {
@@ -6,4 +6,9 @@ export function acceptParkInvite(payload: DriverAcceptInvitePayload) {
     method: 'POST',
     body: payload,
   })
+}
+
+// listAvailableParks — список парков, к которым водитель может присоединиться.
+export function listAvailableParks(params: { limit?: number, offset?: number } = {}) {
+  return apiRequest<AvailableParksResponse>('/driver/parks', { params })
 }

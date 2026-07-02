@@ -26,8 +26,19 @@ export interface DriverVerificationsResponse {
   // поддержкой. face_photo_url появляется после загрузки селфи.
   face_status: 'approved' | 'none' | 'pending' | 'rejected'
   face_photo_url: null | string
+  // has_approved_vehicle — есть хотя бы одна одобренная машина. Именно так
+  // бэкенд решает, пускать ли водителя на линию.
+  has_approved_vehicle: boolean
   daily_check_valid: boolean
   vehicles: DriverVehicleVerification[]
+}
+
+export type VerificationReminderItem = 'face' | 'vehicle'
+
+export interface VerificationReminder {
+  should_remind: boolean
+  pending: VerificationReminderItem[]
+  face_status: DriverVerificationsResponse['face_status']
 }
 
 export interface DailyCheck {
@@ -103,4 +114,50 @@ export interface DriverWalletTopUpPayload {
 
 export interface DriverWalletTopUpResponse {
   redirect_url: string
+}
+
+// Минимальная сумма заявки на вывод (KZT) — как entity.MinPayoutAmount на бэке.
+export const MIN_PAYOUT_AMOUNT = 1000
+
+export type PayoutStatus = 'paid' | 'pending' | 'rejected'
+
+export interface DriverPayoutPayload {
+  amount: number
+  // destination — реквизиты получателя (номер карты или IBAN)
+  destination: string
+}
+
+export interface PayoutRequest {
+  id: string
+  requester_type: 'driver' | 'park'
+  driver_id: null | string
+  park_id: null | string
+  amount: number
+  destination: string
+  status: PayoutStatus
+  rejection_reason: null | string
+  reviewed_at: null | string
+  created_at: string
+}
+
+export interface DriverPayoutsResponse {
+  payouts: PayoutRequest[]
+}
+
+export interface RatePassengerPayload {
+  score: number
+  comment?: string
+}
+
+export interface DriverPhoneOtpResponse {
+  message: string
+  phone: string
+}
+
+export interface DriverPhoneVerifyResponse {
+  message: string
+  phone: string
+  // merged: true — номер принадлежал другому аккаунту, аккаунты объединены и
+  // сессия перевыпущена. После этого нужно перечитать сессию.
+  merged?: boolean
 }

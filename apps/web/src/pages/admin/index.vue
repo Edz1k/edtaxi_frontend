@@ -49,6 +49,24 @@ const adminCards = computed(() => [
     title: 'Техподдержка',
     to: '/admin/tech-support',
   },
+  {
+    description: 'Все обращения в поддержку: назначение агента и закрытие.',
+    icon: 'i-mdi-forum-outline',
+    title: 'Обращения поддержки',
+    to: '/admin/support-rooms',
+  },
+  {
+    description: 'Заявки водителей и парков на вывод средств.',
+    icon: 'i-mdi-cash-multiple',
+    title: 'Выплаты',
+    to: '/admin/payouts',
+  },
+  {
+    description: 'Комиссия платформы и коэффициент цены поездок.',
+    icon: 'i-mdi-tune',
+    title: 'Настройки',
+    to: '/admin/settings',
+  },
 ])
 </script>
 

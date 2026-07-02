@@ -1,4 +1,5 @@
 import type { ParkAnalytics, ParkDriver, ParkInvite, TaxiPark, TaxiParkRegisterPayload, TaxiParkUpdatePayload } from '~/types/park'
+import type { ParkWallet, PayoutCreatePayload, PayoutRequest } from '~/types/payout'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
@@ -6,10 +7,13 @@ import {
   createParkInvite,
   getMyPark,
   getParkAnalytics,
+  getParkWallet,
   listParkDrivers,
   listParkInvites,
+  listParkPayouts,
   registerPark,
   removeParkDriver,
+  requestParkPayout,
   updateMyPark,
 } from '~/api/park'
 import { useStoreAction } from '~/composables/useStoreAction'
@@ -19,7 +23,10 @@ export const useParkStore = defineStore('park', () => {
   const analytics = ref<ParkAnalytics | null>(null)
   const drivers = ref<ParkDriver[]>([])
   const invites = ref<ParkInvite[]>([])
+  const wallet = ref<ParkWallet | null>(null)
+  const payouts = ref<PayoutRequest[]>([])
   const isLoading = ref(false)
+  const isLoadingWallet = ref(false)
   const isMutating = ref(false)
   const errorMessage = ref('')
 
@@ -87,12 +94,47 @@ export const useParkStore = defineStore('park', () => {
     }, 'Не удалось удалить водителя из парка.')
   }
 
+  async function loadWallet() {
+    return withLoading(isLoadingWallet, async () => {
+      const [walletResponse, payoutsResponse] = await Promise.all([
+        getParkWallet(),
+        listParkPayouts({ limit: 50 }),
+      ])
+      wallet.value = walletResponse
+      payouts.value = payoutsResponse.payouts
+      return walletResponse
+    }, 'Не удалось загрузить кошелёк парка.')
+  }
+
+  async function requestPayout(payload: PayoutCreatePayload) {
+    isMutating.value = true
+    errorMessage.value = ''
+    try {
+      const payout = await requestParkPayout(payload)
+      payouts.value = [payout, ...payouts.value]
+      // Сумма удерживается с баланса сразу при создании заявки.
+      if (wallet.value)
+        wallet.value.available_balance -= payout.amount
+      return payout
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось создать заявку на вывод.')
+      throw error
+    }
+    finally {
+      isMutating.value = false
+    }
+  }
+
   function clearParkState() {
     park.value = null
     analytics.value = null
     drivers.value = []
     invites.value = []
+    wallet.value = null
+    payouts.value = []
     isLoading.value = false
+    isLoadingWallet.value = false
     isMutating.value = false
     errorMessage.value = ''
   }
@@ -105,13 +147,18 @@ export const useParkStore = defineStore('park', () => {
     errorMessage,
     invites,
     isLoading,
+    isLoadingWallet,
     isMutating,
     loadDashboard,
     loadPark,
+    loadWallet,
     park,
+    payouts,
     register,
     removeDriver,
+    requestPayout,
     update,
+    wallet,
   }
 })
 

@@ -1,3 +1,4 @@
+import type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
 import type { TripStatus, VehicleCategory } from '~/types/trips'
 
 export type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
@@ -55,11 +56,23 @@ export interface ChatMessageWireMessage {
   type: 'chat_message'
 }
 
-export type DriverWebSocketMessage = ChatMessageWireMessage | DriverTripOfferWireMessage | TripStatusWireMessage
+// Сообщение чата с таксопарком. Бэкенд не шлёт id сообщения по WS —
+// синтетический id собирается на клиенте.
+export interface ParkChatMessageWireMessage {
+  data: {
+    content: string
+    room_id: string
+    sender_id: string
+    sent_at: string
+  }
+  type: 'park_chat_message'
+}
+
+export type DriverWebSocketMessage = ChatMessageWireMessage | DriverTripOfferWireMessage | ParkChatMessageWireMessage | TripStatusWireMessage
 
 export interface PassengerDriverLocationWireMessage {
   data: PassengerDriverLocation
   type: 'driver_location'
 }
 
-export type PassengerWebSocketMessage = ChatMessageWireMessage | PassengerDriverLocationWireMessage | TripStatusWireMessage
+export type PassengerWebSocketMessage = ChatMessageWireMessage | ParkChatMessageWireMessage | PassengerDriverLocationWireMessage | TripStatusWireMessage

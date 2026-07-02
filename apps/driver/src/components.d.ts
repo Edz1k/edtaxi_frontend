@@ -24,6 +24,7 @@ declare module 'vue' {
     PassengerMapPicker: typeof import('./components/passenger/PassengerMapPicker.vue')['default']
     PaymentFrameModal: typeof import('./components/PaymentFrameModal.vue')['default']
     PhoneInput: typeof import('./components/auth/PhoneInput.vue')['default']
+    RatePassengerModal: typeof import('./components/driver/RatePassengerModal.vue')['default']
     RouteHeader: typeof import('./components/app/RouteHeader.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

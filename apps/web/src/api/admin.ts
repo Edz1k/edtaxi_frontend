@@ -13,9 +13,22 @@ import type {
   AdminUpdateUserRolesResponse,
   CreateParkOwnerPayload,
   CreateParkOwnerResponse,
+  PlatformSettings,
+  PlatformSettingsUpdatePayload,
 } from '~/types/admin'
+import type { AdminListPayoutsParams, PayoutsResponse } from '~/types/payout'
+import type { AdminSupportRoomsParams, SupportListRoomsResponse } from '~/types/support'
 import type { Trip } from '~/types/trips'
 import { apiRequest } from '~/api/client'
+
+// У роли tech_support нет доступа к /admin/*, статистика для неё живёт на
+// отдельном эндпоинте с тем же форматом ответа.
+export type SupportStatsScope = 'admin' | 'tech_support'
+
+const SUPPORT_STATS_ENDPOINTS: Record<SupportStatsScope, string> = {
+  admin: '/admin/support/stats',
+  tech_support: '/tech-support/chats/stats',
+}
 
 function buildListParams(params: AdminListTripsParams | AdminListUsersParams) {
   return {
@@ -74,8 +87,66 @@ export function listTechSupportNumbers() {
   return apiRequest<AdminListTechSupportNumbersResponse>('/admin/tech-support-numbers')
 }
 
-export function getSupportStats() {
-  return apiRequest<AdminSupportStats>('/admin/support/stats')
+export function getSupportStats(scope: SupportStatsScope = 'admin') {
+  return apiRequest<AdminSupportStats>(SUPPORT_STATS_ENDPOINTS[scope])
+}
+
+export function listAdminSupportRooms(params: AdminSupportRoomsParams = {}) {
+  return apiRequest<SupportListRoomsResponse>('/admin/support/rooms', {
+    params: {
+      limit: params.limit,
+      offset: params.offset,
+      status: params.status || undefined,
+      participant_type: params.participant_type || undefined,
+    },
+  })
+}
+
+// Назначает агентом обращения текущего пользователя (бэкенд не принимает тело).
+export function assignAdminSupportRoom(id: string) {
+  return apiRequest<{ message: string }>(`/admin/support/rooms/${id}/assign`, {
+    method: 'POST',
+  })
+}
+
+export function closeAdminSupportRoom(id: string) {
+  return apiRequest<{ message: string }>(`/admin/support/rooms/${id}/close`, {
+    method: 'POST',
+  })
+}
+
+export function getPlatformSettings() {
+  return apiRequest<PlatformSettings>('/admin/settings')
+}
+
+export function updatePlatformSettings(payload: PlatformSettingsUpdatePayload) {
+  return apiRequest<PlatformSettings>('/admin/settings', {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export function listAdminPayouts(params: AdminListPayoutsParams = {}) {
+  return apiRequest<PayoutsResponse>('/admin/payouts', {
+    params: {
+      status: params.status || undefined,
+      limit: params.limit,
+      offset: params.offset,
+    },
+  })
+}
+
+export function markAdminPayoutPaid(id: string) {
+  return apiRequest<{ message: string }>(`/admin/payouts/${id}/paid`, {
+    method: 'POST',
+  })
+}
+
+export function rejectAdminPayout(id: string, reason = '') {
+  return apiRequest<{ message: string }>(`/admin/payouts/${id}/reject`, {
+    method: 'POST',
+    body: { reason },
+  })
 }
 
 export function addTechSupportNumber(payload: AdminTechSupportNumberPayload) {

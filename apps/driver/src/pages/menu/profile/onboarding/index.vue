@@ -47,15 +47,17 @@ const faceStatus = computed<ItemStatus>(() => {
 })
 
 const vehicleStatus = computed<ItemStatus>(() => {
-  if (!driver.verification)
+  const v = driver.verification
+  if (!v)
     return 'missing'
-  const veh = driver.verification.vehicles
-  if (!veh.length)
-    return 'missing'
-  if (veh.some(v => v.verification_status === 'rejected'))
-    return 'rejected'
-  if (veh.every(v => v.verification_status === 'approved'))
+  // has_approved_vehicle — так же считает бэкенд-гейт выхода на линию:
+  // достаточно одной одобренной машины.
+  if (v.has_approved_vehicle)
     return 'ok'
+  if (!v.vehicles.length)
+    return 'missing'
+  if (v.vehicles.some(veh => veh.verification_status === 'rejected'))
+    return 'rejected'
   return 'pending'
 })
 

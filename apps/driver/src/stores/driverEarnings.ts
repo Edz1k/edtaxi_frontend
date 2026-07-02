@@ -1,14 +1,17 @@
-import type { DriverEarnings, DriverWallet } from '~/types/driver'
+import type { DriverEarnings, DriverWallet, PayoutRequest } from '~/types/driver'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { getDriverEarnings, getDriverWallet, topUpDriverWallet } from '~/api/driver'
+import { getDriverEarnings, getDriverPayouts, getDriverWallet, requestDriverPayout, topUpDriverWallet } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
 
 export const useDriverEarningsStore = defineStore('driverEarnings', () => {
   const earnings = ref<DriverEarnings | null>(null)
   const wallet = ref<DriverWallet | null>(null)
+  const payouts = ref<PayoutRequest[]>([])
   const isLoadingEarnings = ref(false)
   const isLoadingWallet = ref(false)
+  const isLoadingPayouts = ref(false)
   const isMutatingWallet = ref(false)
+  const isRequestingPayout = ref(false)
   const errorMessage = ref('')
 
   async function loadEarnings() {
@@ -64,12 +67,54 @@ export const useDriverEarningsStore = defineStore('driverEarnings', () => {
     }
   }
 
+  async function loadPayouts() {
+    isLoadingPayouts.value = true
+    errorMessage.value = ''
+
+    try {
+      const response = await getDriverPayouts({ limit: 20, offset: 0 })
+      payouts.value = response.payouts
+      return payouts.value
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось загрузить заявки на вывод.')
+      throw error
+    }
+    finally {
+      isLoadingPayouts.value = false
+    }
+  }
+
+  // requestPayout создаёт заявку на вывод средств. Деньги списываются сразу
+  // (резервируются под заявку), поэтому после успеха обновляем баланс.
+  async function requestPayout(amount: number, destination: string) {
+    isRequestingPayout.value = true
+    errorMessage.value = ''
+
+    try {
+      const payout = await requestDriverPayout({ amount, destination })
+      payouts.value = [payout, ...payouts.value]
+      loadWallet().catch(() => {})
+      return payout
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось создать заявку на вывод.')
+      throw error
+    }
+    finally {
+      isRequestingPayout.value = false
+    }
+  }
+
   function clearEarningsState() {
     earnings.value = null
     wallet.value = null
+    payouts.value = []
     isLoadingEarnings.value = false
     isLoadingWallet.value = false
+    isLoadingPayouts.value = false
     isMutatingWallet.value = false
+    isRequestingPayout.value = false
     errorMessage.value = ''
   }
 
@@ -78,10 +123,15 @@ export const useDriverEarningsStore = defineStore('driverEarnings', () => {
     earnings,
     errorMessage,
     isLoadingEarnings,
+    isLoadingPayouts,
     isLoadingWallet,
     isMutatingWallet,
+    isRequestingPayout,
     loadEarnings,
+    loadPayouts,
     loadWallet,
+    payouts,
+    requestPayout,
     topUpWallet,
     wallet,
   }

@@ -42,6 +42,15 @@ export interface SupportListRoomsResponse {
   rooms: SupportRoom[]
 }
 
+// Параметры общего админского списка обращений (/admin/support/rooms):
+// в отличие от tech-support списков, тип участника здесь — необязательный фильтр.
+export interface AdminSupportRoomsParams {
+  limit?: number
+  offset?: number
+  participant_type?: SupportParticipantType | ''
+  status?: SupportRoomStatus | ''
+}
+
 export interface SupportMessage {
   id: string
   sender_id: string

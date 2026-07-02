@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
+import type { VerificationReminder } from '~/types/driver'
 import type { DriverTripOffer } from '~/types/websocket'
 import { useThrottleFn } from '@vueuse/core'
 import { getDrivingRoute } from '@edtaxi/shared/api/geocoding'
+import { ApiError } from '~/api/client'
+import { getVerificationReminder } from '~/api/driver'
+import { getUserErrorMessage } from '~/api/errors'
+import RatePassengerModal from '~/components/driver/RatePassengerModal.vue'
 import { useDriverTrackingSocket } from '~/composables/driver/useDriverTrackingSocket'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { useDriverStore } from '~/stores/driver'
@@ -19,6 +24,24 @@ const {
 const routeCoordinates = ref<RouteCoordinate[]>([])
 const isRouteLoading = ref(false)
 let routeVersion = 0
+
+// Ненавязчивое напоминание пройти верификацию — бэкенд сам решает, показывать
+// ли его (не чаще 1 раза в 24 часа).
+const verificationReminder = ref<VerificationReminder | null>(null)
+const REMINDER_LABELS: Record<string, string> = {
+  face: 'фото лица',
+  vehicle: 'документы машины',
+}
+const reminderPendingLabel = computed(() =>
+  (verificationReminder.value?.pending ?? []).map(item => REMINDER_LABELS[item] ?? item).join(', '),
+)
+
+// Причина отказа в выходе на линию (403 от POST /driver/status) — показываем
+// панель с текстом и переходом к верификации.
+const onlineBlockMessage = ref('')
+
+// После завершения поездки предлагаем оценить пассажира.
+const ratePassengerTripId = ref('')
 
 const trackingLabel = computed(() => {
   if (tracking.status.value === 'open')
@@ -95,11 +118,23 @@ onMounted(async () => {
   await driver.restoreActiveTrip().catch(() => {})
   // Подтягиваем уже добавленную машину, чтобы водитель не добавлял её заново.
   onboarding.loadVehicles().catch(() => {})
+  checkVerificationReminder()
   startWatchingUserLocation()
 
   if (driver.isOnline || driver.hasActiveTrip)
     tracking.connect()
 })
+
+async function checkVerificationReminder() {
+  try {
+    const reminder = await getVerificationReminder()
+    if (reminder.should_remind && reminder.pending.length)
+      verificationReminder.value = reminder
+  }
+  catch {
+    // напоминание некритично — молча пропускаем
+  }
+}
 
 function coordsToPlace(lat: number, lng: number): GeoPlace {
   return { address: '', id: 'self', lat, lng, name: '' }
@@ -187,12 +222,25 @@ async function handlePrimaryTripAction() {
     return
   }
 
+  const completedTripId = driver.currentTripId
   await driver.completeTrip()
+  ratePassengerTripId.value = completedTripId
 }
 
 async function toggleOnline() {
   const nextOnline = !driver.isOnline
-  await driver.setOnline(nextOnline)
+
+  try {
+    await driver.setOnline(nextOnline)
+    onlineBlockMessage.value = ''
+  }
+  catch (error) {
+    // 403 — не пройдена верификация (лицо/машина): показываем причину с бэка
+    // и предлагаем перейти к верификации.
+    if (nextOnline && error instanceof ApiError && error.status === 403)
+      onlineBlockMessage.value = getUserErrorMessage(error, 'Выход на линию сейчас недоступен.')
+    return
+  }
 
   if (nextOnline)
     tracking.connect()
@@ -220,6 +268,39 @@ watch(liveCoordinates, () => throttledApproachRebuild())
       :route-coordinates="routeCoordinates"
       :user-coordinates="liveCoordinates"
     />
+
+    <!-- Напоминание о незавершённой верификации -->
+    <section v-if="verificationReminder" class="tg-safe-x absolute inset-x-0 top-[calc(var(--app-safe-area-top)+0.75rem)] z-30">
+      <div class="mx-auto max-w-sm rounded-3xl bg-secondary-950/90 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+        <div class="flex items-start gap-3">
+          <span class="h-10 w-10 flex shrink-0 items-center justify-center rounded-2xl bg-amber-500/16 text-amber-300">
+            <span class="i-mdi-shield-alert text-6" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-950">
+              Пройдите верификацию
+            </p>
+            <p class="mt-0.5 text-xs text-slate-400 leading-4">
+              Осталось завершить: {{ reminderPendingLabel }}.
+            </p>
+          </div>
+          <button
+            aria-label="Скрыть напоминание"
+            class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-400"
+            type="button"
+            @click="verificationReminder = null"
+          >
+            <span class="i-mdi-close text-5" />
+          </button>
+        </div>
+        <RouterLink
+          class="mt-3 h-11 flex items-center justify-center rounded-2xl bg-amber-400 text-sm text-#06142f font-950 transition active:scale-[0.98]"
+          to="/menu/profile/onboarding"
+        >
+          Перейти к верификации
+        </RouterLink>
+      </div>
+    </section>
 
     <section class="tg-safe-x absolute inset-x-0 bottom-[calc(var(--app-safe-area-bottom)+5.75rem)] z-20">
       <div class="mx-auto max-w-sm overflow-hidden rounded-[2rem] bg-secondary-950/82 px-4 pb-4 pt-3 shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
@@ -290,6 +371,19 @@ watch(liveCoordinates, () => throttledApproachRebuild())
           {{ driver.isRestoringActiveTrip ? 'Восстанавливаем...' : driver.isChangingStatus ? 'Обновляем...' : driver.isOnline ? 'Уйти офлайн' : 'Выйти онлайн' }}
         </button>
 
+        <!-- Причина отказа в выходе на линию (403 с бэка) -->
+        <div v-if="onlineBlockMessage && !driver.isOnline" class="mt-3 rounded-2xl bg-amber-500/12 px-4 py-3">
+          <p class="text-sm text-amber-200 font-800">
+            {{ onlineBlockMessage }}
+          </p>
+          <RouterLink
+            class="mt-2.5 h-10 flex items-center justify-center rounded-xl bg-amber-400 text-sm text-#06142f font-900 transition active:scale-[0.98]"
+            to="/menu/profile/onboarding"
+          >
+            Пройти верификацию
+          </RouterLink>
+        </div>
+
         <RouterLink
           v-if="!onboarding.hasVehicle"
           class="mt-3 h-12 flex items-center justify-center rounded-2xl bg-white/8 text-sm text-main-100 font-900"
@@ -310,6 +404,12 @@ watch(liveCoordinates, () => throttledApproachRebuild())
       :offer="driver.pendingOffer"
       @accept="driver.acceptOffer()"
       @reject="driver.rejectOffer()"
+    />
+
+    <RatePassengerModal
+      v-if="ratePassengerTripId"
+      :trip-id="ratePassengerTripId"
+      @close="ratePassengerTripId = ''"
     />
   </main>
 </template>

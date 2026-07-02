@@ -1,4 +1,4 @@
-import type { ActiveTripResponse, CreateTripPayload, EstimateTripPayload, EstimateTripResponse, RateTripPayload, Trip, TripHistoryResponse } from '~/types/trips'
+import type { ActiveTripResponse, CreateTripPayload, EstimateTripPayload, EstimateTripResponse, FileTripComplaintPayload, FileTripComplaintResponse, RateTripPayload, Trip, TripHistoryResponse } from '~/types/trips'
 import { apiRequest } from '~/api/client'
 
 export function estimateTrip(payload: EstimateTripPayload) {
@@ -38,6 +38,13 @@ export function cancelTrip(id: string) {
 
 export function rateTrip(id: string, payload: RateTripPayload) {
   return apiRequest<{ message: string }>(`/trips/${id}/rate`, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export function fileTripComplaint(id: string, payload: FileTripComplaintPayload) {
+  return apiRequest<FileTripComplaintResponse>(`/trips/${id}/complaint`, {
     method: 'POST',
     body: payload,
   })

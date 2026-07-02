@@ -63,8 +63,7 @@ const verificationOk = computed(() => {
   const v = onboarding.verification
   if (!v)
     return false
-  const vehiclesOk = v.vehicles.length > 0 && v.vehicles.every(veh => veh.verification_status === 'approved')
-  return v.face_verified && vehiclesOk && v.daily_check_valid
+  return v.face_verified && v.has_approved_vehicle && v.daily_check_valid
 })
 
 const ratingIsGood = computed(() => (data.value?.driver.rating ?? 0) >= 4.5)
@@ -74,13 +73,6 @@ const ratingDash = computed(() => {
   const r = data.value?.driver.rating ?? 0
   const c = 2 * Math.PI * 27
   return `${(r / 5) * c} ${c}`
-})
-
-// r=16 → circumference ≈ 100.53
-const activityDash = computed(() => {
-  const a = data.value?.driver.activity_percent ?? 0
-  const c = 2 * Math.PI * 16
-  return `${(a / 100) * c} ${c}`
 })
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -270,6 +262,23 @@ function formatDate(value: string) {
             <span class="block text-lg font-900">Верификация</span>
             <span class="mt-0.5 block truncate text-xs font-600" :class="verificationOk ? 'text-emerald-400/80' : 'text-amber-400/80'">
               {{ verificationOk ? 'Всё в порядке' : 'Требует внимания' }}
+            </span>
+          </span>
+          <span class="i-mdi-chevron-right text-7 text-slate-500" />
+        </RouterLink>
+
+        <!-- Смена номера телефона -->
+        <RouterLink
+          to="/menu/profile/change-phone"
+          class="mt-3 flex items-center gap-4 rounded-3xl bg-white/5 px-4 py-4 text-white transition active:scale-[0.98]"
+        >
+          <span class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-white/8 text-main-300">
+            <span class="i-mdi-phone-sync text-7" />
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-lg font-900">Номер телефона</span>
+            <span class="mt-0.5 block truncate text-xs text-slate-400 font-600">
+              {{ data.user.phone }} · изменить
             </span>
           </span>
           <span class="i-mdi-chevron-right text-7 text-slate-500" />
