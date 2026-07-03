@@ -14,11 +14,12 @@ updates:
           - minor
           - patch
     ignore:
-      # @unhead/vue v3 несовместим с vite-ssg@28: SSG рендерит <head> своим
-      # unhead v2, поэтому per-page useHead-заголовки теряются (проверено —
-      # сборка проходит, но в SSG-HTML у всех страниц дефолтный <title>).
-      # Держим v2 до апгрейда vite-ssg с поддержкой unhead v3.
-      - dependency-name: '@unhead/vue'
+      # Мажоры НЕ автоматизируем ботом — они регулярно ломают тихо: typescript 6
+      # роняет vue-tsc; @unhead/vue 3 теряет per-page SSG-<title> при vite-ssg@28;
+      # vite 8 рискует плагинами. Их поднимаем осознанно и пакетно вручную (в repo
+      # есть `taze`: pnpm dlx taze major), а бот держит только безопасные
+      # minor/patch. Security-апдейты (GitHub Dependabot security) идут отдельно.
+      - dependency-name: '*'
         update-types: ['version-update:semver-major']
 
   # Держим версии GitHub Actions свежими (checkout/setup-node/action-setup).
