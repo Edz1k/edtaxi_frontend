@@ -50,7 +50,7 @@ jobs:
           VITE_SHARE_URL: https://share.telegramtaxi.kz
           VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-passenger
           path: apps/passenger/dist
@@ -82,7 +82,7 @@ jobs:
           VITE_WS_URL: wss://ws.telegramtaxi.kz
           VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-driver
           path: apps/driver/dist
@@ -113,7 +113,7 @@ jobs:
           VITE_API_URL: /api/v1
           VITE_WS_URL: wss://ws.telegramtaxi.kz
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-web
           path: apps/web/dist
@@ -144,7 +144,7 @@ jobs:
           VITE_API_URL: /api/v1
           VITE_WS_URL: wss://ws.telegramtaxi.kz
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-share
           path: apps/share/dist
