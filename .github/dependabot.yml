@@ -13,6 +13,13 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # @unhead/vue v3 несовместим с vite-ssg@28: SSG рендерит <head> своим
+      # unhead v2, поэтому per-page useHead-заголовки теряются (проверено —
+      # сборка проходит, но в SSG-HTML у всех страниц дефолтный <title>).
+      # Держим v2 до апгрейда vite-ssg с поддержкой unhead v3.
+      - dependency-name: '@unhead/vue'
+        update-types: ['version-update:semver-major']
 
   # Держим версии GitHub Actions свежими (checkout/setup-node/action-setup).
   - package-ecosystem: github-actions
