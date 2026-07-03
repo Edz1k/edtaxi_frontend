@@ -7,3 +7,6 @@ dist
 *.log
 .vite
 .cache
+
+# Claude Code local settings (personal, not shared)
+.claude/settings.local.json
