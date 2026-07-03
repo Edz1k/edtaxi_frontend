@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PinInputInput, PinInputRoot } from 'reka-ui'
-import { useId } from 'vue'
+import { computed, useId } from 'vue'
 
 defineProps<{
   shake?: boolean

@@ -35,7 +35,8 @@
   },
   "scripts": {
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@iconify-json/mdi": "catalog:dev",
@@ -51,6 +52,9 @@
     "vue": "catalog:frontend"
   },
   "devDependencies": {
-    "vitest": "catalog:dev"
+    "typescript": "catalog:dev",
+    "vite": "catalog:build",
+    "vitest": "catalog:dev",
+    "vue-tsc": "catalog:dev"
   }
 }

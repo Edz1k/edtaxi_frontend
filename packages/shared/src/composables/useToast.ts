@@ -1,3 +1,5 @@
+import { ref } from 'vue'
+
 export type ToastKind = 'error' | 'info' | 'success' | 'warning'
 
 export interface AppToast {
