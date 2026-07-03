@@ -7,7 +7,7 @@
     "dev": "vite --port 3000 --open",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
@@ -39,6 +39,7 @@
     "beasties": "catalog:build",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
+    "jsdom": "catalog:dev",
     "markdown-it-link-attributes": "catalog:build",
     "typescript": "catalog:dev",
     "unocss": "catalog:build",

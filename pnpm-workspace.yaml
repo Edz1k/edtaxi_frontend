@@ -2,6 +2,13 @@ packages:
   - 'apps/*'
   - 'packages/*'
 
+# Форсим патч valibot (ReDoS в EMOJI_REGEX — GHSA-vqpr-j7v3-hqw9): @telegram-apps/sdk
+# пинит valibot 1.0.0 (в уязвимом диапазоне >=0.31.0 <1.2.0). 1.0.0 → ^1.2.0 — minor
+# в пределах 1.x, API-совместимо. Точечно по valibot@1.0.0, чтобы не задеть
+# 1.0.0-beta.14 (@telegram-apps/transformers), которого уязвимость не касается.
+overrides:
+  valibot@1.0.0: ^1.2.0
+
 catalogs:
   build:
     '@intlify/unplugin-vue-i18n': ^6.0.8
@@ -33,6 +40,7 @@ catalogs:
     eslint: ^10.0.2
     eslint-plugin-cypress: ^6.1.0
     eslint-plugin-format: ^2.0.1
+    jsdom: ^26.1.0
     lint-staged: ^16.2.7
     simple-git-hooks: ^2.13.1
     taze: ^19.9.2

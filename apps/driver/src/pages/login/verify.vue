@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useShakeAnimation } from '@edtaxi/shared/composables/useShakeAnimation'
 import AuthButton from '~/components/auth/AuthButton.vue'
 import AuthError from '~/components/auth/AuthError.vue'
 import AuthScreen from '~/components/auth/AuthScreen.vue'
 import OtpInput from '~/components/auth/OtpInput.vue'
-import { useShakeAnimation } from '@edtaxi/shared/composables/useShakeAnimation'
 import { useAuthStore } from '~/stores/auth'
 
 const router = useRouter()

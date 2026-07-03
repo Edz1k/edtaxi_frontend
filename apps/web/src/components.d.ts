@@ -23,6 +23,10 @@ declare module 'vue' {
     PhoneInput: typeof import('./components/auth/PhoneInput.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SupportChatHeader: typeof import('./components/support/SupportChatHeader.vue')['default']
+    SupportClientPanel: typeof import('./components/support/SupportClientPanel.vue')['default']
+    SupportMessageList: typeof import('./components/support/SupportMessageList.vue')['default']
+    SupportReplyForm: typeof import('./components/support/SupportReplyForm.vue')['default']
     WebPageShell: typeof import('./components/app/WebPageShell.vue')['default']
   }
 }
