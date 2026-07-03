@@ -24,8 +24,8 @@ export function registerPark(payload: TaxiParkRegisterPayload) {
   })
 }
 
-export function getMyPark() {
-  return apiRequest<TaxiPark>('/park/me')
+export function getMyPark(parkId?: string) {
+  return apiRequest<TaxiPark>('/park/me', { params: { park_id: parkId } })
 }
 
 export function updateMyPark(payload: TaxiParkUpdatePayload) {
@@ -41,12 +41,12 @@ export function createParkInvite() {
   })
 }
 
-export function listParkInvites() {
-  return apiRequest<ParkInvitesResponse>('/park/invites')
+export function listParkInvites(parkId?: string) {
+  return apiRequest<ParkInvitesResponse>('/park/invites', { params: { park_id: parkId } })
 }
 
-export function listParkDrivers() {
-  return apiRequest<ParkDriversResponse>('/park/drivers')
+export function listParkDrivers(parkId?: string) {
+  return apiRequest<ParkDriversResponse>('/park/drivers', { params: { park_id: parkId } })
 }
 
 export function removeParkDriver(id: string) {
@@ -55,8 +55,8 @@ export function removeParkDriver(id: string) {
   })
 }
 
-export function getParkAnalytics() {
-  return apiRequest<ParkAnalytics>('/park/analytics')
+export function getParkAnalytics(parkId?: string) {
+  return apiRequest<ParkAnalytics>('/park/analytics', { params: { park_id: parkId } })
 }
 
 // Park wallet (park owner side)

@@ -4,9 +4,14 @@ import AppSelectDropdown from '~/components/app/AppSelectDropdown.vue'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { useListFilter } from '~/composables/useListFilter'
 import { useAdminStore } from '~/stores/admin'
+import { useAuthStore } from '~/stores/auth'
 import { formatDate } from '~/utils/format'
 
 const admin = useAdminStore()
+const auth = useAuthStore()
+// Просмотр кабинета чужого парка (?park_id=) поддерживает только бэкенд для
+// RoleSuperAdmin — обычным admin ссылка ничего не даст, поэтому не показываем.
+const canPeekParks = computed(() => auth.hasRole('superadmin'))
 const { value: statusFilter, model: statusModel } = useListFilter<ParkStatus | ''>('pending')
 
 const rejectingPark = ref<TaxiPark | null>(null)
@@ -52,7 +57,8 @@ function closeRejectModal() {
 }
 
 async function confirmReject() {
-  if (!rejectingPark.value) return
+  if (!rejectingPark.value)
+    return
   await admin.rejectPark(rejectingPark.value, rejectReason.value).catch(() => {})
   closeRejectModal()
 }
@@ -66,8 +72,10 @@ function parkStatusClass(park: TaxiPark) {
 }
 
 function parkStatusLabel(park: TaxiPark) {
-  if (park.status === 'approved' || park.is_verified) return 'Проверен'
-  if (park.status === 'rejected') return 'Отклонён'
+  if (park.status === 'approved' || park.is_verified)
+    return 'Проверен'
+  if (park.status === 'rejected')
+    return 'Отклонён'
   return 'Ожидает'
 }
 </script>
@@ -101,7 +109,7 @@ function parkStatusLabel(park: TaxiPark) {
           @click.self="rejectingPark = null"
         >
           <form
-            class="w-full max-w-lg border border-white/10 rounded-3xl bg-#071a38 p-6 shadow-2xl"
+            class="max-w-lg w-full border border-white/10 rounded-3xl bg-#071a38 p-6 shadow-2xl"
             @submit.prevent="confirmReject()"
           >
             <h2 class="text-xl font-950">
@@ -111,7 +119,7 @@ function parkStatusLabel(park: TaxiPark) {
               {{ rejectingPark.name }}
             </p>
 
-            <label class="mt-5 grid gap-1.5">
+            <label class="grid mt-5 gap-1.5">
               <span class="text-xs text-white/42 font-900 uppercase">Причина отклонения</span>
               <textarea
                 v-model="rejectReason"
@@ -131,7 +139,7 @@ function parkStatusLabel(park: TaxiPark) {
                 {{ admin.isMutating ? 'Отклоняем...' : 'Отклонить' }}
               </button>
               <button
-                class="h-11 rounded-2xl border border-white/12 bg-white/8 px-5 text-sm font-900 transition hover:bg-white/12"
+                class="h-11 border border-white/12 rounded-2xl bg-white/8 px-5 text-sm font-900 transition hover:bg-white/12"
                 type="button"
                 @click="closeRejectModal()"
               >
@@ -190,6 +198,14 @@ function parkStatusLabel(park: TaxiPark) {
         <span class="text-sm text-white/50 font-800">{{ formatDate(park.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
 
         <div class="flex flex-wrap items-center justify-start gap-2 md:justify-end">
+          <RouterLink
+            v-if="canPeekParks"
+            class="h-10 inline-flex items-center gap-2 border border-white/12 rounded-xl bg-white/8 px-3 text-sm font-900 transition hover:bg-white/14"
+            :to="`/park?park_id=${park.id}`"
+          >
+            <span class="i-mdi-eye-outline text-4.5 text-cyan-200" />
+            Кабинет
+          </RouterLink>
           <button
             :disabled="admin.isMutating || park.status === 'approved'"
             class="h-10 rounded-xl px-4 text-sm font-900 transition active:scale-[0.98] disabled:opacity-50"
