@@ -50,7 +50,7 @@ catalogs:
 
   frontend:
     '@telegram-apps/sdk': ^3.11.8
-    '@unhead/vue': ^2.1.7
+    '@unhead/vue': ^3.1.7
     '@unocss/preset-web-fonts': ^66.7.4
     '@unocss/reset': ^66.7.4
     '@vueuse/core': ^14.2.1
