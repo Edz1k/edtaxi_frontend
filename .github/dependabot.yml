@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Обновления зависимостей (npm-экосистема покрывает pnpm-lock). Систематически
+  # закрывает advisory-бэклог, который CI-аудит только показывает.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Группируем мелкие апдейты в один PR, чтобы не плодить шум.
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Держим версии GitHub Actions свежими (checkout/setup-node/action-setup).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

@@ -56,14 +56,14 @@ jobs:
           VITE_SHARE_URL: https://share.telegramtaxi.kz
           VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
 
-  # Аудит зависимостей — информационный (не блокирует мёрдж). Ужесточить до
-  # блокирующего можно, убрав continue-on-error, когда бэклог advisories чист.
+  # Аудит зависимостей: блокирует только на critical (must-fix). High/moderate
+  # печатаются в логах, но не рушат PR — чтобы неисправимые транзитивные advisory
+  # не стопорили работу; следить за ними лучше через Dependabot (dependabot.yml).
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
 
@@ -79,5 +79,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Audit (high+)
-        run: pnpm audit --audit-level=high
+      - name: Audit (critical blocks; high+ shown in logs)
+        run: pnpm audit --audit-level=critical
