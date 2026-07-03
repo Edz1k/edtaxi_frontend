@@ -12,6 +12,7 @@ import {
   saveOtpDeliveryMethod,
   savePendingPhone,
 } from '@edtaxi/shared/composables/auth/session'
+import { normalizeSession } from '@edtaxi/shared/composables/auth/session-roles'
 import { getTelegramInitData, isTelegramWebApp } from '@edtaxi/shared/composables/auth/telegram'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { getAuthSession, logout as logoutRequest, sendDriverAuthOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyOtp, verifyTelegramPassenger } from '~/api/auth'
@@ -21,8 +22,6 @@ import { usePassengerStore } from '~/stores/passenger'
 import { useSupportStore } from '~/stores/support'
 import { useTripsStore } from '~/stores/trips'
 import { useWalletStore } from '~/stores/wallet'
-
-const ROLE_PRIORITY: AuthRole[] = ['passenger', 'driver', 'admin', 'superadmin', 'tech_support', 'park']
 
 export const useAuthStore = defineStore('auth', () => {
   const currentUser = ref<AuthSession | null>(null)
@@ -35,36 +34,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => Boolean(currentUser.value))
   const role = computed<AuthRole | null>(() => currentUser.value?.role ?? null)
-
-  function isAuthRole(role: string): role is AuthRole {
-    return ROLE_PRIORITY.includes(role as AuthRole)
-  }
-
-  function pickSessionRole(sessionRoles: AuthRole[], preferredRole?: AuthRole | null) {
-    if (preferredRole && sessionRoles.includes(preferredRole))
-      return preferredRole
-
-    return ROLE_PRIORITY.find(role => sessionRoles.includes(role)) ?? null
-  }
-
-  function normalizeSession(session: AuthSession, preferredRole?: AuthRole | null): AuthSession | null {
-    const rawRoles = session.roles?.length
-      ? session.roles
-      : session.role
-        ? [session.role]
-        : []
-    const sessionRoles = Array.from(new Set(rawRoles.filter(isAuthRole)))
-    const nextRole = pickSessionRole(sessionRoles, preferredRole)
-
-    if (!nextRole)
-      return null
-
-    return {
-      ...session,
-      role: nextRole,
-      roles: sessionRoles,
-    }
-  }
 
   function syncSession() {
     const storedPhone = readPendingPhone()

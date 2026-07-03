@@ -8,6 +8,7 @@
     "./api/geocoding": "./src/api/geocoding.ts",
     "./composables/auth/phone": "./src/composables/auth/phone.ts",
     "./composables/auth/session": "./src/composables/auth/session.ts",
+    "./composables/auth/session-roles": "./src/composables/auth/session-roles.ts",
     "./composables/auth/telegram": "./src/composables/auth/telegram.ts",
     "./composables/dark": "./src/composables/dark.ts",
     "./composables/mapbox/useMapboxMap": "./src/composables/mapbox/useMapboxMap.ts",
