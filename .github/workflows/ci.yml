@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+# Отменяем предыдущий прогон для той же PR-ветки при новом пуше — не жжём раннеры.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: 10.30.2
+
+jobs:
+  # Единый гейт качества (см. quality.yml) — тот же, что гейтит деплой.
+  quality:
+    uses: ./.github/workflows/quality.yml
+
+  # Проверяем, что каждое приложение реально собирается (vite-сборка ловит то,
+  # что не видят lint/typecheck: резолв компонентов, unocss, defineModel и т.п.).
+  build:
+    name: Build ${{ matrix.app }}
+    needs: quality
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [passenger, driver, web, share]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build ${{ matrix.app }}
+        run: pnpm --filter @edtaxi/${{ matrix.app }} build
+        env:
+          VITE_API_URL: /api/v1
+          VITE_WS_URL: wss://ws.telegramtaxi.kz
+          VITE_SHARE_URL: https://share.telegramtaxi.kz
+          VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+
+  # Аудит зависимостей — информационный (не блокирует мёрдж). Ужесточить до
+  # блокирующего можно, убрав continue-on-error, когда бэклог advisories чист.
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit (high+)
+        run: pnpm audit --audit-level=high

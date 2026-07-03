@@ -34,8 +34,8 @@
     "./uno.base": "./src/uno.base.ts"
   },
   "scripts": {
-    "test": "vitest",
-    "test:run": "vitest run",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {

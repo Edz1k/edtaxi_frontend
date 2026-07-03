@@ -7,7 +7,7 @@
     "dev": "vite --port 3002 --open",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
