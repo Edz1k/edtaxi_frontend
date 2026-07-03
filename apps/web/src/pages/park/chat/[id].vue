@@ -3,6 +3,7 @@ import { useRoute as useVueRoute } from 'vue-router'
 import { useParkChatSocket } from '~/composables/useParkChatSocket'
 import { useAuthStore } from '~/stores/auth'
 import { useParkChatStore } from '~/stores/park-chat'
+import { formatTime } from '~/utils/format'
 
 const route = useVueRoute()
 const router = useRouter()
@@ -45,13 +46,6 @@ function scrollToBottom() {
     if (messagesEl.value)
       messagesEl.value.scrollTop = messagesEl.value.scrollHeight
   })
-}
-
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
 }
 
 function isMyMessage(senderId: string) {

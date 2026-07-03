@@ -3,6 +3,19 @@ import { useRoute as useVueRoute } from 'vue-router'
 import { useSupportSocket } from '~/composables/useSupportSocket'
 import { useAuthStore } from '~/stores/auth'
 import { useSupportStore } from '~/stores/support'
+import { formatTime, shortId } from '~/utils/format'
+import {
+  canClaimRoom,
+  isAssignedTo,
+  participantIcon as getParticipantIcon,
+  participantLabel as getParticipantLabel,
+  participantProfileLink as getParticipantProfileLink,
+  paymentLabel,
+  resolveSupportActionHint,
+  roomStatusLabel as getRoomStatusLabel,
+  tripFare,
+  tripStatusLabel,
+} from '~/utils/support'
 
 const route = useVueRoute()
 const router = useRouter()
@@ -13,21 +26,8 @@ const roomId = computed(() => (route.params as Record<string, string>).id)
 const draft = ref('')
 const messagesEl = ref<HTMLElement | null>(null)
 
-const isAssigned = computed(() => {
-  const room = support.currentRoom
-  if (!room)
-    return false
-  return room.agent_id === auth.currentUser?.id
-})
-
-// Можно взять в работу открытое обращение, которое ещё не закреплено
-// ни за кем (или уже за нами — повторный claim безопасен).
-const canClaim = computed(() => {
-  const room = support.currentRoom
-  if (!room || room.status === 'closed')
-    return false
-  return !room.agent_id || room.agent_id === auth.currentUser?.id
-})
+const isAssigned = computed(() => isAssignedTo(support.currentRoom, auth.currentUser?.id))
+const canClaim = computed(() => canClaimRoom(support.currentRoom, auth.currentUser?.id))
 
 async function claim() {
   try {
@@ -49,29 +49,9 @@ async function closeAsResolved() {
   catch {}
 }
 
-const roomStatusLabel = computed(() => {
-  const status = support.currentRoom?.status
-
-  if (status === 'pending_close')
-    return 'На закрытии'
-
-  return status === 'closed' ? 'Закрыто' : 'Открыто'
-})
-
-const participantLabel = computed(() => {
-  return support.currentRoom?.participant_type === 'driver' ? 'Водитель' : 'Пассажир'
-})
-
-// Ссылка в кабинет участника: водителя — /drivers/:id, пассажира — /passengers/:id
-// (passenger_id здесь — это user_id участника).
-const participantProfileLink = computed(() => {
-  const room = support.currentRoom
-  if (!room?.passenger_id)
-    return ''
-  return room.participant_type === 'driver'
-    ? `/drivers/${room.passenger_id}`
-    : `/passengers/${room.passenger_id}`
-})
+const roomStatusLabel = computed(() => getRoomStatusLabel(support.currentRoom?.status))
+const participantLabel = computed(() => getParticipantLabel(support.currentRoom?.participant_type))
+const participantProfileLink = computed(() => getParticipantProfileLink(support.currentRoom))
 
 definePage({
   meta: {
@@ -117,13 +97,6 @@ function scrollToBottom() {
   })
 }
 
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
-}
-
 function isMyMessage(senderId: string) {
   return auth.currentUser?.id === senderId
 }
@@ -144,9 +117,7 @@ const isClosed = computed(() => support.currentRoom?.status === 'closed')
 const isPendingClose = computed(() => support.currentRoom?.status === 'pending_close')
 const canReply = computed(() => isAssigned.value && !isClosed.value && !isPendingClose.value)
 
-const participantIcon = computed(() => {
-  return support.currentRoom?.participant_type === 'driver' ? 'i-mdi-steering' : 'i-mdi-account'
-})
+const participantIcon = computed(() => getParticipantIcon(support.currentRoom?.participant_type))
 
 const statusToneClass = computed(() => {
   if (isClosed.value)
@@ -156,46 +127,12 @@ const statusToneClass = computed(() => {
   return 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'
 })
 
-const actionHint = computed(() => {
-  if (isClosed.value) {
-    return {
-      icon: 'i-mdi-check-circle-outline',
-      title: 'Обращение закрыто',
-      text: 'Диалог доступен только для просмотра.',
-      tone: 'border-white/10 bg-white/6 text-white/60',
-    }
-  }
-  if (isPendingClose.value) {
-    return {
-      icon: 'i-mdi-timer-sand',
-      title: 'Ожидаем подтверждение клиента',
-      text: 'Клиент должен ответить “да”, чтобы закрыть обращение, или написать новое сообщение, если проблема осталась.',
-      tone: 'border-amber-400/20 bg-amber-400/10 text-amber-100',
-    }
-  }
-  if (!isAssigned.value && support.currentRoom?.agent_id) {
-    return {
-      icon: 'i-mdi-account-lock-outline',
-      title: 'Чат ведёт другой агент',
-      text: 'Ответы и закрытие доступны только назначенному оператору.',
-      tone: 'border-amber-400/20 bg-amber-400/10 text-amber-100',
-    }
-  }
-  if (!isAssigned.value) {
-    return {
-      icon: 'i-mdi-hand-back-right-outline',
-      title: 'Возьмите обращение в работу',
-      text: 'После этого можно отвечать клиенту и нажать “Решено”.',
-      tone: 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100',
-    }
-  }
-  return {
-    icon: 'i-mdi-message-reply-text-outline',
-    title: 'Вы ведёте этот чат',
-    text: 'Ответьте клиенту. Когда проблема решена, нажмите “Решено” и дождитесь подтверждения.',
-    tone: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-100',
-  }
-})
+const actionHint = computed(() => resolveSupportActionHint({
+  isClosed: isClosed.value,
+  isPendingClose: isPendingClose.value,
+  isAssigned: isAssigned.value,
+  hasAgent: !!support.currentRoom?.agent_id,
+}))
 
 // Прикреплённая к обращению поездка — чтобы агент видел, о какой поездке речь.
 const attachedTrip = computed(() => support.currentRoom?.trip ?? null)
@@ -209,30 +146,6 @@ const participantSecondary = computed(() => {
   return support.currentRoom?.participant_phone || support.currentRoom?.passenger_id || roomId.value
 })
 
-const TRIP_STATUS_LABELS: Record<string, string> = {
-  searching: 'Поиск',
-  driver_assigned: 'Водитель назначен',
-  driver_arriving: 'Водитель в пути',
-  in_progress: 'В пути',
-  completed: 'Завершена',
-  cancelled: 'Отменена',
-}
-
-const PAYMENT_LABELS: Record<string, string> = {
-  cash: 'Наличные',
-  card: 'Карта',
-  wallet: 'Кошелёк',
-  kaspi: 'Kaspi',
-}
-
-function tripFare(t: NonNullable<typeof attachedTrip.value>) {
-  const amount = t.final_fare ?? t.estimated_fare
-  return `${Math.round(amount).toLocaleString('ru-RU')} ₸`
-}
-
-function shortId(value: string) {
-  return value.slice(0, 8)
-}
 </script>
 
 <template>
@@ -389,7 +302,7 @@ function shortId(value: string) {
               Поездка
             </p>
             <p class="mt-3 rounded-lg bg-white/6 px-2 py-1 text-xs text-white/65 font-900">
-              {{ TRIP_STATUS_LABELS[attachedTrip.status] ?? attachedTrip.status }}
+              {{ tripStatusLabel(attachedTrip.status) }}
             </p>
             <p class="mt-3 text-sm leading-5 text-white/78 font-800">
               {{ attachedTrip.pickup_address || 'Адрес подачи не указан' }}
@@ -399,7 +312,7 @@ function shortId(value: string) {
             </p>
             <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-white/45 font-800">
               <span>{{ tripFare(attachedTrip) }}</span>
-              <span>{{ PAYMENT_LABELS[attachedTrip.payment_method ?? ''] ?? attachedTrip.payment_method ?? 'Оплата не указана' }}</span>
+              <span>{{ paymentLabel(attachedTrip.payment_method) }}</span>
               <span>{{ formatTime(attachedTrip.created_at) }}</span>
               <span>ID {{ shortId(attachedTrip.id) }}</span>
             </div>

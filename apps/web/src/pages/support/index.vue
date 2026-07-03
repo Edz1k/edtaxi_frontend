@@ -5,7 +5,8 @@ import WebPageShell from '~/components/app/WebPageShell.vue'
 import { useListFilter } from '~/composables/useListFilter'
 import { useAdminStore } from '~/stores/admin'
 import { useSupportStore } from '~/stores/support'
-import { formatDate } from '~/utils/format'
+import { formatDate, shortId } from '~/utils/format'
+import { participantIcon, participantProfileLink, roomStatusLabel } from '~/utils/support'
 
 const support = useSupportStore()
 // Статистика обращений живёт в admin-сторе; эндпоинт выбирается по роли,
@@ -37,16 +38,6 @@ const visibleCounts = computed(() => {
 const activeParticipantLabel = computed(() => {
   return participantType.value ? participantLabel(participantType.value) : 'Все участники'
 })
-
-// Ссылка в кабинет участника: водитель → /drivers/:id, пассажир → /passengers/:id
-// (passenger_id здесь — user_id участника).
-function profileLink(room: SupportRoom) {
-  if (!room.passenger_id)
-    return ''
-  return room.participant_type === 'driver'
-    ? `/drivers/${room.passenger_id}`
-    : `/passengers/${room.passenger_id}`
-}
 
 const statuses: Array<{ label: string, value: SupportRoomStatus | '' }> = [
   { label: 'Все', value: '' },
@@ -98,15 +89,6 @@ function participantLabel(value: SupportParticipantType) {
   return participantTypes.find(item => item.value === value)?.label ?? value
 }
 
-function statusLabel(value: SupportRoomStatus) {
-  const labels: Record<SupportRoomStatus, string> = {
-    closed: 'Закрыто',
-    open: 'Открыто',
-    pending_close: 'На закрытии',
-  }
-  return labels[value]
-}
-
 function statusClass(value: SupportRoomStatus) {
   if (value === 'open')
     return 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200'
@@ -147,14 +129,6 @@ function assignmentClass(room: SupportRoom) {
   if (room.status === 'pending_close')
     return 'text-amber-200'
   return room.agent_id ? 'text-cyan-200' : 'text-emerald-200'
-}
-
-function participantIcon(value: SupportParticipantType) {
-  return value === 'driver' ? 'i-mdi-steering' : 'i-mdi-account'
-}
-
-function shortId(value: string) {
-  return value.slice(0, 8)
 }
 </script>
 
@@ -242,7 +216,7 @@ function shortId(value: string) {
             Рабочая очередь
           </p>
           <p class="mt-0.5 truncate text-xs text-white/42 font-800">
-            {{ activeParticipantLabel }} · {{ statusFilter ? statusLabel(statusFilter) : 'Все статусы' }} · {{ filteredRooms.length }} строк
+            {{ activeParticipantLabel }} · {{ statusFilter ? roomStatusLabel(statusFilter) : 'Все статусы' }} · {{ filteredRooms.length }} строк
           </p>
         </div>
         <div class="hidden items-center gap-2 text-xs text-white/45 font-800 sm:flex">
@@ -293,8 +267,8 @@ function shortId(value: string) {
           </div>
           <div class="min-w-0">
             <RouterLink
-              v-if="profileLink(room)"
-              :to="profileLink(room)"
+              v-if="participantProfileLink(room)"
+              :to="participantProfileLink(room)"
               class="flex items-center gap-1 truncate text-sm text-cyan-100 font-900 hover:underline"
             >
               {{ room.participant_name || `Обращение ${shortId(room.id)}` }}
@@ -315,7 +289,7 @@ function shortId(value: string) {
           class="w-fit border rounded-lg px-2.5 py-1 text-xs font-900"
           :class="statusClass(room.status)"
         >
-          {{ statusLabel(room.status) }}
+          {{ roomStatusLabel(room.status) }}
         </span>
 
         <span class="text-sm font-800" :class="assignmentClass(room)">
