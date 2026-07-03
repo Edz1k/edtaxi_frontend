@@ -1,10 +1,10 @@
-import type { AdminAssignableRole, AdminListTripsParams, AdminListUsersParams, AdminSupportStats, AdminTechSupportNumber, AdminUser, CreateParkOwnerPayload, PlatformSettings, PlatformSettingsUpdatePayload } from '~/types/admin'
+import type { AdminAssignableRole, AdminListTripsParams, AdminListUsersParams, AdminSupportStats, AdminTechSupportNumber, AdminUser, CreateParkOwnerPayload, DemandOverview, PlatformSettings, PlatformSettingsUpdatePayload, Tariff, TariffPayload } from '~/types/admin'
 import type { ParkChatRoom, ParkStatus, TaxiPark } from '~/types/park'
 import type { AdminListPayoutsParams, PayoutRequest } from '~/types/payout'
 import type { AdminSupportRoomsParams, SupportRoom } from '~/types/support'
 import type { Trip } from '~/types/trips'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, assignAdminSupportRoom, blockAdminUser, closeAdminSupportRoom, createParkOwner as createParkOwnerApi, getAdminTrip, getPlatformSettings, getSupportStats, listAdminPayouts, listAdminSupportRooms, listAdminTrips, listAdminUsers, listTechSupportNumbers, markAdminPayoutPaid, rejectAdminPayout, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi, updatePlatformSettings } from '~/api/admin'
+import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, assignAdminSupportRoom, blockAdminUser, closeAdminSupportRoom, createAdminTariff, createParkOwner as createParkOwnerApi, getAdminTrip, getDemandOverview, getPlatformSettings, getSupportStats, listAdminPayouts, listAdminSupportRooms, listAdminTariffs, listAdminTrips, listAdminUsers, listTechSupportNumbers, markAdminPayoutPaid, rejectAdminPayout, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi, updateAdminTariff, updatePlatformSettings } from '~/api/admin'
 import { listAdminParkChats, listAdminParks, rejectAdminPark, verifyAdminPark } from '~/api/park'
 import { useStoreAction } from '~/composables/useStoreAction'
 import { useAuthStore } from '~/stores/auth'
@@ -19,6 +19,10 @@ export const useAdminStore = defineStore('admin', () => {
   const supportRooms = ref<SupportRoom[]>([])
   const payouts = ref<PayoutRequest[]>([])
   const platformSettings = ref<PlatformSettings | null>(null)
+  const tariffs = ref<Tariff[]>([])
+  const demandOverview = ref<DemandOverview | null>(null)
+  const isLoadingTariffs = ref(false)
+  const isLoadingDemand = ref(false)
   const isLoadingSupportStats = ref(false)
   const selectedTrip = ref<Trip | null>(null)
   const usersTotal = ref(0)
@@ -213,6 +217,34 @@ export const useAdminStore = defineStore('admin', () => {
     }, 'Не удалось сохранить настройки платформы.')
   }
 
+  async function loadTariffs() {
+    return withLoading(isLoadingTariffs, async () => {
+      const response = await listAdminTariffs()
+      tariffs.value = response.tariffs
+      return response
+    }, 'Не удалось загрузить тарифы.')
+  }
+
+  // Создаёт тариф, если id не передан, иначе обновляет существующий.
+  async function saveTariff(payload: TariffPayload, id?: string) {
+    return withLoading(isMutating, async () => {
+      const saved = id ? await updateAdminTariff(id, payload) : await createAdminTariff(payload)
+      const index = tariffs.value.findIndex(item => item.id === saved.id)
+      if (index === -1)
+        tariffs.value = [...tariffs.value, saved]
+      else
+        tariffs.value = tariffs.value.map(item => item.id === saved.id ? saved : item)
+      return saved
+    }, 'Не удалось сохранить тариф.')
+  }
+
+  async function loadDemandOverview() {
+    return withLoading(isLoadingDemand, async () => {
+      demandOverview.value = await getDemandOverview()
+      return demandOverview.value
+    }, 'Не удалось загрузить данные о спросе.')
+  }
+
   async function removeTechSupportNumber(phone: string) {
     return withLoading(isMutating, async () => {
       await removeTechSupportNumberApi({ phone })
@@ -230,6 +262,8 @@ export const useAdminStore = defineStore('admin', () => {
     supportRooms.value = []
     payouts.value = []
     platformSettings.value = null
+    tariffs.value = []
+    demandOverview.value = null
     selectedTrip.value = null
     usersTotal.value = 0
     tripsTotal.value = 0
@@ -242,6 +276,8 @@ export const useAdminStore = defineStore('admin', () => {
     isLoadingSupportRooms.value = false
     isLoadingPayouts.value = false
     isLoadingSettings.value = false
+    isLoadingTariffs.value = false
+    isLoadingDemand.value = false
     isMutating.value = false
     errorMessage.value = ''
   }
@@ -294,6 +330,13 @@ export const useAdminStore = defineStore('admin', () => {
     users,
     usersTotal,
     verifyPark,
+    tariffs,
+    demandOverview,
+    isLoadingTariffs,
+    isLoadingDemand,
+    loadTariffs,
+    saveTariff,
+    loadDemandOverview,
   }
 })
 
