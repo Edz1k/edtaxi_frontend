@@ -22,8 +22,9 @@ const navItems = [
     to: '/wallet',
   },
 ]
+const TRAILING_SLASH_RE = /\/$/
 const tabRoutes = new Set(['/map', '/menu', '/wallet'])
-const normalizedPath = computed(() => route.path.replace(/\/$/, '') || '/map')
+const normalizedPath = computed(() => route.path.replace(TRAILING_SLASH_RE, '') || '/map')
 const isPassengerTabRoute = computed(() => tabRoutes.has(normalizedPath.value))
 const shouldShowBackHeader = computed(() => normalizedPath.value.startsWith('/menu/') && !isPassengerTabRoute.value)
 const backTitle = computed(() => typeof route.meta.screenTitle === 'string' ? route.meta.screenTitle : 'Пассажир')

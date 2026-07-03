@@ -22,8 +22,9 @@ const navItems = [
     to: '/earnings',
   },
 ]
+const TRAILING_SLASH_RE = /\/$/
 const tabRoutes = new Set(['/map', '/menu', '/earnings'])
-const normalizedPath = computed(() => route.path.replace(/\/$/, '') || '/map')
+const normalizedPath = computed(() => route.path.replace(TRAILING_SLASH_RE, '') || '/map')
 const isDriverTabRoute = computed(() => tabRoutes.has(normalizedPath.value))
 const shouldShowBackHeader = computed(() => normalizedPath.value.startsWith('/menu/') && !isDriverTabRoute.value)
 const backTitle = computed(() => typeof route.meta.screenTitle === 'string' ? route.meta.screenTitle : 'Водитель')

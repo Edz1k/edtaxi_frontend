@@ -65,7 +65,8 @@ async function send() {
 }
 
 async function closeChat() {
-  if (!parkChat.currentRoom) return
+  if (!parkChat.currentRoom)
+    return
   await parkChat.closeRoom(parkChat.currentRoom).catch(() => {})
 }
 </script>

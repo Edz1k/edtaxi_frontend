@@ -9,9 +9,12 @@ defineProps<{
 const model = defineModel<string>({ required: true })
 const labelId = useId()
 
+// На уровне модуля — чтобы не пересоздавать регулярку на каждый ввод в сеттере.
+const NON_DIGIT_RE = /\D/g
+
 const digits = computed<string[]>({
   get: () => Array.from({ length: 6 }, (_, index) => model.value[index] ?? ''),
-  set: value => model.value = value.join('').replace(/\D/g, '').slice(0, 6),
+  set: value => model.value = value.join('').replace(NON_DIGIT_RE, '').slice(0, 6),
 })
 </script>
 

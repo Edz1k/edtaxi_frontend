@@ -15,7 +15,8 @@
     "dev:driver": "pnpm --filter @edtaxi/driver dev",
     "dev:web": "pnpm --filter @edtaxi/web dev",
     "dev:share": "pnpm --filter @edtaxi/share dev",
-    "lint": "eslint .",
+    "lint": "eslint . --cache --concurrency=auto",
+    "lint:fix": "eslint . --fix --cache --concurrency=auto",
     "typecheck": "pnpm -r typecheck",
     "postinstall": "npx simple-git-hooks"
   },

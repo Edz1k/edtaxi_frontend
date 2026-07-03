@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import OtpInput from '~/components/auth/OtpInput.vue'
-import PhoneInput from '~/components/auth/PhoneInput.vue'
 import { sendDriverPhoneOtp, verifyDriverPhone } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
+import OtpInput from '~/components/auth/OtpInput.vue'
+import PhoneInput from '~/components/auth/PhoneInput.vue'
 import { isKazakhstanPhoneComplete, toKazakhstanE164 } from '~/composables/auth/phone'
 import { useToast } from '~/composables/useToast'
 import { useAuthStore } from '~/stores/auth'
