@@ -158,22 +158,22 @@ jobs:
     environment: production
     needs: [build-passenger, build-driver, build-web, build-share]
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: dist-passenger
           path: dist/passenger
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: dist-driver
           path: dist/driver
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: dist-web
           path: dist/web
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: dist-share
           path: dist/share
