@@ -39,6 +39,7 @@
     "beasties": "catalog:build",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
+    "jsdom": "catalog:dev",
     "markdown-it-link-attributes": "catalog:build",
     "typescript": "catalog:dev",
     "unocss": "catalog:build",

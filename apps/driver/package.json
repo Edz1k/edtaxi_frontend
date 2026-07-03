@@ -36,6 +36,7 @@
     "@vue/test-utils": "catalog:dev",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
+    "jsdom": "catalog:dev",
     "typescript": "catalog:dev",
     "unocss": "catalog:build",
     "unplugin-auto-import": "catalog:build",
