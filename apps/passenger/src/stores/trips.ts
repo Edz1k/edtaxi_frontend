@@ -2,6 +2,7 @@ import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, Trip, TripFlowState, VehicleCategory } from '~/types/trips'
 import type { PassengerDriverLocation } from '~/types/websocket'
+import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
 import { getUserErrorMessage, showErrorToast } from '~/api/errors'
@@ -330,6 +331,10 @@ export const useTripsStore = defineStore('trips', () => {
   }
 
   async function orderTrip(payload: CreateTripPayload) {
+    // Заказ невозможен без геолокации — точка подачи привязана к местоположению.
+    if (!useLocationAccess().isGranted.value)
+      throw new Error('Включите геолокацию, чтобы заказать поездку.')
+
     isCreating.value = true
     errorMessage.value = ''
 

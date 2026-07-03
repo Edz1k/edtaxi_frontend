@@ -1,0 +1,63 @@
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { useLocationAccess } from '../../composables/location/useLocationAccess'
+
+// Полноэкранная заглушка на входе: не пускает в основной экран, пока не выдан
+// доступ к геолокации. Как только доступ появляется (в т.ч. через фоновый
+// поллинг/watch на карте) — статус становится granted и заглушка исчезает.
+const { isGranted, isRequesting, openSettings, requestAccess, status } = useLocationAccess()
+
+onMounted(() => {
+  if (!isGranted.value)
+    void requestAccess()
+})
+
+async function allow() {
+  const ok = await requestAccess()
+  // Доступ не выдан (уже отказывали) — открываем экран согласия Telegram
+  // или повторный системный промпт браузера.
+  if (!ok)
+    await openSettings()
+}
+</script>
+
+<template>
+  <Transition
+    enter-active-class="transition duration-200"
+    enter-from-class="opacity-0"
+    leave-active-class="transition duration-200"
+    leave-to-class="opacity-0"
+  >
+    <div
+      v-if="!isGranted"
+      class="tg-viewport-screen fixed inset-0 z-[90] flex flex-col items-center justify-center gap-6 bg-secondary-900/98 px-8 text-center text-white backdrop-blur-xl"
+    >
+      <div class="h-20 w-20 flex items-center justify-center rounded-3xl bg-main-500/16 text-main-300">
+        <span class="i-mdi-map-marker-radius text-10" />
+      </div>
+
+      <div class="space-y-2">
+        <h2 class="text-xl font-950">
+          Нужен доступ к геолокации
+        </h2>
+        <p class="text-sm text-slate-300 font-700 leading-6">
+          Без геопозиции приложение не сможет работать. Разрешите доступ, чтобы
+          продолжить.
+        </p>
+      </div>
+
+      <button
+        :disabled="isRequesting"
+        class="h-14 w-full max-w-xs rounded-2xl bg-main-500 text-base text-white font-900 shadow-[0_12px_30px_rgba(230,173,46,0.28)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+        type="button"
+        @click="allow"
+      >
+        {{ isRequesting ? 'Запрашиваем...' : 'Разрешить доступ' }}
+      </button>
+
+      <p v-if="status === 'denied'" class="max-w-xs text-xs text-amber-300 font-700 leading-5">
+        Доступ запрещён. Нажмите «Разрешить доступ» и подтвердите в настройках.
+      </p>
+    </div>
+  </Transition>
+</template>

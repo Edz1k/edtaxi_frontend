@@ -19,6 +19,8 @@
     "./composables/useTelegramSafeArea": "./src/composables/useTelegramSafeArea.ts",
     "./composables/useToast": "./src/composables/useToast.ts",
     "./components/auth/*": "./src/components/auth/*.vue",
+    "./components/location/*": "./src/components/location/*.vue",
+    "./composables/location/useLocationAccess": "./src/composables/location/useLocationAccess.ts",
     "./types/auth": "./src/types/auth.ts",
     "./types/geocoding": "./src/types/geocoding.ts",
     "./types/map": "./src/types/map.ts",

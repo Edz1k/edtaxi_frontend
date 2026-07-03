@@ -7,8 +7,10 @@ import { getDrivingRoute } from '@edtaxi/shared/api/geocoding'
 import { ApiError } from '~/api/client'
 import { getVerificationReminder } from '~/api/driver'
 import { getUserErrorMessage } from '~/api/errors'
+import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import RatePassengerModal from '~/components/driver/RatePassengerModal.vue'
 import { useDriverTrackingSocket } from '~/composables/driver/useDriverTrackingSocket'
+import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
@@ -17,6 +19,7 @@ import { offerToPlace } from '~/utils/geoPlace'
 const driver = useDriverStore()
 const onboarding = useDriverOnboardingStore()
 const tracking = useDriverTrackingSocket()
+const { isGranted: isLocationGranted } = useLocationAccess()
 const {
   liveCoordinates,
   startWatchingUserLocation,
@@ -230,6 +233,12 @@ async function handlePrimaryTripAction() {
 async function toggleOnline() {
   const nextOnline = !driver.isOnline
 
+  // На линию нельзя без геолокации — без неё диспетчер не видит водителя.
+  if (nextOnline && !isLocationGranted.value) {
+    onlineBlockMessage.value = 'Включите геолокацию, чтобы выйти на линию.'
+    return
+  }
+
   try {
     await driver.setOnline(nextOnline)
     onlineBlockMessage.value = ''
@@ -262,6 +271,8 @@ watch(liveCoordinates, () => throttledApproachRebuild())
 
 <template>
   <main class="tg-viewport-screen relative overflow-hidden bg-secondary-900 text-white">
+    <LocationGate />
+
     <DriverMap
       :destination-place="destinationPlace"
       :pickup-place="pickupPlace"
@@ -362,7 +373,7 @@ watch(liveCoordinates, () => throttledApproachRebuild())
 
         <button
           v-else
-          :disabled="driver.isChangingStatus || driver.isRestoringActiveTrip"
+          :disabled="driver.isChangingStatus || driver.isRestoringActiveTrip || (!driver.isOnline && !isLocationGranted)"
           class="mt-4 h-14 w-full rounded-2xl text-base font-900 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
           :class="driver.isOnline ? 'bg-red-500/12 text-red-300' : 'bg-main-500 text-white shadow-[0_12px_30px_rgba(230,173,46,0.28)]'"
           type="button"

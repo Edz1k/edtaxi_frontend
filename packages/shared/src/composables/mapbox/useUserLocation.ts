@@ -2,6 +2,7 @@ import type { GeoPlace } from '../../types/geocoding'
 import { onBeforeUnmount, ref } from 'vue'
 import { reverseGeocodePlace } from '../../api/geocoding'
 import { isTelegramWebApp } from '../auth/telegram'
+import { markLocationDenied, markLocationGranted } from '../location/useLocationAccess'
 import {
   isTelegramLocationSupported,
   openTelegramLocationSettings,
@@ -119,6 +120,7 @@ export function useUserLocation() {
     saveCachedLocation(coords.lat, coords.lng)
     locationError.value = ''
     clearLocationErrorToast()
+    markLocationGranted()
   }
 
   function coordsFromPosition(position: GeolocationPosition): UserCoordinates {
@@ -178,6 +180,7 @@ export function useUserLocation() {
     catch (error) {
       locationError.value = getGeolocationErrorMessage(error)
       showLocationErrorToast(locationError.value)
+      markLocationDenied()
       throw error
     }
     finally {
@@ -202,10 +205,13 @@ export function useUserLocation() {
 
   async function pollTelegramLocationOnce() {
     const tg = await requestTelegramLocation()
-    if (tg)
+    if (tg) {
       saveUserCoordinates(tg)
-    else
+    }
+    else {
       showLocationErrorToast('Разрешите доступ к геолокации.')
+      markLocationDenied()
+    }
   }
 
   function startWatchingUserLocation() {
@@ -227,6 +233,7 @@ export function useUserLocation() {
       (error) => {
         locationError.value = getGeolocationErrorMessage(error)
         showLocationErrorToast(locationError.value)
+        markLocationDenied()
       },
       {
         enableHighAccuracy: true,
