@@ -28,6 +28,10 @@
     "./types/websocket": "./src/types/websocket.ts",
     "./uno.base": "./src/uno.base.ts"
   },
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
   "dependencies": {
     "@iconify-json/mdi": "catalog:dev",
     "@telegram-apps/sdk": "catalog:frontend",
@@ -40,5 +44,8 @@
     "reka-ui": "catalog:frontend",
     "unocss": "catalog:build",
     "vue": "catalog:frontend"
+  },
+  "devDependencies": {
+    "vitest": "catalog:dev"
   }
 }
