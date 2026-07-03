@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AppToast } from '~/composables/useToast'
 import {
   ToastClose,
   ToastDescription,
@@ -10,6 +11,16 @@ import {
 import { useToast } from '~/composables/useToast'
 
 const { removeToast, toasts } = useToast()
+
+// Нажимной тост (например «Геолокация недоступна»): тап по телу выполняет
+// действие и закрывает тост. Если доступ так и не выдан, он покажется снова.
+function onToastClick(toast: AppToast) {
+  if (!toast.action)
+    return
+
+  toast.action.onClick()
+  removeToast(toast.id)
+}
 
 const toastStyles = {
   error: {
@@ -40,6 +51,7 @@ const toastStyles = {
     <ToastRoot
       v-for="toast in toasts"
       :key="toast.id"
+      :duration="toast.action ? 86_400_000 : 4200"
       class="data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:animate-in data-[state=open]:fade-in grid grid-cols-[44px_1fr_auto] max-w-sm w-[calc(100vw-2rem)] items-start gap-3 border rounded-3xl p-3 text-white shadow-[0_18px_60px_rgba(0,0,0,0.32)] backdrop-blur-xl"
       :class="toastStyles[toast.kind].rootClass"
       @update:open="(open) => !open && removeToast(toast.id)"
@@ -51,7 +63,13 @@ const toastStyles = {
         <span class="text-6" :class="toastStyles[toast.kind].icon" />
       </div>
 
-      <div class="min-w-0 pt-0.5">
+      <component
+        :is="toast.action ? 'button' : 'div'"
+        type="button"
+        class="min-w-0 pt-0.5 text-left"
+        :class="toast.action && 'cursor-pointer transition active:scale-[0.99]'"
+        @click="onToastClick(toast)"
+      >
         <ToastTitle class="text-sm font-950">
           {{ toast.title }}
         </ToastTitle>
@@ -62,7 +80,7 @@ const toastStyles = {
         >
           {{ toast.description }}
         </ToastDescription>
-      </div>
+      </component>
 
       <ToastClose class="h-9 w-9 flex items-center justify-center rounded-full bg-white/8 text-slate-300 transition active:scale-[0.95]">
         <span class="i-mdi-close text-5" />

@@ -1,6 +1,12 @@
 import type { GeoPlace } from '../../types/geocoding'
 import { onBeforeUnmount, ref } from 'vue'
 import { reverseGeocodePlace } from '../../api/geocoding'
+import { isTelegramWebApp } from '../auth/telegram'
+import {
+  isTelegramLocationSupported,
+  openTelegramLocationSettings,
+  requestTelegramLocation,
+} from '../telegram/location'
 import { useToast } from '../useToast'
 
 export interface UserCoordinates {
@@ -77,15 +83,65 @@ export function useUserLocation() {
   const locationError = ref('')
 
   let watchID: number | undefined
+  // Telegram LocationManager отдаёт координаты только по одноразовому запросу
+  // (watch, как у navigator, нет) — поэтому непрерывное отслеживание в мини-аппе
+  // делаем поллингом requestLocation по таймеру.
+  let tgWatchTimer: ReturnType<typeof setInterval> | undefined
+  let locationToastID: number | undefined
 
-  function saveCoordinates(position: GeolocationPosition) {
-    liveCoordinates.value = {
+  // Нажимной баннер «Геолокация недоступна»: тап открывает экран согласия. Не
+  // дублируем, пока он на экране; после успеха убираем; после того как юзер его
+  // закрыл — снова покажем при следующей неудаче (настойчивое напоминание).
+  function locationToastVisible() {
+    return locationToastID !== undefined && toast.toasts.value.some(t => t.id === locationToastID)
+  }
+
+  function showLocationErrorToast(message: string) {
+    if (locationToastVisible())
+      return
+
+    locationToastID = toast.warning(
+      'Геолокация недоступна',
+      `${message} Нажмите, чтобы разрешить.`,
+      { onClick: () => { void openLocationSettings() } },
+    )
+  }
+
+  function clearLocationErrorToast() {
+    if (locationToastID !== undefined) {
+      toast.removeToast(locationToastID)
+      locationToastID = undefined
+    }
+  }
+
+  function saveUserCoordinates(coords: UserCoordinates) {
+    liveCoordinates.value = coords
+    saveCachedLocation(coords.lat, coords.lng)
+    locationError.value = ''
+    clearLocationErrorToast()
+  }
+
+  function coordsFromPosition(position: GeolocationPosition): UserCoordinates {
+    return {
       accuracy: position.coords.accuracy,
       heading: position.coords.heading,
       lat: position.coords.latitude,
       lng: position.coords.longitude,
     }
-    saveCachedLocation(position.coords.latitude, position.coords.longitude)
+  }
+
+  // getCoordinates берёт геопозицию из Telegram LocationManager (если внутри
+  // мини-аппа), иначе — из navigator.geolocation. В Telegram navigator после
+  // отказа переспросить нельзя, а нативный менеджер умеет открыть экран согласия.
+  async function getCoordinates(options?: PositionOptions): Promise<UserCoordinates> {
+    if (isTelegramWebApp()) {
+      const tg = await requestTelegramLocation()
+      if (tg)
+        return tg
+    }
+
+    const position = await getCurrentPosition(options)
+    return coordsFromPosition(position)
   }
 
   async function locateUser() {
@@ -93,30 +149,27 @@ export function useUserLocation() {
     locationError.value = ''
 
     try {
-      const position = await getCurrentPosition({
+      const coords = await getCoordinates({
         enableHighAccuracy: true,
         maximumAge: 30_000,
         timeout: 10_000,
       })
 
-      saveCoordinates(position)
+      saveUserCoordinates(coords)
 
       // GPS-координаты уже получены — даже если reverse geocoding
       // (запрос адреса по координатам) не отработает, это не должно
       // выглядеть как "геолокация недоступна". Используем сырые координаты
       // как запасной вариант, чтобы пользователь не остался без точки.
       try {
-        return await reverseGeocodePlace(
-          position.coords.longitude,
-          position.coords.latitude,
-        )
+        return await reverseGeocodePlace(coords.lng, coords.lat)
       }
       catch {
         const fallback: GeoPlace = {
           address: 'Текущее местоположение',
-          id: `${position.coords.latitude}:${position.coords.longitude}`,
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
+          id: `${coords.lat}:${coords.lng}`,
+          lat: coords.lat,
+          lng: coords.lng,
           name: 'Текущее местоположение',
         }
         return fallback
@@ -124,7 +177,7 @@ export function useUserLocation() {
     }
     catch (error) {
       locationError.value = getGeolocationErrorMessage(error)
-      toast.warning('Геолокация недоступна', locationError.value)
+      showLocationErrorToast(locationError.value)
       throw error
     }
     finally {
@@ -132,15 +185,48 @@ export function useUserLocation() {
     }
   }
 
+  // openLocationSettings вызывается по тапу на баннер. В Telegram открывает
+  // нативный экран согласия; вне Telegram — пробует заново запросить геопозицию
+  // у браузера (сработает, если доступ ещё не запрашивали).
+  async function openLocationSettings() {
+    if (await openTelegramLocationSettings())
+      return
+
+    try {
+      await locateUser()
+    }
+    catch {
+      // навигатор всё ещё отказывает — баннер уже показан пользователю
+    }
+  }
+
+  async function pollTelegramLocationOnce() {
+    const tg = await requestTelegramLocation()
+    if (tg)
+      saveUserCoordinates(tg)
+    else
+      showLocationErrorToast('Разрешите доступ к геолокации.')
+  }
+
   function startWatchingUserLocation() {
+    // Telegram-мини-апп: поллим нативный менеджер (watchPosition тут не работает).
+    if (isTelegramWebApp() && isTelegramLocationSupported()) {
+      if (tgWatchTimer !== undefined)
+        return
+
+      void pollTelegramLocationOnce()
+      tgWatchTimer = setInterval(() => void pollTelegramLocationOnce(), 5_000)
+      return
+    }
+
     if (!navigator.geolocation || watchID !== undefined)
       return
 
     watchID = navigator.geolocation.watchPosition(
-      saveCoordinates,
+      position => saveUserCoordinates(coordsFromPosition(position)),
       (error) => {
         locationError.value = getGeolocationErrorMessage(error)
-        toast.warning('Геолокация недоступна', locationError.value)
+        showLocationErrorToast(locationError.value)
       },
       {
         enableHighAccuracy: true,
@@ -151,11 +237,14 @@ export function useUserLocation() {
   }
 
   function stopWatchingUserLocation() {
-    if (watchID === undefined)
-      return
-
-    navigator.geolocation.clearWatch(watchID)
-    watchID = undefined
+    if (tgWatchTimer !== undefined) {
+      clearInterval(tgWatchTimer)
+      tgWatchTimer = undefined
+    }
+    if (watchID !== undefined) {
+      navigator.geolocation.clearWatch(watchID)
+      watchID = undefined
+    }
   }
 
   onBeforeUnmount(stopWatchingUserLocation)
@@ -165,6 +254,7 @@ export function useUserLocation() {
     liveCoordinates,
     locateUser,
     locationError,
+    openLocationSettings,
     startWatchingUserLocation,
     stopWatchingUserLocation,
   }
