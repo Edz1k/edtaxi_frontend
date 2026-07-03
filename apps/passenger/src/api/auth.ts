@@ -84,6 +84,18 @@ export function verifyDriverAuthOtp(payload: VerifyOtpPayload) {
   })
 }
 
+// Тихий вход по подписанному Telegram initData (без OTP). Бэкенд проверяет
+// подпись пассажирского бота и заводит/находит пользователя, ставя auth-cookie.
+export function verifyTelegramPassenger(initData: string, deviceFingerprint?: string) {
+  return apiRequest<AuthLoginResponse>('/auth/telegram/passenger', {
+    method: 'POST',
+    deviceFingerprint,
+    skipAuth: true,
+    skipAuthRefresh: true,
+    body: { init_data: initData },
+  })
+}
+
 export function syncTelegramName(initData: string) {
   return apiRequest<MessageResponse>('/auth/telegram/sync-name', {
     method: 'POST',

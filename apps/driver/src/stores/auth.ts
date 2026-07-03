@@ -14,7 +14,7 @@ import {
 } from '@edtaxi/shared/composables/auth/session'
 import { getTelegramInitData, isTelegramWebApp } from '@edtaxi/shared/composables/auth/telegram'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { getAuthSession, logout as logoutRequest, sendDriverAuthOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyOtp } from '~/api/auth'
+import { getAuthSession, logout as logoutRequest, sendDriverAuthOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyOtp, verifyTelegramDriver } from '~/api/auth'
 import { ApiError } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
 import { useDriverStore } from '~/stores/driver'
@@ -138,15 +138,12 @@ export const useAuthStore = defineStore('auth', () => {
     clearTokenPair()
   }
 
-  async function restoreSession(options: { force?: boolean, preferredRole?: AuthRole } = {}) {
-    syncSession()
-    listenSessionChanges()
-
-    if (!options.force && sessionStatus.value !== 'unknown')
-      return currentUser.value
-
+  // loadServerSession читает текущую сессию с сервера и раскладывает её в стор.
+  // Возвращает нормализованную сессию или null (нет сессии / 401 / сеть недоступна);
+  // прочие ошибки пробрасывает.
+  async function loadServerSession(preferredRole?: AuthRole) {
     try {
-      const session = normalizeSession(await getAuthSession(), options.preferredRole)
+      const session = normalizeSession(await getAuthSession(), preferredRole)
       currentUser.value = session
       sessionStatus.value = session ? 'authenticated' : 'guest'
       if (session)
@@ -162,6 +159,45 @@ export const useAuthStore = defineStore('auth', () => {
 
       throw error
     }
+  }
+
+  // Внутри Telegram Mini App можно войти молча по подписанному initData, не гоняя
+  // пользователя через OTP заново после того как истекла/потерялась сессия.
+  // Возвращает true, если серверная auth-cookie успешно выставлена.
+  async function tryTelegramSilentLogin() {
+    if (!isTelegramWebApp())
+      return false
+
+    const initData = getTelegramInitData()
+    if (!initData)
+      return false
+
+    try {
+      await verifyTelegramDriver(initData, getDeviceFingerprint())
+      return true
+    }
+    catch {
+      return false
+    }
+  }
+
+  async function restoreSession(options: { force?: boolean, preferredRole?: AuthRole } = {}) {
+    syncSession()
+    listenSessionChanges()
+
+    if (!options.force && sessionStatus.value !== 'unknown')
+      return currentUser.value
+
+    const session = await loadServerSession(options.preferredRole)
+    if (session)
+      return session
+
+    // Серверной сессии нет — прежде чем показывать OTP, пробуем тихий вход
+    // через Telegram (в мини-аппе). При успехе перечитываем сессию.
+    if (await tryTelegramSilentLogin())
+      return loadServerSession(options.preferredRole)
+
+    return null
   }
 
   async function restoreSessionAfterLogin(preferredRole: AuthRole) {
