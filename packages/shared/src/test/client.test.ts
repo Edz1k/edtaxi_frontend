@@ -17,7 +17,7 @@ vi.mock('axios', () => ({
 }))
 
 // Imported after the mock is registered (vitest hoists vi.mock above imports).
-const { apiRequest, ApiError, AUTH_SESSION_CHANGED_EVENT } = await import('./client')
+const { apiRequest, ApiError, AUTH_SESSION_CHANGED_EVENT } = await import('../api/client')
 
 interface FakeAxiosError {
   isAxiosError: true

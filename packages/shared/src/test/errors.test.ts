@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError } from './client'
-import { getUserErrorMessage, showErrorToast } from './errors'
+import { ApiError } from '../api/client'
+import { getUserErrorMessage, showErrorToast } from '../api/errors'
 
 // showErrorToast pulls in the real toast composable, which relies on an
 // auto-imported `ref`. Stub it so we can assert what gets shown.

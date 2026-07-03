@@ -1,6 +1,6 @@
-import type { AuthRole, AuthSession } from '../../types/auth'
+import type { AuthRole, AuthSession } from '../types/auth'
 import { describe, expect, it } from 'vitest'
-import { isAuthRole, normalizeSession, pickSessionRole } from './session-roles'
+import { isAuthRole, normalizeSession, pickSessionRole } from '../composables/auth/session-roles'
 
 function makeSession(overrides: Partial<AuthSession>): AuthSession {
   return {

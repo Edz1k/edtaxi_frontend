@@ -17,7 +17,7 @@ vi.mock('~/api/auth', () => ({
   verifyOtp: vi.fn(),
   verifyTelegramPassenger: vi.fn(),
 }))
-vi.mock('~/api/errors', () => ({ showErrorToast: vi.fn(() => 'error') }))
+vi.mock('@edtaxi/shared/api/errors', () => ({ showErrorToast: vi.fn(() => 'error') }))
 vi.mock('@edtaxi/shared/composables/auth/session', () => ({
   AUTH_SESSION_CHANGED_EVENT: 'edtaxi:auth-session-changed',
   clearOtpDeliveryMethod: vi.fn(),

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { apiRequestMock } = vi.hoisted(() => ({ apiRequestMock: vi.fn() }))
-vi.mock('./client', () => ({ apiRequest: apiRequestMock }))
+vi.mock('../api/client', () => ({ apiRequest: apiRequestMock }))
 
-const { getDrivingRoute, reverseGeocodePlace, searchPlaces } = await import('./geocoding')
+const { getDrivingRoute, reverseGeocodePlace, searchPlaces } = await import('../api/geocoding')
 
 beforeEach(() => {
   apiRequestMock.mockReset()
