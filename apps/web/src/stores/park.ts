@@ -32,11 +32,16 @@ export const useParkStore = defineStore('park', () => {
 
   const { withLoading } = useStoreAction(errorMessage)
 
-  async function loadPark(options: { silentNotFound?: boolean } = {}) {
+  // viewParkId — если задан, показывает чужой таксопарк (доступно только
+  // хардкоженным SuperAdmin, бэкенд игнорирует park_id для остальных ролей).
+  const viewParkId = ref<string | undefined>(undefined)
+
+  async function loadPark(options: { silentNotFound?: boolean, parkId?: string } = {}) {
     isLoading.value = true
     errorMessage.value = ''
+    viewParkId.value = options.parkId
     try {
-      park.value = await getMyPark()
+      park.value = await getMyPark(options.parkId)
       return park.value
     }
     catch (error) {
@@ -69,9 +74,9 @@ export const useParkStore = defineStore('park', () => {
   async function loadDashboard() {
     return withLoading(isLoading, async () => {
       const [analyticsResponse, driversResponse, invitesResponse] = await Promise.all([
-        getParkAnalytics(),
-        listParkDrivers(),
-        listParkInvites(),
+        getParkAnalytics(viewParkId.value),
+        listParkDrivers(viewParkId.value),
+        listParkInvites(viewParkId.value),
       ])
       analytics.value = analyticsResponse
       drivers.value = driversResponse.drivers
@@ -133,6 +138,7 @@ export const useParkStore = defineStore('park', () => {
     invites.value = []
     wallet.value = null
     payouts.value = []
+    viewParkId.value = undefined
     isLoading.value = false
     isLoadingWallet.value = false
     isMutating.value = false
@@ -158,6 +164,7 @@ export const useParkStore = defineStore('park', () => {
     removeDriver,
     requestPayout,
     update,
+    viewParkId,
     wallet,
   }
 })

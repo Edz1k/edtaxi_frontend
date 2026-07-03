@@ -1,14 +1,42 @@
 <script setup lang="ts">
+import type { ParkStatus } from '~/types/park'
+import { useRoute as useVueRoute } from 'vue-router'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { useParkStore } from '~/stores/park'
 import { formatRevenue } from '~/utils/format'
 
+const route = useVueRoute()
 const parkStore = useParkStore()
+
+// Присутствие ?park_id= означает, что кабинет открыт «подглядыванием» чужого
+// парка (доступно только хардкоженным SuperAdmin — бэкенд игнорирует
+// park_id для остальных ролей и вернёт собственный парк или 404). В этом
+// режиме скрываем действия редактирования: они всё равно ударят по
+// собственному парку вызывающего, а не по просматриваемому.
+const viewParkId = computed(() => {
+  const raw = route.query.park_id
+  return typeof raw === 'string' && raw ? raw : undefined
+})
+const isPeeking = computed(() => !!viewParkId.value)
 
 const isEditing = ref(false)
 const editForm = reactive({ name: '', description: '', bin: '', phone: '', commission_rate_pct: 0 })
 const { copy, copied } = useClipboard({ legacy: true })
 const copiedToken = ref('')
+
+const parkStatusLabels: Record<ParkStatus, string> = {
+  approved: 'Проверен',
+  pending: 'Ожидает',
+  rejected: 'Отклонён',
+}
+
+const parkStatusClasses: Record<ParkStatus, string> = {
+  approved: 'bg-emerald-500/12 text-emerald-300',
+  pending: 'bg-amber-500/12 text-amber-300',
+  rejected: 'bg-red-500/12 text-red-300',
+}
+
+const parkStatus = computed<ParkStatus>(() => parkStore.park?.status ?? 'pending')
 
 definePage({
   meta: {
@@ -27,7 +55,7 @@ onMounted(() => {
 })
 
 async function loadParkData() {
-  const park = await parkStore.loadPark({ silentNotFound: true })
+  const park = await parkStore.loadPark({ silentNotFound: true, parkId: viewParkId.value })
   if (park)
     await parkStore.loadDashboard()
 }
@@ -69,7 +97,12 @@ async function copyToken(token: string) {
     title="Кабинет таксопарка"
   >
     <template v-if="parkStore.park" #actions>
+      <span v-if="isPeeking" class="h-11 inline-flex items-center gap-2 rounded-full bg-amber-300/12 px-4 text-sm text-amber-200 font-900">
+        <span class="i-mdi-eye-outline text-5" />
+        Режим просмотра
+      </span>
       <button
+        v-if="!isPeeking"
         class="h-11 inline-flex items-center gap-2 border border-white/12 rounded-full bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12"
         type="button"
         @click="openEdit()"
@@ -97,14 +130,14 @@ async function copyToken(token: string) {
           @click.self="isEditing = false"
         >
           <form
-            class="w-full max-w-lg border border-white/10 rounded-3xl bg-#071a38 p-6 shadow-2xl"
+            class="max-w-lg w-full border border-white/10 rounded-3xl bg-#071a38 p-6 shadow-2xl"
             @submit.prevent="saveEdit()"
           >
             <h2 class="text-xl font-950">
               Редактировать парк
             </h2>
 
-            <div class="mt-5 grid gap-3">
+            <div class="grid mt-5 gap-3">
               <label class="grid gap-1.5">
                 <span class="text-xs text-white/42 font-900 uppercase">Название</span>
                 <input v-model="editForm.name" class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40" type="text">
@@ -136,7 +169,7 @@ async function copyToken(token: string) {
                 {{ parkStore.isMutating ? 'Сохраняем...' : 'Сохранить' }}
               </button>
               <button
-                class="h-11 rounded-2xl border border-white/12 bg-white/8 px-5 text-sm font-900 transition hover:bg-white/12"
+                class="h-11 border border-white/12 rounded-2xl bg-white/8 px-5 text-sm font-900 transition hover:bg-white/12"
                 type="button"
                 @click="isEditing = false"
               >
@@ -241,6 +274,7 @@ async function copyToken(token: string) {
             Приглашения
           </h2>
           <button
+            v-if="!isPeeking"
             :disabled="parkStore.isMutating"
             class="h-10 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 disabled:opacity-60"
             type="button"
@@ -255,7 +289,7 @@ async function copyToken(token: string) {
             Приглашений нет.
           </p>
           <div v-for="invite in parkStore.invites" :key="invite.id ?? invite.token" class="flex items-center gap-3 rounded-xl bg-black/14 p-3">
-            <p class="min-w-0 flex-1 break-all text-sm font-mono font-900">
+            <p class="min-w-0 flex-1 break-all text-sm font-900 font-mono">
               {{ invite.token }}
             </p>
             <div class="flex shrink-0 flex-col items-end gap-1.5">
@@ -296,6 +330,7 @@ async function copyToken(token: string) {
             </span>
             <span class="text-sm text-white/62">{{ driver.rating.toFixed(1) }}</span>
             <button
+              v-if="!isPeeking"
               :disabled="parkStore.isMutating"
               class="h-9 rounded-xl bg-red-500/12 px-3 text-sm text-red-300 font-900 disabled:opacity-50"
               type="button"
@@ -307,7 +342,7 @@ async function copyToken(token: string) {
         </div>
       </section>
 
-      <section class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+      <section v-if="!isPeeking" class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p class="text-xs text-white/42 font-900 uppercase">
@@ -330,7 +365,7 @@ async function copyToken(token: string) {
         </div>
       </section>
 
-      <section class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+      <section v-if="!isPeeking" class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p class="text-xs text-white/42 font-900 uppercase">
