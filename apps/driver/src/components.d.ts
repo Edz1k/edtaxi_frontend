@@ -17,6 +17,7 @@ declare module 'vue' {
     AuthScreen: typeof import('./components/auth/AuthScreen.vue')['default']
     BottomNav: typeof import('./components/app/BottomNav.vue')['default']
     DriverMap: typeof import('./components/driver/DriverMap.vue')['default']
+    DriverStatusPanel: typeof import('./components/driver/DriverStatusPanel.vue')['default']
     DriverTripOffer: typeof import('./components/driver/DriverTripOffer.vue')['default']
     MapView: typeof import('./components/map/MapView.vue')['default']
     OtpInput: typeof import('./components/auth/OtpInput.vue')['default']
@@ -28,5 +29,6 @@ declare module 'vue' {
     RouteHeader: typeof import('./components/app/RouteHeader.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    VerificationReminderBanner: typeof import('./components/driver/VerificationReminderBanner.vue')['default']
   }
 }
