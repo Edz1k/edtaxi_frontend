@@ -1,6 +1,7 @@
 import type {
   AdminBlockUserPayload,
   AdminBlockUserResponse,
+  AdminListTariffsResponse,
   AdminListTechSupportNumbersResponse,
   AdminListTripsParams,
   AdminListTripsResponse,
@@ -13,8 +14,11 @@ import type {
   AdminUpdateUserRolesResponse,
   CreateParkOwnerPayload,
   CreateParkOwnerResponse,
+  DemandOverview,
   PlatformSettings,
   PlatformSettingsUpdatePayload,
+  Tariff,
+  TariffPayload,
 } from '~/types/admin'
 import type { AdminListPayoutsParams, PayoutsResponse } from '~/types/payout'
 import type { AdminSupportRoomsParams, SupportListRoomsResponse } from '~/types/support'
@@ -146,6 +150,28 @@ export function rejectAdminPayout(id: string, reason = '') {
   return apiRequest<{ message: string }>(`/admin/payouts/${id}/reject`, {
     method: 'POST',
     body: { reason },
+  })
+}
+
+export function getDemandOverview() {
+  return apiRequest<DemandOverview>('/admin/demand')
+}
+
+export function listAdminTariffs() {
+  return apiRequest<AdminListTariffsResponse>('/admin/tariffs')
+}
+
+export function createAdminTariff(payload: TariffPayload) {
+  return apiRequest<Tariff>('/admin/tariffs', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export function updateAdminTariff(id: string, payload: TariffPayload) {
+  return apiRequest<Tariff>(`/admin/tariffs/${id}`, {
+    method: 'PUT',
+    body: payload,
   })
 }
 

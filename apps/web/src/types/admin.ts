@@ -124,3 +124,58 @@ export interface AdminTechSupportNumberPayload {
   phone: string
   name?: string
 }
+
+export type TariffCategory = 'business' | 'comfort' | 'economy' | 'minivan'
+
+// Тариф платформы (park_id IS NULL) — базовые параметры расчёта цены плюс
+// surge_max, потолок коэффициента спроса для категории.
+export interface Tariff {
+  id: string
+  category: TariffCategory
+  base_fare: number
+  per_km: number
+  per_min: number
+  min_fare: number
+  surge_max: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TariffPayload {
+  category?: TariffCategory
+  base_fare: number
+  per_km: number
+  per_min: number
+  min_fare: number
+  surge_max: number
+  is_active?: boolean
+}
+
+export interface AdminListTariffsResponse {
+  tariffs: Tariff[]
+}
+
+// Текущий срез спроса на категорию — те же счётчики и коэффициент, что
+// использует живой расчёт цены поездки, но платформенные (без гео-радиуса).
+export interface CategoryDemand {
+  category: TariffCategory
+  active_searching: number
+  available_drivers: number
+  ratio: number
+  coefficient: number
+  surge_max: number
+}
+
+// Средний коэффициент спроса категории для часа суток за последние ~30 дней истории.
+export interface DemandForecastPoint {
+  category: TariffCategory
+  hour: number
+  avg_coefficient: number
+  samples: number
+}
+
+export interface DemandOverview {
+  current: CategoryDemand[]
+  forecast: DemandForecastPoint[]
+}
