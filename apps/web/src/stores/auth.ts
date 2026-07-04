@@ -176,7 +176,9 @@ export const useAuthStore = defineStore('auth', () => {
       currentUser.value = null
       sessionStatus.value = 'guest'
 
-      if (error instanceof ApiError && (error.status === 0 || error.status === 401))
+      // 401 — нет/истекла сессия; 403 — cookie указывает на заблокированный
+      // аккаунт. И то и другое — «гость», а не ошибка навигации.
+      if (error instanceof ApiError && (error.status === 0 || error.status === 401 || error.status === 403))
         return null
 
       throw error

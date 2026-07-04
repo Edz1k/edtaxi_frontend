@@ -25,6 +25,7 @@ useHead({
 })
 
 onMounted(() => {
+  auth.errorMessage = ''
   accounts.value = readSavedAccounts(SAVED_ACCOUNTS_KEY)
   // Нечего выбирать — сразу обычный вход по номеру.
   if (!accounts.value.length)

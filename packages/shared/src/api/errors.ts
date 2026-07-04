@@ -75,6 +75,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   'setting value out of allowed range': 'Значение выходит за допустимые пределы.',
   'share link not found or expired': 'Ссылка на поездку устарела или недоступна.',
   'tariff not configured for this category': 'Тариф пока не настроен. Выберите другой класс авто.',
+  'telegram contact does not match account': 'Контакт принадлежит другому Telegram-аккаунту. Выйдите и войдите заново.',
   'too many attempts, request a new code': 'Слишком много попыток. Запросите новый код позже.',
   'trip already rated': 'Вы уже оценили эту поездку.',
   'trip already taken by another driver': 'Этот заказ уже принял другой водитель.',

@@ -34,6 +34,7 @@ useHead({
 
 onMounted(() => {
   readyTelegramWebApp()
+  auth.errorMessage = ''
   hasSavedAccounts.value = readSavedAccounts(SAVED_ACCOUNTS_KEY).length > 0
 
   // Со страницы выбора аккаунта приходят с ?phone=+7... — подставляем номер,
