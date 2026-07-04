@@ -9,25 +9,31 @@ const { getAuthSession } = vi.hoisted(() => ({ getAuthSession: vi.fn() }))
 // the test exercises only the store's own session-restore / clear logic.
 vi.mock('~/api/auth', () => ({
   getAuthSession,
+  linkTelegramPhone: vi.fn(),
   logout: vi.fn(),
   sendDriverAuthOtp: vi.fn(),
+  sendLinkPhoneOtp: vi.fn(),
   sendOtp: vi.fn(),
   syncTelegramName: vi.fn(),
   verifyDriverAuthOtp: vi.fn(),
+  verifyLinkPhoneOtp: vi.fn(),
   verifyOtp: vi.fn(),
   verifyTelegramPassenger: vi.fn(),
 }))
 vi.mock('@edtaxi/shared/api/errors', () => ({ showErrorToast: vi.fn(() => 'error') }))
 vi.mock('@edtaxi/shared/composables/auth/session', () => ({
   AUTH_SESSION_CHANGED_EVENT: 'edtaxi:auth-session-changed',
+  clearExplicitLogout: vi.fn(),
   clearOtpDeliveryMethod: vi.fn(),
   clearPendingPhone: vi.fn(),
   clearStoredAuthArtifacts: vi.fn(),
   clearTokenPair: vi.fn(),
   readDeviceFingerprint: vi.fn(() => 'fp'),
+  readExplicitLogout: vi.fn(() => false),
   readOtpDeliveryMethod: vi.fn(() => 'whatsapp'),
   readPendingPhone: vi.fn(() => ''),
   saveDeviceFingerprint: vi.fn(),
+  saveExplicitLogout: vi.fn(),
   saveOtpDeliveryMethod: vi.fn(),
   savePendingPhone: vi.fn(),
 }))

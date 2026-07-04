@@ -1,19 +1,24 @@
 import { createAuthStore } from '@edtaxi/shared/stores/create-auth-store'
 import { acceptHMRUpdate } from 'pinia'
-import { getAuthSession, logout, sendDriverAuthOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyOtp, verifyTelegramPassenger } from '~/api/auth'
+import { getAuthSession, linkTelegramPhone, logout, sendDriverAuthOtp, sendLinkPhoneOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyLinkPhoneOtp, verifyOtp, verifyTelegramPassenger } from '~/api/auth'
 import { usePassengerStore } from '~/stores/passenger'
 import { useSupportStore } from '~/stores/support'
 import { useTripsStore } from '~/stores/trips'
 import { useWalletStore } from '~/stores/wallet'
 
+export const SAVED_ACCOUNTS_KEY = 'taxiapp_passenger_saved_accounts'
+
 export const useAuthStore = createAuthStore({
   api: {
     getAuthSession,
+    linkTelegramPhone,
     logout,
     sendDriverAuthOtp,
+    sendLinkPhoneOtp,
     sendOtp,
     syncTelegramName,
     verifyDriverAuthOtp,
+    verifyLinkPhoneOtp,
     verifyOtp,
     verifyTelegramSilent: verifyTelegramPassenger,
   },
@@ -23,6 +28,7 @@ export const useAuthStore = createAuthStore({
     useWalletStore().clearWalletState()
     useSupportStore().clearSupportState()
   },
+  savedAccountsKey: SAVED_ACCOUNTS_KEY,
 })
 
 if (import.meta.hot)

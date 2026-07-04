@@ -8,8 +8,10 @@ const { getAuthSession } = vi.hoisted(() => ({ getAuthSession: vi.fn() }))
 // Isolate the store from the network, storage and sibling stores so the test
 // exercises only the store's own session/role logic.
 vi.mock('~/api/auth', () => ({
+  createTelegramLoginRequest: vi.fn(),
   getAuthSession,
   logout: vi.fn(),
+  pollTelegramLoginRequest: vi.fn(),
   sendOtp: vi.fn(),
   verifyOtp: vi.fn(),
   verifyTelegramCode: vi.fn(),

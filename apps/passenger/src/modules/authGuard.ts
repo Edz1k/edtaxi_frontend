@@ -55,6 +55,11 @@ export const install: UserModule = ({ router }) => {
       await auth.restoreSession({ preferredRole })
     }
 
+    // Номер телефона обязателен: вошедший через Telegram без привязанного
+    // номера не идёт дальше экрана «Подтвердите номер».
+    if (auth.isAuthenticated && !auth.phoneVerified && to.path !== '/login/phone')
+      return '/login/phone'
+
     if (to.meta.requiresPendingPhone && !auth.pendingPhone)
       return to.meta.authRedirect ?? '/login'
 

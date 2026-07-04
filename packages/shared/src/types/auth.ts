@@ -20,9 +20,33 @@ export interface AuthSession {
   id: string
   last_name: null | string
   phone: string
+  // false, пока у аккаунта плейсхолдер вместо номера (вход через Telegram без
+  // привязанного телефона) — приложение обязано показать шаг «поделиться номером».
+  phone_verified?: boolean
   role?: AuthRole
   roles: AuthRole[]
   telegram_user_id: null | number
+}
+
+export interface LinkPhoneResponse extends MessageResponse {
+  merged?: boolean
+  phone: string
+}
+
+// Ответ POST /auth/telegram/login-request («Войти через Telegram» в веб-аппе).
+export interface TelegramLoginRequestResponse {
+  bot_username: string
+  deep_link: string
+  request_id: string
+}
+
+export type TelegramLoginStatus = 'approved' | 'expired' | 'pending'
+
+// Ответ поллинга GET /auth/telegram/login-request/:id.
+export interface TelegramLoginPollResponse {
+  phone_verified?: boolean
+  role?: AuthRole
+  status: TelegramLoginStatus
 }
 
 export interface SendOtpPayload {

@@ -6,6 +6,8 @@ import type {
   MessageResponse,
   SendOtpPayload,
   SendOtpResponse,
+  TelegramLoginPollResponse,
+  TelegramLoginRequestResponse,
   VerifyOtpPayload,
 } from '~/types/auth'
 import { apiRequest } from '~/api/client'
@@ -71,6 +73,26 @@ export function verifyTelegramCode(
     body: {
       code: payload.code,
     },
+  })
+}
+
+// «Войти через Telegram»: создаёт запрос входа. Пользователь открывает
+// диплинк бота, делится контактом с тем же номером, а веб-апп поллит статус.
+export function createTelegramLoginRequest(phone: string, flow: AuthLoginFlow) {
+  return apiRequest<TelegramLoginRequestResponse>('/auth/telegram/login-request', {
+    method: 'POST',
+    skipAuth: true,
+    skipAuthRefresh: true,
+    body: { flow, phone },
+  })
+}
+
+// Поллинг запроса входа: на approved бэкенд сразу ставит auth-cookies.
+export function pollTelegramLoginRequest(requestId: string, deviceFingerprint?: string) {
+  return apiRequest<TelegramLoginPollResponse>(`/auth/telegram/login-request/${requestId}`, {
+    deviceFingerprint,
+    skipAuth: true,
+    skipAuthRefresh: true,
   })
 }
 
