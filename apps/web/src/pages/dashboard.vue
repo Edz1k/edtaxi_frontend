@@ -77,8 +77,11 @@ const accessCards = computed(() => {
 })
 
 async function logout() {
+  // Оператора поддержки возвращаем на его вход (там список сохранённых
+  // аккаунтов); админы и парки — на общий вход.
+  const supportOnly = auth.hasRole('tech_support') && !auth.hasAnyRole(['admin', 'superadmin'])
   await auth.logout()
-  await router.push('/')
+  await router.push(supportOnly ? '/support/login' : '/')
 }
 </script>
 

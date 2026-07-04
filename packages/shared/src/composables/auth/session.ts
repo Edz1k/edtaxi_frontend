@@ -4,6 +4,7 @@ const PHONE_KEY = 'taxiapp_pending_phone'
 const OTP_DELIVERY_METHOD_KEY = 'taxiapp_otp_delivery_method'
 const DEVICE_FP_KEY = 'taxiapp_device_fp'
 const OBSOLETE_ACTIVE_ROLE_KEY = 'taxiapp_active_role'
+const EXPLICIT_LOGOUT_KEY = 'taxiapp_explicit_logout'
 export const AUTH_SESSION_CHANGED_EVENT = 'edtaxi:auth-session-changed'
 
 function canUseStorage() {
@@ -75,6 +76,31 @@ export function clearOtpDeliveryMethod() {
     return
 
   sessionStorage.removeItem(OTP_DELIVERY_METHOD_KEY)
+}
+
+// Флаг «пользователь сам нажал Выйти». Пока он стоит, тихий вход по Telegram
+// initData отключён — иначе мини-апп мгновенно возвращал бы пользователя в
+// только что покинутый аккаунт, и переключиться на другой было бы невозможно.
+// Сбрасывается при любом явном входе (OTP или кнопка «Войти через Telegram»).
+export function readExplicitLogout() {
+  if (!canUseStorage())
+    return false
+
+  return localStorage.getItem(EXPLICIT_LOGOUT_KEY) === '1'
+}
+
+export function saveExplicitLogout() {
+  if (!canUseStorage())
+    return
+
+  localStorage.setItem(EXPLICIT_LOGOUT_KEY, '1')
+}
+
+export function clearExplicitLogout() {
+  if (!canUseStorage())
+    return
+
+  localStorage.removeItem(EXPLICIT_LOGOUT_KEY)
 }
 
 export function readDeviceFingerprint() {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/auth'
+import { readSavedAccounts } from '@edtaxi/shared/composables/auth/saved-accounts'
+import { SAVED_ACCOUNTS_KEY, useAuthStore } from '~/stores/auth'
 import { usePassengerStore } from '~/stores/passenger'
 
 const router = useRouter()
@@ -28,7 +29,9 @@ useHead({
 
 async function logout() {
   await auth.logout()
-  await router.replace('/login')
+  // После явного выхода — страница выбора аккаунтов (если уже входили раньше),
+  // откуда можно вернуться в свой аккаунт или войти в другой по номеру.
+  await router.replace(readSavedAccounts(SAVED_ACCOUNTS_KEY).length ? '/login/accounts' : '/login')
 }
 
 onMounted(async () => {

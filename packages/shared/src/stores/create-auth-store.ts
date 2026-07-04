@@ -3,29 +3,39 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { ApiError } from '../api/client'
 import { showErrorToast } from '../api/errors'
+import { rememberAccount } from '../composables/auth/saved-accounts'
 import {
   AUTH_SESSION_CHANGED_EVENT,
+  clearExplicitLogout,
   clearOtpDeliveryMethod,
   clearPendingPhone,
   clearStoredAuthArtifacts,
   clearTokenPair,
   readDeviceFingerprint,
+  readExplicitLogout,
   readOtpDeliveryMethod,
   readPendingPhone,
   saveDeviceFingerprint,
+  saveExplicitLogout,
   saveOtpDeliveryMethod,
   savePendingPhone,
 } from '../composables/auth/session'
 import { normalizeSession } from '../composables/auth/session-roles'
 import { getTelegramInitData, isTelegramWebApp } from '../composables/auth/telegram'
+import { requestTelegramContact } from '../composables/telegram/contact'
 
 export interface AuthStoreApi {
   getAuthSession: () => Promise<AuthSession>
+  // Привязка обязательного номера телефона к уже вошедшему аккаунту:
+  // без OTP по подписанному ответу Telegram requestContact и OTP-фолбэк.
+  linkTelegramPhone: (contactData: string, deviceFingerprint?: string) => Promise<unknown>
   logout: () => Promise<unknown>
   sendDriverAuthOtp: (payload: SendOtpPayload) => Promise<unknown>
+  sendLinkPhoneOtp: (payload: SendOtpPayload) => Promise<unknown>
   sendOtp: (payload: SendOtpPayload) => Promise<unknown>
   syncTelegramName: (initData: string) => Promise<unknown>
   verifyDriverAuthOtp: (payload: VerifyOtpPayload) => Promise<unknown>
+  verifyLinkPhoneOtp: (payload: VerifyOtpPayload) => Promise<unknown>
   verifyOtp: (payload: VerifyOtpPayload) => Promise<unknown>
   // Role-specific silent Telegram login (passenger vs driver bot signature).
   verifyTelegramSilent: (initData: string, deviceFingerprint?: string) => Promise<unknown>
@@ -35,12 +45,15 @@ export interface CreateAuthStoreOptions {
   api: AuthStoreApi
   // Reset the app's own feature stores when the auth session is cleared.
   clearRelatedStores: () => void
+  // localStorage-ключ списка сохранённых аккаунтов (страница выбора аккаунта
+  // после «Выйти»). У пассажирского и водительского аппов ключи разные.
+  savedAccountsKey: string
 }
 
 // Shared passenger/driver auth store. Both apps have identical session-restore,
 // OTP and silent-login logic; only the Telegram verify endpoint and which
 // sibling stores to reset differ, so those are injected.
-export function createAuthStore({ api, clearRelatedStores }: CreateAuthStoreOptions) {
+export function createAuthStore({ api, clearRelatedStores, savedAccountsKey }: CreateAuthStoreOptions) {
   return defineStore('auth', () => {
     const currentUser = ref<AuthSession | null>(null)
     const pendingPhone = ref('')
@@ -52,6 +65,10 @@ export function createAuthStore({ api, clearRelatedStores }: CreateAuthStoreOpti
 
     const isAuthenticated = computed(() => Boolean(currentUser.value))
     const role = computed<AuthRole | null>(() => currentUser.value?.role ?? null)
+    // Номер обязателен для пассажиров и водителей: пока phone_verified=false
+    // (вход через Telegram с плейсхолдер-номером), гард держит пользователя
+    // на экране «Поделитесь номером».
+    const phoneVerified = computed(() => currentUser.value?.phone_verified !== false)
 
     function syncSession() {
       const storedPhone = readPendingPhone()
@@ -105,6 +122,7 @@ export function createAuthStore({ api, clearRelatedStores }: CreateAuthStoreOpti
 
     function completeLogin() {
       clearStoredAuthArtifacts()
+      clearExplicitLogout()
       clearPendingPhone()
       clearOtpDeliveryMethod()
       pendingPhone.value = ''
@@ -124,8 +142,17 @@ export function createAuthStore({ api, clearRelatedStores }: CreateAuthStoreOpti
         const session = normalizeSession(await api.getAuthSession(), preferredRole)
         currentUser.value = session
         sessionStatus.value = session ? 'authenticated' : 'guest'
-        if (session)
+        if (session) {
           syncNameFromTelegram()
+          rememberAccount(savedAccountsKey, {
+            avatarUrl: session.avatar_url,
+            firstName: session.first_name,
+            id: session.id,
+            lastName: session.last_name,
+            phone: session.phone,
+            role: session.role ?? null,
+          })
+        }
         return session
       }
       catch (error) {
@@ -146,6 +173,12 @@ export function createAuthStore({ api, clearRelatedStores }: CreateAuthStoreOpti
       if (!isTelegramWebApp())
         return false
 
+      // Пользователь сам нажал «Выйти» — не возвращаем его в тот же аккаунт
+      // молча, иначе переключиться на другой аккаунт невозможно. Флаг
+      // сбрасывается при явном входе (OTP или кнопка «Войти через Telegram»).
+      if (readExplicitLogout())
+        return false
+
       const initData = getTelegramInitData()
       if (!initData)
         return false
@@ -156,6 +189,32 @@ export function createAuthStore({ api, clearRelatedStores }: CreateAuthStoreOpti
       }
       catch {
         return false
+      }
+    }
+
+    // Явный вход через Telegram (кнопка на странице выбора аккаунта) —
+    // в отличие от тихого входа игнорирует флаг «Выйти» и сбрасывает его.
+    async function loginWithTelegram() {
+      if (!isTelegramWebApp())
+        return null
+
+      const initData = getTelegramInitData()
+      if (!initData)
+        return null
+
+      isLoading.value = true
+      errorMessage.value = ''
+      try {
+        await api.verifyTelegramSilent(initData, getDeviceFingerprint())
+        clearExplicitLogout()
+        return await restoreSessionAfterLogin(undefined)
+      }
+      catch (error) {
+        errorMessage.value = showErrorToast(error, 'Не удалось войти через Telegram.')
+        throw error
+      }
+      finally {
+        isLoading.value = false
       }
     }
 
@@ -178,7 +237,7 @@ export function createAuthStore({ api, clearRelatedStores }: CreateAuthStoreOpti
       return null
     }
 
-    async function restoreSessionAfterLogin(preferredRole: AuthRole) {
+    async function restoreSessionAfterLogin(preferredRole?: AuthRole) {
       const session = await restoreSession({ force: true, preferredRole })
 
       if (!session)
@@ -310,7 +369,79 @@ export function createAuthStore({ api, clearRelatedStores }: CreateAuthStoreOpti
         errorMessage.value = showErrorToast(error, 'Не удалось завершить сессию на сервере.')
       }
       finally {
+        // Запрещаем тихий Telegram-вход до следующего явного входа — иначе
+        // мини-апп сразу вернул бы пользователя в покинутый аккаунт.
+        saveExplicitLogout()
         clearSession()
+        isLoading.value = false
+      }
+    }
+
+    // --- обязательная привязка номера (экран «Поделитесь номером») ---
+
+    // Привязка номера одним тапом через нативный диалог Telegram.
+    // Возвращает false, если requestContact недоступен или пользователь
+    // отказал — страница предлагает ввести номер вручную (OTP-фолбэк).
+    async function linkPhoneViaTelegram() {
+      const contactData = await requestTelegramContact()
+      if (!contactData)
+        return false
+
+      isLoading.value = true
+      errorMessage.value = ''
+      try {
+        await api.linkTelegramPhone(contactData, getDeviceFingerprint())
+        await restoreSession({ force: true, preferredRole: role.value ?? undefined })
+        return true
+      }
+      catch (error) {
+        errorMessage.value = showErrorToast(error, 'Не удалось подтвердить номер. Попробуйте ещё раз.')
+        throw error
+      }
+      finally {
+        isLoading.value = false
+      }
+    }
+
+    async function requestLinkPhoneOtp(phone: string, channel: OtpDeliveryMethod = 'whatsapp') {
+      isLoading.value = true
+      errorMessage.value = ''
+
+      try {
+        await api.sendLinkPhoneOtp({ channel, phone })
+        setPendingPhone(phone)
+        setPendingOtpDeliveryMethod(channel)
+      }
+      catch (error) {
+        errorMessage.value = showErrorToast(error, 'Не удалось отправить код. Попробуйте еще раз.')
+        throw error
+      }
+      finally {
+        isLoading.value = false
+      }
+    }
+
+    async function confirmLinkPhoneOtp(code: string) {
+      if (!pendingPhone.value)
+        throw new Error('Missing pending phone')
+
+      isLoading.value = true
+      errorMessage.value = ''
+
+      try {
+        await api.verifyLinkPhoneOtp({
+          phone: pendingPhone.value,
+          code,
+          deviceFingerprint: getDeviceFingerprint(),
+        })
+
+        await restoreSessionAfterLogin(role.value ?? undefined)
+      }
+      catch (error) {
+        errorMessage.value = showErrorToast(error, 'Не удалось подтвердить код. Попробуйте еще раз.')
+        throw error
+      }
+      finally {
         isLoading.value = false
       }
     }
@@ -318,17 +449,22 @@ export function createAuthStore({ api, clearRelatedStores }: CreateAuthStoreOpti
     return {
       clearSession,
       confirmDriverOtp,
+      confirmLinkPhoneOtp,
       confirmPassengerOtp,
       currentUser,
       errorMessage,
       getDeviceFingerprint,
       isAuthenticated,
       isLoading,
+      linkPhoneViaTelegram,
       loadSession,
+      loginWithTelegram,
       logout,
       pendingPhone,
       pendingOtpDeliveryMethod,
+      phoneVerified,
       requestDriverOtp,
+      requestLinkPhoneOtp,
       requestPassengerOtp,
       restoreSession,
       role,

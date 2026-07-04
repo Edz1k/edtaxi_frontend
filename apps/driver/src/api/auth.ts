@@ -1,6 +1,7 @@
 import type {
   AuthLoginResponse,
   AuthSession,
+  LinkPhoneResponse,
   LogoutAllPayload,
   LogoutPayload,
   MessageResponse,
@@ -100,5 +101,32 @@ export function syncTelegramName(initData: string) {
   return apiRequest<MessageResponse>('/auth/telegram/sync-name', {
     method: 'POST',
     body: { init_data: initData },
+  })
+}
+
+// Привязка обязательного номера телефона к вошедшему аккаунту без OTP:
+// contactData — сырой подписанный ответ Telegram requestContact, бэкенд
+// проверяет подпись бота и принадлежность контакта владельцу сессии.
+export function linkTelegramPhone(contactData: string, deviceFingerprint?: string) {
+  return apiRequest<LinkPhoneResponse>('/auth/phone/telegram', {
+    method: 'POST',
+    deviceFingerprint,
+    body: { contact_data: contactData },
+  })
+}
+
+// OTP-фолбэк привязки номера (requestContact недоступен или пользователь отказал).
+export function sendLinkPhoneOtp(payload: SendOtpPayload) {
+  return apiRequest<SendOtpResponse>('/auth/phone/send', {
+    method: 'POST',
+    body: { phone: payload.phone },
+  })
+}
+
+export function verifyLinkPhoneOtp(payload: VerifyOtpPayload) {
+  return apiRequest<LinkPhoneResponse>('/auth/phone/verify', {
+    method: 'POST',
+    deviceFingerprint: payload.deviceFingerprint,
+    body: { phone: payload.phone, code: payload.code },
   })
 }

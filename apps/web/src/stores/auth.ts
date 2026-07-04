@@ -1,7 +1,8 @@
 import type { TelegramCodeFlow } from '~/api/auth'
-import type { AuthLoginFlow, AuthRole, AuthSession, OtpDeliveryMethod } from '~/types/auth'
+import type { AuthLoginFlow, AuthRole, AuthSession, OtpDeliveryMethod, TelegramLoginStatus } from '~/types/auth'
+import { rememberAccount } from '@edtaxi/shared/composables/auth/saved-accounts'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { getAuthSession, logout as logoutRequest, sendOtp, verifyOtp, verifyTelegramCode } from '~/api/auth'
+import { createTelegramLoginRequest, getAuthSession, logout as logoutRequest, pollTelegramLoginRequest, sendOtp, verifyOtp, verifyTelegramCode } from '~/api/auth'
 import { ApiError } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
 import {
@@ -22,6 +23,10 @@ import { useAdminStore } from '~/stores/admin'
 import { useParkStore } from '~/stores/park'
 import { useSupportStore } from '~/stores/support'
 import { useVerificationStore } from '~/stores/verification'
+
+// Список аккаунтов, под которыми входили в веб-кабинет (страница выбора
+// аккаунта на входе техподдержки).
+export const SAVED_ACCOUNTS_KEY = 'taxiwebapp_saved_accounts'
 
 export const useAuthStore = defineStore('auth', () => {
   const currentUser = ref<AuthSession | null>(null)
@@ -154,8 +159,17 @@ export const useAuthStore = defineStore('auth', () => {
       return currentUser.value
 
     try {
-      currentUser.value = await getAuthSession()
+      const session = await getAuthSession()
+      currentUser.value = session
       sessionStatus.value = 'authenticated'
+      rememberAccount(SAVED_ACCOUNTS_KEY, {
+        avatarUrl: session.avatar_url,
+        firstName: session.first_name,
+        id: session.id,
+        lastName: session.last_name,
+        phone: session.phone,
+        role: session.roles?.[0] ?? null,
+      })
       return currentUser.value
     }
     catch (error) {
@@ -239,6 +253,57 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // --- «Войти через Telegram» (подтверждение входа в боте) ---
+
+  const telegramLogin = ref<null | { botUsername: string, deepLink: string, requestId: string }>(null)
+
+  // Создаёт запрос входа: пользователь открывает диплинк бота и делится
+  // контактом с тем же номером, а веб-апп поллит статус (pollTelegramLogin).
+  async function startTelegramLogin(phone: string, flow: AuthLoginFlow) {
+    isLoading.value = true
+    errorMessage.value = ''
+
+    try {
+      const response = await createTelegramLoginRequest(phone, flow)
+      telegramLogin.value = {
+        botUsername: response.bot_username,
+        deepLink: response.deep_link,
+        requestId: response.request_id,
+      }
+      return telegramLogin.value
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось начать вход через Telegram.')
+      throw error
+    }
+    finally {
+      isLoading.value = false
+    }
+  }
+
+  // Один шаг поллинга. На approved бэкенд уже поставил cookies — остаётся
+  // восстановить сессию. Возвращает статус, чтобы компонент управлял циклом.
+  async function pollTelegramLogin(): Promise<TelegramLoginStatus> {
+    if (!telegramLogin.value)
+      return 'expired'
+
+    const response = await pollTelegramLoginRequest(telegramLogin.value.requestId, getDeviceFingerprint())
+
+    if (response.status === 'approved') {
+      telegramLogin.value = null
+      await restoreSessionAfterLogin()
+    }
+    else if (response.status === 'expired') {
+      telegramLogin.value = null
+    }
+
+    return response.status
+  }
+
+  function cancelTelegramLogin() {
+    telegramLogin.value = null
+  }
+
   // Вход по коду из Telegram-бота: номер телефона не нужен, код сам
   // идентифицирует пользователя.
   async function confirmTelegramCode(code: string, flow: TelegramCodeFlow) {
@@ -275,6 +340,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
+    cancelTelegramLogin,
     clearSession,
     clearPendingLogin,
     confirmOtp,
@@ -292,12 +358,15 @@ export const useAuthStore = defineStore('auth', () => {
     pendingPhone,
     pendingFlow,
     pendingOtpDeliveryMethod,
+    pollTelegramLogin,
     requestOtp,
     restoreSession,
     roles,
     setPendingPhone,
     sessionStatus,
+    startTelegramLogin,
     stopListeningSessionChanges,
+    telegramLogin,
   }
 })
 
