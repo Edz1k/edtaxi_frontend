@@ -2,7 +2,15 @@ import { ref } from 'vue'
 
 export type ToastKind = 'error' | 'info' | 'success' | 'warning'
 
+// ToastAction делает тост нажимным: тап по телу тоста вызывает onClick (например
+// «Геолокация недоступна» → открыть экран согласия). Тост с action не исчезает
+// автоматически (persist), чтобы у пользователя было время нажать.
+export interface ToastAction {
+  onClick: () => void
+}
+
 export interface AppToast {
+  action?: ToastAction
   description?: string
   id: number
   kind: ToastKind
@@ -24,11 +32,11 @@ function removeToast(id: number) {
 
 export function useToast() {
   return {
-    error: (title: string, description?: string) => addToast({ description, kind: 'error', title }),
-    info: (title: string, description?: string) => addToast({ description, kind: 'info', title }),
+    error: (title: string, description?: string, action?: ToastAction) => addToast({ action, description, kind: 'error', title }),
+    info: (title: string, description?: string, action?: ToastAction) => addToast({ action, description, kind: 'info', title }),
     removeToast,
-    success: (title: string, description?: string) => addToast({ description, kind: 'success', title }),
+    success: (title: string, description?: string, action?: ToastAction) => addToast({ action, description, kind: 'success', title }),
     toasts,
-    warning: (title: string, description?: string) => addToast({ description, kind: 'warning', title }),
+    warning: (title: string, description?: string, action?: ToastAction) => addToast({ action, description, kind: 'warning', title }),
   }
 }

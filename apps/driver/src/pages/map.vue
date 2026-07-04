@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { VerificationReminder } from '~/types/driver'
+import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
+import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { ApiError } from '~/api/client'
 import { getVerificationReminder } from '~/api/driver'
@@ -16,6 +18,7 @@ import { offerToPlace } from '~/utils/geoPlace'
 const driver = useDriverStore()
 const onboarding = useDriverOnboardingStore()
 const tracking = useDriverTrackingSocket()
+const { isGranted: isLocationGranted } = useLocationAccess()
 const {
   liveCoordinates,
   startWatchingUserLocation,
@@ -120,6 +123,12 @@ async function handlePrimaryTripAction() {
 async function toggleOnline() {
   const nextOnline = !driver.isOnline
 
+  // На линию нельзя без геолокации — без неё диспетчер не видит водителя.
+  if (nextOnline && !isLocationGranted.value) {
+    onlineBlockMessage.value = 'Включите геолокацию, чтобы выйти на линию.'
+    return
+  }
+
   try {
     await driver.setOnline(nextOnline)
     onlineBlockMessage.value = ''
@@ -141,6 +150,8 @@ async function toggleOnline() {
 
 <template>
   <main class="tg-viewport-screen relative overflow-hidden bg-secondary-900 text-white">
+    <LocationGate />
+
     <DriverMap
       :destination-place="destinationPlace"
       :pickup-place="pickupPlace"
@@ -156,6 +167,7 @@ async function toggleOnline() {
     />
 
     <DriverStatusPanel
+      :is-location-granted="isLocationGranted"
       :online-block-message="onlineBlockMessage"
       :show-route-loading="Boolean(mapOffer && isRouteLoading)"
       :tracking-label="trackingLabel"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
+import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { usePassengerTripSocket } from '~/composables/passenger/usePassengerTripSocket'
 import { usePassengerStore } from '~/stores/passenger'
@@ -60,6 +61,8 @@ async function setPickupFromCurrentLocation() {
 
 <template>
   <div class="tg-viewport-screen relative overflow-hidden bg-secondary-900">
+    <LocationGate />
+
     <PassengerMap
       :destination-place="trips.destinationPlace"
       :driver-location="trips.driverLocation"

@@ -21,6 +21,8 @@
     "./composables/useTelegramSafeArea": "./src/composables/useTelegramSafeArea.ts",
     "./composables/useToast": "./src/composables/useToast.ts",
     "./components/auth/*": "./src/components/auth/*.vue",
+    "./components/location/*": "./src/components/location/*.vue",
+    "./composables/location/useLocationAccess": "./src/composables/location/useLocationAccess.ts",
     "./stores/create-auth-store": "./src/stores/create-auth-store.ts",
     "./stores/create-support-store": "./src/stores/create-support-store.ts",
     "./types/auth": "./src/types/auth.ts",

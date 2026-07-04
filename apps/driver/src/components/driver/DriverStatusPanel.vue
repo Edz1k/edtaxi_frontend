@@ -2,7 +2,7 @@
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
-defineProps<{ trackingLabel: string, onlineBlockMessage: string, showRouteLoading: boolean }>()
+defineProps<{ trackingLabel: string, onlineBlockMessage: string, showRouteLoading: boolean, isLocationGranted: boolean }>()
 const emit = defineEmits<{ primaryAction: [], toggleOnline: [] }>()
 
 const driver = useDriverStore()
@@ -100,7 +100,7 @@ const tripStep = computed(() => {
 
       <button
         v-else
-        :disabled="driver.isChangingStatus || driver.isRestoringActiveTrip"
+        :disabled="driver.isChangingStatus || driver.isRestoringActiveTrip || (!driver.isOnline && !isLocationGranted)"
         class="mt-4 h-14 w-full rounded-2xl text-base font-900 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
         :class="driver.isOnline ? 'bg-red-500/12 text-red-300' : 'bg-main-500 text-white shadow-[0_12px_30px_rgba(230,173,46,0.28)]'"
         type="button"
