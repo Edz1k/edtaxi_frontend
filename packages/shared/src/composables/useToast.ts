@@ -21,6 +21,18 @@ const toasts = ref<AppToast[]>([])
 let nextToastID = 1
 
 function addToast(toast: Omit<AppToast, 'id'>) {
+  // Одинаковые тосты (вид + заголовок + текст) не плодим, пока предыдущий ещё
+  // на экране: повторяющиеся ошибки (геолокация, сокет) приходят из разных
+  // мест и при ремоунте страницы, и без этой проверки складываются в стопку
+  // одинаковых баннеров. Возвращаем id уже показанного тоста.
+  const visibleDuplicate = toasts.value.find(existing =>
+    existing.kind === toast.kind
+    && existing.title === toast.title
+    && existing.description === toast.description,
+  )
+  if (visibleDuplicate)
+    return visibleDuplicate.id
+
   const id = nextToastID++
   toasts.value = [...toasts.value, { ...toast, id }]
   return id
