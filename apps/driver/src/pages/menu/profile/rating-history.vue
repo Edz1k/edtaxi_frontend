@@ -79,7 +79,7 @@ const avgRecentScore = computed(() => {
         <!-- Сводка -->
         <div class="grid grid-cols-2 gap-3">
           <div class="rounded-2xl bg-white/5 px-4 py-4">
-            <p class="text-[10px] font-900 uppercase tracking-wider text-slate-500">
+            <p class="text-[10px] text-slate-500 font-900 tracking-wider uppercase">
               Текущий рейтинг
             </p>
             <p
@@ -100,7 +100,7 @@ const avgRecentScore = computed(() => {
             </div>
           </div>
           <div class="rounded-2xl bg-white/5 px-4 py-4">
-            <p class="text-[10px] font-900 uppercase tracking-wider text-slate-500">
+            <p class="text-[10px] text-slate-500 font-900 tracking-wider uppercase">
               Средняя оценка
             </p>
             <p class="mt-1 text-3xl font-950 leading-none" :class="avgRecentScore !== null && avgRecentScore >= 4 ? 'text-emerald-300' : 'text-amber-300'">
@@ -137,7 +137,7 @@ const avgRecentScore = computed(() => {
                 </p>
               </div>
               <div class="shrink-0 text-right">
-                <p class="text-sm font-950 text-red-300">
+                <p class="text-sm text-red-300 font-950">
                   {{ e.delta.toFixed(2) }}
                 </p>
                 <p class="mt-0.5 text-xs text-slate-500">

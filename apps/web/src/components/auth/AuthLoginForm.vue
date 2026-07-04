@@ -85,7 +85,7 @@ function editPhone() {
     :icon="icon"
     :title="title"
   >
-    <div v-if="supportsTelegramCode" class="mt-6 inline-flex w-full gap-1 rounded-2xl bg-white/5 p-1">
+    <div v-if="supportsTelegramCode" class="mt-6 w-full inline-flex gap-1 rounded-2xl bg-white/5 p-1">
       <button
         class="h-10 flex-1 rounded-xl text-sm font-900 transition"
         :class="!isTelegramMethod ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'"

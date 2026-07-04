@@ -105,7 +105,7 @@ function statusClass(status: PayoutStatus) {
             Заявка на вывод
           </h2>
 
-          <div class="mt-4 grid gap-3">
+          <div class="grid mt-4 gap-3">
             <label class="grid gap-1.5">
               <span class="text-xs text-white/42 font-900 uppercase">Сумма (₸)</span>
               <input

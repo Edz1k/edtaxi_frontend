@@ -108,7 +108,7 @@ async function acceptInvite() {
                 <p class="truncate text-base font-950">
                   {{ park.name }}
                 </p>
-                <p v-if="park.description" class="mt-1 line-clamp-2 text-xs text-slate-400 leading-4">
+                <p v-if="park.description" class="line-clamp-2 mt-1 text-xs text-slate-400 leading-4">
                   {{ park.description }}
                 </p>
                 <p v-if="park.phone" class="mt-1 text-xs text-slate-500 font-700">

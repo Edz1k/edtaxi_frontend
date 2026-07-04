@@ -98,7 +98,7 @@ const isClosed = computed(() => parkChat.room?.status === 'closed')
           {{ openError }}
         </p>
         <RouterLink
-          class="mt-4 inline-flex h-12 items-center justify-center rounded-2xl bg-main-500 px-6 text-sm font-950 transition active:scale-[0.98]"
+          class="mt-4 h-12 inline-flex items-center justify-center rounded-2xl bg-main-500 px-6 text-sm font-950 transition active:scale-[0.98]"
           to="/menu/park-invite"
         >
           Вступить в парк
