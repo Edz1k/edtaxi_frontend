@@ -6,8 +6,10 @@
     "./api/client": "./src/api/client.ts",
     "./api/errors": "./src/api/errors.ts",
     "./api/geocoding": "./src/api/geocoding.ts",
+    "./api/support": "./src/api/support.ts",
     "./composables/auth/phone": "./src/composables/auth/phone.ts",
     "./composables/auth/session": "./src/composables/auth/session.ts",
+    "./composables/auth/session-roles": "./src/composables/auth/session-roles.ts",
     "./composables/auth/telegram": "./src/composables/auth/telegram.ts",
     "./composables/dark": "./src/composables/dark.ts",
     "./composables/mapbox/useMapboxMap": "./src/composables/mapbox/useMapboxMap.ts",
@@ -21,14 +23,22 @@
     "./components/auth/*": "./src/components/auth/*.vue",
     "./components/location/*": "./src/components/location/*.vue",
     "./composables/location/useLocationAccess": "./src/composables/location/useLocationAccess.ts",
+    "./stores/create-auth-store": "./src/stores/create-auth-store.ts",
+    "./stores/create-support-store": "./src/stores/create-support-store.ts",
     "./types/auth": "./src/types/auth.ts",
     "./types/geocoding": "./src/types/geocoding.ts",
     "./types/map": "./src/types/map.ts",
     "./types/passenger": "./src/types/passenger.ts",
     "./types/places": "./src/types/places.ts",
+    "./types/support": "./src/types/support.ts",
     "./types/wallet": "./src/types/wallet.ts",
     "./types/websocket": "./src/types/websocket.ts",
     "./uno.base": "./src/uno.base.ts"
+  },
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@iconify-json/mdi": "catalog:dev",
@@ -42,5 +52,11 @@
     "reka-ui": "catalog:frontend",
     "unocss": "catalog:build",
     "vue": "catalog:frontend"
+  },
+  "devDependencies": {
+    "typescript": "catalog:dev",
+    "vite": "catalog:build",
+    "vitest": "catalog:dev",
+    "vue-tsc": "catalog:dev"
   }
 }

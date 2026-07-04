@@ -8,9 +8,24 @@ env:
   NODE_VERSION: '22'
   PNPM_VERSION: 10.30.2
 
+# Не допускаем параллельных прод-деплоев: второй пуш ждёт, а не перетирает rsync.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read # для download-artifact при явном permissions-блоке
+
 jobs:
+  # Гейт качества перед сборкой и деплоем — прод не уезжает без зелёных
+  # lint / typecheck / test (тот же quality.yml, что гейтит PR).
+  quality:
+    uses: ./.github/workflows/quality.yml
+
   build-passenger:
     name: Build Passenger
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -35,7 +50,7 @@ jobs:
           VITE_SHARE_URL: https://share.telegramtaxi.kz
           VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-passenger
           path: apps/passenger/dist
@@ -43,6 +58,7 @@ jobs:
 
   build-driver:
     name: Build Driver
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -66,7 +82,7 @@ jobs:
           VITE_WS_URL: wss://ws.telegramtaxi.kz
           VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-driver
           path: apps/driver/dist
@@ -74,6 +90,7 @@ jobs:
 
   build-web:
     name: Build Web
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -96,7 +113,7 @@ jobs:
           VITE_API_URL: /api/v1
           VITE_WS_URL: wss://ws.telegramtaxi.kz
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-web
           path: apps/web/dist
@@ -104,6 +121,7 @@ jobs:
 
   build-share:
     name: Build Share
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -126,7 +144,7 @@ jobs:
           VITE_API_URL: /api/v1
           VITE_WS_URL: wss://ws.telegramtaxi.kz
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-share
           path: apps/share/dist
@@ -135,24 +153,27 @@ jobs:
   deploy:
     name: Deploy to Server
     runs-on: ubuntu-latest
+    # Хук для защиты окружения: настрой required reviewers на environment
+    # "production" в настройках репо, чтобы прод-деплой требовал апрува.
+    environment: production
     needs: [build-passenger, build-driver, build-web, build-share]
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: dist-passenger
           path: dist/passenger
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: dist-driver
           path: dist/driver
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: dist-web
           path: dist/web
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: dist-share
           path: dist/share

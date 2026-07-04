@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PinInputInput, PinInputRoot } from 'reka-ui'
-import { useId } from 'vue'
+import { computed, useId } from 'vue'
 
 defineProps<{
   shake?: boolean
@@ -9,9 +9,11 @@ defineProps<{
 const model = defineModel<string>({ required: true })
 const labelId = useId()
 
+const NON_DIGIT_RE = /\D/g
+
 const digits = computed<string[]>({
   get: () => Array.from({ length: 6 }, (_, index) => model.value[index] ?? ''),
-  set: value => model.value = value.join('').replace(/\D/g, '').slice(0, 6),
+  set: value => model.value = value.join('').replace(NON_DIGIT_RE, '').slice(0, 6),
 })
 </script>
 
@@ -48,9 +50,22 @@ const digits = computed<string[]>({
 }
 
 @keyframes otp-shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-4px); }
-  40%, 60% { transform: translateX(4px); }
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
 }
 </style>

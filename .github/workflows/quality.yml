@@ -1,0 +1,40 @@
+name: Quality
+
+# Переиспользуемый гейт качества: зовётся из ci.yml (на PR) и из deploy.yml
+# (перед сборкой/деплоем), чтобы правила жили в одном месте.
+on:
+  workflow_call:
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: 10.30.2
+
+jobs:
+  quality:
+    name: Lint · Typecheck · Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm -r typecheck
+
+      - name: Test
+        run: pnpm -r test

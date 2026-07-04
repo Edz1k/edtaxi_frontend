@@ -35,7 +35,6 @@ watch(statusFilter, () => loadChats())
 function loadChats() {
   admin.loadParkChats({ status: statusFilter.value || undefined }).catch(() => {})
 }
-
 </script>
 
 <template>

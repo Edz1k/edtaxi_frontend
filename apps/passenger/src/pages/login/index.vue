@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { OtpDeliveryMethod } from '~/types/auth'
+import { readyTelegramWebApp } from '@edtaxi/shared/composables/auth/telegram'
 import AuthButton from '~/components/auth/AuthButton.vue'
 import AuthError from '~/components/auth/AuthError.vue'
 import AuthScreen from '~/components/auth/AuthScreen.vue'
 import PhoneInput from '~/components/auth/PhoneInput.vue'
 import { isKazakhstanPhoneComplete, toKazakhstanE164 } from '~/composables/auth/phone'
-import { readyTelegramWebApp } from '@edtaxi/shared/composables/auth/telegram'
 import { useAuthStore } from '~/stores/auth'
 
 const router = useRouter()

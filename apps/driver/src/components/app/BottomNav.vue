@@ -20,8 +20,10 @@ const route = useRoute()
 
 const navAttrs = computed(() => props.dataSelector ? { [props.dataSelector]: '' } : {})
 
+const TRAILING_SLASH_RE = /\/$/
+
 function normalizePath(path: string) {
-  return path.replace(/\/$/, '') || '/'
+  return path.replace(TRAILING_SLASH_RE, '') || '/'
 }
 
 function isActive(path: string) {
