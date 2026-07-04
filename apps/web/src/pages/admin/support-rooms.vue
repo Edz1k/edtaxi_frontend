@@ -149,7 +149,7 @@ function statusClass(status: SupportRoomStatus) {
         <div class="flex flex-wrap items-center justify-start gap-2 md:justify-end">
           <RouterLink
             :to="`/support/${room.id}`"
-            class="h-10 flex items-center rounded-xl bg-white/8 px-3 text-sm font-900 transition hover:bg-white/14 active:scale-[0.98]"
+            class="h-10 flex items-center rounded-xl bg-white/8 px-3 text-sm font-900 transition active:scale-[0.98] hover:bg-white/14"
           >
             Открыть
           </RouterLink>

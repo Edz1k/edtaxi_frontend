@@ -3,10 +3,51 @@ import type { VehicleCategory } from '~/types/trips'
 export type VerificationStatus = 'approved' | 'pending' | 'rejected'
 export type DriverTripStep = 'arrived' | 'in_progress' | 'to_pickup'
 
+// Слоты фото машины для верификации. required-набор приходит с бэка,
+// doc_insurance и vin — необязательные.
+export type VehiclePhotoSlot
+  = | 'dashboard'
+    | 'doc_insurance'
+    | 'doc_registration_back'
+    | 'doc_registration_front'
+    | 'exterior_back'
+    | 'exterior_front'
+    | 'exterior_left'
+    | 'exterior_right'
+    | 'interior_back'
+    | 'interior_front'
+    | 'trunk'
+    | 'vin'
+
+export interface VehicleSlotPhoto {
+  slot: VehiclePhotoSlot
+  photo_url: string
+}
+
+export interface VehiclePhotosResponse {
+  photos: VehicleSlotPhoto[]
+  required: VehiclePhotoSlot[]
+  missing: VehiclePhotoSlot[]
+  can_submit: boolean
+}
+
+export interface SubmitVehiclePhotosResponse {
+  verification_status: VerificationStatus
+}
+
+// available — тарифы, доступные по одобренным машинам водителя;
+// active — тарифы, по которым он сейчас принимает заказы.
+export interface DriverCategoriesResponse {
+  available: VehicleCategory[]
+  active: VehicleCategory[]
+}
+
 export interface DriverVehicleVerification {
   id: string
   driver_id: string
+  // category — легаси-скаляр (старший из categories), оставлен для совместимости.
   category: VehicleCategory
+  categories?: VehicleCategory[]
   plate_number: string
   make: string
   model: string
@@ -72,8 +113,9 @@ export interface DriverStatusPayload {
   is_online: boolean
 }
 
+// Тариф больше не выбирается водителем — бэкенд сам выводит categories
+// из каталога машин по марке/модели/году.
 export interface DriverVehiclePayload {
-  category: VehicleCategory
   color: string
   make: string
   model: string
@@ -82,6 +124,9 @@ export interface DriverVehiclePayload {
 }
 
 export interface DriverVehicle extends DriverVehiclePayload {
+  // category — легаси-скаляр (старший из categories).
+  category: VehicleCategory
+  categories?: VehicleCategory[]
   driver_id: string
   id: string
 }

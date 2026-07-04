@@ -1,5 +1,6 @@
 import type {
   DailyCheck,
+  DriverCategoriesResponse,
   DriverEarnings,
   DriverLocationPayload,
   DriverPayoutPayload,
@@ -19,10 +20,14 @@ import type {
   DriverWalletTopUpResponse,
   PayoutRequest,
   RatePassengerPayload,
+  SubmitVehiclePhotosResponse,
+  VehiclePhotoSlot,
+  VehiclePhotosResponse,
+  VehicleSlotPhoto,
   VerificationReminder,
 } from '~/types/driver'
 import type { DriverOverview } from '~/types/driver-overview'
-import type { ActiveTripResponse, Trip } from '~/types/trips'
+import type { ActiveTripResponse, Trip, VehicleCategory } from '~/types/trips'
 import { apiRequest } from '~/api/client'
 import { acceptParkInvite } from '~/api/park'
 
@@ -191,6 +196,37 @@ export function uploadVehiclePhoto(vehicleId: string, file: File) {
   return apiRequest<DriverVehicleVerification>(`/driver/vehicles/${vehicleId}/photo`, {
     method: 'POST',
     body: form,
+  })
+}
+
+export function getDriverCategories() {
+  return apiRequest<DriverCategoriesResponse>('/driver/categories')
+}
+
+export function setDriverCategories(categories: VehicleCategory[]) {
+  return apiRequest<DriverCategoriesResponse>('/driver/categories', {
+    method: 'PUT',
+    body: { categories },
+  })
+}
+
+// uploadVehicleSlotPhoto загружает фото в конкретный слот (upsert по слоту).
+export function uploadVehicleSlotPhoto(vehicleId: string, slot: VehiclePhotoSlot, file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  return apiRequest<VehicleSlotPhoto>(`/driver/vehicles/${vehicleId}/photos/${slot}`, {
+    method: 'POST',
+    body: form,
+  })
+}
+
+export function getVehiclePhotos(vehicleId: string) {
+  return apiRequest<VehiclePhotosResponse>(`/driver/vehicles/${vehicleId}/photos`)
+}
+
+export function submitVehiclePhotos(vehicleId: string) {
+  return apiRequest<SubmitVehiclePhotosResponse>(`/driver/vehicles/${vehicleId}/photos/submit`, {
+    method: 'POST',
   })
 }
 

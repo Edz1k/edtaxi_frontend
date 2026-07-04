@@ -9,6 +9,8 @@ export interface PendingVehicle {
   driver_phone?: string
   driver_user_id?: string
   category: string
+  // Категории, выведенные сервером из каталога машин.
+  categories?: string[]
   plate_number: string
   make: string
   model: string
@@ -17,6 +19,9 @@ export interface PendingVehicle {
   is_active: boolean
   verification_status: VerificationStatus
   verification_photo_url: null | string
+  tech_passport_photo_url?: null | string
+  // Фотоотчёт по слотам; старые заявки приходят без него.
+  photos?: Array<{ slot: string, photo_url: string }>
   reviewed_by: null | string
   reviewed_at: null | string
   created_at: string

@@ -7,15 +7,14 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
 import { getUserErrorMessage, showErrorToast } from '~/api/errors'
 import { cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getTrip, getTripHistory, rateTrip } from '~/api/trips'
+import { TARIFF_ORDER } from '~/constants/tariffs'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
 import { isTerminalTripStatus } from '~/utils/trip'
-
-const TARIFF_CATEGORIES: VehicleCategory[] = ['economy', 'comfort', 'business', 'minivan']
 
 export const useTripsStore = defineStore('trips', () => {
   const estimate = ref<EstimateTripResponse | null>(null)
   const tariffEstimates = ref<EstimateTripResponse[]>([])
-  const selectedCategory = ref<VehicleCategory>('economy')
+  const selectedCategories = ref<VehicleCategory[]>(['economy'])
   const history = ref<Trip[]>([])
   const historyHasMore = ref(true)
   const historyOffset = ref(0)
@@ -44,6 +43,21 @@ export const useTripsStore = defineStore('trips', () => {
   let activeTripPollingTimer: number | undefined
 
   const hasActiveTrip = computed(() => Boolean(activeTrip.value && !isTerminalTripStatus(activeTrip.value.status)))
+
+  // Самый дешёвый из выбранных тарифов: определяет цену «от N ₸» до принятия
+  // заказа и legacy-поле category для старых серверов.
+  const cheapestSelectedEstimate = computed<EstimateTripResponse | null>(() => {
+    return tariffEstimates.value
+      .filter(item => selectedCategories.value.includes(item.category))
+      .reduce<EstimateTripResponse | null>(
+        (min, item) => !min || item.estimated_fare < min.estimated_fare ? item : min,
+        null,
+      )
+  })
+
+  const selectedCategory = computed<VehicleCategory>(() => {
+    return cheapestSelectedEstimate.value?.category ?? selectedCategories.value[0] ?? 'economy'
+  })
   const isMapPickerActive = computed(() => Boolean(mapPickerMode.value))
   const tripFlowState = computed<TripFlowState>(() => {
     if (activeTrip.value) {
@@ -244,17 +258,14 @@ export const useTripsStore = defineStore('trips', () => {
 
     try {
       const estimates = await Promise.all(
-        TARIFF_CATEGORIES.map(category => estimateTrip({
+        TARIFF_ORDER.map(category => estimateTrip({
           ...payload,
           category,
         })),
       )
 
       tariffEstimates.value = estimates
-      estimate.value = estimates.find(item => item.category === selectedCategory.value) ?? estimates[0] ?? null
-
-      if (estimate.value)
-        selectedCategory.value = estimate.value.category
+      estimate.value = cheapestSelectedEstimate.value ?? estimates[0] ?? null
 
       return estimates
     }
@@ -269,9 +280,22 @@ export const useTripsStore = defineStore('trips', () => {
     }
   }
 
-  function selectCategory(category: VehicleCategory) {
-    selectedCategory.value = category
-    estimate.value = tariffEstimates.value.find(item => item.category === category) ?? null
+  function toggleCategory(category: VehicleCategory) {
+    const current = selectedCategories.value
+
+    if (current.includes(category)) {
+      // Нельзя снять последний выбранный тариф — заказ без тарифа невозможен.
+      if (current.length === 1)
+        return
+
+      selectedCategories.value = current.filter(item => item !== category)
+    }
+    else {
+      // Храним выбор в порядке списка тарифов, а не в порядке нажатий.
+      selectedCategories.value = TARIFF_ORDER.filter(item => current.includes(item) || item === category)
+    }
+
+    estimate.value = cheapestSelectedEstimate.value
   }
 
   function setRouteCoordinates(coordinates: RouteCoordinate[]) {
@@ -330,7 +354,7 @@ export const useTripsStore = defineStore('trips', () => {
     cancelMapPicker()
   }
 
-  async function orderTrip(payload: CreateTripPayload) {
+  async function orderTrip(payload: Omit<CreateTripPayload, 'categories' | 'category'>) {
     // Заказ невозможен без геолокации — точка подачи привязана к местоположению.
     if (!useLocationAccess().isGranted.value)
       throw new Error('Включите геолокацию, чтобы заказать поездку.')
@@ -339,7 +363,12 @@ export const useTripsStore = defineStore('trips', () => {
     errorMessage.value = ''
 
     try {
-      syncActiveTrip(await createTrip(payload))
+      syncActiveTrip(await createTrip({
+        ...payload,
+        // Legacy-поле для старого сервера: самый дешёвый из выбранных тарифов.
+        category: selectedCategory.value,
+        categories: [...selectedCategories.value],
+      }))
       startSearchTimer()
       startActiveTripPolling()
       return activeTrip.value
@@ -465,7 +494,7 @@ export const useTripsStore = defineStore('trips', () => {
   function clearEstimate() {
     estimate.value = null
     tariffEstimates.value = []
-    selectedCategory.value = 'economy'
+    selectedCategories.value = ['economy']
     routeCoordinates.value = []
   }
 
@@ -502,6 +531,7 @@ export const useTripsStore = defineStore('trips', () => {
     applyTripStatus,
     cancelActiveTrip,
     cancelMapPicker,
+    cheapestSelectedEstimate,
     clearEstimate,
     confirmMapPicker,
     errorMessage,
@@ -533,10 +563,10 @@ export const useTripsStore = defineStore('trips', () => {
     routeCoordinates,
     searchElapsedSeconds,
     searchStartedAt,
-    selectCategory,
-    selectedCategory,
+    selectedCategories,
     setRouteCoordinates,
     tariffEstimates,
+    toggleCategory,
     tripFlowState,
     pickup,
     destination,

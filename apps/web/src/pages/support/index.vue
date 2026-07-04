@@ -160,13 +160,13 @@ function assignmentClass(room: SupportRoom) {
       <AppSelectDropdown v-model="statusFilter" label="Статус" :options="statuses" />
     </template>
 
-    <div class="mt-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+    <div class="grid mt-5 gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
       <div class="relative">
         <span class="i-mdi-magnify absolute left-3 top-1/2 text-5 text-white/38 -translate-y-1/2" aria-hidden="true" />
         <input
           v-model="query"
           aria-label="Поиск по имени или номеру"
-          class="h-11 w-full border border-white/10 rounded-lg bg-white/7 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/32 focus:border-cyan-300/60 focus:bg-white/10"
+          class="h-11 w-full border border-white/10 rounded-lg bg-white/7 pl-10 pr-4 text-sm text-white outline-none transition focus:border-cyan-300/60 focus:bg-white/10 placeholder:text-white/32"
           placeholder="Поиск по имени или номеру телефона"
           type="search"
         >
@@ -239,7 +239,7 @@ function assignmentClass(room: SupportRoom) {
           <div class="flex items-center gap-3">
             <div class="h-10 w-10 animate-pulse rounded-lg bg-white/8" />
             <div class="min-w-0 flex-1">
-              <div class="h-3 w-48 max-w-full animate-pulse rounded bg-white/8" />
+              <div class="h-3 max-w-full w-48 animate-pulse rounded bg-white/8" />
               <div class="mt-2 h-2.5 w-32 animate-pulse rounded bg-white/6" />
             </div>
           </div>
@@ -259,7 +259,7 @@ function assignmentClass(room: SupportRoom) {
         v-for="room in filteredRooms"
         v-else
         :key="room.id"
-        class="grid gap-3 border-b border-white/6 px-4 py-3 transition hover:bg-white/5 lg:grid-cols-[minmax(260px,1fr)_110px_130px_120px_150px_104px] lg:items-center last:border-b-0"
+        class="grid gap-3 border-b border-white/6 px-4 py-3 transition lg:grid-cols-[minmax(260px,1fr)_110px_130px_120px_150px_104px] lg:items-center last:border-b-0 hover:bg-white/5"
       >
         <div class="min-w-0 flex items-center gap-3">
           <div class="h-10 w-10 flex shrink-0 items-center justify-center rounded-lg bg-cyan-300/10 text-cyan-200">
@@ -301,7 +301,7 @@ function assignmentClass(room: SupportRoom) {
         <div class="flex justify-start md:justify-end">
           <RouterLink
             :to="`/support/${room.id}`"
-            class="h-9 inline-flex items-center gap-1.5 rounded-lg bg-cyan-300 px-3 text-sm text-#06142f font-900 transition hover:bg-cyan-200 active:scale-[0.98]"
+            class="h-9 inline-flex items-center gap-1.5 rounded-lg bg-cyan-300 px-3 text-sm text-#06142f font-900 transition active:scale-[0.98] hover:bg-cyan-200"
           >
             <span class="i-mdi-message-text-outline text-4.5" aria-hidden="true" />
             Открыть

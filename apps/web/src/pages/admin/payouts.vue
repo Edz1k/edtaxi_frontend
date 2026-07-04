@@ -113,7 +113,7 @@ function statusClass(status: PayoutStatus) {
           @click.self="rejectingPayout = null"
         >
           <form
-            class="w-full max-w-lg border border-white/10 rounded-3xl bg-#071a38 p-6 shadow-2xl"
+            class="max-w-lg w-full border border-white/10 rounded-3xl bg-#071a38 p-6 shadow-2xl"
             @submit.prevent="confirmReject()"
           >
             <h2 class="text-xl font-950">
@@ -123,7 +123,7 @@ function statusClass(status: PayoutStatus) {
               {{ requesterLabel(rejectingPayout) }} · {{ formatRevenue(rejectingPayout.amount) }}. Сумма вернётся на баланс заявителя.
             </p>
 
-            <label class="mt-5 grid gap-1.5">
+            <label class="grid mt-5 gap-1.5">
               <span class="text-xs text-white/42 font-900 uppercase">Причина отклонения</span>
               <textarea
                 v-model="rejectReason"
@@ -143,7 +143,7 @@ function statusClass(status: PayoutStatus) {
                 {{ admin.isMutating ? 'Отклоняем...' : 'Отклонить' }}
               </button>
               <button
-                class="h-11 rounded-2xl border border-white/12 bg-white/8 px-5 text-sm font-900 transition hover:bg-white/12"
+                class="h-11 border border-white/12 rounded-2xl bg-white/8 px-5 text-sm font-900 transition hover:bg-white/12"
                 type="button"
                 @click="closeRejectModal()"
               >

@@ -1,6 +1,7 @@
 import type { DriverProfile, DriverStatusResponse, DriverTripStep } from '~/types/driver'
-import type { Trip } from '~/types/trips'
+import type { Trip, VehicleCategory } from '~/types/trips'
 import type { DriverTripOffer } from '~/types/websocket'
+import { useToast } from '@edtaxi/shared/composables/useToast'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import {
   acceptDriverParkInvite,
@@ -9,13 +10,16 @@ import {
   completeDriverTrip,
   createDriverProfile,
   getActiveDriverTrip,
+  getDriverCategories,
   markDriverArrived,
   rejectDriverTrip,
+  setDriverCategories,
   startDriverTrip,
   updateDriverStatus,
 } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
 import { isTerminalTripStatus, tripStatusToStep, tripToOffer } from '~/utils/trip'
+import { sortCategories } from '~/utils/vehicleCategories'
 
 export const useDriverStore = defineStore('driver', () => {
   const profile = ref<DriverProfile | null>(null)
@@ -32,6 +36,14 @@ export const useDriverStore = defineStore('driver', () => {
   const isRestoringActiveTrip = ref(false)
   const isChangingStatus = ref(false)
   const errorMessage = ref('')
+
+  // Тарифы, по которым водитель может/хочет получать заказы.
+  // available пуст, пока нет одобренной машины.
+  const availableCategories = ref<VehicleCategory[]>([])
+  const activeCategories = ref<VehicleCategory[]>([])
+  const isLoadingCategories = ref(false)
+  const isSavingCategories = ref(false)
+  const hasLoadedCategories = ref(false)
 
   const hasActiveTrip = computed(() => Boolean(currentTripId.value))
 
@@ -76,6 +88,7 @@ export const useDriverStore = defineStore('driver', () => {
       profile.value = await createDriverProfile()
       isOnline.value = profile.value.is_online
       isAvailable.value = profile.value.is_available
+      loadCategories().catch(() => {})
       return profile.value
     }
     catch (error) {
@@ -84,6 +97,54 @@ export const useDriverStore = defineStore('driver', () => {
     }
     finally {
       isLoadingProfile.value = false
+    }
+  }
+
+  // loadCategories подтягивает available/active тарифы водителя.
+  // Ошибка не показывается тостом: без данных чипы тарифов просто скрыты.
+  async function loadCategories() {
+    isLoadingCategories.value = true
+
+    try {
+      const res = await getDriverCategories()
+      availableCategories.value = sortCategories(res.available)
+      activeCategories.value = sortCategories(res.active)
+      hasLoadedCategories.value = true
+      return res
+    }
+    finally {
+      isLoadingCategories.value = false
+    }
+  }
+
+  // toggleCategory — оптимистичное включение/выключение тарифа с откатом
+  // при ошибке. Последний активный тариф выключить нельзя (бэкенд вернёт 400).
+  async function toggleCategory(category: VehicleCategory) {
+    const previous = [...activeCategories.value]
+    const isActive = previous.includes(category)
+    const next = isActive
+      ? previous.filter(item => item !== category)
+      : sortCategories([...previous, category])
+
+    if (isActive && next.length === 0) {
+      useToast().warning('Нужен хотя бы один тариф', 'Сначала включите другой тариф.')
+      return
+    }
+
+    activeCategories.value = next
+    isSavingCategories.value = true
+
+    try {
+      const res = await setDriverCategories(next)
+      availableCategories.value = sortCategories(res.available)
+      activeCategories.value = sortCategories(res.active)
+    }
+    catch (error) {
+      activeCategories.value = previous
+      showErrorToast(error, 'Не удалось обновить тарифы.')
+    }
+    finally {
+      isSavingCategories.value = false
     }
   }
 
@@ -303,16 +364,23 @@ export const useDriverStore = defineStore('driver', () => {
     isLoadingProfile.value = false
     isMutatingOffer.value = false
     isLoadingParkInvite.value = false
+    availableCategories.value = []
+    activeCategories.value = []
+    isLoadingCategories.value = false
+    isSavingCategories.value = false
+    hasLoadedCategories.value = false
     errorMessage.value = ''
   }
 
   return {
     acceptOffer,
     acceptParkInvite,
+    activeCategories,
     activeOffer,
     activeTrip,
     activeTripStep,
     applyTripStatus,
+    availableCategories,
     cancelTrip,
     clearDriverState,
     clearOffer,
@@ -321,13 +389,17 @@ export const useDriverStore = defineStore('driver', () => {
     ensureProfile,
     errorMessage,
     hasActiveTrip,
+    hasLoadedCategories,
     isAvailable,
     isChangingStatus,
+    isLoadingCategories,
     isLoadingParkInvite,
     isLoadingProfile,
     isMutatingOffer,
     isOnline,
     isRestoringActiveTrip,
+    isSavingCategories,
+    loadCategories,
     markArrived,
     pendingOffer,
     profile,
@@ -337,6 +409,7 @@ export const useDriverStore = defineStore('driver', () => {
     restoreActiveTrip,
     setOnline,
     startTrip,
+    toggleCategory,
   }
 })
 

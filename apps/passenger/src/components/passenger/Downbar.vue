@@ -86,7 +86,7 @@ const activeDownbarProps = computed(() => {
       elapsedSeconds: trips.searchElapsedSeconds,
       isPolling: trips.isPollingActiveTrip,
       pickup: pickup.value,
-      selectedCategory: trips.selectedCategory,
+      selectedCategories: trips.selectedCategories,
       selectedEstimate: selectedEstimate.value,
     }
   }
@@ -96,7 +96,7 @@ const activeDownbarProps = computed(() => {
       destination: destination.value,
       estimates: trips.tariffEstimates,
       pickup: pickup.value,
-      selectedCategory: trips.selectedCategory,
+      selectedCategories: trips.selectedCategories,
     }
   }
 
@@ -130,7 +130,7 @@ function startNewTrip() {
         @pick-from-map="emit('pickFromMap', $event)"
         @search-destination="searchDestination"
         @search-pickup="searchPickup"
-        @select-category="trips.selectCategory"
+        @toggle-category="trips.toggleCategory"
         @select-destination="selectDestination"
         @select-pickup="selectPickup"
         @update:destination="destination = $event"

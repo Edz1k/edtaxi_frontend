@@ -84,6 +84,9 @@ watch(
 
 onMounted(async () => {
   await driver.restoreActiveTrip().catch(() => {})
+  // ensureProfile сам подтягивает доступные/активные тарифы (available/active
+  // categories) — нужны панели статуса, даже если водитель зашёл сразу на карту.
+  driver.ensureProfile().catch(() => {})
   // Подтягиваем уже добавленную машину, чтобы водитель не добавлял её заново.
   onboarding.loadVehicles().catch(() => {})
   checkVerificationReminder()

@@ -114,12 +114,12 @@ function formatDate(value: string) {
                   alt=""
                   class="h-full w-full object-cover"
                 />
-                <AvatarFallback class="flex h-full w-full items-center justify-center">
+                <AvatarFallback class="h-full w-full flex items-center justify-center">
                   <span class="i-mdi-steering text-10" />
                 </AvatarFallback>
               </AvatarRoot>
               <span
-                class="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-secondary-900"
+                class="absolute h-4 w-4 border-2 border-secondary-900 rounded-full -bottom-0.5 -right-0.5"
                 :class="data.driver.is_online ? 'bg-emerald-400' : 'bg-slate-600'"
               />
             </div>
@@ -144,9 +144,9 @@ function formatDate(value: string) {
           <div class="mx-5 mt-5 h-px bg-white/8" />
 
           <!-- Блок рейтинга -->
-          <div class="flex items-center gap-4 px-5 pt-5 pb-2">
+          <div class="flex items-center gap-4 px-5 pb-2 pt-5">
             <div class="min-w-0 flex-1">
-              <p class="text-[10px] font-900 uppercase tracking-wider text-slate-500">
+              <p class="text-[10px] text-slate-500 font-900 tracking-wider uppercase">
                 Рейтинг водителя
               </p>
               <div class="mt-1 flex items-baseline gap-1.5">
@@ -179,7 +179,7 @@ function formatDate(value: string) {
                 />
               </svg>
               <div class="absolute inset-0 flex items-center justify-center">
-                <span class="text-[10px] font-900 text-slate-400">
+                <span class="text-[10px] text-slate-400 font-900">
                   {{ Math.round((data.driver.rating / 5) * 100) }}%
                 </span>
               </div>
@@ -197,7 +197,7 @@ function formatDate(value: string) {
         </div>
 
         <!-- Статистика -->
-        <div class="mt-3 grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 mt-3 gap-3">
           <!-- Поездки -->
           <div class="rounded-2xl bg-white/5 px-3 py-4">
             <span class="i-mdi-steering text-6 text-main-300" />
@@ -237,7 +237,7 @@ function formatDate(value: string) {
         <div v-if="data.driver.blocked_until" class="mt-3 flex items-center gap-3 rounded-2xl bg-red-500/10 px-4 py-3">
           <span class="i-mdi-lock shrink-0 text-5 text-red-400" />
           <div>
-            <p class="text-sm font-900 text-red-300">
+            <p class="text-sm text-red-300 font-900">
               Аккаунт заблокирован
             </p>
             <p class="mt-0.5 text-xs text-red-400/70">

@@ -5,7 +5,10 @@ export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan'
 export interface Trip {
   cancelled_at?: null | string
   cancelled_by?: null | string
+  // category — тариф поездки; до принятия водителем это заглушка,
+  // пассажир мог заказать сразу несколько тарифов (categories).
   category: VehicleCategory
+  categories?: VehicleCategory[]
   completed_at?: null | string
   created_at?: string
   distance_km: number
