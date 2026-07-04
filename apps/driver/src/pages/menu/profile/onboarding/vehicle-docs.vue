@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { VehiclePhotoSlot } from '~/types/driver'
+import { mediaUrl } from '~/api/client'
 import AuthButton from '~/components/auth/AuthButton.vue'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
@@ -13,75 +15,118 @@ definePage({
     requiredRole: 'driver',
     backTo: '/menu/profile/onboarding',
     screenSubtitle: 'Назад',
-    screenTitle: 'Документы машины',
+    screenTitle: 'Фото машины',
   },
 })
 
 useHead({
-  title: 'Документы машины | EdTaxi Driver',
+  title: 'Фото машины | EdTaxi Driver',
 })
 
-const vehiclePhotoFile = ref<File | null>(null)
-const vehiclePhotoPreview = ref('')
-const techPassportFile = ref<File | null>(null)
-const techPassportPreview = ref('')
+interface SlotMeta {
+  slot: VehiclePhotoSlot
+  label: string
+  icon: string
+  capture: string | null
+  optional?: boolean
+}
 
-const vehicleId = computed(() => driver.verification?.vehicles[0]?.id ?? '')
+interface SlotGroup {
+  title: string
+  slots: SlotMeta[]
+}
 
+const SLOT_GROUPS: SlotGroup[] = [
+  {
+    title: 'Кузов автомобиля',
+    slots: [
+      { slot: 'exterior_front', label: 'Спереди', icon: 'i-mdi-car', capture: 'environment' },
+      { slot: 'exterior_back', label: 'Сзади', icon: 'i-mdi-car-back', capture: 'environment' },
+      { slot: 'exterior_left', label: 'Левый бок', icon: 'i-mdi-car-side', capture: 'environment' },
+      { slot: 'exterior_right', label: 'Правый бок', icon: 'i-mdi-car-side', capture: 'environment' },
+    ],
+  },
+  {
+    title: 'Салон',
+    slots: [
+      { slot: 'interior_front', label: 'Передние сиденья', icon: 'i-mdi-car-seat', capture: 'environment' },
+      { slot: 'interior_back', label: 'Задний ряд сидений', icon: 'i-mdi-seat', capture: 'environment' },
+      { slot: 'dashboard', label: 'Панель приборов (с одометром)', icon: 'i-mdi-speedometer', capture: 'environment' },
+    ],
+  },
+  {
+    title: 'Багажник',
+    slots: [
+      { slot: 'trunk', label: 'Багажник', icon: 'i-mdi-bag-suitcase', capture: 'environment' },
+    ],
+  },
+  {
+    title: 'Документы',
+    slots: [
+      { slot: 'doc_registration_front', label: 'Техпаспорт (лицевая сторона)', icon: 'i-mdi-file-document', capture: null },
+      { slot: 'doc_registration_back', label: 'Техпаспорт (обратная сторона)', icon: 'i-mdi-file-document-outline', capture: null },
+      { slot: 'doc_insurance', label: 'Страховой полис', icon: 'i-mdi-shield-check', capture: null, optional: true },
+    ],
+  },
+  {
+    title: 'VIN',
+    slots: [
+      { slot: 'vin', label: 'VIN-номер', icon: 'i-mdi-barcode-scan', capture: 'environment', optional: true },
+    ],
+  },
+]
+
+const vehicleId = computed(() => driver.verification?.vehicles[0]?.id ?? driver.vehicles[0]?.id ?? '')
 const hasVehicle = computed(() => Boolean(vehicleId.value))
 
-const canSubmit = computed(() =>
-  hasVehicle.value && (vehiclePhotoFile.value !== null || techPassportFile.value !== null),
+const uploadedRequiredCount = computed(() =>
+  Math.max(0, driver.requiredPhotoSlots.length - driver.missingPhotoSlots.length),
 )
+
+function photoUrl(slot: VehiclePhotoSlot) {
+  return driver.vehiclePhotos.find(p => p.slot === slot)?.photo_url ?? null
+}
+
+function isUploading(slot: VehiclePhotoSlot) {
+  return driver.uploadingPhotoSlots.has(slot)
+}
 
 onMounted(async () => {
   if (!driver.verification)
     await driver.loadVerification().catch(() => {})
+
+  if (vehicleId.value)
+    await driver.loadVehiclePhotos(vehicleId.value).catch(() => {})
 })
 
-function pickFile(type: 'photo' | 'passport') {
+function pickSlotFile(meta: SlotMeta) {
+  if (!vehicleId.value || isUploading(meta.slot))
+    return
+
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  input.onchange = (e) => {
+  if (meta.capture)
+    input.capture = meta.capture
+
+  input.onchange = async (e) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (!file)
       return
-    const url = URL.createObjectURL(file)
-    if (type === 'photo') {
-      if (vehiclePhotoPreview.value)
-        URL.revokeObjectURL(vehiclePhotoPreview.value)
-      vehiclePhotoFile.value = file
-      vehiclePhotoPreview.value = url
-    }
-    else {
-      if (techPassportPreview.value)
-        URL.revokeObjectURL(techPassportPreview.value)
-      techPassportFile.value = file
-      techPassportPreview.value = url
-    }
+
+    await driver.doUploadVehicleSlotPhoto(vehicleId.value, meta.slot, file).catch(() => {})
   }
+
   input.click()
 }
 
-onUnmounted(() => {
-  if (vehiclePhotoPreview.value)
-    URL.revokeObjectURL(vehiclePhotoPreview.value)
-  if (techPassportPreview.value)
-    URL.revokeObjectURL(techPassportPreview.value)
-})
-
 async function submit() {
-  if (!canSubmit.value || driver.isLoading)
+  if (!driver.canSubmitPhotos || driver.isSubmittingPhotos || !vehicleId.value)
     return
 
   try {
-    if (vehiclePhotoFile.value)
-      await driver.doUploadVehiclePhoto(vehicleId.value, vehiclePhotoFile.value)
-
-    if (techPassportFile.value)
-      await driver.doUploadTechPassport(vehicleId.value, techPassportFile.value)
-
+    await driver.doSubmitVehiclePhotos(vehicleId.value)
+    useToast().success('Отправлено на проверку', 'Мы проверим фото и сообщим о результате.')
     await router.replace('/menu/profile/onboarding')
   }
   catch {}
@@ -97,10 +142,15 @@ async function submit() {
         </div>
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
-            Документы машины
+            Фото машины
           </h1>
           <p class="mt-1 text-sm text-slate-400 leading-5">
-            Загрузите фото автомобиля и техпаспорт для проверки.
+            <template v-if="hasVehicle && driver.requiredPhotoSlots.length">
+              Загружено {{ uploadedRequiredCount }} из {{ driver.requiredPhotoSlots.length }} обязательных
+            </template>
+            <template v-else>
+              Загрузите фото автомобиля и документы для проверки.
+            </template>
           </p>
         </div>
       </div>
@@ -117,74 +167,92 @@ async function submit() {
         </RouterLink>
       </div>
 
-      <div v-else class="mt-8 space-y-6">
-        <!-- Фото автомобиля -->
-        <div>
-          <p class="mb-3 text-sm text-slate-300 font-700">
-            Фото автомобиля
+      <div v-else class="mt-6 space-y-6">
+        <!-- Подсказки по качеству фото -->
+        <div class="rounded-2xl bg-white/5 p-4">
+          <p class="mb-2 text-xs text-slate-300 font-800 uppercase">
+            Как фотографировать
           </p>
-          <button
-            class="relative h-44 w-full overflow-hidden border-2 rounded-3xl border-dashed transition active:scale-[0.98]"
-            :class="vehiclePhotoPreview ? 'border-transparent' : 'border-white/16 bg-white/4'"
-            type="button"
-            @click="pickFile('photo')"
-          >
-            <img
-              v-if="vehiclePhotoPreview"
-              :src="vehiclePhotoPreview"
-              class="h-full w-full object-cover"
-              alt="Фото авто"
-            >
-            <div v-else class="h-full flex flex-col items-center justify-center gap-2 text-slate-400">
-              <span class="i-mdi-camera text-10" />
-              <span class="text-sm font-700">Нажмите, чтобы выбрать фото</span>
-            </div>
-            <div
-              v-if="vehiclePhotoPreview"
-              class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/50 py-2 text-sm text-white font-700 backdrop-blur-sm"
-            >
-              <span class="i-mdi-pencil text-4" />
-              Изменить
-            </div>
-          </button>
+          <ul class="text-xs text-slate-400 leading-5 space-y-1.5">
+            <li class="flex items-start gap-2">
+              <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
+              Хорошее освещение, без бликов
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
+              Автомобиль в кадре целиком
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
+              Номер и VIN хорошо читаются
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
+              Без посторонних предметов в кадре
+            </li>
+          </ul>
         </div>
 
-        <!-- Техпаспорт -->
-        <div>
-          <p class="mb-3 text-sm text-slate-300 font-700">
-            Техпаспорт
-          </p>
-          <button
-            class="relative h-44 w-full overflow-hidden border-2 rounded-3xl border-dashed transition active:scale-[0.98]"
-            :class="techPassportPreview ? 'border-transparent' : 'border-white/16 bg-white/4'"
-            type="button"
-            @click="pickFile('passport')"
-          >
-            <img
-              v-if="techPassportPreview"
-              :src="techPassportPreview"
-              class="h-full w-full object-cover"
-              alt="Техпаспорт"
-            >
-            <div v-else class="h-full flex flex-col items-center justify-center gap-2 text-slate-400">
-              <span class="i-mdi-file-document text-10" />
-              <span class="text-sm font-700">Нажмите, чтобы выбрать фото</span>
-            </div>
-            <div
-              v-if="techPassportPreview"
-              class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/50 py-2 text-sm text-white font-700 backdrop-blur-sm"
-            >
-              <span class="i-mdi-pencil text-4" />
-              Изменить
-            </div>
-          </button>
+        <div v-if="driver.isLoadingPhotos" class="flex items-center gap-3 text-sm text-slate-400">
+          <span class="i-mdi-loading animate-spin text-5" />
+          Загружаем фото...
         </div>
+
+        <template v-else>
+          <div v-for="group in SLOT_GROUPS" :key="group.title">
+            <p class="mb-3 text-sm text-white font-800">
+              {{ group.title }}
+            </p>
+
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                v-for="meta in group.slots"
+                :key="meta.slot"
+                class="relative h-32 overflow-hidden border-2 rounded-2xl border-dashed text-left transition active:scale-[0.98]"
+                :class="photoUrl(meta.slot) ? 'border-transparent' : 'border-white/16 bg-white/4'"
+                type="button"
+                @click="pickSlotFile(meta)"
+              >
+                <img
+                  v-if="photoUrl(meta.slot)"
+                  :src="mediaUrl(photoUrl(meta.slot))"
+                  class="h-full w-full object-cover"
+                  :alt="meta.label"
+                >
+                <div v-else class="h-full flex flex-col items-center justify-center gap-1.5 px-2 text-center text-slate-400">
+                  <span :class="meta.icon" class="text-8" />
+                  <span class="text-xs font-700 leading-4">{{ meta.label }}</span>
+                  <span v-if="meta.optional" class="text-[10px] text-slate-500">необязательно</span>
+                </div>
+
+                <!-- Спиннер загрузки -->
+                <div v-if="isUploading(meta.slot)" class="absolute inset-0 flex items-center justify-center bg-black/60">
+                  <span class="i-mdi-loading animate-spin text-8 text-white" />
+                </div>
+
+                <!-- Готово: галочка + подпись + кнопка "переснять" -->
+                <template v-if="photoUrl(meta.slot) && !isUploading(meta.slot)">
+                  <span class="absolute right-2 top-2 h-6 w-6 flex items-center justify-center rounded-full bg-emerald-500 text-white">
+                    <span class="i-mdi-check text-4" />
+                  </span>
+                  <div class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-black/55 px-2.5 py-1.5 backdrop-blur-sm">
+                    <span class="truncate text-[11px] text-white font-700">{{ meta.label }}</span>
+                    <span class="flex items-center gap-1 text-[11px] text-main-200 font-800">
+                      <span class="i-mdi-camera-retake text-3.5" />
+                      Переснять
+                    </span>
+                  </div>
+                </template>
+              </button>
+            </div>
+          </div>
+        </template>
 
         <AuthButton
-          :disabled="driver.isLoading || !canSubmit"
+          :disabled="driver.isSubmittingPhotos || !driver.canSubmitPhotos"
           icon="i-mdi-upload"
-          :loading="driver.isLoading"
-          loading-text="Загружаем..."
+          :loading="driver.isSubmittingPhotos"
+          loading-text="Отправляем..."
           text="Отправить на проверку"
           @click="submit"
         />

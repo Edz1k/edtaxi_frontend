@@ -11,7 +11,7 @@ const props = defineProps<{
   elapsedSeconds: number
   isPolling: boolean
   pickup: string
-  selectedCategory: VehicleCategory
+  selectedCategories: VehicleCategory[]
   selectedEstimate: EstimateTripResponse | null
 }>()
 
@@ -113,7 +113,23 @@ const fareText = computed(() => {
   return props.selectedEstimate ? formatFare(props.selectedEstimate) : 'Цена рассчитана'
 })
 
-const category = computed(() => props.activeTrip?.category ?? props.selectedCategory)
+const category = computed(() => props.activeTrip?.category ?? props.selectedCategories[0] ?? 'economy')
+
+// Пока заказ ещё в поиске и выбрано несколько тарифов — показываем список того,
+// что ищем. После того как заказ принят (или это уже терминальный статус),
+// backend фиксирует итоговую категорию и цену — показываем именно их.
+const isSearchingAcrossCategories = computed(() => {
+  return props.activeTrip?.status === 'searching' && props.selectedCategories.length > 1
+})
+
+const tariffLine = computed(() => {
+  if (isSearchingAcrossCategories.value) {
+    const labels = props.selectedCategories.map(cat => TARIFF_META[cat].label).join(' · ')
+    return `Ищем: ${labels}`
+  }
+
+  return `${TARIFF_META[category.value].label} · ${fareText.value}`
+})
 
 // Водитель показывается, когда заказ принят (бэкенд добавляет объект driver).
 const driver = computed(() => props.activeTrip?.driver ?? null)
@@ -185,7 +201,7 @@ async function shareTrip() {
         {{ pickup }} → {{ destination }}
       </p>
       <p class="mt-1 text-xs text-slate-400 font-700">
-        {{ TARIFF_META[category].label }} · {{ fareText }}
+        {{ tariffLine }}
       </p>
     </div>
 

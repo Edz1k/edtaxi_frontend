@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DriverTripOffer } from '~/types/websocket'
+import { categoryLabel } from '~/utils/vehicleCategories'
 
 defineProps<{
   isBusy: boolean
@@ -22,8 +23,11 @@ function formatFare(value: number) {
       <section class="w-full rounded-3xl bg-secondary-900 p-5 shadow-2xl">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="text-xs text-main-300 font-900 uppercase">
+            <p class="flex items-center gap-2 text-xs text-main-300 font-900 uppercase">
               Новый заказ
+              <span v-if="offer.category" class="rounded-full bg-main-500/18 px-2 py-0.5 text-[11px] text-main-200 normal-case">
+                {{ categoryLabel(offer.category) }}
+              </span>
             </p>
             <h2 class="mt-2 text-3xl font-950">
               {{ formatFare(offer.estimated_fare) }}

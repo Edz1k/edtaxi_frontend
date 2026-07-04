@@ -13,10 +13,6 @@ interface UseTripOrderFlowOptions {
   pickupPlace: Ref<GeoPlace | null>
 }
 
-const DEFAULT_TRIP = {
-  category: 'economy' as const,
-}
-
 export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
   const trips = useTripsStore()
   const isSubmittingRoute = ref(false)
@@ -36,7 +32,8 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
   const isTariffsVisible = computed(() => trips.tripFlowState === 'tariffs')
   const isSearching = computed(() => trips.hasActiveTrip)
   const isBusy = computed(() => trips.isEstimating || trips.isCreating || trips.isCancelling || trips.isRestoringActiveTrip || isResolvingRoute.value)
-  const selectedEstimate = computed(() => trips.tariffEstimates.find(item => item.category === trips.selectedCategory) ?? null)
+  // Самый дешёвый из выбранных тарифов — от него считается цена «от N ₸».
+  const selectedEstimate = computed(() => trips.cheapestSelectedEstimate)
   const primaryText = computed(() => {
     if (isResolvingRoute.value)
       return 'Строим маршрут...'
@@ -47,8 +44,11 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
     if (trips.isCreating)
       return 'Создаем заказ...'
 
-    if (selectedEstimate.value)
-      return `Заказать за ${formatFare(selectedEstimate.value)}`
+    if (selectedEstimate.value) {
+      return trips.selectedCategories.length > 1
+        ? `Заказать от ${formatFare(selectedEstimate.value)}`
+        : `Заказать за ${formatFare(selectedEstimate.value)}`
+    }
 
     return 'Показать цены'
   })
@@ -67,7 +67,6 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
     options.clearDestinationSuggestions()
 
     return {
-      ...DEFAULT_TRIP,
       distance_km: route.distance_km,
       dropoff_address: resolvedDestination.address,
       dropoff_lat: resolvedDestination.lat,
@@ -96,10 +95,8 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
         return
       }
 
-      await trips.orderTrip({
-        ...payload,
-        category: trips.selectedCategory,
-      })
+      // category/categories добавляет сам стор из выбранных тарифов.
+      await trips.orderTrip(payload)
     }
     catch (error) {
       trips.errorMessage = showErrorToast(error, 'Не удалось построить маршрут.')

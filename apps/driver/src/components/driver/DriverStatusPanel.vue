@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
+import { categoryLabel } from '~/utils/vehicleCategories'
 
 defineProps<{ trackingLabel: string, onlineBlockMessage: string, showRouteLoading: boolean, isLocationGranted: boolean }>()
 const emit = defineEmits<{ primaryAction: [], toggleOnline: [] }>()
 
 const driver = useDriverStore()
 const onboarding = useDriverOnboardingStore()
+
+// Нельзя выйти на линию без выбранного тарифа — если доступные тарифы уже
+// загружены, но ни один не активен.
+const blockedByNoCategory = computed(() =>
+  !driver.isOnline && driver.availableCategories.length > 0 && driver.activeCategories.length === 0,
+)
 
 const tripStep = computed(() => {
   if (!driver.hasActiveTrip)
@@ -79,6 +86,43 @@ const tripStep = computed(() => {
         </div>
       </div>
 
+      <!-- Тарифы, по которым водитель принимает заказы -->
+      <div v-if="!driver.hasActiveTrip && driver.availableCategories.length" class="mt-4">
+        <p class="mb-2 text-xs text-slate-400 font-800 uppercase">
+          Тарифы на линии
+        </p>
+
+        <div class="flex flex-wrap gap-2">
+          <template v-if="driver.isOnline">
+            <span
+              v-for="cat in driver.activeCategories"
+              :key="cat"
+              class="rounded-full bg-main-500/18 px-3 py-1.5 text-xs text-main-200 font-800"
+            >
+              {{ categoryLabel(cat) }}
+            </span>
+          </template>
+
+          <template v-else>
+            <button
+              v-for="cat in driver.availableCategories"
+              :key="cat"
+              :disabled="driver.isSavingCategories"
+              class="rounded-full px-3 py-1.5 text-xs font-800 transition active:scale-[0.96] disabled:opacity-60"
+              :class="driver.activeCategories.includes(cat) ? 'bg-main-500 text-white' : 'bg-white/8 text-slate-400'"
+              type="button"
+              @click="driver.toggleCategory(cat)"
+            >
+              {{ categoryLabel(cat) }}
+            </button>
+          </template>
+        </div>
+
+        <p v-if="blockedByNoCategory" class="mt-2 text-xs text-amber-300 font-700">
+          Выберите хотя бы один тариф
+        </p>
+      </div>
+
       <div v-if="driver.hasActiveTrip && tripStep" class="mt-4 space-y-2">
         <button
           class="h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-main-500 text-sm font-950 shadow-[0_12px_30px_rgba(230,173,46,0.28)] transition active:scale-[0.99]"
@@ -100,7 +144,7 @@ const tripStep = computed(() => {
 
       <button
         v-else
-        :disabled="driver.isChangingStatus || driver.isRestoringActiveTrip || (!driver.isOnline && !isLocationGranted)"
+        :disabled="driver.isChangingStatus || driver.isRestoringActiveTrip || (!driver.isOnline && !isLocationGranted) || blockedByNoCategory"
         class="mt-4 h-14 w-full rounded-2xl text-base font-900 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
         :class="driver.isOnline ? 'bg-red-500/12 text-red-300' : 'bg-main-500 text-white shadow-[0_12px_30px_rgba(230,173,46,0.28)]'"
         type="button"

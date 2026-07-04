@@ -18,12 +18,18 @@ export interface EstimateTripResponse {
 }
 
 export interface CreateTripPayload extends EstimateTripPayload {
+  categories?: VehicleCategory[]
   dropoff_address: string
   dropoff_lat: number
   dropoff_lng: number
   pickup_address: string
   pickup_lat: number
   pickup_lng: number
+}
+
+export interface TripFareQuote {
+  fare: number
+  surge_multiplier: number
 }
 
 // TripDriver — данные назначенного водителя, которые видит пассажир, когда заказ
@@ -48,6 +54,7 @@ export interface TripDriver {
 export interface Trip {
   cancelled_at?: null | string
   cancelled_by?: null | string
+  categories?: VehicleCategory[]
   category: VehicleCategory
   completed_at?: null | string
   created_at?: string
@@ -60,6 +67,7 @@ export interface Trip {
   dropoff_lng: number
   duration_min: number
   estimated_fare: number
+  fare_quotes?: Record<string, TripFareQuote>
   final_fare?: null | number
   id: string
   passenger_id?: string

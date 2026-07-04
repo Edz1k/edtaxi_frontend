@@ -4,16 +4,22 @@ import type {
   DriverVehiclePayload,
   DriverVehicleVerification,
   DriverVerificationsResponse,
+  VehiclePhotoSlot,
+  VehicleSlotPhoto,
+  VerificationStatus,
 } from '~/types/driver'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import {
   addDriverVehicle,
+  getVehiclePhotos,
   getVerificationStatus,
   listDriverVehicles,
   submitDailyCheck,
+  submitVehiclePhotos,
   updateDriverVehicle,
   uploadFaceVerification,
   uploadVehiclePhoto,
+  uploadVehicleSlotPhoto,
   uploadVehicleTechPassport,
 } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
@@ -25,6 +31,16 @@ export const useDriverOnboardingStore = defineStore('driverOnboarding', () => {
   const isLoading = ref(false)
   const isLoadingVerification = ref(false)
   const errorMessage = ref('')
+
+  // Пофотослотовая верификация машины (чек-лист вместо одной фотографии + техпаспорта).
+  const vehiclePhotos = ref<VehicleSlotPhoto[]>([])
+  const requiredPhotoSlots = ref<VehiclePhotoSlot[]>([])
+  const missingPhotoSlots = ref<VehiclePhotoSlot[]>([])
+  const canSubmitPhotos = ref(false)
+  const isLoadingPhotos = ref(false)
+  const isSubmittingPhotos = ref(false)
+  // Set слотов, которые сейчас грузятся — управляет спиннером конкретной карточки.
+  const uploadingPhotoSlots = ref<Set<VehiclePhotoSlot>>(new Set())
 
   const hasVehicle = computed(() => Boolean(vehicle.value) || vehicles.value.length > 0)
 
@@ -93,6 +109,14 @@ export const useDriverOnboardingStore = defineStore('driverOnboarding', () => {
     finally {
       isLoading.value = false
     }
+  }
+
+  // applyVehicleVerificationStatus обновляет статус машины локально —
+  // например, после отправки фото на проверку хаб сразу показывает «На проверке».
+  function applyVehicleVerificationStatus(vehicleId: string, status: VerificationStatus) {
+    vehicles.value = vehicles.value.map(v => v.id === vehicleId ? { ...v, verification_status: status } : v)
+    if (verification.value)
+      verification.value = { ...verification.value, vehicles: vehicles.value }
   }
 
   async function doUploadVehiclePhoto(vehicleId: string, file: File) {
@@ -170,6 +194,78 @@ export const useDriverOnboardingStore = defineStore('driverOnboarding', () => {
     }
   }
 
+  // loadVehiclePhotos подтягивает загруженные фото-слоты машины и список
+  // недостающих обязательных слотов (used для прогресса и can_submit).
+  async function loadVehiclePhotos(vehicleId: string) {
+    isLoadingPhotos.value = true
+    errorMessage.value = ''
+
+    try {
+      const res = await getVehiclePhotos(vehicleId)
+      vehiclePhotos.value = res.photos
+      requiredPhotoSlots.value = res.required
+      missingPhotoSlots.value = res.missing
+      canSubmitPhotos.value = res.can_submit
+      return res
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось загрузить фото машины.')
+      throw error
+    }
+    finally {
+      isLoadingPhotos.value = false
+    }
+  }
+
+  // doUploadVehicleSlotPhoto грузит фото в конкретный слот (upsert) — вызывается
+  // сразу при выборе файла, до нажатия какой-либо кнопки "Сохранить".
+  async function doUploadVehicleSlotPhoto(vehicleId: string, slot: VehiclePhotoSlot, file: File) {
+    uploadingPhotoSlots.value.add(slot)
+
+    try {
+      const res = await uploadVehicleSlotPhoto(vehicleId, slot, file)
+      vehiclePhotos.value = [...vehiclePhotos.value.filter(p => p.slot !== slot), res]
+      missingPhotoSlots.value = missingPhotoSlots.value.filter(s => s !== slot)
+      canSubmitPhotos.value = requiredPhotoSlots.value.every(
+        s => vehiclePhotos.value.some(p => p.slot === s),
+      )
+      return res
+    }
+    catch (error) {
+      showErrorToast(error, 'Не удалось загрузить фото.')
+      throw error
+    }
+    finally {
+      uploadingPhotoSlots.value.delete(slot)
+    }
+  }
+
+  async function doSubmitVehiclePhotos(vehicleId: string) {
+    isSubmittingPhotos.value = true
+    errorMessage.value = ''
+
+    try {
+      const res = await submitVehiclePhotos(vehicleId)
+      applyVehicleVerificationStatus(vehicleId, res.verification_status)
+      return res
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось отправить фото на проверку.')
+      throw error
+    }
+    finally {
+      isSubmittingPhotos.value = false
+    }
+  }
+
+  function clearVehiclePhotosState() {
+    vehiclePhotos.value = []
+    requiredPhotoSlots.value = []
+    missingPhotoSlots.value = []
+    canSubmitPhotos.value = false
+    uploadingPhotoSlots.value = new Set()
+  }
+
   function clearOnboardingState() {
     vehicle.value = null
     vehicles.value = []
@@ -177,23 +273,34 @@ export const useDriverOnboardingStore = defineStore('driverOnboarding', () => {
     isLoading.value = false
     isLoadingVerification.value = false
     errorMessage.value = ''
+    clearVehiclePhotosState()
   }
 
   return {
+    canSubmitPhotos,
     clearOnboardingState,
     doSubmitDailyCheck,
+    doSubmitVehiclePhotos,
     doUploadFaceVerification,
     doUploadTechPassport,
     doUploadVehiclePhoto,
+    doUploadVehicleSlotPhoto,
     errorMessage,
     hasVehicle,
     isLoading,
+    isLoadingPhotos,
     isLoadingVerification,
+    isSubmittingPhotos,
+    loadVehiclePhotos,
     loadVehicles,
     loadVerification,
+    missingPhotoSlots,
+    requiredPhotoSlots,
     saveVehicle,
     updateVehicle,
+    uploadingPhotoSlots,
     vehicle,
+    vehiclePhotos,
     vehicles,
     verification,
   }

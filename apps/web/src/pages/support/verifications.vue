@@ -1,11 +1,48 @@
 <script setup lang="ts">
+import type { PendingVehicle } from '~/types/verification'
 import { mediaUrl } from '~/api/client'
 import WebPageShell from '~/components/app/WebPageShell.vue'
+import { CATEGORY_LABELS } from '~/constants/admin'
 import { useVerificationStore } from '~/stores/verification'
 import { formatDate } from '~/utils/format'
 
 const verification = useVerificationStore()
 const tab = ref<'daily' | 'faces' | 'vehicles'>('vehicles')
+
+// Слоты фотоотчёта машины в порядке показа; первые 10 обязательны.
+const VEHICLE_PHOTO_SLOTS: Array<{ slot: string, label: string, required: boolean }> = [
+  { slot: 'exterior_front', label: 'Спереди', required: true },
+  { slot: 'exterior_back', label: 'Сзади', required: true },
+  { slot: 'exterior_left', label: 'Левый бок', required: true },
+  { slot: 'exterior_right', label: 'Правый бок', required: true },
+  { slot: 'interior_front', label: 'Передние сиденья', required: true },
+  { slot: 'interior_back', label: 'Задний ряд сидений', required: true },
+  { slot: 'dashboard', label: 'Панель приборов (с одометром)', required: true },
+  { slot: 'trunk', label: 'Багажник', required: true },
+  { slot: 'doc_registration_front', label: 'Техпаспорт (лицевая сторона)', required: true },
+  { slot: 'doc_registration_back', label: 'Техпаспорт (обратная сторона)', required: true },
+  { slot: 'vin', label: 'VIN-номер', required: false },
+  { slot: 'doc_insurance', label: 'Страховой полис', required: false },
+]
+
+function categoryLabel(category: string) {
+  return (CATEGORY_LABELS as Record<string, string>)[category] ?? category
+}
+
+function vehiclePhotoCards(vehicle: PendingVehicle) {
+  const bySlot = new Map((vehicle.photos ?? []).map(p => [p.slot, p.photo_url]))
+  const cards: Array<{ slot: string, label: string, url: null | string }> = []
+  for (const { slot, label, required } of VEHICLE_PHOTO_SLOTS) {
+    const url = bySlot.get(slot) ?? null
+    bySlot.delete(slot)
+    // Необязательные слоты без фото не показываем, обязательные — как заглушку.
+    if (url || required)
+      cards.push({ slot, label, url })
+  }
+  for (const [slot, url] of bySlot)
+    cards.push({ slot, label: slot, url })
+  return cards
+}
 
 definePage({
   meta: {
@@ -90,6 +127,15 @@ function photos(items: Array<{ label: string, url: null | string }>) {
             <p class="mt-0.5 text-sm text-white/60 font-800">
               {{ vehicle.plate_number }} · {{ vehicle.color }} · {{ vehicle.category }}
             </p>
+            <div v-if="vehicle.categories?.length" class="mt-1.5 flex flex-wrap gap-1.5">
+              <span
+                v-for="cat in vehicle.categories"
+                :key="cat"
+                class="rounded-lg bg-cyan-300/15 px-2 py-0.5 text-xs text-cyan-200 font-800"
+              >
+                {{ categoryLabel(cat) }}
+              </span>
+            </div>
             <p class="mt-1 text-xs text-white/45">
               <RouterLink
                 v-if="vehicle.driver_user_id"
@@ -123,14 +169,50 @@ function photos(items: Array<{ label: string, url: null | string }>) {
           </div>
         </div>
 
-        <div v-if="vehicle.verification_photo_url" class="mt-4">
-          <a :href="mediaUrl(vehicle.verification_photo_url)" rel="noopener" target="_blank">
-            <img
-              :alt="`Фото ${vehicle.plate_number}`"
-              class="h-44 w-full rounded-2xl bg-black/20 object-cover"
-              :src="mediaUrl(vehicle.verification_photo_url)"
-            >
-          </a>
+        <div v-if="vehicle.photos?.length" class="grid grid-cols-2 mt-4 gap-3 lg:grid-cols-4 sm:grid-cols-3">
+          <figure v-for="card in vehiclePhotoCards(vehicle)" :key="card.slot">
+            <a v-if="card.url" :href="mediaUrl(card.url)" rel="noopener" target="_blank">
+              <img
+                :alt="card.label"
+                class="h-32 w-full rounded-2xl bg-black/20 object-cover"
+                :src="mediaUrl(card.url)"
+              >
+            </a>
+            <div v-else class="h-32 w-full flex items-center justify-center border border-white/15 rounded-2xl border-dashed bg-white/4 text-xs text-white/35 font-700">
+              нет фото
+            </div>
+            <figcaption class="mt-1 text-center text-xs font-700" :class="card.url ? 'text-white/50' : 'text-white/30'">
+              {{ card.label }}
+            </figcaption>
+          </figure>
+        </div>
+
+        <!-- Старые заявки без пофотового отчёта: одно фото машины + техпаспорт. -->
+        <div v-else-if="vehicle.verification_photo_url || vehicle.tech_passport_photo_url" class="grid mt-4 gap-3 sm:grid-cols-2">
+          <figure v-if="vehicle.verification_photo_url">
+            <a :href="mediaUrl(vehicle.verification_photo_url)" rel="noopener" target="_blank">
+              <img
+                :alt="`Фото ${vehicle.plate_number}`"
+                class="h-44 w-full rounded-2xl bg-black/20 object-cover"
+                :src="mediaUrl(vehicle.verification_photo_url)"
+              >
+            </a>
+            <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
+              Фото машины
+            </figcaption>
+          </figure>
+          <figure v-if="vehicle.tech_passport_photo_url">
+            <a :href="mediaUrl(vehicle.tech_passport_photo_url)" rel="noopener" target="_blank">
+              <img
+                alt="Техпаспорт"
+                class="h-44 w-full rounded-2xl bg-black/20 object-cover"
+                :src="mediaUrl(vehicle.tech_passport_photo_url)"
+              >
+            </a>
+            <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
+              Техпаспорт
+            </figcaption>
+          </figure>
         </div>
         <p v-else class="mt-4 text-xs text-amber-300/80 font-700">
           Водитель не приложил фото машины.

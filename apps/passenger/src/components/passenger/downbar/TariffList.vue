@@ -2,17 +2,21 @@
 import type { EstimateTripResponse, VehicleCategory } from '~/types/trips'
 import { formatFare, TARIFF_META } from '~/constants/tariffs'
 
-defineProps<{
+const props = defineProps<{
   destination: string
   estimates: EstimateTripResponse[]
   pickup: string
-  selectedCategory: VehicleCategory
+  selectedCategories: VehicleCategory[]
 }>()
 
 const emit = defineEmits<{
   editRoute: []
-  selectCategory: [category: VehicleCategory]
+  toggleCategory: [category: VehicleCategory]
 }>()
+
+function isSelected(category: VehicleCategory) {
+  return props.selectedCategories.includes(category)
+}
 </script>
 
 <template>
@@ -54,11 +58,12 @@ const emit = defineEmits<{
           v-for="tariff in estimates"
           :key="tariff.category"
           class="min-h-15 w-full flex items-center gap-3 border rounded-2xl px-3 py-2 text-left transition active:scale-[0.98]"
-          :class="tariff.category === selectedCategory
+          :class="isSelected(tariff.category)
             ? 'border-main-400 bg-main-500/16 shadow-[0_14px_34px_rgba(230,173,46,0.18)]'
             : 'border-white/8 bg-white/5'"
+          :aria-pressed="isSelected(tariff.category)"
           type="button"
-          @click="emit('selectCategory', tariff.category)"
+          @click="emit('toggleCategory', tariff.category)"
         >
           <span class="h-11 w-11 flex shrink-0 items-center justify-center rounded-2xl bg-white/8">
             <span :class="TARIFF_META[tariff.category].icon" class="text-6" />
@@ -79,12 +84,16 @@ const emit = defineEmits<{
 
           <span
             class="h-5 w-5 flex shrink-0 items-center justify-center rounded-full"
-            :class="tariff.category === selectedCategory ? 'bg-main-500 text-white' : 'bg-white/8 text-transparent'"
+            :class="isSelected(tariff.category) ? 'bg-main-500 text-white' : 'bg-white/8 text-transparent'"
           >
             <span class="i-mdi-check text-3.5" />
           </span>
         </button>
       </div>
+
+      <p v-if="selectedCategories.length > 1" class="mt-2 px-1 text-[11px] text-slate-400 font-700 leading-4">
+        Можно выбрать несколько тарифов — приедет тот, кто примет заказ первым
+      </p>
     </div>
   </div>
 </template>
