@@ -159,7 +159,10 @@ export function createAuthStore({ api, clearRelatedStores, savedAccountsKey }: C
         currentUser.value = null
         sessionStatus.value = 'guest'
 
-        if (error instanceof ApiError && (error.status === 0 || error.status === 401))
+        // 401 — нет/истекла сессия; 403 — cookie указывает на заблокированный
+        // (например, слитый при мердже) аккаунт. И то и другое — «гость», а не
+        // ошибка: дальше сработает тихий вход через Telegram или экран входа.
+        if (error instanceof ApiError && (error.status === 0 || error.status === 401 || error.status === 403))
           return null
 
         throw error

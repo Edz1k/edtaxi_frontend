@@ -37,12 +37,22 @@ useHead({
 })
 
 onMounted(() => {
+  // Ошибки от предыдущих действий не должны встречать пользователя на входе.
+  auth.errorMessage = ''
+
   // Номер уже подтверждён — на карту (страницу открыли напрямую).
-  if (auth.phoneVerified)
+  if (auth.phoneVerified) {
     router.replace('/map')
+    return
+  }
+
+  // Линейный первый вход: сразу показываем нативный диалог Telegram
+  // «Поделиться номером?», не заставляя искать кнопку.
+  if (contactSupported.value)
+    void shareTelegramContact(true)
 })
 
-async function shareTelegramContact() {
+async function shareTelegramContact(auto = false) {
   if (auth.isLoading)
     return
 
@@ -52,8 +62,11 @@ async function shareTelegramContact() {
       await router.replace('/map')
       return
     }
-    // requestContact недоступен или пользователь закрыл диалог — ручной ввод.
-    step.value = 'manual'
+    // requestContact недоступен или пользователь закрыл диалог. При тапе по
+    // кнопке переходим к ручному вводу; после автозапроса остаёмся на экране
+    // с кнопкой — пользователь мог закрыть диалог случайно.
+    if (!auto)
+      step.value = 'manual'
   }
   catch {}
 }
@@ -112,7 +125,7 @@ async function logoutToLogin() {
         :disabled="auth.isLoading"
         class="h-14 w-full flex items-center justify-center rounded-2xl bg-main-500 text-base text-white font-900 shadow-lg shadow-main-500/25 transition active:scale-[0.98] disabled:opacity-60"
         type="button"
-        @click="shareTelegramContact"
+        @click="shareTelegramContact()"
       >
         <span class="i-mdi-send mr-2 text-5" />
         {{ auth.isLoading ? 'Подтверждаем...' : 'Поделиться номером из Telegram' }}

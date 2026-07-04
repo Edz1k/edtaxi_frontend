@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/auth'
+import { readSavedAccounts } from '@edtaxi/shared/composables/auth/saved-accounts'
+import { SAVED_ACCOUNTS_KEY, useAuthStore } from '~/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -11,7 +12,17 @@ useHead({
 onMounted(async () => {
   auth.loadSession()
   await auth.restoreSession({ preferredRole: 'driver' }).catch(() => {})
-  await router.replace(auth.role === 'driver' ? '/map' : '/login')
+
+  if (auth.role === 'driver') {
+    // Гард сам уведёт на /login/phone, если номер ещё не подтверждён.
+    await router.replace('/map')
+    return
+  }
+
+  // Сессии нет (тихий вход не сработал или пользователь выходил сам):
+  // страница выбора аккаунтов, если уже входили; ОТП-форма — только если
+  // выбирать не из чего.
+  await router.replace(readSavedAccounts(SAVED_ACCOUNTS_KEY).length ? '/login/accounts' : '/login')
 })
 </script>
 
