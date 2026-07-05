@@ -1,4 +1,4 @@
-import type { EstimateTripResponse, VehicleCategory } from '~/types/trips'
+import type { EstimateTripResponse, PaymentMethod, VehicleCategory } from '~/types/trips'
 
 // Канонический порядок тарифов в интерфейсе (от дешёвого к дорогому).
 export const TARIFF_ORDER: VehicleCategory[] = ['economy', 'comfort', 'business', 'minivan']
@@ -32,4 +32,12 @@ export const TARIFF_META: Record<VehicleCategory, {
 
 export function formatFare(estimate: EstimateTripResponse) {
   return `${Math.round(estimate.estimated_fare).toLocaleString('ru-RU')} ₸`
+}
+
+// Способы оплаты для селектора (порядок = порядок в UI). Пока UI-only.
+export const PAYMENT_ORDER: PaymentMethod[] = ['cash', 'card']
+
+export const PAYMENT_META: Record<PaymentMethod, { icon: string, label: string }> = {
+  cash: { icon: 'i-mdi-cash', label: 'Наличные' },
+  card: { icon: 'i-mdi-credit-card-outline', label: 'Карта' },
 }

@@ -2,6 +2,8 @@ export type TripStatus = 'cancelled' | 'completed' | 'driver_arriving' | 'driver
 export const TERMINAL_TRIP_STATUSES = ['cancelled', 'completed'] as const
 export type TripFlowState = 'driver_arriving' | 'driver_assigned' | 'finished' | 'idle' | 'in_progress' | 'route_ready' | 'searching' | 'tariffs'
 export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan'
+// Способ оплаты. Пока UI-only (бэкенд-поля в заказе ещё нет) — по умолчанию наличные.
+export type PaymentMethod = 'card' | 'cash'
 
 export interface EstimateTripPayload {
   category: VehicleCategory
