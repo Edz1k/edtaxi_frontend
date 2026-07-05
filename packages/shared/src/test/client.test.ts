@@ -65,11 +65,37 @@ describe('apiRequest', () => {
     await expect(apiRequest('/otp', { skipAuthRefresh: true })).rejects.toBeInstanceOf(ApiError)
   })
 
-  it('does not attempt a refresh when the 401 is a missing token', async () => {
-    requestMock.mockRejectedValue(axiosError(401, { error: 'missing token' }))
+  // The access cookie can expire (or be dropped) while the refresh cookie is
+  // still valid, in which case the API replies "missing token". We must still
+  // try to refresh — otherwise active web sessions get logged out. For a real
+  // guest the refresh endpoint returns 401 and the session is cleared (covered
+  // by the "signals a session change" test below).
+  it('attempts a refresh when the 401 is a missing token', async () => {
+    requestMock
+      .mockRejectedValueOnce(axiosError(401, { error: 'missing token' }))
+      .mockResolvedValueOnce({ data: { id: 1 } })
+    refreshMock.mockResolvedValue({ data: {} })
+
+    await expect(apiRequest('/me')).resolves.toEqual({ id: 1 })
+    expect(refreshMock).toHaveBeenCalledTimes(1)
+    expect(requestMock).toHaveBeenCalledTimes(2)
+  })
+
+  // Transient refresh failures (network drop, 429, 5xx) must NOT clear the
+  // session — only an explicit 401/403 from the refresh endpoint does.
+  it('keeps the session on a transient refresh failure (no 401/403)', async () => {
+    const win = new EventTarget()
+    const onSessionChanged = vi.fn()
+    win.addEventListener(AUTH_SESSION_CHANGED_EVENT, onSessionChanged)
+    vi.stubGlobal('window', win)
+
+    requestMock.mockRejectedValue(axiosError(401, { error: 'expired' }))
+    refreshMock.mockRejectedValue(axiosError(503, { error: 'service unavailable' }))
 
     await expect(apiRequest('/me')).rejects.toBeInstanceOf(ApiError)
-    expect(refreshMock).not.toHaveBeenCalled()
+    expect(onSessionChanged).not.toHaveBeenCalled()
+
+    vi.unstubAllGlobals()
   })
 
   it('does not attempt a refresh when skipAuthRefresh is set', async () => {
