@@ -2,7 +2,13 @@
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
 
-defineProps<{
+// «Умная подсказка» назначения из истории поездок: место + сколько раз ездил.
+export interface QuickDestination {
+  place: GeoPlace
+  times: number
+}
+
+const props = defineProps<{
   destination: string
   destinationSuggestions: GeoPlace[]
   isLocatingUser: boolean
@@ -10,6 +16,7 @@ defineProps<{
   isSearchingPickup: boolean
   pickup: string
   pickupSuggestions: GeoPlace[]
+  quickDestinations?: QuickDestination[]
 }>()
 
 const emit = defineEmits<{
@@ -22,6 +29,14 @@ const emit = defineEmits<{
   'update:destination': [value: string]
   'update:pickup': [value: string]
 }>()
+
+// Подсказки из истории показываем, пока пользователь не начал вводить адрес и
+// гео-саджест ничего не предлагает — не конкурируем с реальным поиском.
+const showQuickDestinations = computed(() =>
+  Boolean(props.quickDestinations?.length)
+  && props.destination.trim() === ''
+  && props.destinationSuggestions.length === 0,
+)
 </script>
 
 <template>
@@ -134,5 +149,30 @@ const emit = defineEmits<{
       :places="destinationSuggestions"
       @select="emit('selectDestination', $event)"
     />
+
+    <!-- Частые и недавние адреса из истории поездок — быстрый выбор «Куда» -->
+    <div v-if="showQuickDestinations" class="rounded-[1.65rem] bg-white/5 p-2">
+      <p class="px-2 pb-1 pt-1.5 text-[11px] text-slate-500 font-800 uppercase">
+        Недавние и частые
+      </p>
+      <button
+        v-for="item in quickDestinations"
+        :key="item.place.id"
+        class="w-full flex items-center gap-3 rounded-[1.25rem] px-3 py-2.5 text-left transition active:scale-[0.99] hover:bg-white/6"
+        type="button"
+        @click="emit('selectDestination', item.place)"
+      >
+        <span class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-main-200">
+          <span :class="item.times > 2 ? 'i-mdi-star' : 'i-mdi-history'" class="text-4.5" />
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-800">{{ item.place.name }}</span>
+          <span class="block truncate text-xs text-slate-500 font-700">{{ item.place.address }}</span>
+        </span>
+        <span v-if="item.times > 1" class="shrink-0 text-[11px] text-slate-500 font-800">
+          ×{{ item.times }}
+        </span>
+      </button>
+    </div>
   </div>
 </template>
