@@ -40,6 +40,9 @@ export const useTripsStore = defineStore('trips', () => {
   const pickupPlace = ref<GeoPlace | null>(null)
   const destinationPlace = ref<GeoPlace | null>(null)
   const mapPickerMode = ref<MapPickerMode | null>(null)
+  // Сигнал даунбару «после выбора точки с карты/избранного — раскрыть поиск
+  // адреса (2-й экран)», чтобы выбранная точка была на виду, а не терялась.
+  const expandOnReturn = ref(false)
 
   let searchTimer: number | undefined
   let activeTripPollingTimer: number | undefined
@@ -364,6 +367,12 @@ export const useTripsStore = defineStore('trips', () => {
   function confirmMapPicker(place: GeoPlace, mode: MapPickerMode) {
     setPlaceFromPicker(place, mode)
     cancelMapPicker()
+    expandOnReturn.value = true
+  }
+
+  // Выбор точки вне пикера (избранное на карте) — тоже просим раскрыть поиск.
+  function requestExpandSearch() {
+    expandOnReturn.value = true
   }
 
   async function orderTrip(payload: Omit<CreateTripPayload, 'categories' | 'category'>) {
@@ -545,6 +554,8 @@ export const useTripsStore = defineStore('trips', () => {
     cancelMapPicker,
     cheapestSelectedEstimate,
     clearEstimate,
+    expandOnReturn,
+    requestExpandSearch,
     confirmMapPicker,
     errorMessage,
     estimate,

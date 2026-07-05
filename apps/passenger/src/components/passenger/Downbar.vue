@@ -131,14 +131,28 @@ const sheetSnaps = computed<SheetSnap[]>(() => {
   }
 })
 
-const { active, dragging, sheetStyle, snapTo } = useBottomSheet({
+const { active, sheetStyle, snapTo } = useBottomSheet({
   boundsEl,
   contentEl,
   handleEl,
-  // Стартуем на первом экране адреса (Такси + Куда едем + частые адреса).
-  initialSnap: 'half',
+  // Первый экран адреса; но если вернулись с карты/избранного — сразу поиск.
+  initialSnap: trips.expandOnReturn ? 'full' : 'half',
   sheetEl,
   snaps: sheetSnaps,
+})
+
+// Выбор точки с карты/избранного → раскрываем поиск адреса (2-й экран).
+// Пик размонтирует даунбар (remount закрывает initialSnap выше); этот watch —
+// для избранного, которое выбирается без размонтирования.
+watch(() => trips.expandOnReturn, (want) => {
+  if (!want)
+    return
+  trips.expandOnReturn = false
+  nextTick(() => snapTo('full'))
+})
+onMounted(() => {
+  if (trips.expandOnReturn)
+    trips.expandOnReturn = false
 })
 
 // Полный поиск адреса открыт: шторка на full в состоянии адреса. Первый экран
@@ -205,19 +219,18 @@ function onHandleKeydown(event: KeyboardEvent) {
   >
     <div
       ref="sheetEl"
-      class="will-change-[height] pointer-events-auto mx-auto max-w-sm w-full flex flex-col overflow-hidden border border-white/10 rounded-[2rem] text-white shadow-[0_-18px_54px_rgba(0,0,0,0.34)]"
-      :class="dragging ? 'bg-secondary-950/95' : 'bg-secondary-950/82 backdrop-blur-2xl'"
+      class="will-change-[height] pointer-events-auto mx-auto max-w-sm w-full flex flex-col overflow-hidden border border-white/10 rounded-[2rem] bg-secondary-950/82 text-white shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
       :style="sheetStyle"
     >
       <div
         ref="handleEl"
         aria-label="Потяните, чтобы развернуть или свернуть панель"
-        class="shrink-0 cursor-grab touch-none select-none px-3 pb-1.5 pt-2.5 active:cursor-grabbing"
+        class="shrink-0 cursor-grab touch-none select-none px-3 pb-3 pt-4 active:cursor-grabbing"
         role="button"
         tabindex="0"
         @keydown="onHandleKeydown"
       >
-        <div class="mx-auto h-1 w-10 rounded-full bg-white/14" />
+        <div class="mx-auto h-1.5 w-12 rounded-full bg-white/25" />
       </div>
 
       <div class="relative min-h-0 flex-1">

@@ -38,6 +38,21 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
+// Логарифмическое сопротивление за пределами снапов («резина», приём из vaul):
+// тянуть за границу можно, но чем дальше — тем туже; после отпускания шторка
+// пружинит обратно к ближайшему снапу. Даёт «живой» drag вместо жёсткого стопа.
+function resist(overshoot: number): number {
+  return 10 * Math.log10(1 + Math.max(0, overshoot))
+}
+
+function withResistance(raw: number, min: number, max: number): number {
+  if (raw < min)
+    return min - resist(min - raw)
+  if (raw > max)
+    return max + resist(raw - max)
+  return raw
+}
+
 export function useBottomSheet(options: UseBottomSheetOptions) {
   const reducedMotion = usePreferredReducedMotion()
 
@@ -172,7 +187,7 @@ export function useBottomSheet(options: UseBottomSheetOptions) {
       return
     const delta = startPointerY - event.clientY
     moved = Math.max(moved, Math.abs(delta))
-    height.value = clamp(startHeight + delta, minVisible(), maxVisible())
+    height.value = withResistance(startHeight + delta, minVisible(), maxVisible())
     samples.push({ t: event.timeStamp, y: height.value })
     if (samples.length > 6)
       samples.shift()
@@ -197,7 +212,7 @@ export function useBottomSheet(options: UseBottomSheetOptions) {
   const sheetStyle = computed(() => ({
     height: `${Math.round(height.value)}px`,
     transition: !dragging.value && transitioning.value && reducedMotion.value !== 'reduce'
-      ? `height ${SETTLE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`
+      ? `height ${SETTLE_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`
       : 'none',
   }))
 
