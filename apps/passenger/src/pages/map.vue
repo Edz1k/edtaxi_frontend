@@ -28,6 +28,8 @@ watch(activeTripId, (id) => {
 
 function selectFavoritePlace(place: GeoPlace) {
   trips.setDestinationPlace(place)
+  // Раскрываем поиск адреса (2-й экран), чтобы выбранное было на виду.
+  trips.requestExpandSearch()
 }
 
 const {

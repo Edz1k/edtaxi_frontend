@@ -272,8 +272,9 @@ async function shareTrip() {
 </script>
 
 <template>
-  <div class="pb-4 text-center">
-    <!-- Радар: пока ищем — от иконки расходятся пульсирующие кольца -->
+  <div class="pb-4 pt-7 text-center">
+    <!-- Радар: пока ищем — от иконки расходятся пульсирующие кольца.
+         pt-7 сверху + умеренный масштаб колец, чтобы пульс не срезался краем шторки. -->
     <div class="relative mx-auto h-22 w-22">
       <template v-if="isSearchingStatus">
         <span class="sonar-ring absolute inset-0 rounded-full bg-main-500/14" aria-hidden="true" />
@@ -429,11 +430,11 @@ async function shareTrip() {
 @keyframes sonar {
   from {
     opacity: 0.9;
-    transform: scale(0.55);
+    transform: scale(0.65);
   }
   to {
     opacity: 0;
-    transform: scale(1.9);
+    transform: scale(1.55);
   }
 }
 
