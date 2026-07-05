@@ -52,6 +52,8 @@ export interface TripDriver {
 }
 
 export interface Trip {
+  // Момент прибытия водителя — точка отсчёта бесплатного ожидания.
+  arrived_at?: null | string
   cancelled_at?: null | string
   cancelled_by?: null | string
   categories?: VehicleCategory[]
@@ -77,6 +79,11 @@ export interface Trip {
   started_at?: null | string
   status: TripStatus
   surge_multiplier: number
+  // Надбавка за платное ожидание (в final_fare) и правила её расчёта —
+  // фронт строит таймер/тексты по этим значениям, а не по константам.
+  waiting_fee?: number
+  waiting_free_minutes?: number
+  waiting_per_minute_fee?: number
 }
 
 export interface TripHistoryResponse {

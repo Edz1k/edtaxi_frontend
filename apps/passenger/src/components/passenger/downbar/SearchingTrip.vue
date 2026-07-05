@@ -4,6 +4,7 @@ import { mediaUrl } from '~/api/client'
 import { shareTripLink } from '~/api/share'
 import { formatFare, TARIFF_META } from '~/constants/tariffs'
 import { usePlacesStore } from '~/stores/places'
+import { useTripChatStore } from '~/stores/tripChat'
 
 const props = defineProps<{
   activeTrip: null | Trip
@@ -15,10 +16,90 @@ const props = defineProps<{
   selectedEstimate: EstimateTripResponse | null
 }>()
 
+const router = useRouter()
 const places = usePlacesStore()
+const tripChat = useTripChatStore()
 const isFavoriteSaved = ref(false)
 
 const isCompleted = computed(() => props.activeTrip?.status === 'completed')
+
+// Чат доступен, пока поездка активна (водитель назначен и до завершения).
+const isChatAvailable = computed(() => {
+  const status = props.activeTrip?.status
+  return status === 'driver_assigned' || status === 'driver_arriving' || status === 'in_progress'
+})
+const isDriverArrived = computed(() => props.activeTrip?.status === 'driver_arriving')
+
+function openChat() {
+  router.push('/trip-chat')
+}
+
+// «Уже выхожу» — быстрый ответ водителю с табло: сообщение уходит в чат
+// поездки, и мы открываем сам чат.
+const isSendingOnMyWay = ref(false)
+async function sendOnMyWay() {
+  const trip = props.activeTrip
+  if (!trip || isSendingOnMyWay.value)
+    return
+  isSendingOnMyWay.value = true
+  try {
+    await tripChat.sendQuickMessage(trip.id, 'Уже выхожу 🚶')
+  }
+  catch {}
+  finally {
+    isSendingOnMyWay.value = false
+  }
+  await router.push('/trip-chat')
+}
+
+// Платное ожидание: тикающий таймер от arrived_at. Правила (бесплатные минуты
+// и цена минуты) приходят с бэка в объекте поездки.
+const nowTick = ref(Date.now())
+let waitTimer: number | undefined
+watch(isDriverArrived, (arrived) => {
+  if (arrived && waitTimer === undefined) {
+    waitTimer = window.setInterval(() => {
+      nowTick.value = Date.now()
+    }, 1000)
+  }
+  else if (!arrived && waitTimer !== undefined) {
+    window.clearInterval(waitTimer)
+    waitTimer = undefined
+  }
+}, { immediate: true })
+onBeforeUnmount(() => {
+  if (waitTimer !== undefined)
+    window.clearInterval(waitTimer)
+})
+
+const waitingInfo = computed(() => {
+  const trip = props.activeTrip
+  if (!trip || !isDriverArrived.value || !trip.arrived_at)
+    return null
+
+  const freeMinutes = trip.waiting_free_minutes ?? 3
+  const perMinute = trip.waiting_per_minute_fee ?? 100
+  const waitedSec = Math.max(0, Math.floor((nowTick.value - new Date(trip.arrived_at).getTime()) / 1000))
+  const freeLeftSec = freeMinutes * 60 - waitedSec
+
+  if (freeLeftSec > 0) {
+    const mm = Math.floor(freeLeftSec / 60)
+    const ss = String(freeLeftSec % 60).padStart(2, '0')
+    return {
+      accent: false,
+      text: `Бесплатное ожидание: ещё ${mm}:${ss}. Дальше +${perMinute} ₸ за минуту.`,
+    }
+  }
+
+  const paidMinutes = Math.floor(-freeLeftSec / 60)
+  const fee = paidMinutes * perMinute
+  return {
+    accent: true,
+    text: fee > 0
+      ? `Платное ожидание: +${fee.toLocaleString('ru-RU')} ₸ (${paidMinutes} мин по ${perMinute} ₸).`
+      : `Бесплатные ${freeMinutes} мин истекли — дальше +${perMinute} ₸ за минуту.`,
+  }
+})
 
 // Уже ли это место среди избранных (по близким координатам) — чтобы не
 // предлагать сохранить то, что уже сохранено.
@@ -233,6 +314,47 @@ async function shareTrip() {
       >
         <span class="i-mdi-phone text-5" />
       </a>
+    </div>
+
+    <!-- Платное ожидание: таймер после прибытия водителя -->
+    <div
+      v-if="waitingInfo"
+      class="mt-3 rounded-2xl px-4 py-3 text-left"
+      :class="waitingInfo.accent ? 'bg-amber-500/12' : 'bg-white/5'"
+    >
+      <p class="text-xs font-800 leading-5" :class="waitingInfo.accent ? 'text-amber-200' : 'text-slate-300'">
+        <span class="i-mdi-timer-sand mr-1 inline-block align-middle text-4" />
+        {{ waitingInfo.text }}
+      </p>
+    </div>
+
+    <!-- Кнопки активной поездки: чат с водителем и «Уже выхожу» -->
+    <div v-if="isChatAvailable" class="mt-3 space-y-2">
+      <button
+        v-if="isDriverArrived"
+        :disabled="isSendingOnMyWay"
+        class="h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.98] disabled:opacity-60"
+        type="button"
+        @click="sendOnMyWay"
+      >
+        <span class="i-mdi-run-fast text-5" />
+        {{ isSendingOnMyWay ? 'Отправляем...' : 'Уже выхожу' }}
+      </button>
+
+      <button
+        class="relative h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98]"
+        type="button"
+        @click="openChat"
+      >
+        <span class="i-mdi-message-text text-5" />
+        Чат с водителем
+        <span
+          v-if="tripChat.unreadCount"
+          class="absolute right-3 min-w-5 flex items-center justify-center rounded-full bg-main-500 px-1.5 py-0.5 text-[11px] text-white font-900"
+        >
+          {{ tripChat.unreadCount }}
+        </span>
+      </button>
     </div>
 
     <label

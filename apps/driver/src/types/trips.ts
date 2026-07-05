@@ -3,6 +3,8 @@ export const TERMINAL_TRIP_STATUSES = ['cancelled', 'completed'] as const
 export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan'
 
 export interface Trip {
+  // Момент прибытия к пассажиру — точка отсчёта бесплатного ожидания.
+  arrived_at?: null | string
   cancelled_at?: null | string
   cancelled_by?: null | string
   // category — тариф поездки; до принятия водителем это заглушка,
@@ -28,6 +30,10 @@ export interface Trip {
   started_at?: null | string
   status: TripStatus
   surge_multiplier: number
+  // Надбавка за платное ожидание (в final_fare) и правила её расчёта.
+  waiting_fee?: number
+  waiting_free_minutes?: number
+  waiting_per_minute_fee?: number
 }
 
 export interface ActiveTripResponse {

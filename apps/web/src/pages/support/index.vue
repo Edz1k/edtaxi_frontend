@@ -156,6 +156,13 @@ function assignmentClass(room: SupportRoom) {
         <span class="i-mdi-shield-car text-5 text-cyan-200" aria-hidden="true" />
         Верификация
       </RouterLink>
+      <RouterLink
+        class="h-10 inline-flex items-center gap-2 border border-white/12 rounded-lg bg-white/7 px-3 text-sm font-900 transition hover:bg-white/12"
+        to="/support/trip-chats"
+      >
+        <span class="i-mdi-message-text-outline text-5 text-cyan-200" aria-hidden="true" />
+        Чаты поездок
+      </RouterLink>
       <AppSelectDropdown v-model="participantFilter" label="Тип" :options="participantTypes" />
       <AppSelectDropdown v-model="statusFilter" label="Статус" :options="statuses" />
     </template>

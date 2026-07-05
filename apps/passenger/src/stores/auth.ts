@@ -3,6 +3,7 @@ import { acceptHMRUpdate } from 'pinia'
 import { getAuthSession, linkTelegramPhone, logout, sendDriverAuthOtp, sendLinkPhoneOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyLinkPhoneOtp, verifyOtp, verifyTelegramPassenger } from '~/api/auth'
 import { usePassengerStore } from '~/stores/passenger'
 import { useSupportStore } from '~/stores/support'
+import { useTripChatStore } from '~/stores/tripChat'
 import { useTripsStore } from '~/stores/trips'
 import { useWalletStore } from '~/stores/wallet'
 
@@ -27,6 +28,7 @@ export const useAuthStore = createAuthStore({
     useTripsStore().resetTripState()
     useWalletStore().clearWalletState()
     useSupportStore().clearSupportState()
+    useTripChatStore().clearTripChatState()
   },
   savedAccountsKey: SAVED_ACCOUNTS_KEY,
 })

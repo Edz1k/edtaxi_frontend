@@ -199,6 +199,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/support/trip-chats': RouteRecordInfo<
+      '/support/trip-chats',
+      '/support/trip-chats',
+      Record<never, never>,
+      Record<never, never>,
+      | '/support/trip-chats/[id]'
+    >,
+    '/support/trip-chats/[id]': RouteRecordInfo<
+      '/support/trip-chats/[id]',
+      '/support/trip-chats/:id',
+      { id: ParamValue<true> },
+      { id: ParamValue<false> },
+      | never
+    >,
     '/support/verifications': RouteRecordInfo<
       '/support/verifications',
       '/support/verifications',
@@ -410,6 +424,23 @@ declare module 'vue-router/auto-routes' {
         | never
       pathParamNames:
         | never
+    }
+    'src/pages/support/trip-chats.vue': {
+      routes:
+        | '/support/trip-chats'
+        | '/support/trip-chats/[id]'
+      views:
+        | 'default'
+      pathParamNames:
+        | never
+    }
+    'src/pages/support/trip-chats/[id].vue': {
+      routes:
+        | '/support/trip-chats/[id]'
+      views:
+        | never
+      pathParamNames:
+        | 'id'
     }
     'src/pages/support/verifications.vue': {
       routes:
