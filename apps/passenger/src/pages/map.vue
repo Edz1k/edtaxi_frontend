@@ -95,7 +95,7 @@ async function setPickupFromCurrentLocation() {
 </script>
 
 <template>
-  <div class="tg-viewport-screen relative overflow-hidden bg-bg">
+  <div class="tg-viewport-screen relative overflow-hidden bg-secondary-900">
     <LocationGate />
 
     <!-- Город и адрес текущей точки — аккуратной плашкой сверху карты,
@@ -104,7 +104,7 @@ async function setPickupFromCurrentLocation() {
       <div class="relative flex justify-center">
         <div
           v-if="locationLine"
-          class="max-w-[68%] truncate rounded-full bg-surface-strong/82 px-4 py-2 text-xs text-body font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+          class="max-w-[68%] truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
         >
           <span class="i-mdi-map-marker mr-1 inline-block align-middle text-3.5 text-main-300" />
           {{ locationLine }}
@@ -113,7 +113,7 @@ async function setPickupFromCurrentLocation() {
         <RouterLink
           v-if="bonusBalance !== null"
           aria-label="Бонусы"
-          class="pointer-events-auto absolute right-0 top-0 flex items-center gap-1 rounded-full bg-surface-strong/82 px-3 py-2 text-xs text-body font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
+          class="pointer-events-auto absolute right-0 top-0 flex items-center gap-1 rounded-full bg-secondary-950/82 px-3 py-2 text-xs text-white font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
           to="/bonus"
         >
           <span class="i-mdi-star-four-points text-3.5 text-main-300" />

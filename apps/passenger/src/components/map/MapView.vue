@@ -3,8 +3,7 @@ import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserL
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
-import { isDark } from '@edtaxi/shared/composables/dark'
-import { mapStyleForTheme, useMapboxMap } from '@edtaxi/shared/composables/mapbox/useMapboxMap'
+import { useMapboxMap } from '@edtaxi/shared/composables/mapbox/useMapboxMap'
 import { useMapboxPicker } from '@edtaxi/shared/composables/mapbox/useMapboxPicker'
 import { useMapboxRoute } from '@edtaxi/shared/composables/mapbox/useMapboxRoute'
 import { loadCachedLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
@@ -73,7 +72,6 @@ const {
 
 const {
   clearRoute,
-  reapplyRoute,
   showTripRoute,
 } = useMapboxRoute({
   destinationPlace: computed(() => props.destinationPlace),
@@ -253,20 +251,6 @@ watch(
   },
 )
 
-// Смена темы → переключаем стиль карты. setStyle стирает source/layer маршрута
-// (DOM-метки переживают смену стиля сами), поэтому линию восстанавливаем после
-// загрузки нового стиля, не двигая камеру.
-watch(isDark, (dark) => {
-  if (!map.value)
-    return
-
-  map.value.setStyle(mapStyleForTheme(dark))
-  map.value.once('style.load', () => {
-    if (hasRoute.value && !isPickingLocation.value)
-      reapplyRoute()
-  })
-})
-
 onMounted(async () => {
   const cachedCenter = loadCachedLocation()
 
@@ -323,7 +307,7 @@ onBeforeUnmount(() => {
 
     <div
       v-if="mapError"
-      class="absolute inset-0 flex items-center justify-center bg-surface-strong px-8 text-center text-sm text-body/70 font-800"
+      class="absolute inset-0 flex items-center justify-center bg-secondary-950 px-8 text-center text-sm text-slate-300 font-800"
     >
       {{ mapError }}
     </div>

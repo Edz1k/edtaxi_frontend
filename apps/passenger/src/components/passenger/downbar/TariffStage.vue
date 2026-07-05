@@ -30,13 +30,13 @@ function isSelected(category: VehicleCategory) {
 <template>
   <div class="space-y-3">
     <!-- Маршрут -->
-    <div class="flex items-center gap-3 rounded-[1.65rem] bg-surface/5 p-3">
+    <div class="flex items-center gap-3 rounded-[1.65rem] bg-white/5 p-3">
       <div class="min-w-0 flex-1 space-y-2">
-        <p class="flex items-center gap-2 text-sm text-body font-900">
+        <p class="flex items-center gap-2 text-sm text-white font-900">
           <span class="i-mdi-near-me shrink-0 text-4.5 text-main-300" aria-hidden="true" />
           <span class="truncate">{{ trips.pickup }}</span>
         </p>
-        <p class="flex items-center gap-2 text-sm text-body font-900">
+        <p class="flex items-center gap-2 text-sm text-white font-900">
           <span class="i-mdi-flag-checkered shrink-0 text-4.5 text-main-300" aria-hidden="true" />
           <span class="truncate">{{ trips.destination }}</span>
         </p>
@@ -44,7 +44,7 @@ function isSelected(category: VehicleCategory) {
 
       <button
         aria-label="Изменить маршрут"
-        class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-surface/8 text-body transition active:scale-95 hover:bg-surface/12"
+        class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-white transition active:scale-95 hover:bg-white/12"
         type="button"
         @click="emit('editRoute')"
       >
@@ -69,7 +69,7 @@ function isSelected(category: VehicleCategory) {
           class="w-27 flex shrink-0 flex-col snap-center items-center gap-1.5 border rounded-2xl px-3 py-3 transition active:scale-[0.97]"
           :class="isSelected(tariff.category)
             ? 'border-main-400 bg-main-500/16 shadow-[0_14px_34px_rgba(230,173,46,0.18)]'
-            : 'border-border/8 bg-surface/5'"
+            : 'border-white/8 bg-white/5'"
           role="radio"
           :aria-checked="isSelected(tariff.category)"
           type="button"
@@ -77,34 +77,34 @@ function isSelected(category: VehicleCategory) {
         >
           <span
             class="h-12 w-12 flex items-center justify-center rounded-2xl transition"
-            :class="isSelected(tariff.category) ? 'bg-main-500/22 text-main-200' : 'bg-surface/8 text-body'"
+            :class="isSelected(tariff.category) ? 'bg-main-500/22 text-main-200' : 'bg-white/8 text-white'"
           >
             <span :class="TARIFF_META[tariff.category].icon" class="text-6.5" aria-hidden="true" />
           </span>
-          <span class="text-sm text-body font-900">
+          <span class="text-sm text-white font-900">
             {{ TARIFF_META[tariff.category].label }}
           </span>
-          <span class="text-sm text-body font-950">
+          <span class="text-sm text-white font-950">
             {{ formatFare(tariff) }}
           </span>
         </button>
       </div>
 
-      <p class="mt-1.5 truncate px-1 text-[11px] text-muted font-700">
+      <p class="mt-1.5 truncate px-1 text-[11px] text-slate-400 font-700">
         {{ TARIFF_META[trips.selectedCategory].caption }}
       </p>
     </div>
 
     <!-- Способ оплаты (пока UI-only) -->
-    <div class="flex items-center gap-1 rounded-[1.65rem] bg-surface/5 p-1.5">
-      <span class="shrink-0 pl-2 pr-1 text-[11px] text-muted font-800 uppercase">
+    <div class="flex items-center gap-1 rounded-[1.65rem] bg-white/5 p-1.5">
+      <span class="shrink-0 pl-2 pr-1 text-[11px] text-slate-400 font-800 uppercase">
         Оплата
       </span>
       <button
         v-for="method in PAYMENT_ORDER"
         :key="method"
         class="h-10 flex flex-1 items-center justify-center gap-1.5 rounded-[1.3rem] text-sm font-900 transition active:scale-[0.98]"
-        :class="trips.paymentMethod === method ? 'bg-surface/12 text-body' : 'text-muted hover:text-body'"
+        :class="trips.paymentMethod === method ? 'bg-white/12 text-white' : 'text-slate-400 hover:text-white'"
         :aria-pressed="trips.paymentMethod === method"
         type="button"
         @click="trips.setPaymentMethod(method)"

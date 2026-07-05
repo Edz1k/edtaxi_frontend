@@ -202,19 +202,8 @@ export function useMapboxRoute(options: UseMapboxRouteOptions) {
     fitRoute()
   }
 
-  // Восстанавливает линию и метки маршрута БЕЗ переезда камеры — нужно после
-  // смены стиля карты (setStyle стирает source/layer, но не двигает камеру).
-  function reapplyRoute() {
-    if (!options.map.value || !options.hasRoute.value)
-      return
-
-    renderRoute()
-    renderRouteMarkers()
-  }
-
   return {
     clearRoute,
-    reapplyRoute,
     showTripRoute,
   }
 }

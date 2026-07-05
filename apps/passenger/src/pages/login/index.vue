@@ -64,7 +64,7 @@ async function submitPhone() {
   >
     <template v-if="hasSavedAccounts" #before>
       <button
-        class="mb-8 h-11 w-11 flex items-center justify-center border border-border/10 rounded-2xl bg-surface/5 text-body/80 transition active:scale-[0.96]"
+        class="mb-8 h-11 w-11 flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-slate-300 transition active:scale-[0.96]"
         type="button"
         @click="router.replace('/login/accounts')"
       >

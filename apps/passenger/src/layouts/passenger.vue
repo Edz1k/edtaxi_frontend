@@ -36,7 +36,7 @@ function goToPassengerMenu() {
 </script>
 
 <template>
-  <div class="tg-viewport-screen relative overflow-hidden bg-bg text-body">
+  <div class="tg-viewport-screen relative overflow-hidden bg-secondary-900 text-white">
     <main class="relative z-0 h-full">
       <RouterView />
     </main>
