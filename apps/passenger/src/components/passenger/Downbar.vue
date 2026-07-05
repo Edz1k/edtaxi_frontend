@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
+import type { QuickDestination } from '~/components/passenger/downbar/AddressForm.vue'
+import { getDestinationSuggestions } from '~/api/trips'
 import AddressForm from '~/components/passenger/downbar/AddressForm.vue'
 import SearchingTrip from '~/components/passenger/downbar/SearchingTrip.vue'
 import TariffList from '~/components/passenger/downbar/TariffList.vue'
@@ -64,6 +66,28 @@ const downbarViews = {
   tariffs: markRaw(TariffList),
 }
 
+// «Умные подсказки» для поля «Куда»: частые и недавние адреса из истории
+// поездок пользователя (бэкенд ранжирует). Загружаем один раз; выбор
+// подсказки идёт тем же путём, что и выбор из гео-саджеста.
+const quickDestinations = ref<QuickDestination[]>([])
+
+onMounted(() => {
+  getDestinationSuggestions()
+    .then((response) => {
+      quickDestinations.value = response.suggestions.map(s => ({
+        place: {
+          id: `history:${s.lat.toFixed(5)}:${s.lng.toFixed(5)}`,
+          name: s.address.split(',')[0]?.trim() || s.address,
+          address: s.address,
+          lat: s.lat,
+          lng: s.lng,
+        },
+        times: s.times,
+      }))
+    })
+    .catch(() => {}) // истории может не быть — блок просто не показываем
+})
+
 const isActiveTripFinished = computed(() => {
   return trips.activeTrip?.status === 'cancelled' || trips.activeTrip?.status === 'completed'
 })
@@ -108,6 +132,7 @@ const activeDownbarProps = computed(() => {
     isSearchingPickup: isSearchingPickup.value,
     pickup: pickup.value,
     pickupSuggestions: pickupSuggestions.value,
+    quickDestinations: quickDestinations.value,
   }
 })
 

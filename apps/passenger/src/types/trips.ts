@@ -96,6 +96,19 @@ export interface ActiveTripResponse {
   trip: null | Trip
 }
 
+// «Умная подсказка» адреса назначения из истории поездок.
+export interface DestinationSuggestion {
+  address: string
+  last_used: string
+  lat: number
+  lng: number
+  times: number
+}
+
+export interface DestinationSuggestionsResponse {
+  suggestions: DestinationSuggestion[]
+}
+
 export interface RateTripPayload {
   comment?: string
   score: number

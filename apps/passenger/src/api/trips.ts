@@ -1,4 +1,4 @@
-import type { ActiveTripResponse, CreateTripPayload, EstimateTripPayload, EstimateTripResponse, FileTripComplaintPayload, FileTripComplaintResponse, RateTripPayload, Trip, TripHistoryResponse } from '~/types/trips'
+import type { ActiveTripResponse, CreateTripPayload, DestinationSuggestionsResponse, EstimateTripPayload, EstimateTripResponse, FileTripComplaintPayload, FileTripComplaintResponse, RateTripPayload, Trip, TripHistoryResponse } from '~/types/trips'
 import { apiRequest } from '~/api/client'
 
 export function estimateTrip(payload: EstimateTripPayload) {
@@ -22,6 +22,12 @@ export function getTrip(id: string) {
 export async function getActiveTrip() {
   const response = await apiRequest<ActiveTripResponse>('/trips/active')
   return response.trip
+}
+
+// «Умные подсказки» для поля «Куда»: частые и недавние адреса назначения
+// из истории завершённых поездок (ранжирует бэкенд).
+export function getDestinationSuggestions() {
+  return apiRequest<DestinationSuggestionsResponse>('/trips/suggestions')
 }
 
 export function getTripHistory(limit = 20, offset = 0) {
