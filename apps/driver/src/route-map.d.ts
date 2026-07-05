@@ -115,13 +115,6 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    '/menu/park-invite': RouteRecordInfo<
-      '/menu/park-invite',
-      '/menu/park-invite',
-      Record<never, never>,
-      Record<never, never>,
-      | never
-    >,
     '/menu/parks': RouteRecordInfo<
       '/menu/parks',
       '/menu/parks',
@@ -303,14 +296,6 @@ declare module 'vue-router/auto-routes' {
     'src/pages/menu/park-chat.vue': {
       routes:
         | '/menu/park-chat'
-      views:
-        | never
-      pathParamNames:
-        | never
-    }
-    'src/pages/menu/park-invite.vue': {
-      routes:
-        | '/menu/park-invite'
       views:
         | never
       pathParamNames:

@@ -11,8 +11,10 @@ import {
   listAvailableParks,
 } from '~/api/park'
 import { useToast } from '~/composables/useToast'
+import { useDriverStore } from '~/stores/driver'
 
 const toast = useToast()
+const driver = useDriverStore()
 
 const parks = ref<AvailablePark[]>([])
 const myRequest = ref<null | ParkJoinRequest>(null)
@@ -28,6 +30,10 @@ const isApplying = ref(false)
 const expandedParkId = ref('')
 const parkDetails = ref<Record<string, ParkInfo>>({})
 const isLoadingDetails = ref(false)
+
+// Код приглашения от владельца парка — прямое вступление без заявки
+// (бывшая отдельная страница /menu/park-invite, объединена сюда).
+const inviteToken = ref('')
 
 definePage({
   meta: {
@@ -131,6 +137,19 @@ async function apply(id: string) {
   }
 }
 
+async function acceptInvite() {
+  await driver.acceptParkInvite(inviteToken.value.trim())
+  inviteToken.value = ''
+  toast.success('Готово', 'Вы присоединились к таксопарку.')
+  // Обновляем членство, чтобы страница сразу показала «Вы состоите в таксопарке»
+  try {
+    parkId.value = (await getDriverOverview()).driver.park_id
+  }
+  catch {
+    // не критично: статус подтянется при следующем открытии страницы
+  }
+}
+
 async function applyPlatform() {
   if (isApplying.value)
     return
@@ -190,6 +209,29 @@ async function applyPlatform() {
             Заявка отправлена в {{ pendingRequest.park_name || 'таксопарк' }}, ждём одобрения парка.
           </p>
         </div>
+
+        <!-- Код приглашения: прямое вступление, если владелец парка выдал token -->
+        <form v-if="!hasPark" class="mt-6 rounded-3xl bg-white/5 p-4" @submit.prevent="acceptInvite">
+          <label class="text-xs text-slate-400 font-800 uppercase" for="park-token">
+            Код приглашения
+          </label>
+          <p class="mt-1 text-xs text-slate-500 leading-4">
+            Если владелец парка выдал вам код, введите его и вступите без заявки.
+          </p>
+          <input
+            id="park-token"
+            v-model="inviteToken"
+            class="mt-2 h-13 w-full border border-white/10 rounded-2xl bg-secondary-950/70 px-4 text-sm outline-none focus:border-main-400"
+            placeholder="Введите код"
+          >
+          <button
+            :disabled="driver.isLoadingParkInvite || !inviteToken.trim()"
+            class="mt-3 h-13 w-full rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
+            type="submit"
+          >
+            {{ driver.isLoadingParkInvite ? 'Проверяем...' : 'Присоединиться' }}
+          </button>
+        </form>
 
         <!-- Список парков -->
         <section class="mt-6">
