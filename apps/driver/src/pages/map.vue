@@ -13,6 +13,7 @@ import RatePassengerModal from '~/components/driver/RatePassengerModal.vue'
 import VerificationReminderBanner from '~/components/driver/VerificationReminderBanner.vue'
 import { useDriverTrackingSocket } from '~/composables/driver/useDriverTrackingSocket'
 import { useOfferRoute } from '~/composables/driver/useOfferRoute'
+import { useOrderSound } from '~/composables/driver/useOrderSound'
 import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
@@ -21,6 +22,10 @@ import { offerToPlace } from '~/utils/geoPlace'
 const driver = useDriverStore()
 const onboarding = useDriverOnboardingStore()
 const tracking = useDriverTrackingSocket()
+
+// Мелодия входящего заказа: играет, пока показывается оффер (управляется
+// тумблером «Мелодия заказа» в личном кабинете).
+useOrderSound()
 
 // Push-канал для сообщений чата поездки: бейдж «Чат с пассажиром» обновляется,
 // пока водитель смотрит на карту.
