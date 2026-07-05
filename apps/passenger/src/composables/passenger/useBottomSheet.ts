@@ -86,10 +86,12 @@ export function useBottomSheet(options: UseBottomSheetOptions) {
 
   function snapTo(snap: SheetSnap, { animate = true }: { animate?: boolean } = {}) {
     const target = resolveSnap(snap)
+    const next = visibleFor(target)
     active.value = target
-    if (animate && reducedMotion.value !== 'reduce')
-      transitioning.value = true
-    height.value = visibleFor(target)
+    // Анимируем доводку только когда высота реально меняется: иначе transitionend
+    // не придёт и флаг завис бы true, ломая мгновенное отслеживание размеров.
+    transitioning.value = animate && reducedMotion.value !== 'reduce' && next !== height.value
+    height.value = next
   }
 
   // Пока не тащим — держим высоту синхронной с активным снапом и размерами:
