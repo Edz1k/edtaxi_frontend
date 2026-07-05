@@ -172,11 +172,12 @@ const sheetSnaps = computed<SheetSnap[]>(() => {
   }
 })
 
-const { dragging, sheetStyle, snapTo } = useBottomSheet({
+const { active, dragging, sheetStyle, snapTo } = useBottomSheet({
   boundsEl,
   contentEl,
   handleEl,
-  initialSnap: 'half',
+  // Стартуем свёрнутыми: в состоянии адреса peek показывает кнопку «Куда едем?».
+  initialSnap: 'peek',
   sheetEl,
   snaps: sheetSnaps,
 })
@@ -226,52 +227,80 @@ function onHandleKeydown(event: KeyboardEvent) {
         <div class="mx-auto h-1 w-10 rounded-full bg-white/14" />
       </div>
 
-      <div class="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
-        <div ref="contentEl">
-          <component
-            :is="activeDownbarView"
-            v-bind="activeDownbarProps"
-            @edit-route="trips.clearEstimate"
-            @locate-user="emit('locateUser')"
-            @pick-from-map="emit('pickFromMap', $event)"
-            @search-destination="expandForInput(searchDestination)"
-            @search-pickup="expandForInput(searchPickup)"
-            @toggle-category="trips.toggleCategory"
-            @select-destination="selectDestination"
-            @select-pickup="selectPickup"
-            @update:destination="destination = $event"
-            @update:pickup="pickup = $event"
-          />
+      <div class="relative min-h-0 flex-1">
+        <!-- Форму прячем (но оставляем в потоке для замера высоты half), пока
+             показываем свёрнутую кнопку — иначе её текст просвечивает сквозь CTA. -->
+        <div
+          class="h-full overflow-y-auto px-3 pb-3"
+          :class="{ invisible: active === 'peek' && sheetState === 'address' }"
+        >
+          <div ref="contentEl">
+            <component
+              :is="activeDownbarView"
+              v-bind="activeDownbarProps"
+              @edit-route="trips.clearEstimate"
+              @locate-user="emit('locateUser')"
+              @pick-from-map="emit('pickFromMap', $event)"
+              @search-destination="expandForInput(searchDestination)"
+              @search-pickup="expandForInput(searchPickup)"
+              @toggle-category="trips.toggleCategory"
+              @select-destination="selectDestination"
+              @select-pickup="selectPickup"
+              @update:destination="destination = $event"
+              @update:pickup="pickup = $event"
+            />
 
-          <button
-            v-if="!isSearching"
-            :disabled="!canSubmit || isBusy"
-            class="mt-3 h-13 w-full rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-600 disabled:shadow-none"
-            type="button"
-            @click="submitTrip"
-          >
-            {{ primaryText }}
-          </button>
+            <button
+              v-if="!isSearching"
+              :disabled="!canSubmit || isBusy"
+              class="mt-3 h-13 w-full rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-600 disabled:shadow-none"
+              type="button"
+              @click="submitTrip"
+            >
+              {{ primaryText }}
+            </button>
 
-          <button
-            v-else-if="isActiveTripFinished"
-            class="mt-3 h-13 w-full rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99]"
-            type="button"
-            @click="startNewTrip"
-          >
-            Новая поездка
-          </button>
+            <button
+              v-else-if="isActiveTripFinished"
+              class="mt-3 h-13 w-full rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99]"
+              type="button"
+              @click="startNewTrip"
+            >
+              Новая поездка
+            </button>
 
-          <button
-            v-else
-            :disabled="trips.isCancelling"
-            class="mt-3 h-13 w-full rounded-[1.35rem] bg-red-500/12 text-sm text-red-300 font-950 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-            type="button"
-            @click="cancelSearch"
-          >
-            {{ trips.isCancelling ? 'Отменяем...' : 'Отменить поиск' }}
-          </button>
+            <button
+              v-else
+              :disabled="trips.isCancelling"
+              class="mt-3 h-13 w-full rounded-[1.35rem] bg-red-500/12 text-sm text-red-300 font-950 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+              type="button"
+              @click="cancelSearch"
+            >
+              {{ trips.isCancelling ? 'Отменяем...' : 'Отменить поиск' }}
+            </button>
+          </div>
         </div>
+
+        <!-- Свёрнутое состояние адреса: единая кнопка «Куда едем?» вместо торчащей
+             формы (точка А уже задана). Тап раскрывает шторку с полями A/B,
+             свайп вниз по шторке возвращает сюда. -->
+        <button
+          v-show="active === 'peek' && sheetState === 'address'"
+          class="absolute inset-0 flex items-center justify-between gap-3 rounded-b-[2rem] bg-secondary-950/92 px-5 text-left backdrop-blur-2xl transition active:scale-[0.99]"
+          type="button"
+          @click="snapTo('half')"
+        >
+          <span class="min-w-0 flex items-center gap-3">
+            <span class="i-mdi-map-marker-path shrink-0 text-6 text-main-300" aria-hidden="true" />
+            <span class="min-w-0">
+              <span class="block text-lg font-950 leading-tight">Куда едем?</span>
+              <span class="block truncate text-xs text-white/45 font-800">
+                От: {{ pickup || 'Моё местоположение' }}
+              </span>
+            </span>
+          </span>
+          <span class="i-mdi-chevron-up shrink-0 text-6 text-white/40" aria-hidden="true" />
+        </button>
       </div>
     </div>
   </section>
