@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AdminAssignableRole, AdminUser, AdminUserRole } from '~/types/admin'
+import type { AdminAssignableRole, AdminCityStat, AdminUser, AdminUserRole } from '~/types/admin'
 import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from 'reka-ui'
+import { getAdminCities, getAdminCityStats } from '~/api/admin'
 import AppSelectDropdown from '~/components/app/AppSelectDropdown.vue'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { useListFilter } from '~/composables/useListFilter'
@@ -19,6 +20,12 @@ import { useAuthStore } from '~/stores/auth'
 const admin = useAdminStore()
 const auth = useAuthStore()
 const { value: role, model: roleFilter } = useListFilter<AdminUserRole>()
+const { value: city, model: cityFilter } = useListFilter<string>()
+
+// Города для фильтра — справочник с бэка (оффлайн-список крупных городов КЗ).
+const cityOptions = ref<Array<{ label: string, value: string }>>([{ label: 'Все города', value: '' }])
+// Сводка «сколько людей в каком городе» — для быстрой статистики.
+const cityStats = ref<AdminCityStat[]>([])
 
 const isSuperAdmin = computed(() => auth.roles.includes('superadmin'))
 
@@ -69,20 +76,31 @@ useHead({
 
 onMounted(() => {
   load()
+  getAdminCities()
+    .then((response) => {
+      cityOptions.value = [
+        { label: 'Все города', value: '' },
+        ...response.cities.map(name => ({ label: name, value: name })),
+      ]
+    })
+    .catch(() => {})
+  getAdminCityStats()
+    .then(response => cityStats.value = response.stats)
+    .catch(() => {})
 })
 
-watch([role, search], () => {
+watch([role, city, search], () => {
   offset.value = 0
   load()
 })
 
 function load() {
-  admin.loadUsers({ role: role.value || undefined, search: search.value || undefined, limit: LIMIT, offset: offset.value }).catch(() => {})
+  admin.loadUsers({ role: role.value || undefined, city: city.value || undefined, search: search.value || undefined, limit: LIMIT, offset: offset.value }).catch(() => {})
 }
 
 async function loadMore() {
   const nextOffset = offset.value + LIMIT
-  const response = await admin.loadUsers({ role: role.value || undefined, search: search.value || undefined, limit: LIMIT, offset: nextOffset }).catch(() => null)
+  const response = await admin.loadUsers({ role: role.value || undefined, city: city.value || undefined, search: search.value || undefined, limit: LIMIT, offset: nextOffset }).catch(() => null)
   if (response) {
     offset.value = nextOffset
   }
@@ -170,8 +188,28 @@ function blockedLabel(user: AdminUser) {
     title="Пользователи"
   >
     <template #actions>
+      <AppSelectDropdown v-model="cityFilter" label="Город" :options="cityOptions" />
       <AppSelectDropdown v-model="roleFilter" label="Фильтр ролей" :options="roles" />
     </template>
+
+    <!-- Статистика по городам -->
+    <div v-if="cityStats.length" class="mt-5 flex flex-wrap gap-2">
+      <button
+        v-for="stat in cityStats"
+        :key="stat.city"
+        class="border rounded-2xl px-3 py-2 text-left transition"
+        :class="city === stat.city ? 'border-cyan-300/40 bg-cyan-300/12' : 'border-white/10 bg-white/6 hover:bg-white/10'"
+        type="button"
+        @click="cityFilter = city === stat.city ? '' : stat.city"
+      >
+        <p class="text-sm text-white font-950">
+          {{ stat.city }} · {{ stat.total }}
+        </p>
+        <p class="mt-0.5 text-[11px] text-white/45 font-800">
+          Водители {{ stat.drivers }} · Пассажиры {{ stat.passengers }}
+        </p>
+      </button>
+    </div>
 
     <div class="relative mt-5">
       <span class="i-mdi-magnify absolute left-3.5 top-1/2 text-5 text-white/40 -translate-y-1/2" />
@@ -215,7 +253,7 @@ function blockedLabel(user: AdminUser) {
             <span class="i-mdi-open-in-new shrink-0 text-3.5 text-cyan-300/70" />
           </RouterLink>
           <p class="mt-0.5 truncate text-xs text-white/42">
-            {{ user.phone }}
+            {{ user.phone }}<span v-if="user.city"> · {{ user.city }}</span>
           </p>
         </div>
 

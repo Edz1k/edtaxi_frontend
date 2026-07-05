@@ -23,6 +23,8 @@ export interface AdminUser {
   // До какого момента действует блокировка (null = бессрочная) и её причина.
   blocked_reason?: null | string
   blocked_until?: null | string
+  // Город (определяется по координатам пользователя).
+  city?: null | string
   created_at: string
   first_name: null | string
   id: string
@@ -37,11 +39,20 @@ export interface AdminUser {
 }
 
 export interface AdminListUsersParams {
+  city?: string
   limit?: number
   offset?: number
   role?: AdminUserRole | ''
   // search — поиск по имени/фамилии/телефону/telegram-юзернейму (регистронезависимо).
   search?: string
+}
+
+// Сводка по городу: всего пользователей и сколько из них водителей/пассажиров.
+export interface AdminCityStat {
+  city: string
+  drivers: number
+  passengers: number
+  total: number
 }
 
 export interface AdminListUsersResponse {

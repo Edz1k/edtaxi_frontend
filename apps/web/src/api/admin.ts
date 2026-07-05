@@ -1,6 +1,7 @@
 import type {
   AdminBlockUserPayload,
   AdminBlockUserResponse,
+  AdminCityStat,
   AdminListTariffsResponse,
   AdminListTechSupportNumbersResponse,
   AdminListTripsParams,
@@ -39,9 +40,19 @@ function buildListParams(params: AdminListTripsParams | AdminListUsersParams) {
     limit: params.limit,
     offset: params.offset,
     role: 'role' in params ? params.role || undefined : undefined,
+    city: 'city' in params ? params.city || undefined : undefined,
     status: 'status' in params ? params.status || undefined : undefined,
     search: 'search' in params ? params.search || undefined : undefined,
   }
+}
+
+// Справочник городов (оффлайн-список крупных городов Казахстана на бэке).
+export function getAdminCities() {
+  return apiRequest<{ cities: string[] }>('/admin/cities')
+}
+
+export function getAdminCityStats() {
+  return apiRequest<{ stats: AdminCityStat[] }>('/admin/users/city-stats')
 }
 
 export function listAdminUsers(params: AdminListUsersParams = {}) {

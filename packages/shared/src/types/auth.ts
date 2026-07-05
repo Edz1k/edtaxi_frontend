@@ -16,6 +16,8 @@ export interface AuthLoginResponse {
 
 export interface AuthSession {
   avatar_url: null | string
+  // Город пользователя (определяется по координатам на бэке).
+  city?: null | string
   first_name: null | string
   id: string
   last_name: null | string

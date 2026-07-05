@@ -3,6 +3,7 @@ import type { VerificationReminder } from '~/types/driver'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
+import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
 import { ApiError } from '~/api/client'
 import { getVerificationReminder } from '~/api/driver'
 import { getUserErrorMessage } from '~/api/errors'
@@ -32,6 +33,10 @@ const {
   liveCoordinates,
   startWatchingUserLocation,
 } = useUserLocation()
+
+// Город водителя — плашкой сверху карты; резолвится по координатам на бэке
+// (оффлайн-справочник, без 2ГИС) и сохраняется в профиле для статистики.
+const { city } = useUserCity(liveCoordinates)
 const { isRouteLoading, mapOffer, routeCoordinates } = useOfferRoute(liveCoordinates)
 
 // Ненавязчивое напоминание пройти верификацию — бэкенд сам решает, показывать
@@ -163,6 +168,17 @@ async function toggleOnline() {
 <template>
   <main class="tg-viewport-screen relative overflow-hidden bg-secondary-900 text-white">
     <LocationGate />
+
+    <!-- Город — аккуратной плашкой сверху карты -->
+    <div class="tg-safe-x pointer-events-none absolute inset-x-0 top-[calc(var(--app-safe-area-top)+0.75rem)] z-10 flex justify-center">
+      <div
+        v-if="city"
+        class="max-w-[86%] truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+      >
+        <span class="i-mdi-map-marker mr-1 inline-block align-middle text-3.5 text-main-300" />
+        г. {{ city }}
+      </div>
+    </div>
 
     <DriverMap
       :destination-place="destinationPlace"
