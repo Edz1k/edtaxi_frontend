@@ -73,6 +73,7 @@ const PAYMENT_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
+  moto: 'Мото',
   economy: 'Эконом',
   comfort: 'Комфорт',
   business: 'Бизнес',

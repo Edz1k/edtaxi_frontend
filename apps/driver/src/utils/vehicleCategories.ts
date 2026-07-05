@@ -5,10 +5,11 @@ export const CATEGORY_LABELS: Record<VehicleCategory, string> = {
   comfort: 'Комфорт',
   economy: 'Эконом',
   minivan: 'Минивэн',
+  moto: 'Мото',
 }
 
-// Порядок отображения тарифов: от дешёвого к дорогому, минивэн отдельно.
-export const CATEGORY_ORDER: VehicleCategory[] = ['economy', 'comfort', 'business', 'minivan']
+// Порядок отображения тарифов: от дешёвого к дорогому, минивэн и мото отдельно.
+export const CATEGORY_ORDER: VehicleCategory[] = ['economy', 'comfort', 'business', 'minivan', 'moto']
 
 export function categoryLabel(category: string) {
   return CATEGORY_LABELS[category as VehicleCategory] ?? category

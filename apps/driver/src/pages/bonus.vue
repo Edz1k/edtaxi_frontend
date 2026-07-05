@@ -2,6 +2,7 @@
 import type { BonusOverview, BonusPromotion } from '@edtaxi/shared/types/bonus'
 import { getBonusOverview, getMyPromotions, redeemReferralCode } from '@edtaxi/shared/api/bonus'
 import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
+import { mediaUrl } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
 
 const router = useRouter()
@@ -225,6 +226,13 @@ function promoProgress(promo: BonusPromotion) {
 
           <div v-else class="mt-3 space-y-3">
             <article v-for="promo in promotions" :key="promo.id" class="rounded-3xl bg-white/5 p-4">
+              <!-- Баннер акции (может отсутствовать) -->
+              <img
+                v-if="promo.image_url"
+                :alt="promo.title"
+                class="mb-3 max-h-40 w-full rounded-2xl object-cover"
+                :src="mediaUrl(promo.image_url)"
+              >
               <div class="flex items-start justify-between gap-3">
                 <p class="min-w-0 text-base font-950">
                   {{ promo.title }}
@@ -235,6 +243,9 @@ function promoProgress(promo: BonusPromotion) {
               </div>
               <p v-if="promo.description" class="mt-1 text-xs text-slate-400 leading-4">
                 {{ promo.description }}
+              </p>
+              <p v-if="promo.message" class="mt-1 text-xs text-slate-300 leading-4">
+                {{ promo.message }}
               </p>
 
               <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">

@@ -93,6 +93,17 @@ function isSelected(category: VehicleCategory) {
       <p class="mt-1.5 truncate px-1 text-[11px] text-slate-400 font-700">
         {{ TARIFF_META[trips.selectedCategory].caption }}
       </p>
+
+      <!-- Мототакси: напоминание о безопасности (виден пока выбран мото) -->
+      <div
+        v-if="trips.selectedCategory === 'moto'"
+        class="mt-2 flex items-start gap-2 rounded-2xl bg-amber-500/12 px-3 py-2.5"
+      >
+        <span class="i-mdi-shield-check mt-0.5 shrink-0 text-4.5 text-amber-300" aria-hidden="true" />
+        <p class="text-[12px] text-amber-200 leading-4">
+          Мототакси: только 1 пассажир. Водитель обязан выдать вам шлем. Поездка застрахована.
+        </p>
+      </div>
     </div>
 
     <!-- Способ оплаты (пока UI-only) -->

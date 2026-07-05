@@ -1,6 +1,6 @@
 export type TripStatus = 'cancelled' | 'completed' | 'driver_arriving' | 'driver_assigned' | 'in_progress' | 'searching'
 export const TERMINAL_TRIP_STATUSES = ['cancelled', 'completed'] as const
-export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan'
+export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
 
 export interface Trip {
   // Момент прибытия к пассажиру — точка отсчёта бесплатного ожидания.

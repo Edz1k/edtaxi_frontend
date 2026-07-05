@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CreatePromotionPayload, Promotion } from '~/types/promotions'
 import { showErrorToast } from '~/api/errors'
-import { createAdminPromotion, deactivateAdminPromotion, listAdminPromotions } from '~/api/promotions'
+import { createAdminPromotion, deactivateAdminPromotion, listAdminPromotions, uploadAdminPromotionImage } from '~/api/promotions'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import PromotionForm from '~/components/promotions/PromotionForm.vue'
 import PromotionsList from '~/components/promotions/PromotionsList.vue'
@@ -81,6 +81,7 @@ async function stop(promotion: Promotion) {
       ref="formRef"
       hint="Все пользователи аудитории получат уведомление в Telegram."
       :pending="isMutating"
+      :upload-image="uploadAdminPromotionImage"
       with-audience
       @create="create"
     />

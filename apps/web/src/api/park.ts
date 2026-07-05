@@ -1,6 +1,7 @@
 import type {
   AdminParkChatsResponse,
   AdminParksResponse,
+  CreatePlatformGaragePayload,
   ParkAnalytics,
   ParkChatMessage,
   ParkChatMessagesResponse,
@@ -10,11 +11,13 @@ import type {
   ParkInvite,
   ParkInvitesResponse,
   ParkStatus,
+  PlatformGarageResponse,
   TaxiPark,
   TaxiParkRegisterPayload,
   TaxiParkUpdatePayload,
 } from '~/types/park'
 import type { ParkWallet, PayoutCreatePayload, PayoutRequest, PayoutsResponse } from '~/types/payout'
+import type { ParkJoinRequest } from '~/types/promotions'
 import { apiRequest } from '~/api/client'
 
 export function registerPark(payload: TaxiParkRegisterPayload) {
@@ -137,5 +140,40 @@ export function setAdminParkPlatform(id: string, isPlatform: boolean) {
 export function listAdminParkChats(params: { limit?: number, offset?: number, status?: string } = {}) {
   return apiRequest<AdminParkChatsResponse>('/admin/park-chats', {
     params,
+  })
+}
+
+// --- «Гараж платформы» — платформенный парк, заявки и водители. ---
+
+// 404 ("no platform park") означает, что гараж ещё не создан.
+export function getPlatformGarage() {
+  return apiRequest<PlatformGarageResponse>('/admin/parks/platform')
+}
+
+// Создаёт гараж: сразу approved + is_platform, комиссия парка 0.
+export function createPlatformGarage(payload: CreatePlatformGaragePayload) {
+  return apiRequest<TaxiPark>('/admin/parks/platform', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export function approvePlatformGarageRequest(id: string) {
+  return apiRequest<ParkJoinRequest>(`/admin/parks/platform/requests/${id}/approve`, {
+    method: 'POST',
+  })
+}
+
+export function rejectPlatformGarageRequest(id: string) {
+  return apiRequest<ParkJoinRequest>(`/admin/parks/platform/requests/${id}/reject`, {
+    method: 'POST',
+  })
+}
+
+// commission_rate — доля (0.03 = 3%); для гаража держим 0.
+export function updateAdminPark(id: string, payload: TaxiParkUpdatePayload) {
+  return apiRequest<TaxiPark>(`/admin/parks/${id}`, {
+    method: 'PUT',
+    body: payload,
   })
 }

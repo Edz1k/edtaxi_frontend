@@ -7,8 +7,12 @@ export interface Promotion {
   description: string
   ends_at: string
   id: string
+  // Абсолютный/относительный URL баннера акции (null — без картинки).
+  image_url: null | string
   is_active: boolean
   is_running: boolean
+  // Кастомный текст Telegram-рассылки; пустой — ушло шаблонное уведомление.
+  message: null | string
   reward: number
   scope: PromotionScope
   starts_at: string
@@ -23,6 +27,10 @@ export interface PromotionsResponse {
 export interface CreatePromotionPayload {
   description?: string
   ends_at: string
+  // path из ответа загрузки баннера (POST .../promotions/image).
+  image_path?: string
+  // Свой текст Telegram-рассылки (≤1000 символов); пусто — шаблонное уведомление.
+  message?: string
   reward: number
   // Только для платформенных акций — парковые всегда создаются со scope 'park'.
   scope?: PromotionScope
@@ -30,9 +38,16 @@ export interface CreatePromotionPayload {
   title: string
 }
 
+// Ответ загрузки баннера акции: path сохраняем в payload, url — для превью.
+export interface PromotionImageUpload {
+  path: string
+  url: string
+}
+
 // Заявка водителя на вступление в таксопарк.
 export interface ParkJoinRequest {
   created_at: string
+  decided_at?: null | string
   driver_id: string
   driver_name?: null | string
   driver_phone?: null | string

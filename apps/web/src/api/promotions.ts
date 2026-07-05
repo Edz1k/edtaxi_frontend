@@ -1,5 +1,16 @@
-import type { CreatePromotionPayload, ParkJoinRequestsResponse, Promotion, PromotionsResponse } from '~/types/promotions'
+import type { CreatePromotionPayload, ParkJoinRequestsResponse, Promotion, PromotionImageUpload, PromotionsResponse } from '~/types/promotions'
 import { apiRequest } from '~/api/client'
+
+// Баннер акции (jpeg/png до 5MB): бэкенд возвращает path (кладём в payload
+// акции) и url для отображения.
+function uploadPromotionImage(endpoint: string, file: Blob) {
+  const form = new FormData()
+  form.append('file', file)
+  return apiRequest<PromotionImageUpload>(endpoint, {
+    method: 'POST',
+    body: form,
+  })
+}
 
 // --- Платформенные акции (роли admin/superadmin) ---
 
@@ -12,6 +23,10 @@ export function createAdminPromotion(payload: CreatePromotionPayload) {
     method: 'POST',
     body: payload,
   })
+}
+
+export function uploadAdminPromotionImage(file: Blob) {
+  return uploadPromotionImage('/admin/promotions/image', file)
 }
 
 export function deactivateAdminPromotion(id: string) {
@@ -31,6 +46,10 @@ export function createParkPromotion(payload: CreatePromotionPayload) {
     method: 'POST',
     body: payload,
   })
+}
+
+export function uploadParkPromotionImage(file: Blob) {
+  return uploadPromotionImage('/park/promotions/image', file)
 }
 
 export function deactivateParkPromotion(id: string) {

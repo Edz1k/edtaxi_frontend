@@ -25,4 +25,9 @@ export const TARIFF_META: Record<VehicleCategory, {
     icon: 'i-mdi-van-passenger',
     label: 'Минивэн',
   },
+  moto: {
+    caption: 'Быстро по городу · 1 пассажир',
+    icon: 'i-mdi-motorbike',
+    label: 'Мото',
+  },
 }

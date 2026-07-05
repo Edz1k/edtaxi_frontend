@@ -1,3 +1,5 @@
+import type { ParkJoinRequest } from '~/types/promotions'
+
 export interface TaxiPark {
   bin: null | string
   commission_rate: number
@@ -93,4 +95,30 @@ export interface ParkAnalytics {
 
 export interface AdminParksResponse {
   parks: TaxiPark[]
+}
+
+// --- «Гараж платформы»: платформенный парк с нулевой комиссией, куда
+// попадают заявки водителей «стать партнёром платформы». ---
+
+export interface PlatformGarageDriver {
+  id: string
+  is_online: boolean
+  name?: null | string
+  phone?: null | string
+  rating: number
+  total_trips: number
+  user_id: string
+}
+
+export interface PlatformGarageResponse {
+  drivers: PlatformGarageDriver[]
+  park: TaxiPark
+  // Заявки водителей на партнёрство (та же форма, что park join requests).
+  requests: ParkJoinRequest[]
+}
+
+export interface CreatePlatformGaragePayload {
+  description?: string
+  name: string
+  phone?: string
 }
