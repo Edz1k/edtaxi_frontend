@@ -8,6 +8,7 @@ const auth = useAuthStore()
 const passenger = usePassengerStore()
 
 const menuItems = [
+  { label: 'Кабинет', description: 'Профиль и рейтинг', icon: 'i-mdi-account-circle-outline', to: '/menu/profile' },
   { label: 'История', description: 'Поездки и оценки', icon: 'i-mdi-clock-outline', to: '/menu/history' },
   { label: 'Избранные адреса', description: 'Сохранённые места', icon: 'i-mdi-heart-outline', to: '/menu/places' },
   { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support' },
@@ -42,13 +43,16 @@ onMounted(async () => {
 <template>
   <main class="tg-safe-x tg-menu-home-safe h-full overflow-y-auto bg-secondary-900 text-white">
     <section class="mx-auto max-w-sm">
-      <header class="flex items-center gap-4">
+      <RouterLink
+        class="flex items-center gap-4 rounded-3xl transition active:scale-[0.98]"
+        to="/menu/profile"
+      >
         <Avatar
           :name="passenger.displayName"
           :src="passenger.profile?.avatar_url || ''"
         />
 
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
           <p class="text-xs text-main-300 font-900 uppercase">
             Пассажир
           </p>
@@ -59,7 +63,9 @@ onMounted(async () => {
             {{ passenger.profile?.phone || 'Профиль загружается' }}
           </p>
         </div>
-      </header>
+
+        <span class="i-mdi-chevron-right shrink-0 text-7 text-slate-500" />
+      </RouterLink>
 
       <nav class="mt-8 space-y-3">
         <RouterLink
