@@ -2,12 +2,15 @@
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
+import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
 import { usePassengerTripSocket } from '~/composables/passenger/usePassengerTripSocket'
 import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
+import { useAuthStore } from '~/stores/auth'
 import { usePassengerStore } from '~/stores/passenger'
 import { usePlacesStore } from '~/stores/places'
 import { useTripsStore } from '~/stores/trips'
 
+const auth = useAuthStore()
 const passenger = usePassengerStore()
 const trips = useTripsStore()
 const places = usePlacesStore()
@@ -32,6 +35,18 @@ const {
   locateUser,
   startWatchingUserLocation,
 } = useUserLocation()
+
+// Плашка «г.Город · адрес» над картой: город резолвится по координатам на
+// бэке (оффлайн-справочник, без 2ГИС), адрес — текущая точка подачи.
+const { city } = useUserCity(liveCoordinates, auth.currentUser?.city ?? '')
+const locationLine = computed(() => {
+  const parts: string[] = []
+  if (city.value)
+    parts.push(`г. ${city.value}`)
+  if (trips.pickup)
+    parts.push(trips.pickup)
+  return parts.join(' · ')
+})
 
 definePage({
   meta: {
@@ -71,6 +86,17 @@ async function setPickupFromCurrentLocation() {
 <template>
   <div class="tg-viewport-screen relative overflow-hidden bg-secondary-900">
     <LocationGate />
+
+    <!-- Город и адрес текущей точки — аккуратной плашкой сверху карты -->
+    <div class="tg-safe-x pointer-events-none absolute inset-x-0 top-[calc(var(--app-safe-area-top)+0.75rem)] z-10 flex justify-center">
+      <div
+        v-if="locationLine"
+        class="max-w-[86%] truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+      >
+        <span class="i-mdi-map-marker mr-1 inline-block align-middle text-3.5 text-main-300" />
+        {{ locationLine }}
+      </div>
+    </div>
 
     <PassengerMap
       :destination-place="trips.destinationPlace"
