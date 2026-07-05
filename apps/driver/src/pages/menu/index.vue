@@ -39,8 +39,7 @@ const faceAvatar = computed(() => {
 const menuItems = computed(() => [
   { label: 'Автомобиль', description: 'Данные машины и тариф', icon: 'i-mdi-car-info', to: '/menu/vehicle', badge: false },
   { label: 'История поездок', description: 'Ваши заказы', icon: 'i-mdi-history', to: '/menu/history', badge: false },
-  { label: 'Таксопарк', description: 'Вступление и партнёрство', icon: 'i-mdi-office-building', to: '/menu/parks', badge: false },
-  { label: 'Приглашение в парк', description: 'Принять код приглашения', icon: 'i-mdi-office-building-marker', to: '/menu/park-invite', badge: false },
+  { label: 'Таксопарк', description: 'Вступление, код приглашения, партнёрство', icon: 'i-mdi-office-building', to: '/menu/parks', badge: false },
   ...(parkId.value
     ? [{ label: 'Чат с парком', description: 'Связь с вашим таксопарком', icon: 'i-mdi-message-text', to: '/menu/park-chat', badge: false }]
     : []),
