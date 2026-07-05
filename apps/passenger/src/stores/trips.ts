@@ -1,6 +1,6 @@
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
-import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, Trip, TripFlowState, VehicleCategory } from '~/types/trips'
+import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, PaymentMethod, Trip, TripFlowState, VehicleCategory } from '~/types/trips'
 import type { PassengerDriverLocation } from '~/types/websocket'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { acceptHMRUpdate, defineStore } from 'pinia'
@@ -15,6 +15,8 @@ export const useTripsStore = defineStore('trips', () => {
   const estimate = ref<EstimateTripResponse | null>(null)
   const tariffEstimates = ref<EstimateTripResponse[]>([])
   const selectedCategories = ref<VehicleCategory[]>(['economy'])
+  // Способ оплаты — пользовательская настройка, живёт между заказами (не сбрасываем).
+  const paymentMethod = ref<PaymentMethod>('cash')
   const history = ref<Trip[]>([])
   const historyHasMore = ref(true)
   const historyOffset = ref(0)
@@ -278,6 +280,16 @@ export const useTripsStore = defineStore('trips', () => {
     finally {
       isEstimating.value = false
     }
+  }
+
+  // Одиночный выбор тарифа (боковая карусель): заменяем весь набор одним.
+  function selectCategory(category: VehicleCategory) {
+    selectedCategories.value = [category]
+    estimate.value = cheapestSelectedEstimate.value
+  }
+
+  function setPaymentMethod(method: PaymentMethod) {
+    paymentMethod.value = method
   }
 
   function toggleCategory(category: VehicleCategory) {
@@ -563,7 +575,11 @@ export const useTripsStore = defineStore('trips', () => {
     routeCoordinates,
     searchElapsedSeconds,
     searchStartedAt,
+    paymentMethod,
+    selectCategory,
     selectedCategories,
+    selectedCategory,
+    setPaymentMethod,
     setRouteCoordinates,
     tariffEstimates,
     toggleCategory,

@@ -5,8 +5,9 @@ import type { QuickDestination } from '~/components/passenger/downbar/AddressFor
 import type { SheetSnap } from '~/composables/passenger/useBottomSheet'
 import { getDestinationSuggestions } from '~/api/trips'
 import AddressForm from '~/components/passenger/downbar/AddressForm.vue'
+import DestinationFirstScreen from '~/components/passenger/downbar/DestinationFirstScreen.vue'
 import SearchingTrip from '~/components/passenger/downbar/SearchingTrip.vue'
-import TariffList from '~/components/passenger/downbar/TariffList.vue'
+import TariffStage from '~/components/passenger/downbar/TariffStage.vue'
 import { useAddressSearch } from '~/composables/passenger/useAddressSearch'
 import { useBottomSheet } from '~/composables/passenger/useBottomSheet'
 import { useTripOrderFlow } from '~/composables/passenger/useTripOrderFlow'
@@ -62,12 +63,6 @@ const {
   pickupPlace,
 })
 
-const downbarViews = {
-  address: markRaw(AddressForm),
-  searching: markRaw(SearchingTrip),
-  tariffs: markRaw(TariffList),
-}
-
 // «Умные подсказки» для поля «Куда»: частые и недавние адреса из истории
 // поездок пользователя (бэкенд ранжирует). Загружаем один раз; выбор
 // подсказки идёт тем же путём, что и выбор из гео-саджеста.
@@ -94,49 +89,12 @@ const isActiveTripFinished = computed(() => {
   return trips.activeTrip?.status === 'cancelled' || trips.activeTrip?.status === 'completed'
 })
 
-const activeDownbarView = computed(() => {
-  if (isSearching.value)
-    return downbarViews.searching
-
-  if (isTariffsVisible.value)
-    return downbarViews.tariffs
-
-  return downbarViews.address
-})
-
-const activeDownbarProps = computed(() => {
-  if (isSearching.value) {
-    return {
-      activeTrip: trips.activeTrip,
-      destination: destination.value,
-      elapsedSeconds: trips.searchElapsedSeconds,
-      isPolling: trips.isPollingActiveTrip,
-      pickup: pickup.value,
-      selectedCategories: trips.selectedCategories,
-      selectedEstimate: selectedEstimate.value,
-    }
-  }
-
-  if (isTariffsVisible.value) {
-    return {
-      destination: destination.value,
-      estimates: trips.tariffEstimates,
-      pickup: pickup.value,
-      selectedCategories: trips.selectedCategories,
-    }
-  }
-
-  return {
-    destination: destination.value,
-    destinationSuggestions: destinationSuggestions.value,
-    isLocatingUser: isLocatingUser.value,
-    isSearchingDestination: isSearchingDestination.value,
-    isSearchingPickup: isSearchingPickup.value,
-    pickup: pickup.value,
-    pickupSuggestions: pickupSuggestions.value,
-    quickDestinations: quickDestinations.value,
-  }
-})
+// Выбор адреса назначения (быстрый на первом экране или из поиска) → сразу
+// считаем тарифы и уходим на тарифный этап.
+function chooseDestination(place: GeoPlace) {
+  selectDestination(place)
+  nextTick(() => submitTrip())
+}
 
 function startNewTrip() {
   trips.resetActiveTrip()
@@ -164,18 +122,20 @@ const sheetSnaps = computed<SheetSnap[]>(() => {
       // Нечего скроллить — только «свернуть на карту» ↔ рабочая высота.
       return ['peek', 'half']
     case 'tariffs':
-      // Список тарифов + кнопка на виду, `full` — чтобы увидеть все.
-      return ['half', 'full']
-    default:
-      // Адрес: свернуть на карту, рабочая высота, полный экран под саджест.
+      // Тарифы: свайпом вниз можно свернуть к карте (peek), рабочая высота
+      // (карусель + оплата + заказ), полный экран.
       return ['peek', 'half', 'full']
+    default:
+      // Адрес: первый экран (Такси + Куда едем + частые) ↔ полный поиск.
+      return ['half', 'full']
   }
 })
 
-const { dragging, sheetStyle, snapTo } = useBottomSheet({
+const { active, dragging, sheetStyle, snapTo } = useBottomSheet({
   boundsEl,
   contentEl,
   handleEl,
+  // Стартуем на первом экране адреса (Такси + Куда едем + частые адреса).
   initialSnap: 'half',
   sheetEl,
   snaps: sheetSnaps,
@@ -199,6 +159,8 @@ function onHandleKeydown(event: KeyboardEvent) {
   }
   else if (event.key === 'ArrowDown') {
     event.preventDefault()
+    // peek там, где он есть (тарифы/поиск — свернуть к карте); для адреса
+    // резолвится в half (ниже первого экрана сворачивать некуда).
     snapTo('peek')
   }
 }
@@ -226,50 +188,93 @@ function onHandleKeydown(event: KeyboardEvent) {
         <div class="mx-auto h-1 w-10 rounded-full bg-white/14" />
       </div>
 
-      <div class="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
-        <div ref="contentEl">
-          <component
-            :is="activeDownbarView"
-            v-bind="activeDownbarProps"
-            @edit-route="trips.clearEstimate"
+      <div class="relative min-h-0 flex-1">
+        <div class="h-full overflow-y-auto px-3 pb-3">
+          <div ref="contentEl">
+            <!-- Тарифы: самодостаточный этап (карусель + оплата + заказ). -->
+            <TariffStage
+              v-if="isTariffsVisible"
+              :is-ordering="isBusy"
+              :primary-text="primaryText"
+              @edit-route="trips.clearEstimate"
+              @order="submitTrip"
+            />
+
+            <!-- Поиск водителя (активная поездка). -->
+            <template v-else-if="isSearching">
+              <SearchingTrip
+                :active-trip="trips.activeTrip"
+                :destination="destination"
+                :elapsed-seconds="trips.searchElapsedSeconds"
+                :is-polling="trips.isPollingActiveTrip"
+                :pickup="pickup"
+                :selected-categories="trips.selectedCategories"
+                :selected-estimate="selectedEstimate"
+              />
+
+              <button
+                v-if="isActiveTripFinished"
+                class="mt-3 h-13 w-full rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99]"
+                type="button"
+                @click="startNewTrip"
+              >
+                Новая поездка
+              </button>
+
+              <button
+                v-else
+                :disabled="trips.isCancelling"
+                class="mt-3 h-13 w-full rounded-[1.35rem] bg-red-500/12 text-sm text-red-300 font-950 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                @click="cancelSearch"
+              >
+                {{ trips.isCancelling ? 'Отменяем...' : 'Отменить поиск' }}
+              </button>
+            </template>
+
+            <!-- Первый экран адреса: заголовок + «Куда едем?» + частые адреса. -->
+            <DestinationFirstScreen
+              v-else
+              :quick-destinations="quickDestinations"
+              @expand="expandForInput(searchDestination)"
+              @select-destination="chooseDestination"
+            />
+          </div>
+        </div>
+
+        <!-- Полный поиск адреса — оверлей поверх первого экрана, когда шторка
+             раскрыта (full). Первый экран остаётся в потоке ради замера half. -->
+        <div
+          v-show="active === 'full' && sheetState === 'address'"
+          class="[scrollbar-width:none] absolute inset-0 overflow-y-auto rounded-b-[2rem] bg-secondary-950/96 px-3 pb-3 pt-2 backdrop-blur-2xl [&::-webkit-scrollbar]:hidden"
+        >
+          <AddressForm
+            :destination="destination"
+            :destination-suggestions="destinationSuggestions"
+            :is-locating-user="isLocatingUser"
+            :is-searching-destination="isSearchingDestination"
+            :is-searching-pickup="isSearchingPickup"
+            :pickup="pickup"
+            :pickup-suggestions="pickupSuggestions"
+            :quick-destinations="quickDestinations"
             @locate-user="emit('locateUser')"
             @pick-from-map="emit('pickFromMap', $event)"
-            @search-destination="expandForInput(searchDestination)"
-            @search-pickup="expandForInput(searchPickup)"
-            @toggle-category="trips.toggleCategory"
-            @select-destination="selectDestination"
+            @search-destination="searchDestination"
+            @search-pickup="searchPickup"
+            @select-destination="chooseDestination"
             @select-pickup="selectPickup"
             @update:destination="destination = $event"
             @update:pickup="pickup = $event"
           />
 
           <button
-            v-if="!isSearching"
-            :disabled="!canSubmit || isBusy"
+            v-if="canSubmit"
+            :disabled="isBusy"
             class="mt-3 h-13 w-full rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-600 disabled:shadow-none"
             type="button"
             @click="submitTrip"
           >
             {{ primaryText }}
-          </button>
-
-          <button
-            v-else-if="isActiveTripFinished"
-            class="mt-3 h-13 w-full rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99]"
-            type="button"
-            @click="startNewTrip"
-          >
-            Новая поездка
-          </button>
-
-          <button
-            v-else
-            :disabled="trips.isCancelling"
-            class="mt-3 h-13 w-full rounded-[1.35rem] bg-red-500/12 text-sm text-red-300 font-950 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-            type="button"
-            @click="cancelSearch"
-          >
-            {{ trips.isCancelling ? 'Отменяем...' : 'Отменить поиск' }}
           </button>
         </div>
       </div>
