@@ -45,6 +45,13 @@ declare module 'vue-router/auto-routes' {
       { all: ParamValue<false> },
       | never
     >,
+    '/bonus': RouteRecordInfo<
+      '/bonus',
+      '/bonus',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/earnings': RouteRecordInfo<
       '/earnings',
       '/earnings',
@@ -111,6 +118,13 @@ declare module 'vue-router/auto-routes' {
     '/menu/park-invite': RouteRecordInfo<
       '/menu/park-invite',
       '/menu/park-invite',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/menu/parks': RouteRecordInfo<
+      '/menu/parks',
+      '/menu/parks',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -214,6 +228,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | 'all'
     }
+    'src/pages/bonus.vue': {
+      routes:
+        | '/bonus'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     'src/pages/earnings.vue': {
       routes:
         | '/earnings'
@@ -289,6 +311,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/menu/park-invite.vue': {
       routes:
         | '/menu/park-invite'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/parks.vue': {
+      routes:
+        | '/menu/parks'
       views:
         | never
       pathParamNames:

@@ -73,6 +73,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/admin/promotions': RouteRecordInfo<
+      '/admin/promotions',
+      '/admin/promotions',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/admin/settings': RouteRecordInfo<
       '/admin/settings',
       '/admin/settings',
@@ -157,9 +164,23 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/park/promotions': RouteRecordInfo<
+      '/park/promotions',
+      '/park/promotions',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/park/register': RouteRecordInfo<
       '/park/register',
       '/park/register',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/park/requests': RouteRecordInfo<
+      '/park/requests',
+      '/park/requests',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -281,6 +302,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    'src/pages/admin/promotions.vue': {
+      routes:
+        | '/admin/promotions'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     'src/pages/admin/settings.vue': {
       routes:
         | '/admin/settings'
@@ -377,9 +406,25 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    'src/pages/park/promotions.vue': {
+      routes:
+        | '/park/promotions'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     'src/pages/park/register.vue': {
       routes:
         | '/park/register'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/park/requests.vue': {
+      routes:
+        | '/park/requests'
       views:
         | never
       pathParamNames:

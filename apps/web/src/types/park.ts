@@ -5,6 +5,8 @@ export interface TaxiPark {
   description: null | string
   id: string
   is_active: boolean
+  // «Партнёр платформы» — в этот парк попадают заявки водителей с платформенных акций.
+  is_platform: boolean
   is_verified: boolean
   name: string
   owner_id: string

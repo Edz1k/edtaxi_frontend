@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
+import { getBonusOverview } from '@edtaxi/shared/api/bonus'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
@@ -57,7 +58,17 @@ definePage({
   },
 })
 
+// Бейдж бонусов в углу карты: пока баланс не загрузился (или упал) — не
+// показываем, чтобы не рисовать пустышку поверх карты.
+const bonusBalance = ref<null | number>(null)
+
 onMounted(async () => {
+  getBonusOverview()
+    .then((bonus) => {
+      bonusBalance.value = Math.floor(bonus.balance)
+    })
+    .catch(() => {})
+
   try {
     await passenger.loadProfile()
   }
@@ -87,14 +98,27 @@ async function setPickupFromCurrentLocation() {
   <div class="tg-viewport-screen relative overflow-hidden bg-secondary-900">
     <LocationGate />
 
-    <!-- Город и адрес текущей точки — аккуратной плашкой сверху карты -->
-    <div class="tg-safe-x pointer-events-none absolute inset-x-0 top-[calc(var(--app-safe-area-top)+0.75rem)] z-10 flex justify-center">
-      <div
-        v-if="locationLine"
-        class="max-w-[86%] truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
-      >
-        <span class="i-mdi-map-marker mr-1 inline-block align-middle text-3.5 text-main-300" />
-        {{ locationLine }}
+    <!-- Город и адрес текущей точки — аккуратной плашкой сверху карты,
+         бонусный бейдж прижат к правому краю -->
+    <div class="tg-safe-x pointer-events-none absolute inset-x-0 top-[calc(var(--app-safe-area-top)+0.75rem)] z-10">
+      <div class="relative flex justify-center">
+        <div
+          v-if="locationLine"
+          class="max-w-[68%] truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+        >
+          <span class="i-mdi-map-marker mr-1 inline-block align-middle text-3.5 text-main-300" />
+          {{ locationLine }}
+        </div>
+
+        <RouterLink
+          v-if="bonusBalance !== null"
+          aria-label="Бонусы"
+          class="pointer-events-auto absolute right-0 top-0 flex items-center gap-1 rounded-full bg-secondary-950/82 px-3 py-2 text-xs text-white font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
+          to="/bonus"
+        >
+          <span class="i-mdi-star-four-points text-3.5 text-main-300" />
+          {{ bonusBalance.toLocaleString('ru-RU') }}
+        </RouterLink>
       </div>
     </div>
 

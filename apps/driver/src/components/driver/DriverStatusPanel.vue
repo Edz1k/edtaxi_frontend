@@ -4,8 +4,16 @@ import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { useTripChatStore } from '~/stores/tripChat'
 import { categoryLabel } from '~/utils/vehicleCategories'
 
-defineProps<{ trackingLabel: string, onlineBlockMessage: string, showRouteLoading: boolean, isLocationGranted: boolean }>()
+const props = defineProps<{ trackingLabel: string, onlineBlockMessage: string, showRouteLoading: boolean, isLocationGranted: boolean }>()
 const emit = defineEmits<{ primaryAction: [], toggleOnline: [] }>()
+
+// 403 из-за отсутствия таксопарка решается выбором парка, а не верификацией —
+// ведём водителя на нужный экран по содержимому сообщения с бэка.
+const onlineBlockLink = computed(() =>
+  props.onlineBlockMessage.toLowerCase().includes('таксопарк')
+    ? { label: 'Выбрать таксопарк', to: '/menu/parks' }
+    : { label: 'Пройти верификацию', to: '/menu/profile/onboarding' },
+)
 
 const driver = useDriverStore()
 const onboarding = useDriverOnboardingStore()
@@ -230,9 +238,9 @@ const tripStep = computed(() => {
         </p>
         <RouterLink
           class="mt-2.5 h-10 flex items-center justify-center rounded-xl bg-amber-400 text-sm text-#06142f font-900 transition active:scale-[0.98]"
-          to="/menu/profile/onboarding"
+          :to="onlineBlockLink.to"
         >
-          Пройти верификацию
+          {{ onlineBlockLink.label }}
         </RouterLink>
       </div>
 

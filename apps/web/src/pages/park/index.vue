@@ -369,6 +369,52 @@ async function copyToken(token: string) {
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p class="text-xs text-white/42 font-900 uppercase">
+              Бонусы
+            </p>
+            <h2 class="mt-1 text-xl font-950">
+              Акции парка
+            </h2>
+            <p class="mt-1 text-sm text-white/55">
+              Акции «N поездок → X бонусов» для ваших водителей с рассылкой в Telegram.
+            </p>
+          </div>
+          <RouterLink
+            class="h-10 inline-flex items-center gap-2 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 transition hover:bg-cyan-200"
+            to="/park/promotions"
+          >
+            <span class="i-mdi-gift-outline text-4.5" />
+            Открыть акции
+          </RouterLink>
+        </div>
+      </section>
+
+      <section v-if="!isPeeking" class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs text-white/42 font-900 uppercase">
+              Найм
+            </p>
+            <h2 class="mt-1 text-xl font-950">
+              Заявки водителей
+            </h2>
+            <p class="mt-1 text-sm text-white/55">
+              Водители, которые хотят вступить в ваш парк: принимайте или отклоняйте.
+            </p>
+          </div>
+          <RouterLink
+            class="h-10 inline-flex items-center gap-2 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 transition hover:bg-cyan-200"
+            to="/park/requests"
+          >
+            <span class="i-mdi-account-plus-outline text-4.5" />
+            Открыть заявки
+          </RouterLink>
+        </div>
+      </section>
+
+      <section v-if="!isPeeking" class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs text-white/42 font-900 uppercase">
               Чат
             </p>
             <h2 class="mt-1 text-xl font-950">

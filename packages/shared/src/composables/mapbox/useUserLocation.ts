@@ -8,7 +8,6 @@ import {
   openTelegramLocationSettings,
   requestTelegramLocation,
 } from '../telegram/location'
-import { useToast } from '../useToast'
 
 export interface UserCoordinates {
   accuracy: number
@@ -78,7 +77,6 @@ function getGeolocationErrorMessage(error: unknown) {
 }
 
 export function useUserLocation() {
-  const toast = useToast()
   const isLocating = ref(false)
   const liveCoordinates = ref<UserCoordinates | null>(null)
   const locationError = ref('')
@@ -88,32 +86,13 @@ export function useUserLocation() {
   // (watch, как у navigator, нет) — поэтому непрерывное отслеживание в мини-аппе
   // делаем поллингом requestLocation по таймеру.
   let tgWatchTimer: ReturnType<typeof setInterval> | undefined
-  let locationToastID: number | undefined
 
-  // Нажимной баннер «Геолокация недоступна»: тап открывает экран согласия. Не
-  // дублируем, пока он на экране; после успеха убираем; после того как юзер его
-  // закрыл — снова покажем при следующей неудаче (настойчивое напоминание).
-  function locationToastVisible() {
-    return locationToastID !== undefined && toast.toasts.value.some(t => t.id === locationToastID)
-  }
+  // Геолокация обязательна и обрабатывается экраном LocationGate — тосты поверх
+  // него только шумят. Состояние (locationError + markLocationDenied) сохраняем,
+  // сами баннеры больше не показываем.
+  function showLocationErrorToast(_message: string) {}
 
-  function showLocationErrorToast(message: string) {
-    if (locationToastVisible())
-      return
-
-    locationToastID = toast.warning(
-      'Геолокация недоступна',
-      `${message} Нажмите, чтобы разрешить.`,
-      { onClick: () => { void openLocationSettings() } },
-    )
-  }
-
-  function clearLocationErrorToast() {
-    if (locationToastID !== undefined) {
-      toast.removeToast(locationToastID)
-      locationToastID = undefined
-    }
-  }
+  function clearLocationErrorToast() {}
 
   function saveUserCoordinates(coords: UserCoordinates) {
     liveCoordinates.value = coords
