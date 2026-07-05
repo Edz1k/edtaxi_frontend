@@ -108,6 +108,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/menu/profile/': RouteRecordInfo<
+      '/menu/profile/',
+      '/menu/profile',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/menu/settings': RouteRecordInfo<
       '/menu/settings',
       '/menu/settings',
@@ -232,6 +239,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/menu/places.vue': {
       routes:
         | '/menu/places'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/profile/index.vue': {
+      routes:
+        | '/menu/profile/'
       views:
         | never
       pathParamNames:
