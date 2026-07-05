@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
+import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { QuickDestination } from '~/components/passenger/downbar/AddressForm.vue'
 
 defineProps<{
@@ -9,6 +10,8 @@ defineProps<{
 const emit = defineEmits<{
   // «Куда едем?» — раскрыть полный поиск адреса.
   expand: []
+  // Выбор точки на карте — полезный старт, пока истории поездок нет.
+  pickFromMap: [mode: MapPickerMode]
   // Быстрый адрес — сразу выбрать назначение (дальше уходим к тарифам).
   selectDestination: [place: GeoPlace]
 }>()
@@ -55,6 +58,32 @@ const emit = defineEmits<{
           <span class="block truncate text-sm font-800">{{ item.place.name }}</span>
           <span class="block truncate text-xs text-slate-500 font-700">{{ item.place.address }}</span>
         </span>
+      </button>
+    </div>
+
+    <!-- Пустое состояние: истории поездок ещё нет — вместо дыры даём подсказку
+         и полезное действие (выбор точки на карте). -->
+    <div
+      v-else
+      class="relative overflow-hidden border border-white/8 rounded-[1.65rem] from-main-500/14 via-white/4 to-transparent bg-gradient-to-br p-4"
+    >
+      <span
+        class="i-mdi-map-marker-star-outline pointer-events-none absolute text-24 text-main-300/12 -right-4 -top-5"
+        aria-hidden="true"
+      />
+      <p class="text-sm font-950">
+        Любимые адреса появятся здесь
+      </p>
+      <p class="mt-1 max-w-60 text-xs text-slate-400 font-700 leading-5">
+        После первых поездок покажем недавние и частые места — закажете в один тап.
+      </p>
+      <button
+        class="mt-3 h-10 inline-flex items-center gap-2 rounded-full bg-white/8 px-4 text-sm font-900 transition active:scale-[0.97] hover:bg-white/12"
+        type="button"
+        @click="emit('pickFromMap', 'destination')"
+      >
+        <span class="i-mdi-map-marker-radius-outline text-4.5 text-main-300" aria-hidden="true" />
+        Выбрать на карте
       </button>
     </div>
   </div>

@@ -62,25 +62,20 @@ const showQuickDestinations = computed(() =>
       </button>
     </header>
 
-    <div class="relative rounded-[1.65rem] bg-white/5 p-2">
-      <div class="absolute bottom-8 left-[1.36rem] top-8 w-px bg-white/12" />
+    <div class="space-y-1.5">
+      <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-white/6 px-3.5 transition focus-within:bg-white/10">
+        <span class="i-mdi-near-me shrink-0 text-5 text-main-300" aria-hidden="true" />
 
-      <div class="relative min-h-14 flex items-center gap-3 rounded-[1.25rem] bg-secondary-950/36 px-3">
-        <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.10)]" />
-
-        <label class="min-w-0 flex-1">
-          <span class="block text-[11px] text-slate-500 font-800 leading-none uppercase">Откуда</span>
-          <input
-            :value="pickup"
-            aria-label="Адрес отправления"
-            class="mt-1 w-full bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-300"
-            name="pickup_address"
-            placeholder="Мое местоположение"
-            type="text"
-            @focus="emit('searchPickup')"
-            @input="emit('update:pickup', ($event.target as HTMLInputElement).value)"
-          >
-        </label>
+        <input
+          :value="pickup"
+          aria-label="Адрес отправления"
+          class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-400"
+          name="pickup_address"
+          placeholder="Откуда"
+          type="text"
+          @focus="emit('searchPickup')"
+          @input="emit('update:pickup', ($event.target as HTMLInputElement).value)"
+        >
 
         <button
           aria-label="Определить мое местоположение"
@@ -107,22 +102,19 @@ const showQuickDestinations = computed(() =>
         </button>
       </div>
 
-      <div class="relative mt-1 min-h-14 flex items-center gap-3 rounded-[1.25rem] px-3">
-        <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-red-400 shadow-[0_0_0_4px_rgba(248,113,113,0.10)]" />
+      <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-white/6 px-3.5 transition focus-within:bg-white/10">
+        <span class="i-mdi-flag-checkered shrink-0 text-5 text-main-300" aria-hidden="true" />
 
-        <label class="min-w-0 flex-1">
-          <span class="block text-[11px] text-slate-500 font-800 leading-none uppercase">Куда</span>
-          <input
-            :value="destination"
-            aria-label="Адрес назначения"
-            class="mt-1 w-full bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-300"
-            name="destination_address"
-            placeholder="Адрес назначения"
-            type="text"
-            @focus="emit('searchDestination')"
-            @input="emit('update:destination', ($event.target as HTMLInputElement).value)"
-          >
-        </label>
+        <input
+          :value="destination"
+          aria-label="Адрес назначения"
+          class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-400"
+          name="destination_address"
+          placeholder="Куда"
+          type="text"
+          @focus="emit('searchDestination')"
+          @input="emit('update:destination', ($event.target as HTMLInputElement).value)"
+        >
 
         <button
           aria-label="Выбрать адрес назначения на карте"

@@ -10,11 +10,19 @@ const props = defineProps<{
   activeTrip: null | Trip
   destination: string
   elapsedSeconds: number
-  isPolling: boolean
   pickup: string
   selectedCategories: VehicleCategory[]
   selectedEstimate: EstimateTripResponse | null
 }>()
+
+// Пока водитель не найден — крутим «радар» и тикающий таймер поиска.
+const isSearchingStatus = computed(() => !props.activeTrip || props.activeTrip.status === 'searching')
+
+const elapsedLabel = computed(() => {
+  const mm = Math.floor(props.elapsedSeconds / 60)
+  const ss = String(props.elapsedSeconds % 60).padStart(2, '0')
+  return `${mm}:${ss}`
+})
 
 const router = useRouter()
 const places = usePlacesStore()
@@ -179,8 +187,8 @@ const statusMeta = computed(() => {
       }
     default:
       return {
-        description: `Поиск идет ${props.elapsedSeconds} сек.`,
-        icon: 'i-mdi-radar animate-pulse',
+        description: 'Обычно это занимает меньше минуты',
+        icon: 'i-mdi-radar',
         tone: 'text-main-300',
         title: 'Ищем водителя',
       }
@@ -265,11 +273,22 @@ async function shareTrip() {
 
 <template>
   <div class="pb-4 text-center">
-    <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-main-500/18" :class="statusMeta.tone">
-      <span class="text-8" :class="statusMeta.icon" />
+    <!-- Радар: пока ищем — от иконки расходятся пульсирующие кольца -->
+    <div class="relative mx-auto h-22 w-22">
+      <template v-if="isSearchingStatus">
+        <span class="sonar-ring absolute inset-0 rounded-full bg-main-500/14" aria-hidden="true" />
+        <span class="sonar-ring absolute inset-0 rounded-full bg-main-500/14" style="animation-delay: 0.75s" aria-hidden="true" />
+        <span class="sonar-ring absolute inset-0 rounded-full bg-main-500/14" style="animation-delay: 1.5s" aria-hidden="true" />
+      </template>
+      <div
+        class="absolute inset-2.5 flex items-center justify-center border border-main-400/25 rounded-full bg-main-500/16"
+        :class="statusMeta.tone"
+      >
+        <span class="text-8" :class="statusMeta.icon" />
+      </div>
     </div>
 
-    <h2 class="mt-4 text-xl font-900">
+    <h2 class="mt-4 text-xl font-950">
       {{ statusMeta.title }}
     </h2>
 
@@ -277,11 +296,22 @@ async function shareTrip() {
       {{ statusMeta.description }}
     </p>
 
+    <!-- Тикающий таймер поиска -->
+    <div v-if="isSearchingStatus" class="mt-3 inline-flex items-center gap-2 rounded-full bg-white/6 px-4 py-1.5">
+      <span class="i-mdi-timer-outline text-4 text-main-300" aria-hidden="true" />
+      <span class="text-sm font-950 tabular-nums">{{ elapsedLabel }}</span>
+    </div>
+
     <div class="mt-4 rounded-2xl bg-white/5 px-4 py-3 text-left">
-      <p class="truncate text-sm font-800">
-        {{ pickup }} → {{ destination }}
+      <p class="flex items-center gap-2 text-sm font-800">
+        <span class="i-mdi-near-me shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+        <span class="truncate">{{ pickup }}</span>
       </p>
-      <p class="mt-1 text-xs text-slate-400 font-700">
+      <p class="mt-2 flex items-center gap-2 text-sm font-800">
+        <span class="i-mdi-flag-checkered shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+        <span class="truncate">{{ destination }}</span>
+      </p>
+      <p class="mt-2.5 border-t border-white/6 pt-2.5 text-xs text-slate-400 font-700">
         {{ tariffLine }}
       </p>
     </div>
@@ -388,9 +418,29 @@ async function shareTrip() {
         Поделиться поездкой
       </span>
     </button>
-
-    <p v-if="isPolling" class="mt-3 text-xs text-slate-500 font-800">
-      Обновляем статус поездки...
-    </p>
   </div>
 </template>
+
+<style scoped>
+.sonar-ring {
+  animation: sonar 2.25s ease-out infinite;
+}
+
+@keyframes sonar {
+  from {
+    opacity: 0.9;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sonar-ring {
+    animation: none;
+    opacity: 0;
+  }
+}
+</style>
