@@ -109,7 +109,7 @@ async function logoutToLogin() {
   >
     <template v-if="step !== 'share'" #before>
       <button
-        class="mb-8 h-11 w-11 flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-slate-300 transition active:scale-[0.96]"
+        class="mb-8 h-11 w-11 flex items-center justify-center border border-border/10 rounded-2xl bg-surface/5 text-body/80 transition active:scale-[0.96]"
         type="button"
         @click="step = step === 'code' ? 'manual' : 'share'"
       >
@@ -132,7 +132,7 @@ async function logoutToLogin() {
       </button>
 
       <button
-        class="h-14 w-full flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-base text-slate-300 font-700 transition active:scale-[0.98]"
+        class="h-14 w-full flex items-center justify-center border border-border/10 rounded-2xl bg-surface/5 text-base text-body/80 font-700 transition active:scale-[0.98]"
         type="button"
         @click="step = 'manual'"
       >
@@ -167,7 +167,7 @@ async function logoutToLogin() {
     </form>
 
     <template #footer>
-      <button class="text-xs text-slate-500 underline" type="button" @click="logoutToLogin">
+      <button class="text-xs text-muted/70 underline" type="button" @click="logoutToLogin">
         Выйти и сменить аккаунт
       </button>
     </template>

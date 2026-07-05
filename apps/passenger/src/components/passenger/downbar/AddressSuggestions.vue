@@ -19,7 +19,7 @@ function getSuggestionIcon(place: GeoPlace) {
 <template>
   <div
     v-if="places.length || isLoading"
-    class="[scrollbar-width:thin] mt-3 max-h-64 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl bg-white/5 p-2 pr-1 space-y-1"
+    class="[scrollbar-width:thin] mt-3 max-h-64 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl bg-surface/5 p-2 pr-1 space-y-1"
   >
     <button
       v-for="place in places"
@@ -36,13 +36,13 @@ function getSuggestionIcon(place: GeoPlace) {
       </span>
       <span class="min-w-0 flex-1 overflow-hidden">
         <span class="block truncate text-sm font-800">{{ place.name }}</span>
-        <span class="block truncate text-xs text-slate-400">{{ place.address }}</span>
+        <span class="block truncate text-xs text-muted">{{ place.address }}</span>
       </span>
     </button>
 
     <p
       v-if="isLoading && !places.length"
-      class="px-2 py-2 text-xs text-slate-400 font-700"
+      class="px-2 py-2 text-xs text-muted font-700"
     >
       Ищем адрес...
     </p>

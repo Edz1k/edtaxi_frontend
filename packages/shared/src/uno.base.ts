@@ -11,7 +11,16 @@ import {
 } from 'unocss'
 
 export const unoColors = {
-  main: {
+  // Семантические токены темы (packages/shared/src/styles/theme.css). Значение —
+  // RGB-каналы в CSS-переменной, поэтому alpha-модификаторы (bg-surface/8,
+  // text-muted/70) работают через <alpha-value>.
+  'bg': 'rgb(var(--c-bg) / <alpha-value>)',
+  'body': 'rgb(var(--c-body) / <alpha-value>)',
+  'border': 'rgb(var(--c-border) / <alpha-value>)',
+  'muted': 'rgb(var(--c-muted) / <alpha-value>)',
+  'surface': 'rgb(var(--c-surface) / <alpha-value>)',
+  'surface-strong': 'rgb(var(--c-surface-strong) / <alpha-value>)',
+  'main': {
     50: '#fff8db',
     100: '#ffefad',
     200: '#ffe071',
@@ -24,7 +33,7 @@ export const unoColors = {
     900: '#3f2d13',
     950: '#211606',
   },
-  secondary: {
+  'secondary': {
     50: '#f4f5f7',
     100: '#dfe2e7',
     200: '#b8bec8',

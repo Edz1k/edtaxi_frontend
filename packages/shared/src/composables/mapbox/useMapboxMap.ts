@@ -4,9 +4,18 @@ import type { GeoPlace } from '../../types/geocoding'
 import type { PassengerDriverLocation } from '../../types/websocket'
 import type { UserCoordinates } from './useUserLocation'
 import { ref, shallowRef } from 'vue'
+import { isDark } from '../dark'
 
 export type MapboxModule = typeof import('mapbox-gl')
 export const ALMATY_CENTER: [number, number] = [76.9286, 43.2389]
+
+// Стиль карты завязан на тему: светлый в светлой теме, тёмный в тёмной.
+const LIGHT_MAP_STYLE = 'mapbox://styles/mapbox/streets-v12'
+const DARK_MAP_STYLE = 'mapbox://styles/mapbox/dark-v11'
+
+export function mapStyleForTheme(dark: boolean) {
+  return dark ? DARK_MAP_STYLE : LIGHT_MAP_STYLE
+}
 
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined
 
@@ -74,7 +83,7 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
       center: initialCenter ?? ALMATY_CENTER,
       container: mapContainer.value,
       pitch: 10,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: mapStyleForTheme(isDark.value),
       zoom: 12,
     })
 

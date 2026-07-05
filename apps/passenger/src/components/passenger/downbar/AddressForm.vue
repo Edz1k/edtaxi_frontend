@@ -53,7 +53,7 @@ const showQuickDestinations = computed(() =>
 
       <button
         aria-label="Выбрать точку назначения на карте"
-        class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-white transition active:scale-95"
+        class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-surface/8 text-body transition active:scale-95"
         title="Выбрать точку назначения на карте"
         type="button"
         @click="emit('pickFromMap', 'destination')"
@@ -63,13 +63,13 @@ const showQuickDestinations = computed(() =>
     </header>
 
     <div class="space-y-1.5">
-      <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-white/6 px-3.5 transition focus-within:bg-white/10">
+      <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-surface/6 px-3.5 transition focus-within:bg-surface/10">
         <span class="i-mdi-near-me shrink-0 text-5 text-main-300" aria-hidden="true" />
 
         <input
           :value="pickup"
           aria-label="Адрес отправления"
-          class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-400"
+          class="min-w-0 flex-1 bg-transparent text-sm text-body font-800 outline-none placeholder:text-muted"
           name="pickup_address"
           placeholder="Откуда"
           type="text"
@@ -79,7 +79,7 @@ const showQuickDestinations = computed(() =>
 
         <button
           aria-label="Определить мое местоположение"
-          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-surface/7 text-body transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
           :disabled="isLocatingUser"
           title="Моя геопозиция"
           type="button"
@@ -93,7 +93,7 @@ const showQuickDestinations = computed(() =>
 
         <button
           aria-label="Выбрать адрес отправления на карте"
-          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
+          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-surface/7 text-body transition active:scale-95"
           title="Выбрать на карте"
           type="button"
           @click="emit('pickFromMap', 'pickup')"
@@ -102,13 +102,13 @@ const showQuickDestinations = computed(() =>
         </button>
       </div>
 
-      <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-white/6 px-3.5 transition focus-within:bg-white/10">
+      <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-surface/6 px-3.5 transition focus-within:bg-surface/10">
         <span class="i-mdi-flag-checkered shrink-0 text-5 text-main-300" aria-hidden="true" />
 
         <input
           :value="destination"
           aria-label="Адрес назначения"
-          class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-400"
+          class="min-w-0 flex-1 bg-transparent text-sm text-body font-800 outline-none placeholder:text-muted"
           name="destination_address"
           placeholder="Куда"
           type="text"
@@ -118,7 +118,7 @@ const showQuickDestinations = computed(() =>
 
         <button
           aria-label="Выбрать адрес назначения на карте"
-          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
+          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-surface/7 text-body transition active:scale-95"
           title="Выбрать на карте"
           type="button"
           @click="emit('pickFromMap', 'destination')"
@@ -143,25 +143,25 @@ const showQuickDestinations = computed(() =>
     />
 
     <!-- Частые и недавние адреса из истории поездок — быстрый выбор «Куда» -->
-    <div v-if="showQuickDestinations" class="rounded-[1.65rem] bg-white/5 p-2">
-      <p class="px-2 pb-1 pt-1.5 text-[11px] text-slate-500 font-800 uppercase">
+    <div v-if="showQuickDestinations" class="rounded-[1.65rem] bg-surface/5 p-2">
+      <p class="px-2 pb-1 pt-1.5 text-[11px] text-muted/70 font-800 uppercase">
         Недавние и частые
       </p>
       <button
         v-for="item in quickDestinations"
         :key="item.place.id"
-        class="w-full flex items-center gap-3 rounded-[1.25rem] px-3 py-2.5 text-left transition active:scale-[0.99] hover:bg-white/6"
+        class="w-full flex items-center gap-3 rounded-[1.25rem] px-3 py-2.5 text-left transition active:scale-[0.99] hover:bg-surface/6"
         type="button"
         @click="emit('selectDestination', item.place)"
       >
-        <span class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-main-200">
+        <span class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-surface/7 text-main-200">
           <span :class="item.times > 2 ? 'i-mdi-star' : 'i-mdi-history'" class="text-4.5" />
         </span>
         <span class="min-w-0 flex-1">
           <span class="block truncate text-sm font-800">{{ item.place.name }}</span>
-          <span class="block truncate text-xs text-slate-500 font-700">{{ item.place.address }}</span>
+          <span class="block truncate text-xs text-muted/70 font-700">{{ item.place.address }}</span>
         </span>
-        <span v-if="item.times > 1" class="shrink-0 text-[11px] text-slate-500 font-800">
+        <span v-if="item.times > 1" class="shrink-0 text-[11px] text-muted/70 font-800">
           ×{{ item.times }}
         </span>
       </button>
