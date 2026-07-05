@@ -11,6 +11,7 @@ import RatePassengerModal from '~/components/driver/RatePassengerModal.vue'
 import VerificationReminderBanner from '~/components/driver/VerificationReminderBanner.vue'
 import { useDriverTrackingSocket } from '~/composables/driver/useDriverTrackingSocket'
 import { useOfferRoute } from '~/composables/driver/useOfferRoute'
+import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { offerToPlace } from '~/utils/geoPlace'
@@ -18,6 +19,14 @@ import { offerToPlace } from '~/utils/geoPlace'
 const driver = useDriverStore()
 const onboarding = useDriverOnboardingStore()
 const tracking = useDriverTrackingSocket()
+
+// Push-канал для сообщений чата поездки: бейдж «Чат с пассажиром» обновляется,
+// пока водитель смотрит на карту.
+const notifications = useNotificationsSocket()
+watch(() => driver.hasActiveTrip, (active) => {
+  if (active)
+    notifications.connect()
+}, { immediate: true })
 const { isGranted: isLocationGranted } = useLocationAccess()
 const {
   liveCoordinates,

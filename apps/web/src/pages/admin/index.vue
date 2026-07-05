@@ -56,6 +56,12 @@ const adminCards = computed(() => [
     to: '/admin/support-rooms',
   },
   {
+    description: 'Переписка пассажиров и водителей внутри поездок — контроль качества.',
+    icon: 'i-mdi-message-text-outline',
+    title: 'Чаты поездок',
+    to: '/support/trip-chats',
+  },
+  {
     description: 'Заявки водителей и парков на вывод средств.',
     icon: 'i-mdi-cash-multiple',
     title: 'Выплаты',

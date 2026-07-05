@@ -20,6 +20,9 @@ export interface AdminSupportStats {
 
 export interface AdminUser {
   avatar_url: null | string
+  // До какого момента действует блокировка (null = бессрочная) и её причина.
+  blocked_reason?: null | string
+  blocked_until?: null | string
   created_at: string
   first_name: null | string
   id: string
@@ -50,6 +53,9 @@ export interface AdminListUsersResponse {
 
 export interface AdminBlockUserPayload {
   blocked: boolean
+  // hours > 0 — временная блокировка («наказание» на N часов), 0/не задано — бессрочная.
+  hours?: number
+  reason?: string
 }
 
 export interface AdminBlockUserResponse {

@@ -65,11 +65,24 @@ export interface ChatMessageWireMessage {
   type: 'chat_message'
 }
 
-export type DriverWebSocketMessage = ChatMessageWireMessage | DriverTripOfferWireMessage | TripStatusWireMessage
+// Чат поездки (пассажир <-> водитель): комнатой служит сама поездка.
+export interface TripChatMessageWireMessage {
+  data: {
+    content: string
+    id: string
+    image_url?: null | string
+    sender_id: string
+    sent_at: string
+    trip_id: string
+  }
+  type: 'trip_chat_message'
+}
+
+export type DriverWebSocketMessage = ChatMessageWireMessage | DriverTripOfferWireMessage | TripChatMessageWireMessage | TripStatusWireMessage
 
 export interface PassengerDriverLocationWireMessage {
   data: PassengerDriverLocation
   type: 'driver_location'
 }
 
-export type PassengerWebSocketMessage = ChatMessageWireMessage | PassengerDriverLocationWireMessage | TripStatusWireMessage
+export type PassengerWebSocketMessage = ChatMessageWireMessage | PassengerDriverLocationWireMessage | TripChatMessageWireMessage | TripStatusWireMessage

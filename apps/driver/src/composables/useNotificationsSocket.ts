@@ -3,14 +3,16 @@ import { useWebSocket } from '@vueuse/core'
 import { buildWsUrl } from '~/api/client'
 import { useParkChatStore } from '~/stores/parkChat'
 import { useSupportStore } from '~/stores/support'
+import { useTripChatStore } from '~/stores/tripChat'
 
 // Общий push-канал /ws/notifications — держим открытым на экранах, которым
-// нужны live-обновления, не привязанные к конкретной поездке (чат поддержки
-// и чат с таксопарком). Сервер адресует сообщения по userID, так что одно
-// такое соединение покрывает любую роль.
+// нужны live-обновления, не привязанные к конкретной поездке (чат поддержки,
+// чат с таксопарком, чат поездки). Сервер адресует сообщения по userID, так
+// что одно такое соединение покрывает любую роль.
 export function useNotificationsSocket() {
   const support = useSupportStore()
   const parkChat = useParkChatStore()
+  const tripChat = useTripChatStore()
 
   function handleMessage(event: MessageEvent<string>) {
     try {
@@ -21,6 +23,9 @@ export function useNotificationsSocket() {
 
       if (message.type === 'park_chat_message')
         applyParkChatMessage(message)
+
+      if (message.type === 'trip_chat_message')
+        tripChat.receiveMessage(message.data)
     }
     catch {
       // молча игнорируем нераспознанные сообщения — это общий канал

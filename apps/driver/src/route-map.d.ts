@@ -178,6 +178,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/trip-chat': RouteRecordInfo<
+      '/trip-chat',
+      '/trip-chat',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
   }
 
   /**
@@ -354,6 +361,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/menu/vehicle.vue': {
       routes:
         | '/menu/vehicle'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/trip-chat.vue': {
+      routes:
+        | '/trip-chat'
       views:
         | never
       pathParamNames:

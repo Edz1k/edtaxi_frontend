@@ -6,6 +6,7 @@ import { useDriverEarningsStore } from '~/stores/driverEarnings'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { useParkChatStore } from '~/stores/parkChat'
 import { useSupportStore } from '~/stores/support'
+import { useTripChatStore } from '~/stores/tripChat'
 
 export const SAVED_ACCOUNTS_KEY = 'taxiapp_driver_saved_accounts'
 
@@ -29,6 +30,7 @@ export const useAuthStore = createAuthStore({
     useDriverEarningsStore().clearEarningsState()
     useSupportStore().clearSupportState()
     useParkChatStore().clearParkChatState()
+    useTripChatStore().clearTripChatState()
   },
   savedAccountsKey: SAVED_ACCOUNTS_KEY,
 })

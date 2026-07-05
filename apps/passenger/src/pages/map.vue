@@ -3,6 +3,7 @@ import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { usePassengerTripSocket } from '~/composables/passenger/usePassengerTripSocket'
+import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
 import { usePassengerStore } from '~/stores/passenger'
 import { usePlacesStore } from '~/stores/places'
 import { useTripsStore } from '~/stores/trips'
@@ -12,6 +13,14 @@ const trips = useTripsStore()
 const places = usePlacesStore()
 const activeTripId = computed(() => trips.hasActiveTrip ? trips.activeTrip?.id ?? '' : '')
 usePassengerTripSocket(activeTripId)
+
+// Push-канал для сообщений чата поездки: бейдж «Чат с водителем» обновляется,
+// пока пассажир смотрит на карту.
+const notifications = useNotificationsSocket()
+watch(activeTripId, (id) => {
+  if (id)
+    notifications.connect()
+}, { immediate: true })
 
 function selectFavoritePlace(place: GeoPlace) {
   trips.setDestinationPlace(place)

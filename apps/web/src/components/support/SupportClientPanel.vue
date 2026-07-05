@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { SupportRoom } from '~/types/support'
+import { showErrorToast } from '~/api/errors'
+import { blockUserBySupport } from '~/api/trip-chats'
 import { formatTime, shortId } from '~/utils/format'
 import {
   isAssignedTo,
@@ -46,6 +48,45 @@ const actionHint = computed(() => resolveSupportActionHint({
   isAssigned: isAssigned.value,
   hasAgent: !!props.room?.agent_id,
 }))
+
+// --- Блокировка клиента («наказание»: срок + причина) ---
+
+const showBlockForm = ref(false)
+const blockHours = ref(5)
+const blockReason = ref('')
+const isBlocking = ref(false)
+const blockedNow = ref(false)
+
+const BLOCK_DURATIONS = [
+  { label: '1 ч', value: 1 },
+  { label: '5 ч', value: 5 },
+  { label: '24 ч', value: 24 },
+  { label: 'Навсегда', value: 0 },
+]
+
+watch(() => props.room?.id, () => {
+  showBlockForm.value = false
+  blockReason.value = ''
+  blockedNow.value = false
+})
+
+async function confirmBlock() {
+  const userId = props.room?.passenger_id
+  if (!userId || isBlocking.value || !blockReason.value.trim())
+    return
+  isBlocking.value = true
+  try {
+    await blockUserBySupport(userId, { blocked: true, hours: blockHours.value, reason: blockReason.value.trim() })
+    blockedNow.value = true
+    showBlockForm.value = false
+  }
+  catch (error) {
+    showErrorToast(error, 'Не удалось заблокировать пользователя.')
+  }
+  finally {
+    isBlocking.value = false
+  }
+}
 </script>
 
 <template>
@@ -91,6 +132,57 @@ const actionHint = computed(() => resolveSupportActionHint({
         <span class="i-mdi-account-details-outline text-4.5" aria-hidden="true" />
         Открыть профиль
       </RouterLink>
+
+      <!-- Блокировка клиента: «наказание» на срок с обязательной причиной -->
+      <p v-if="blockedNow" class="mt-3 rounded-lg bg-red-500/12 px-3 py-2 text-xs text-red-300 font-900">
+        Пользователь заблокирован
+      </p>
+      <button
+        v-else-if="!showBlockForm"
+        class="mt-3 h-9 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-red-500/12 text-sm text-red-300 font-900 transition hover:bg-red-500/20"
+        type="button"
+        @click="showBlockForm = true"
+      >
+        <span class="i-mdi-account-cancel-outline text-4.5" aria-hidden="true" />
+        Заблокировать
+      </button>
+      <div v-else class="mt-3 border border-red-400/20 rounded-lg bg-red-500/6 p-2.5">
+        <div class="flex flex-wrap gap-1.5">
+          <button
+            v-for="duration in BLOCK_DURATIONS"
+            :key="duration.value"
+            class="h-8 rounded-lg px-2.5 text-xs font-900 transition active:scale-[0.97]"
+            :class="blockHours === duration.value ? 'bg-red-400 text-#06142f' : 'bg-white/8 text-white/70 hover:bg-white/12'"
+            type="button"
+            @click="blockHours = duration.value"
+          >
+            {{ duration.label }}
+          </button>
+        </div>
+        <textarea
+          v-model="blockReason"
+          class="mt-2 h-16 w-full resize-none border border-white/10 rounded-lg bg-white/6 p-2 text-xs outline-none transition focus:border-red-300/50"
+          maxlength="500"
+          placeholder="Причина блокировки (обязательно)"
+        />
+        <div class="mt-2 flex gap-1.5">
+          <button
+            class="h-8 flex-1 rounded-lg bg-white/8 text-xs font-900 transition active:scale-[0.98]"
+            type="button"
+            @click="showBlockForm = false"
+          >
+            Отмена
+          </button>
+          <button
+            :disabled="isBlocking || !blockReason.trim()"
+            class="h-8 flex-1 rounded-lg bg-red-500/80 text-xs text-white font-900 transition active:scale-[0.98] disabled:opacity-50"
+            type="button"
+            @click="confirmBlock"
+          >
+            {{ isBlocking ? 'Блокируем...' : 'Заблокировать' }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="mt-3 border border-white/8 rounded-lg bg-secondary-900/45 p-3">

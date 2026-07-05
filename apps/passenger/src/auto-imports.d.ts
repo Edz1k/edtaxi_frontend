@@ -290,6 +290,7 @@ declare global {
   const useToast: typeof import('../../../packages/shared/src/composables/useToast').useToast
   const useToggle: typeof import('@vueuse/core').useToggle
   const useTransition: typeof import('@vueuse/core').useTransition
+  const useTripChatStore: typeof import('./stores/tripChat').useTripChatStore
   const useTripsStore: typeof import('./stores/trips').useTripsStore
   const useUrlSearchParams: typeof import('@vueuse/core').useUrlSearchParams
   const useUserMedia: typeof import('@vueuse/core').useUserMedia
@@ -619,6 +620,7 @@ declare module 'vue' {
     readonly useToast: UnwrapRef<typeof import('../../../packages/shared/src/composables/useToast')['useToast']>
     readonly useToggle: UnwrapRef<typeof import('@vueuse/core')['useToggle']>
     readonly useTransition: UnwrapRef<typeof import('@vueuse/core')['useTransition']>
+    readonly useTripChatStore: UnwrapRef<typeof import('./stores/tripChat')['useTripChatStore']>
     readonly useTripsStore: UnwrapRef<typeof import('./stores/trips')['useTripsStore']>
     readonly useUrlSearchParams: UnwrapRef<typeof import('@vueuse/core')['useUrlSearchParams']>
     readonly useUserMedia: UnwrapRef<typeof import('@vueuse/core')['useUserMedia']>

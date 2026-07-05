@@ -49,10 +49,13 @@ export const useAdminStore = defineStore('admin', () => {
     }, 'Не удалось загрузить пользователей.')
   }
 
-  async function setUserBlocked(user: AdminUser, blocked: boolean) {
+  // Блокировка с «наказанием»: hours > 0 — временная (на N часов), 0 — бессрочная.
+  async function setUserBlocked(user: AdminUser, blocked: boolean, hours = 0, reason = '') {
     return withLoading(isMutating, async () => {
-      const response = await blockAdminUser(user.id, { blocked })
+      const response = await blockAdminUser(user.id, { blocked, hours, reason })
       user.is_blocked = response.is_blocked
+      user.blocked_until = blocked && hours > 0 ? new Date(Date.now() + hours * 3_600_000).toISOString() : null
+      user.blocked_reason = blocked ? reason || null : null
     }, 'Не удалось изменить статус пользователя.')
   }
 

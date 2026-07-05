@@ -124,6 +124,42 @@ function toggleRole(user: AdminUser, role: AdminAssignableRole) {
   if (canRevokeRole(user, role))
     return admin.revokeUserRole(user, role)
 }
+
+// --- Блокировка с «наказанием»: срок + причина ---
+
+const blockTarget = ref<AdminUser | null>(null)
+const blockHours = ref(5)
+const blockReason = ref('')
+
+const BLOCK_DURATIONS = [
+  { label: '1 час', value: 1 },
+  { label: '5 часов', value: 5 },
+  { label: '24 часа', value: 24 },
+  { label: '3 суток', value: 72 },
+  { label: 'Навсегда', value: 0 },
+]
+
+function openBlockDialog(user: AdminUser) {
+  blockTarget.value = user
+  blockHours.value = 5
+  blockReason.value = ''
+}
+
+async function confirmBlock() {
+  const user = blockTarget.value
+  if (!user)
+    return
+  await admin.setUserBlocked(user, true, blockHours.value, blockReason.value.trim())
+  blockTarget.value = null
+}
+
+function blockedLabel(user: AdminUser) {
+  if (!user.is_blocked)
+    return 'Активен'
+  if (user.blocked_until)
+    return `Блок до ${new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(user.blocked_until))}`
+  return 'Блок'
+}
 </script>
 
 <template>
@@ -245,8 +281,9 @@ function toggleRole(user: AdminUser, role: AdminAssignableRole) {
         <span
           class="w-fit rounded-full px-3 py-1.5 text-xs font-900 md:w-auto md:rounded-none md:px-0 md:py-0 md:text-sm"
           :class="user.is_blocked ? 'bg-red-500/12 text-red-300 md:bg-transparent' : 'bg-emerald-500/12 text-emerald-300 md:bg-transparent'"
+          :title="user.blocked_reason || undefined"
         >
-          {{ user.is_blocked ? 'Блок' : 'Активен' }}
+          {{ blockedLabel(user) }}
         </span>
 
         <button
@@ -254,10 +291,70 @@ function toggleRole(user: AdminUser, role: AdminAssignableRole) {
           class="h-10 rounded-xl text-sm font-900 transition active:scale-[0.98] disabled:opacity-60"
           :class="user.is_blocked ? 'bg-emerald-500/12 text-emerald-300' : 'bg-red-500/12 text-red-300'"
           type="button"
-          @click="admin.setUserBlocked(user, !user.is_blocked)"
+          @click="user.is_blocked ? admin.setUserBlocked(user, false) : openBlockDialog(user)"
         >
           {{ user.is_blocked ? 'Разблок' : 'Блок' }}
         </button>
+      </div>
+    </div>
+
+    <!-- Диалог блокировки: срок («наказание») + причина -->
+    <div
+      v-if="blockTarget"
+      class="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      @click.self="blockTarget = null"
+    >
+      <div class="max-w-md w-full border border-white/12 rounded-3xl bg-#071a38/96 p-5 text-white shadow-2xl shadow-black/40">
+        <h3 class="text-lg font-950">
+          Заблокировать {{ displayName(blockTarget) }}
+        </h3>
+        <p class="mt-1 text-sm text-white/50">
+          {{ blockTarget.phone }}
+        </p>
+
+        <p class="mt-4 text-xs text-white/45 font-900 uppercase">
+          Срок блокировки
+        </p>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <button
+            v-for="duration in BLOCK_DURATIONS"
+            :key="duration.value"
+            class="h-9 rounded-xl px-3 text-sm font-900 transition active:scale-[0.97]"
+            :class="blockHours === duration.value ? 'bg-cyan-400 text-#06142f' : 'bg-white/8 text-white/70 hover:bg-white/12'"
+            type="button"
+            @click="blockHours = duration.value"
+          >
+            {{ duration.label }}
+          </button>
+        </div>
+
+        <p class="mt-4 text-xs text-white/45 font-900 uppercase">
+          Причина
+        </p>
+        <textarea
+          v-model="blockReason"
+          class="mt-2 h-24 w-full resize-none border border-white/10 rounded-2xl bg-white/6 p-3 text-sm outline-none transition focus:border-cyan-300/50"
+          maxlength="500"
+          placeholder="Например: грубость с пассажиром, отмены заказов..."
+        />
+
+        <div class="mt-4 flex gap-2">
+          <button
+            class="h-11 flex-1 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+            type="button"
+            @click="blockTarget = null"
+          >
+            Отмена
+          </button>
+          <button
+            :disabled="admin.isMutating || !blockReason.trim()"
+            class="h-11 flex-1 rounded-2xl bg-red-500/80 text-sm text-white font-900 transition active:scale-[0.98] disabled:opacity-50"
+            type="button"
+            @click="confirmBlock"
+          >
+            {{ admin.isMutating ? 'Блокируем...' : 'Заблокировать' }}
+          </button>
+        </div>
       </div>
     </div>
 
