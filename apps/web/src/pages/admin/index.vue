@@ -38,6 +38,12 @@ const adminCards = computed(() => [
     to: '/admin/parks',
   },
   {
+    description: 'Платформенный парк: заявки водителей «Стать партнёром платформы» и их список.',
+    icon: 'i-mdi-garage',
+    title: 'Гараж платформы',
+    to: '/admin/garage',
+  },
+  {
     description: 'Переписка таксопарков с водителями.',
     icon: 'i-mdi-chat-outline',
     title: 'Чаты парков',

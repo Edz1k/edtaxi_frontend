@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CategoryDemand } from '~/types/admin'
-import { CATEGORY_LABELS, CATEGORY_ORDER } from '~/constants/admin'
+import { CATEGORY_ICONS, CATEGORY_LABELS, CATEGORY_ORDER } from '~/constants/admin'
 import { useAdminStore } from '~/stores/admin'
 
 const admin = useAdminStore()
@@ -46,9 +46,10 @@ onMounted(loadDemand)
       </button>
     </div>
 
-    <div class="grid mt-4 gap-4 lg:grid-cols-4 sm:grid-cols-2">
+    <div class="grid mt-4 gap-4 lg:grid-cols-3 sm:grid-cols-2 xl:grid-cols-5">
       <div v-for="card in demandCards" :key="card.category" class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
-        <p class="text-xs text-white/42 font-900 uppercase">
+        <p class="inline-flex items-center gap-1.5 text-xs text-white/42 font-900 uppercase">
+          <span class="text-4" :class="CATEGORY_ICONS[card.category]" />
           {{ CATEGORY_LABELS[card.category] }}
         </p>
         <p class="mt-2 text-3xl font-950">

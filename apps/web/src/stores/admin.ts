@@ -5,6 +5,7 @@ import type { AdminSupportRoomsParams, SupportRoom } from '~/types/support'
 import type { Trip } from '~/types/trips'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, assignAdminSupportRoom, blockAdminUser, closeAdminSupportRoom, createAdminTariff, createParkOwner as createParkOwnerApi, getAdminTrip, getDemandOverview, getPlatformSettings, getSupportStats, listAdminPayouts, listAdminSupportRooms, listAdminTariffs, listAdminTrips, listAdminUsers, listTechSupportNumbers, markAdminPayoutPaid, rejectAdminPayout, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi, updateAdminTariff, updatePlatformSettings } from '~/api/admin'
+import { ApiError } from '~/api/client'
 import { listAdminParkChats, listAdminParks, rejectAdminPark, setAdminParkPlatform, verifyAdminPark } from '~/api/park'
 import { useStoreAction } from '~/composables/useStoreAction'
 import { useAuthStore } from '~/stores/auth'
@@ -238,7 +239,17 @@ export const useAdminStore = defineStore('admin', () => {
   // Создаёт тариф, если id не передан, иначе обновляет существующий.
   async function saveTariff(payload: TariffPayload, id?: string) {
     return withLoading(isMutating, async () => {
-      const saved = id ? await updateAdminTariff(id, payload) : await createAdminTariff(payload)
+      let saved: Tariff
+      try {
+        saved = id ? await updateAdminTariff(id, payload) : await createAdminTariff(payload)
+      }
+      catch (error) {
+        // 409 — у категории уже есть активный тариф; переводим серверный
+        // текст в понятный, showErrorToast покажет message как есть.
+        if (error instanceof ApiError && error.status === 409)
+          throw new Error('Активный тариф для этой категории уже существует')
+        throw error
+      }
       const index = tariffs.value.findIndex(item => item.id === saved.id)
       if (index === -1)
         tariffs.value = [...tariffs.value, saved]

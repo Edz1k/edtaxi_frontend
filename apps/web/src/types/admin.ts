@@ -142,13 +142,15 @@ export interface AdminTechSupportNumberPayload {
   name?: string
 }
 
-export type TariffCategory = 'business' | 'comfort' | 'economy' | 'minivan'
+export type TariffCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
 
 // Тариф платформы (park_id IS NULL) — базовые параметры расчёта цены плюс
 // surge_max, потолок коэффициента спроса для категории.
+// name — произвольное название тарифа; пустая строка = стандартное название категории.
 export interface Tariff {
   id: string
   category: TariffCategory
+  name: string
   base_fare: number
   per_km: number
   per_min: number
@@ -161,6 +163,7 @@ export interface Tariff {
 
 export interface TariffPayload {
   category?: TariffCategory
+  name?: string
   base_fare: number
   per_km: number
   per_min: number

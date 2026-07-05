@@ -36,7 +36,7 @@ interface SlotGroup {
   slots: SlotMeta[]
 }
 
-const SLOT_GROUPS: SlotGroup[] = [
+const CAR_SLOT_GROUPS: SlotGroup[] = [
   {
     title: 'Кузов автомобиля',
     slots: [
@@ -76,8 +76,46 @@ const SLOT_GROUPS: SlotGroup[] = [
   },
 ]
 
-const vehicleId = computed(() => driver.verification?.vehicles[0]?.id ?? driver.vehicles[0]?.id ?? '')
+// Для мототакси набор слотов другой: без салона и багажника, страховка
+// обязательна, плюс фото второго шлема для пассажира.
+const MOTO_SLOT_GROUPS: SlotGroup[] = [
+  {
+    title: 'Мотоцикл',
+    slots: [
+      { slot: 'exterior_front', label: 'Спереди', icon: 'i-mdi-motorbike', capture: 'environment' },
+      { slot: 'exterior_back', label: 'Сзади', icon: 'i-mdi-motorbike', capture: 'environment' },
+      { slot: 'exterior_left', label: 'Левый бок', icon: 'i-mdi-motorbike', capture: 'environment' },
+      { slot: 'exterior_right', label: 'Правый бок', icon: 'i-mdi-motorbike', capture: 'environment' },
+    ],
+  },
+  {
+    title: 'Экипировка',
+    slots: [
+      { slot: 'moto_second_helmet', label: 'Второй шлем для пассажира', icon: 'i-mdi-racing-helmet', capture: 'environment' },
+    ],
+  },
+  {
+    title: 'Документы',
+    slots: [
+      { slot: 'doc_registration_front', label: 'Техпаспорт (лицевая сторона)', icon: 'i-mdi-file-document', capture: null },
+      { slot: 'doc_registration_back', label: 'Техпаспорт (обратная сторона)', icon: 'i-mdi-file-document-outline', capture: null },
+      { slot: 'doc_insurance', label: 'Страховой полис', icon: 'i-mdi-shield-check', capture: null },
+    ],
+  },
+  {
+    title: 'VIN',
+    slots: [
+      { slot: 'vin', label: 'VIN-номер', icon: 'i-mdi-barcode-scan', capture: 'environment', optional: true },
+    ],
+  },
+]
+
+const currentVehicle = computed(() => driver.verification?.vehicles[0] ?? driver.vehicles[0] ?? null)
+const vehicleId = computed(() => currentVehicle.value?.id ?? '')
 const hasVehicle = computed(() => Boolean(vehicleId.value))
+const isMoto = computed(() => currentVehicle.value?.category === 'moto')
+
+const slotGroups = computed(() => isMoto.value ? MOTO_SLOT_GROUPS : CAR_SLOT_GROUPS)
 
 const uploadedRequiredCount = computed(() =>
   Math.max(0, driver.requiredPhotoSlots.length - driver.missingPhotoSlots.length),
@@ -142,7 +180,7 @@ async function submit() {
         </div>
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
-            Фото машины
+            {{ isMoto ? 'Фото мотоцикла' : 'Фото машины' }}
           </h1>
           <p class="mt-1 text-sm text-slate-400 leading-5">
             <template v-if="hasVehicle && driver.requiredPhotoSlots.length">
@@ -180,7 +218,7 @@ async function submit() {
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
-              Автомобиль в кадре целиком
+              {{ isMoto ? 'Мотоцикл в кадре целиком' : 'Автомобиль в кадре целиком' }}
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
@@ -199,7 +237,7 @@ async function submit() {
         </div>
 
         <template v-else>
-          <div v-for="group in SLOT_GROUPS" :key="group.title">
+          <div v-for="group in slotGroups" :key="group.title">
             <p class="mb-3 text-sm text-white font-800">
               {{ group.title }}
             </p>
