@@ -24,7 +24,6 @@ useHead({
 
 onMounted(() => {
   admin.loadTechSupportNumbers().catch(() => {})
-  admin.loadSupportStats().catch(() => {})
 })
 
 async function submit() {
@@ -44,35 +43,7 @@ async function submit() {
     description="Управляйте номерами, которым разрешён отдельный вход в кабинет техподдержки."
     title="Техподдержка"
   >
-    <!-- Счётчик решённых обращений -->
-    <div v-if="admin.supportStats" class="grid mt-6 gap-3 sm:grid-cols-3">
-      <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
-        <p class="text-xs text-white/45 font-800 uppercase">
-          Решено
-        </p>
-        <p class="mt-1 text-2xl text-emerald-300 font-950">
-          {{ admin.supportStats.resolved }}/{{ admin.supportStats.total }}
-        </p>
-      </div>
-      <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
-        <p class="text-xs text-white/45 font-800 uppercase">
-          В работе
-        </p>
-        <p class="mt-1 text-2xl font-950" :class="admin.supportStats.open > 0 ? 'text-amber-300' : ''">
-          {{ admin.supportStats.open }}
-        </p>
-      </div>
-      <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
-        <p class="text-xs text-white/45 font-800 uppercase">
-          Всего обращений
-        </p>
-        <p class="mt-1 text-2xl font-950">
-          {{ admin.supportStats.total }}
-        </p>
-      </div>
-    </div>
-
-    <form class="grid mt-5 gap-3 border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur md:grid-cols-[minmax(200px,1fr)_minmax(160px,0.7fr)_auto] md:items-end" @submit.prevent="submit">
+    <form class="grid mt-6 gap-3 border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur md:grid-cols-[minmax(200px,1fr)_minmax(160px,0.7fr)_auto] md:items-end" @submit.prevent="submit">
       <PhoneInput v-model="phone" />
       <input
         v-model="name"
