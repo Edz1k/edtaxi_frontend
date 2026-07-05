@@ -1,35 +1,31 @@
 @import './markdown.css';
 
 :root {
-  --app-safe-area-top: max(
-    env(safe-area-inset-top, 0px),
-    var(--tg-viewport-safe-area-inset-top, 0px),
-    var(--tg-viewport-content-safe-area-inset-top, 0px)
+  /* Инсет = железо (нотч/статус-бар) + бэнд UI Telegram (кнопки ✕/⋯ поверх
+     контента в fullscreen). Их надо складывать: content-inset отсчитывается
+     ОТ safe-area. В fullsize content-inset = 0, поэтому обычный режим не
+     меняется; max с env — чтобы не задвоить железный инсет из двух источников. */
+  --app-safe-area-top: calc(
+    max(env(safe-area-inset-top, 0px), var(--tg-viewport-safe-area-inset-top, 0px)) +
+      var(--tg-viewport-content-safe-area-inset-top, 0px)
   );
-  --app-safe-area-right: max(
-    env(safe-area-inset-right, 0px),
-    var(--tg-viewport-safe-area-inset-right, 0px),
-    var(--tg-viewport-content-safe-area-inset-right, 0px)
+  --app-safe-area-right: calc(
+    max(env(safe-area-inset-right, 0px), var(--tg-viewport-safe-area-inset-right, 0px)) +
+      var(--tg-viewport-content-safe-area-inset-right, 0px)
   );
-  --app-safe-area-bottom: max(
-    env(safe-area-inset-bottom, 0px),
-    var(--tg-viewport-safe-area-inset-bottom, 0px),
-    var(--tg-viewport-content-safe-area-inset-bottom, 0px)
+  --app-safe-area-bottom: calc(
+    max(env(safe-area-inset-bottom, 0px), var(--tg-viewport-safe-area-inset-bottom, 0px)) +
+      var(--tg-viewport-content-safe-area-inset-bottom, 0px)
   );
-  --app-safe-area-left: max(
-    env(safe-area-inset-left, 0px),
-    var(--tg-viewport-safe-area-inset-left, 0px),
-    var(--tg-viewport-content-safe-area-inset-left, 0px)
+  --app-safe-area-left: calc(
+    max(env(safe-area-inset-left, 0px), var(--tg-viewport-safe-area-inset-left, 0px)) +
+      var(--tg-viewport-content-safe-area-inset-left, 0px)
   );
   --app-navbar-top-gap: 2rem;
   --app-menu-home-top-gap: 2.6rem;
   --app-menu-inner-top-gap: 7.75rem;
   --app-route-header-top-gap: 2.25rem;
   --app-viewport-height: var(--tg-viewport-height, 100vh);
-}
-
-:root.tg-fullscreen {
-  --app-navbar-top-gap: 3rem;
 }
 
 html,
