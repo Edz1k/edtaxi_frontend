@@ -313,7 +313,7 @@ declare global {
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, ShallowRef, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
   // @ts-ignore
-  export type { ToastKind, AppToast } from '../../../packages/shared/src/composables/useToast'
+  export type { ToastKind, ToastAction, AppToast } from '../../../packages/shared/src/composables/useToast'
   import('../../../packages/shared/src/composables/useToast')
 }
 

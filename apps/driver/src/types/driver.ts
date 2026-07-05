@@ -4,7 +4,8 @@ export type VerificationStatus = 'approved' | 'pending' | 'rejected'
 export type DriverTripStep = 'arrived' | 'in_progress' | 'to_pickup'
 
 // Слоты фото машины для верификации. required-набор приходит с бэка,
-// doc_insurance и vin — необязательные.
+// doc_insurance и vin — необязательные для машин; для мото страховка
+// обязательна, плюс отдельный слот moto_second_helmet (второй шлем пассажира).
 export type VehiclePhotoSlot
   = | 'dashboard'
     | 'doc_insurance'
@@ -16,6 +17,7 @@ export type VehiclePhotoSlot
     | 'exterior_right'
     | 'interior_back'
     | 'interior_front'
+    | 'moto_second_helmet'
     | 'trunk'
     | 'vin'
 
@@ -114,8 +116,10 @@ export interface DriverStatusPayload {
 }
 
 // Тариф больше не выбирается водителем — бэкенд сам выводит categories
-// из каталога машин по марке/модели/году.
+// из каталога машин по марке/модели/году. Исключение — мототакси:
+// каталог не используется, category: 'moto' передаётся явно.
 export interface DriverVehiclePayload {
+  category?: VehicleCategory
   color: string
   make: string
   model: string

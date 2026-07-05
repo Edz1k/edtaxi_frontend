@@ -74,6 +74,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   comfort: 'Комфорт',
   business: 'Бизнес',
   minivan: 'Минивэн',
+  moto: 'Мото',
 }
 
 const STATUS_LABELS: Record<string, string> = {

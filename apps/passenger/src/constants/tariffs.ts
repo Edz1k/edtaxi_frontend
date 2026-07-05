@@ -1,7 +1,7 @@
 import type { EstimateTripResponse, PaymentMethod, VehicleCategory } from '~/types/trips'
 
 // Канонический порядок тарифов в интерфейсе (от дешёвого к дорогому).
-export const TARIFF_ORDER: VehicleCategory[] = ['economy', 'comfort', 'business', 'minivan']
+export const TARIFF_ORDER: VehicleCategory[] = ['moto', 'economy', 'comfort', 'business', 'minivan']
 
 export const TARIFF_META: Record<VehicleCategory, {
   caption: string
@@ -27,6 +27,11 @@ export const TARIFF_META: Record<VehicleCategory, {
     caption: 'Для компании',
     icon: 'i-mdi-van-passenger',
     label: 'Минивэн',
+  },
+  moto: {
+    caption: 'Быстро по городу · 1 пассажир',
+    icon: 'i-mdi-motorbike',
+    label: 'Мото',
   },
 }
 

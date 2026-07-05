@@ -1,5 +1,5 @@
 export type TripStatus = 'cancelled' | 'completed' | 'driver_arriving' | 'driver_assigned' | 'in_progress' | 'searching'
-export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan'
+export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
 
 // TripDriverVehicle/TripDriver — данные назначенного водителя, которые бэкенд
 // подмешивает в детализацию поездки (админка) — см. admin.go tripDetailMap.

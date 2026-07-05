@@ -18,6 +18,8 @@ export interface BonusPromotion {
   description: string
   ends_at: string
   id: string
+  image_url?: string | null
+  message?: string
   my_trips: number
   reward: number
   scope: string

@@ -36,11 +36,28 @@ const showSuggestions = computed(() =>
 const existingId = ref('')
 const isEditing = computed(() => Boolean(existingId.value))
 
+// Режим мототакси: каталог машин не используется, категория 'moto'
+// отправляется явно, марка и модель — свободным текстом.
+const isMoto = ref(false)
+
 const resolveResult = ref<CatalogResolveResponse | null>(null)
 const isResolving = ref(false)
 const resolvedCategories = computed<VehicleCategory[]>(() =>
   resolveResult.value ? sortCategories(resolveResult.value.categories) : [],
 )
+
+function setMotoMode(value: boolean) {
+  if (isMoto.value === value)
+    return
+
+  isMoto.value = value
+  form.make = ''
+  form.model = ''
+  query.value = ''
+  lastPickedQuery.value = ''
+  suggestions.value = []
+  resolveResult.value = null
+}
 
 const savedCategories = ref<VehicleCategory[] | null>(null)
 
@@ -62,6 +79,7 @@ function prefillFromExisting() {
     return
 
   existingId.value = existing.id
+  isMoto.value = existing.category === 'moto'
   form.color = existing.color
   form.make = existing.make
   form.model = existing.model
@@ -138,7 +156,7 @@ watch(query, (val) => {
 })
 
 watchDebounced(query, async (val) => {
-  if (val === lastPickedQuery.value) {
+  if (isMoto.value || val === lastPickedQuery.value) {
     suggestions.value = []
     return
   }
@@ -166,7 +184,8 @@ watchDebounced(query, async (val) => {
 watchDebounced(
   [() => form.make, () => form.model, () => form.year],
   async ([make, model, year]) => {
-    if (!make.trim() || !model.trim() || !isValidYear(year)) {
+    // Для мото каталог не используется — тариф задаётся явно.
+    if (isMoto.value || !make.trim() || !model.trim() || !isValidYear(year)) {
       resolveResult.value = null
       return
     }
@@ -191,6 +210,7 @@ async function submitVehicle() {
     return
 
   const payload = {
+    ...(isMoto.value ? { category: 'moto' as const } : {}),
     color: form.color.trim(),
     make: form.make.trim(),
     model: form.model.trim(),
@@ -214,15 +234,20 @@ async function submitVehicle() {
     <section class="mx-auto max-w-sm pb-6 pt-[calc(var(--app-safe-area-top)+6.5rem)]">
       <div class="flex items-center gap-3">
         <div class="h-13 w-13 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200">
-          <span class="i-mdi-car-info text-7" />
+          <span :class="isMoto ? 'i-mdi-motorbike' : 'i-mdi-car-info'" class="text-7" />
         </div>
 
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
-            Автомобиль
+            {{ isMoto ? 'Мототакси' : 'Автомобиль' }}
           </h1>
           <p class="mt-1 text-sm text-slate-400 leading-5">
-            {{ isEditing ? 'Ваша машина уже добавлена. Можно отредактировать данные.' : 'Добавьте машину, чтобы выйти на линию и получать заказы.' }}
+            <template v-if="isEditing">
+              {{ isMoto ? 'Ваш мотоцикл уже добавлен. Можно отредактировать данные.' : 'Ваша машина уже добавлена. Можно отредактировать данные.' }}
+            </template>
+            <template v-else>
+              {{ isMoto ? 'Добавьте мотоцикл, чтобы выйти на линию и получать заказы.' : 'Добавьте машину, чтобы выйти на линию и получать заказы.' }}
+            </template>
           </p>
         </div>
       </div>
@@ -231,7 +256,7 @@ async function submitVehicle() {
       <div v-if="savedCategories" class="mt-8 rounded-3xl bg-emerald-500/10 p-6 text-center">
         <span class="i-mdi-check-circle mx-auto block text-12 text-emerald-400" />
         <p class="mt-3 text-lg text-white font-900">
-          Машина сохранена
+          {{ isMoto ? 'Мотоцикл сохранён' : 'Машина сохранена' }}
         </p>
         <p class="mt-1 text-sm text-slate-400">
           Доступные тарифы:
@@ -255,7 +280,61 @@ async function submitVehicle() {
       </div>
 
       <form v-else class="mt-8 space-y-5" @submit.prevent="submitVehicle">
-        <label class="relative block">
+        <!-- Переключатель «Стать мототакси» / возврат к автомобилю -->
+        <button
+          v-if="!isMoto"
+          class="w-full flex items-center gap-3 border border-main-500/25 rounded-2xl bg-main-500/10 p-4 text-left transition active:scale-[0.98]"
+          type="button"
+          @click="setMotoMode(true)"
+        >
+          <span class="h-11 w-11 flex shrink-0 items-center justify-center rounded-xl bg-main-500/18 text-main-200">
+            <span class="i-mdi-motorbike text-6" />
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm text-white font-900">Стать мототакси</span>
+            <span class="mt-0.5 block text-xs text-slate-400 leading-4">Работайте на мотоцикле — быстрые заказы по городу</span>
+          </span>
+          <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-500" />
+        </button>
+
+        <button
+          v-else
+          class="w-full flex items-center gap-3 border border-white/10 rounded-2xl bg-white/5 p-4 text-left transition active:scale-[0.98]"
+          type="button"
+          @click="setMotoMode(false)"
+        >
+          <span class="h-11 w-11 flex shrink-0 items-center justify-center rounded-xl bg-white/8 text-slate-300">
+            <span class="i-mdi-car text-6" />
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm text-white font-900">У меня автомобиль</span>
+            <span class="mt-0.5 block text-xs text-slate-400 leading-4">Вернуться к добавлению машины</span>
+          </span>
+          <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-500" />
+        </button>
+
+        <!-- Инфо для мототакси: страховка и второй шлем обязательны -->
+        <div v-if="isMoto" class="rounded-2xl bg-amber-500/12 p-4">
+          <p class="flex items-start gap-2 text-xs text-amber-300 leading-5">
+            <span class="i-mdi-shield-alert mt-0.5 shrink-0 text-4" />
+            Для мототакси обязательны страховка и второй шлем для пассажира. Перевозка только одного пассажира.
+          </p>
+        </div>
+
+        <!-- Мото: марка и модель свободным текстом, без автокомплита каталога -->
+        <div v-if="isMoto" class="grid grid-cols-2 gap-3">
+          <label class="block">
+            <span class="mb-2 block text-sm text-slate-300 font-600">Марка</span>
+            <input v-model="form.make" autocomplete="off" class="h-13 w-full border border-white/10 rounded-2xl bg-white/5 px-4 text-white font-800 outline-none focus:border-main-400" placeholder="Yamaha">
+          </label>
+
+          <label class="block">
+            <span class="mb-2 block text-sm text-slate-300 font-600">Модель</span>
+            <input v-model="form.model" autocomplete="off" class="h-13 w-full border border-white/10 rounded-2xl bg-white/5 px-4 text-white font-800 outline-none focus:border-main-400" placeholder="MT-07">
+          </label>
+        </div>
+
+        <label v-if="!isMoto" class="relative block">
           <span class="mb-2 block text-sm text-slate-300 font-600">Марка и модель</span>
           <input
             v-model="query"
@@ -290,8 +369,8 @@ async function submitVehicle() {
           </div>
         </label>
 
-        <!-- Доступные тарифы по каталогу -->
-        <div v-if="resolveResult" class="rounded-2xl p-4" :class="resolveResult.matched ? 'bg-emerald-500/10' : 'bg-white/5'">
+        <!-- Доступные тарифы по каталогу (для мото не показываем) -->
+        <div v-if="resolveResult && !isMoto" class="rounded-2xl p-4" :class="resolveResult.matched ? 'bg-emerald-500/10' : 'bg-white/5'">
           <p class="mb-2 text-xs text-slate-300 font-800 uppercase">
             Доступные тарифы
           </p>

@@ -85,6 +85,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   comfort: 'Комфорт',
   business: 'Бизнес',
   minivan: 'Минивэн',
+  moto: 'Мото',
 }
 
 function formatDate(value: string) {

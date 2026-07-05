@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Promotion, PromotionScope } from '~/types/promotions'
+import { mediaUrl } from '~/api/client'
 import { formatDate } from '~/utils/format'
 
 withDefaults(defineProps<{
@@ -62,6 +63,13 @@ function statusClass(promotion: Promotion) {
         :key="promotion.id"
         class="flex flex-wrap items-center gap-3 border-b border-white/6 px-4 py-4 last:border-b-0"
       >
+        <img
+          v-if="promotion.image_url"
+          alt="Баннер акции"
+          class="max-h-16 w-24 shrink-0 border border-white/10 rounded-xl object-cover"
+          :src="mediaUrl(promotion.image_url)"
+        >
+
         <div class="min-w-0 flex-1 basis-64">
           <div class="flex flex-wrap items-center gap-2">
             <p class="truncate text-sm font-900">
@@ -72,6 +80,13 @@ function statusClass(promotion: Promotion) {
               class="border border-cyan-200/16 rounded-full bg-cyan-300/10 px-2.5 py-1 text-[11px] text-cyan-100 font-900"
             >
               {{ SCOPE_LABELS[promotion.scope] }}
+            </span>
+            <span
+              v-if="promotion.message"
+              class="border border-amber-200/16 rounded-full bg-amber-300/10 px-2.5 py-1 text-[11px] text-amber-100 font-900"
+              title="Пользователям ушёл кастомный текст рассылки вместо шаблонного"
+            >
+              Свой текст рассылки
             </span>
           </div>
           <p v-if="promotion.description" class="mt-0.5 truncate text-xs text-white/42">

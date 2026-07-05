@@ -120,8 +120,14 @@ async function performRefresh(deviceFingerprint?: string) {
 
     return true
   }
-  catch {
-    if (typeof window !== 'undefined')
+  catch (error) {
+    // Сессию сбрасываем только когда сервер ЯВНО отверг refresh-токен
+    // (401/403). Сетевые сбои, 429 от rate limit и 5xx — транзиентные:
+    // разлогинивать по ним нельзя, иначе любой чих сети выкидывает живого
+    // пользователя на логин.
+    const status = isAxiosError(error) ? error.response?.status : undefined
+
+    if ((status === 401 || status === 403) && typeof window !== 'undefined')
       window.dispatchEvent(new Event(AUTH_SESSION_CHANGED_EVENT))
 
     return false
@@ -169,10 +175,11 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
 
     const responseMessage = getResponseErrorMessage(error.response?.data)
 
-    // Don't attempt refresh when there is no token at all — it would just
-    // generate a redundant 401 from the refresh endpoint.
+    // Пробуем refresh и на "missing token": access-cookie могла истечь или
+    // потеряться, пока refresh-cookie ещё жива (старые сессии, выданные до
+    // выравнивания MaxAge access-cookie с refresh). Для настоящих гостей
+    // refresh вернёт 401 один раз (dedupe) и корректно оставит гостя.
     const shouldRefresh = error.response?.status === 401
-      && responseMessage !== 'missing token'
       && !options.skipAuthRefresh
 
     if (shouldRefresh) {
