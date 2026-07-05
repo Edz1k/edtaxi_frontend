@@ -24,6 +24,8 @@ declare module 'vue' {
     OtpSelect: typeof import('./components/auth/OtpSelect.vue')['default']
     PhoneInput: typeof import('./components/auth/PhoneInput.vue')['default']
     PlatformCommissionForm: typeof import('./components/admin/settings/PlatformCommissionForm.vue')['default']
+    PromotionForm: typeof import('./components/promotions/PromotionForm.vue')['default']
+    PromotionsList: typeof import('./components/promotions/PromotionsList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SupportChatHeader: typeof import('./components/support/SupportChatHeader.vue')['default']

@@ -68,6 +68,12 @@ const adminCards = computed(() => [
     to: '/admin/payouts',
   },
   {
+    description: 'Акции для пассажиров и водителей с рассылкой в Telegram.',
+    icon: 'i-mdi-gift-outline',
+    title: 'Акции',
+    to: '/admin/promotions',
+  },
+  {
     description: 'Комиссия платформы и коэффициент цены поездок.',
     icon: 'i-mdi-tune',
     title: 'Настройки',

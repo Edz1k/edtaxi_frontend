@@ -5,7 +5,7 @@ import type { AdminSupportRoomsParams, SupportRoom } from '~/types/support'
 import type { Trip } from '~/types/trips'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, assignAdminSupportRoom, blockAdminUser, closeAdminSupportRoom, createAdminTariff, createParkOwner as createParkOwnerApi, getAdminTrip, getDemandOverview, getPlatformSettings, getSupportStats, listAdminPayouts, listAdminSupportRooms, listAdminTariffs, listAdminTrips, listAdminUsers, listTechSupportNumbers, markAdminPayoutPaid, rejectAdminPayout, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi, updateAdminTariff, updatePlatformSettings } from '~/api/admin'
-import { listAdminParkChats, listAdminParks, rejectAdminPark, verifyAdminPark } from '~/api/park'
+import { listAdminParkChats, listAdminParks, rejectAdminPark, setAdminParkPlatform, verifyAdminPark } from '~/api/park'
 import { useStoreAction } from '~/composables/useStoreAction'
 import { useAuthStore } from '~/stores/auth'
 
@@ -112,6 +112,13 @@ export const useAdminStore = defineStore('admin', () => {
       park.rejection_reason = reason
       park.is_verified = false
     }, 'Не удалось отклонить таксопарк.')
+  }
+
+  async function setParkPlatform(park: TaxiPark, isPlatform: boolean) {
+    return withLoading(isMutating, async () => {
+      await setAdminParkPlatform(park.id, isPlatform)
+      park.is_platform = isPlatform
+    }, 'Не удалось изменить статус партнёра платформы.')
   }
 
   async function createParkOwner(payload: CreateParkOwnerPayload) {
@@ -326,6 +333,7 @@ export const useAdminStore = defineStore('admin', () => {
     revokeUserRole,
     saveSettings,
     selectedTrip,
+    setParkPlatform,
     setUserBlocked,
     trips,
     tripsTotal,

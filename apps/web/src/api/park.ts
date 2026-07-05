@@ -125,6 +125,15 @@ export function rejectAdminPark(id: string, reason = '') {
   })
 }
 
+// Отмечает парк «партнёром платформы» — водители из платформенных акций
+// подают заявки на вступление именно в него.
+export function setAdminParkPlatform(id: string, isPlatform: boolean) {
+  return apiRequest<{ message: string }>(`/admin/parks/${id}/platform`, {
+    method: 'PUT',
+    body: { is_platform: isPlatform },
+  })
+}
+
 export function listAdminParkChats(params: { limit?: number, offset?: number, status?: string } = {}) {
   return apiRequest<AdminParkChatsResponse>('/admin/park-chats', {
     params,

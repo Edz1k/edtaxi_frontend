@@ -3,6 +3,7 @@
   "type": "module",
   "private": true,
   "exports": {
+    "./api/bonus": "./src/api/bonus.ts",
     "./api/client": "./src/api/client.ts",
     "./api/errors": "./src/api/errors.ts",
     "./api/geocoding": "./src/api/geocoding.ts",
@@ -26,6 +27,7 @@
     "./stores/create-auth-store": "./src/stores/create-auth-store.ts",
     "./stores/create-support-store": "./src/stores/create-support-store.ts",
     "./types/auth": "./src/types/auth.ts",
+    "./types/bonus": "./src/types/bonus.ts",
     "./types/geocoding": "./src/types/geocoding.ts",
     "./types/map": "./src/types/map.ts",
     "./types/passenger": "./src/types/passenger.ts",

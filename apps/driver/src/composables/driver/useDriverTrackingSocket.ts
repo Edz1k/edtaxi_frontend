@@ -109,8 +109,9 @@ export function useDriverTrackingSocket() {
         lastPosition = position
       },
       () => {
+        // Тост не показываем: обязательность геолокации обрабатывает экран
+        // LocationGate, баннер поверх него только дублирует сообщение.
         errorMessage.value = 'Не удалось получить геопозицию.'
-        toast.warning('Геолокация недоступна', errorMessage.value)
       },
       {
         enableHighAccuracy: true,

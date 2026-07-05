@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { VerificationReminder } from '~/types/driver'
+import { getBonusOverview } from '@edtaxi/shared/api/bonus'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
@@ -54,6 +55,10 @@ const reminderPendingLabel = computed(() =>
 // панель с текстом и переходом к верификации.
 const onlineBlockMessage = ref('')
 
+// Бейдж бонусов в углу карты: пока баланс не загрузился (или упал) — не
+// показываем, чтобы не рисовать пустышку поверх карты.
+const bonusBalance = ref<null | number>(null)
+
 // После завершения поездки предлагаем оценить пассажира.
 const ratePassengerTripId = ref('')
 
@@ -97,6 +102,11 @@ watch(
 )
 
 onMounted(async () => {
+  getBonusOverview()
+    .then((bonus) => {
+      bonusBalance.value = Math.floor(bonus.balance)
+    })
+    .catch(() => {})
   await driver.restoreActiveTrip().catch(() => {})
   // ensureProfile сам подтягивает доступные/активные тарифы (available/active
   // categories) — нужны панели статуса, даже если водитель зашёл сразу на карту.
@@ -169,14 +179,27 @@ async function toggleOnline() {
   <main class="tg-viewport-screen relative overflow-hidden bg-secondary-900 text-white">
     <LocationGate />
 
-    <!-- Город — аккуратной плашкой сверху карты -->
-    <div class="tg-safe-x pointer-events-none absolute inset-x-0 top-[calc(var(--app-safe-area-top)+0.75rem)] z-10 flex justify-center">
-      <div
-        v-if="city"
-        class="max-w-[86%] truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
-      >
-        <span class="i-mdi-map-marker mr-1 inline-block align-middle text-3.5 text-main-300" />
-        г. {{ city }}
+    <!-- Город — аккуратной плашкой сверху карты, бонусный бейдж прижат к
+         правому краю -->
+    <div class="tg-safe-x pointer-events-none absolute inset-x-0 top-[calc(var(--app-safe-area-top)+0.75rem)] z-10">
+      <div class="relative flex justify-center">
+        <div
+          v-if="city"
+          class="max-w-[68%] truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+        >
+          <span class="i-mdi-map-marker mr-1 inline-block align-middle text-3.5 text-main-300" />
+          г. {{ city }}
+        </div>
+
+        <RouterLink
+          v-if="bonusBalance !== null"
+          aria-label="Бонусы"
+          class="pointer-events-auto absolute right-0 top-0 flex items-center gap-1 rounded-full bg-secondary-950/82 px-3 py-2 text-xs text-white font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
+          to="/bonus"
+        >
+          <span class="i-mdi-star-four-points text-3.5 text-main-300" />
+          {{ bonusBalance.toLocaleString('ru-RU') }}
+        </RouterLink>
       </div>
     </div>
 

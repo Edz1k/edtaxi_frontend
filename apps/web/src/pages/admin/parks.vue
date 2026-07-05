@@ -175,9 +175,17 @@ function parkStatusLabel(park: TaxiPark) {
         class="grid gap-3 border-b border-white/6 px-4 py-4 md:grid-cols-[minmax(180px,1fr)_130px_130px_130px_220px] md:items-center last:border-b-0"
       >
         <div class="min-w-0">
-          <p class="truncate text-sm font-900">
-            {{ park.name }}
-          </p>
+          <div class="flex flex-wrap items-center gap-2">
+            <p class="truncate text-sm font-900">
+              {{ park.name }}
+            </p>
+            <span
+              v-if="park.is_platform"
+              class="shrink-0 border border-cyan-200/16 rounded-full bg-cyan-300/10 px-2.5 py-1 text-[11px] text-cyan-100 font-900"
+            >
+              Партнёр платформы
+            </span>
+          </div>
           <p class="mt-0.5 truncate text-xs text-white/42">
             {{ park.phone || park.owner_id }}
           </p>
@@ -206,6 +214,16 @@ function parkStatusLabel(park: TaxiPark) {
             <span class="i-mdi-eye-outline text-4.5 text-cyan-200" />
             Кабинет
           </RouterLink>
+          <button
+            :disabled="admin.isMutating"
+            class="h-10 rounded-xl px-3 text-sm font-900 transition active:scale-[0.98] disabled:opacity-50"
+            :class="park.is_platform ? 'bg-cyan-300/16 text-cyan-200' : 'border border-white/12 bg-white/8 text-white/70 hover:bg-white/14'"
+            :title="park.is_platform ? 'Снять статус партнёра платформы' : 'Сделать партнёром платформы'"
+            type="button"
+            @click="admin.setParkPlatform(park, !park.is_platform)"
+          >
+            {{ park.is_platform ? 'Партнёр' : 'Не партнёр' }}
+          </button>
           <button
             :disabled="admin.isMutating || park.status === 'approved'"
             class="h-10 rounded-xl px-4 text-sm font-900 transition active:scale-[0.98] disabled:opacity-50"
