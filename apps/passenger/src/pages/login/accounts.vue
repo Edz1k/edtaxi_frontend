@@ -71,10 +71,10 @@ function loginWithNewAccount() {
         <div
           v-for="account in accounts"
           :key="account.id"
-          class="flex items-center gap-4 rounded-3xl bg-white/5 px-4 py-4 transition active:scale-[0.98]"
+          class="flex items-center gap-4 rounded-3xl bg-surface/5 px-4 py-4 transition active:scale-[0.98]"
         >
           <button class="min-w-0 flex flex-1 items-center gap-4 text-left" type="button" @click="selectAccount(account)">
-            <span class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-white/8 text-main-200">
+            <span class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-surface/8 text-main-200">
               <span class="i-mdi-account text-7" />
             </span>
 
@@ -82,14 +82,14 @@ function loginWithNewAccount() {
               <span class="block truncate text-lg font-900">
                 {{ savedAccountDisplayName(account) }}
               </span>
-              <span class="mt-0.5 block truncate text-xs text-slate-400 font-600">
+              <span class="mt-0.5 block truncate text-xs text-muted font-600">
                 {{ account.phone }}
               </span>
             </span>
           </button>
 
           <button
-            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-400 transition active:scale-[0.95]"
+            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-surface/8 text-muted transition active:scale-[0.95]"
             type="button"
             @click="removeAccount(account)"
           >
@@ -110,7 +110,7 @@ function loginWithNewAccount() {
       </button>
 
       <button
-        class="h-14 w-full flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-base text-slate-300 font-700 transition active:scale-[0.98]"
+        class="h-14 w-full flex items-center justify-center border border-border/10 rounded-2xl bg-surface/5 text-base text-body/80 font-700 transition active:scale-[0.98]"
         type="button"
         @click="loginWithNewAccount"
       >

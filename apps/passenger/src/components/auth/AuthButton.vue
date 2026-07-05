@@ -13,7 +13,7 @@ withDefaults(defineProps<{
 
 <template>
   <button
-    class="h-14 w-full flex items-center justify-center rounded-2xl bg-main-500 text-base text-white font-800 shadow-lg shadow-main-500/25 transition active:scale-[0.98] disabled:bg-slate-700 disabled:text-slate-400 disabled:shadow-none"
+    class="h-14 w-full flex items-center justify-center rounded-2xl bg-main-500 text-base text-white font-800 shadow-lg shadow-main-500/25 transition active:scale-[0.98] disabled:bg-slate-700 disabled:text-muted disabled:shadow-none"
     type="submit"
   >
     <span v-if="loading" class="i-mdi-loading mr-2 animate-spin text-xl" />

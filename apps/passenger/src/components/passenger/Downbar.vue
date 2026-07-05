@@ -205,8 +205,8 @@ function onHandleKeydown(event: KeyboardEvent) {
   >
     <div
       ref="sheetEl"
-      class="will-change-[height] pointer-events-auto mx-auto max-w-sm w-full flex flex-col overflow-hidden border border-white/10 rounded-[2rem] text-white shadow-[0_-18px_54px_rgba(0,0,0,0.34)]"
-      :class="dragging ? 'bg-secondary-950/95' : 'bg-secondary-950/82 backdrop-blur-2xl'"
+      class="will-change-[height] pointer-events-auto mx-auto max-w-sm w-full flex flex-col overflow-hidden border border-border/10 rounded-[2rem] text-body shadow-[0_-18px_54px_rgba(0,0,0,0.34)]"
+      :class="dragging ? 'bg-surface-strong/95' : 'bg-surface-strong/82 backdrop-blur-2xl'"
       :style="sheetStyle"
     >
       <div
@@ -217,7 +217,7 @@ function onHandleKeydown(event: KeyboardEvent) {
         tabindex="0"
         @keydown="onHandleKeydown"
       >
-        <div class="mx-auto h-1 w-10 rounded-full bg-white/14" />
+        <div class="mx-auto h-1 w-10 rounded-full bg-surface/14" />
       </div>
 
       <div class="relative min-h-0 flex-1">
@@ -329,12 +329,12 @@ function onHandleKeydown(event: KeyboardEvent) {
             </span>
             <span class="min-w-0">
               <span class="block truncate text-base font-950 leading-tight">{{ searchPillTitle }}</span>
-              <span v-if="searchPillSubtitle" class="block truncate text-xs text-white/45 font-800 tabular-nums">
+              <span v-if="searchPillSubtitle" class="block truncate text-xs text-body/45 font-800 tabular-nums">
                 {{ searchPillSubtitle }}
               </span>
             </span>
           </span>
-          <span class="i-mdi-chevron-up shrink-0 text-6 text-white/40" aria-hidden="true" />
+          <span class="i-mdi-chevron-up shrink-0 text-6 text-body/40" aria-hidden="true" />
         </button>
       </div>
     </div>

@@ -26,7 +26,7 @@ const methods: Array<{
 
 <template>
   <div
-    class="grid grid-cols-2 gap-1 rounded-2xl bg-white/5 p-1"
+    class="grid grid-cols-2 gap-1 rounded-2xl bg-surface/5 p-1"
     role="radiogroup"
     aria-label="Способ получения кода"
   >
@@ -37,9 +37,9 @@ const methods: Array<{
       class="min-h-12 flex items-center justify-center gap-2 rounded-xl px-4 text-center text-sm font-700 transition-all duration-300 ease-out active:scale-[0.98]"
       :class="model === method.value
         ? method.value === 'whatsapp'
-          ? 'bg-green-500 text-white shadow-lg shadow-green-500/25'
+          ? 'bg-green-500 text-body shadow-lg shadow-green-500/25'
           : 'bg-main-500 text-white shadow-lg shadow-main-500/25'
-        : 'bg-transparent text-slate-400 shadow-none'"
+        : 'bg-transparent text-muted shadow-none'"
       role="radio"
       type="button"
       @click="model = method.value"

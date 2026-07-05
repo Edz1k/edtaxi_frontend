@@ -8,14 +8,14 @@ const inputId = useId()
 
 <template>
   <div>
-    <label :for="inputId" class="mb-2 block text-sm text-slate-300 font-600">
+    <label :for="inputId" class="mb-2 block text-sm text-body/80 font-600">
       Номер телефона
     </label>
 
     <div
-      class="h-14 flex items-center overflow-hidden border border-white/10 rounded-2xl bg-white/5 shadow-inner transition focus-within:border-main-400 focus-within:bg-white/8"
+      class="h-14 flex items-center overflow-hidden border border-border/10 rounded-2xl bg-surface/5 shadow-inner transition focus-within:border-main-400 focus-within:bg-surface/8"
     >
-      <span class="h-full flex items-center gap-2 border-r border-white/10 px-4 text-lg text-white font-700">
+      <span class="h-full flex items-center gap-2 border-r border-border/10 px-4 text-lg text-body font-700">
         🇰🇿 +7
       </span>
 
@@ -24,7 +24,7 @@ const inputId = useId()
         v-model="model"
         v-maska="'(###) ###-##-##'"
         autocomplete="tel"
-        class="min-w-0 flex-1 bg-transparent px-4 text-lg text-white font-700 tracking-wide outline-none placeholder:text-slate-600"
+        class="min-w-0 flex-1 bg-transparent px-4 text-lg text-body font-700 tracking-wide outline-none placeholder:text-muted/60"
         inputmode="numeric"
         maxlength="15"
         name="phone"
