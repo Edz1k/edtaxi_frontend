@@ -141,6 +141,38 @@ const { active, dragging, sheetStyle, snapTo } = useBottomSheet({
   snaps: sheetSnaps,
 })
 
+// Полный поиск адреса открыт: шторка на full в состоянии адреса. Первый экран
+// в этот момент прячем (visibility), а сам оверлей держим прозрачным — фон
+// рисует только шторка, поэтому цветового шва между слоями нет.
+const isAddressSearchOpen = computed(() => active.value === 'full' && sheetState.value === 'address')
+
+// Свёрнутая шторка во время активной поездки: вместо торчащего верха контента
+// показываем компактную пилюлю-статус (в стиле кнопки «Куда едем?»).
+const isSearchPillVisible = computed(() => active.value === 'peek' && sheetState.value === 'searching')
+
+function formatElapsed(total: number) {
+  const mm = Math.floor(total / 60)
+  const ss = String(total % 60).padStart(2, '0')
+  return `${mm}:${ss}`
+}
+
+const searchPillTitle = computed(() => {
+  switch (trips.activeTrip?.status) {
+    case 'driver_assigned': return 'Водитель едет к вам'
+    case 'driver_arriving': return 'Водитель на месте'
+    case 'in_progress': return 'Вы в пути'
+    case 'completed': return 'Поездка завершена'
+    case 'cancelled': return 'Заказ отменён'
+    default: return 'Ищем водителя'
+  }
+})
+
+const searchPillSubtitle = computed(() => {
+  if (!trips.activeTrip || trips.activeTrip.status === 'searching')
+    return `Поиск идёт ${formatElapsed(trips.searchElapsedSeconds)}`
+  return destination.value ? `До: ${destination.value}` : ''
+})
+
 // Смена состояния возвращает шторку на рабочую высоту нового вида.
 watch(sheetState, () => {
   nextTick(() => snapTo('half'))
@@ -189,8 +221,11 @@ function onHandleKeydown(event: KeyboardEvent) {
       </div>
 
       <div class="relative min-h-0 flex-1">
-        <div class="h-full overflow-y-auto px-3 pb-3">
-          <div ref="contentEl">
+        <!-- Обычно контент влезает целиком (half подгоняется под него с запасом),
+             поэтому скролла нет; auto — страховка для маленьких экранов, когда
+             шторка упирается в максимум. Скроллбар скрыт всегда. -->
+        <div class="[scrollbar-width:none] h-full overflow-y-auto px-3 pb-3 [&::-webkit-scrollbar]:hidden">
+          <div ref="contentEl" :class="{ invisible: isAddressSearchOpen || isSearchPillVisible }">
             <!-- Тарифы: самодостаточный этап (карусель + оплата + заказ). -->
             <TariffStage
               v-if="isTariffsVisible"
@@ -206,7 +241,6 @@ function onHandleKeydown(event: KeyboardEvent) {
                 :active-trip="trips.activeTrip"
                 :destination="destination"
                 :elapsed-seconds="trips.searchElapsedSeconds"
-                :is-polling="trips.isPollingActiveTrip"
                 :pickup="pickup"
                 :selected-categories="trips.selectedCategories"
                 :selected-estimate="selectedEstimate"
@@ -237,16 +271,18 @@ function onHandleKeydown(event: KeyboardEvent) {
               v-else
               :quick-destinations="quickDestinations"
               @expand="expandForInput(searchDestination)"
+              @pick-from-map="emit('pickFromMap', $event)"
               @select-destination="chooseDestination"
             />
           </div>
         </div>
 
-        <!-- Полный поиск адреса — оверлей поверх первого экрана, когда шторка
-             раскрыта (full). Первый экран остаётся в потоке ради замера half. -->
+        <!-- Полный поиск адреса — прозрачный оверлей (фон даёт шторка); первый
+             экран остаётся в потоке ради замера half, но невидим. Скролл есть,
+             скроллбар скрыт. -->
         <div
-          v-show="active === 'full' && sheetState === 'address'"
-          class="[scrollbar-width:none] absolute inset-0 overflow-y-auto rounded-b-[2rem] bg-secondary-950/96 px-3 pb-3 pt-2 backdrop-blur-2xl [&::-webkit-scrollbar]:hidden"
+          v-show="isAddressSearchOpen"
+          class="[scrollbar-width:none] absolute inset-0 overflow-y-auto px-3 pb-3 pt-2 [&::-webkit-scrollbar]:hidden"
         >
           <AddressForm
             :destination="destination"
@@ -277,6 +313,29 @@ function onHandleKeydown(event: KeyboardEvent) {
             {{ primaryText }}
           </button>
         </div>
+
+        <!-- Свёрнутый статус поездки: компактная пилюля (пульс + статус + таймер),
+             тап раскрывает шторку. Фон прозрачный — рисует шторка. -->
+        <button
+          v-show="isSearchPillVisible"
+          class="absolute inset-0 flex items-center justify-between gap-3 px-5 text-left transition active:scale-[0.99]"
+          type="button"
+          @click="snapTo('half')"
+        >
+          <span class="min-w-0 flex items-center gap-3">
+            <span class="relative h-2.5 w-2.5 shrink-0" aria-hidden="true">
+              <span class="absolute inset-0 animate-ping rounded-full bg-main-400/60" />
+              <span class="absolute inset-0 rounded-full bg-main-400" />
+            </span>
+            <span class="min-w-0">
+              <span class="block truncate text-base font-950 leading-tight">{{ searchPillTitle }}</span>
+              <span v-if="searchPillSubtitle" class="block truncate text-xs text-white/45 font-800 tabular-nums">
+                {{ searchPillSubtitle }}
+              </span>
+            </span>
+          </span>
+          <span class="i-mdi-chevron-up shrink-0 text-6 text-white/40" aria-hidden="true" />
+        </button>
       </div>
     </div>
   </section>

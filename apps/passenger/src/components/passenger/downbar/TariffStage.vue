@@ -31,18 +31,14 @@ function isSelected(category: VehicleCategory) {
   <div class="space-y-3">
     <!-- Маршрут -->
     <div class="flex items-center gap-3 rounded-[1.65rem] bg-white/5 p-3">
-      <div class="flex flex-col items-center">
-        <span class="h-2.5 w-2.5 rounded-full bg-emerald-400" aria-hidden="true" />
-        <span class="my-1 h-5 w-px bg-white/15" aria-hidden="true" />
-        <span class="h-2.5 w-2.5 rounded-full bg-red-400" aria-hidden="true" />
-      </div>
-
       <div class="min-w-0 flex-1 space-y-2">
-        <p class="truncate text-sm text-white font-900">
-          {{ trips.pickup }}
+        <p class="flex items-center gap-2 text-sm text-white font-900">
+          <span class="i-mdi-near-me shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+          <span class="truncate">{{ trips.pickup }}</span>
         </p>
-        <p class="truncate text-sm text-white font-900">
-          {{ trips.destination }}
+        <p class="flex items-center gap-2 text-sm text-white font-900">
+          <span class="i-mdi-flag-checkered shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+          <span class="truncate">{{ trips.destination }}</span>
         </p>
       </div>
 
