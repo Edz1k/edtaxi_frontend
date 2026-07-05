@@ -65,6 +65,28 @@ onMounted(() => {
 function photos(items: Array<{ label: string, url: null | string }>) {
   return items.filter(item => item.url)
 }
+
+// Лайтбокс: фото открывается в оверлее прямо на странице, а не переходом по
+// прямой ссылке /uploads/... (на домене веб-аппа такого пути нет — был 404).
+const previewPhoto = ref<null | { alt: string, url: string }>(null)
+
+function openPhoto(url: null | string | undefined, alt: string) {
+  const resolved = url ? mediaUrl(url) : ''
+  if (resolved)
+    previewPhoto.value = { alt, url: resolved }
+}
+
+function closePhoto() {
+  previewPhoto.value = null
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape')
+    closePhoto()
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
@@ -171,13 +193,13 @@ function photos(items: Array<{ label: string, url: null | string }>) {
 
         <div v-if="vehicle.photos?.length" class="grid grid-cols-2 mt-4 gap-3 lg:grid-cols-4 sm:grid-cols-3">
           <figure v-for="card in vehiclePhotoCards(vehicle)" :key="card.slot">
-            <a v-if="card.url" :href="mediaUrl(card.url)" rel="noopener" target="_blank">
+            <button v-if="card.url" class="block w-full" type="button" @click="openPhoto(card.url, card.label)">
               <img
                 :alt="card.label"
-                class="h-32 w-full rounded-2xl bg-black/20 object-cover"
+                class="h-32 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
                 :src="mediaUrl(card.url)"
               >
-            </a>
+            </button>
             <div v-else class="h-32 w-full flex items-center justify-center border border-white/15 rounded-2xl border-dashed bg-white/4 text-xs text-white/35 font-700">
               нет фото
             </div>
@@ -190,25 +212,25 @@ function photos(items: Array<{ label: string, url: null | string }>) {
         <!-- Старые заявки без пофотового отчёта: одно фото машины + техпаспорт. -->
         <div v-else-if="vehicle.verification_photo_url || vehicle.tech_passport_photo_url" class="grid mt-4 gap-3 sm:grid-cols-2">
           <figure v-if="vehicle.verification_photo_url">
-            <a :href="mediaUrl(vehicle.verification_photo_url)" rel="noopener" target="_blank">
+            <button class="block w-full" type="button" @click="openPhoto(vehicle.verification_photo_url, `Фото ${vehicle.plate_number}`)">
               <img
                 :alt="`Фото ${vehicle.plate_number}`"
-                class="h-44 w-full rounded-2xl bg-black/20 object-cover"
+                class="h-44 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
                 :src="mediaUrl(vehicle.verification_photo_url)"
               >
-            </a>
+            </button>
             <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
               Фото машины
             </figcaption>
           </figure>
           <figure v-if="vehicle.tech_passport_photo_url">
-            <a :href="mediaUrl(vehicle.tech_passport_photo_url)" rel="noopener" target="_blank">
+            <button class="block w-full" type="button" @click="openPhoto(vehicle.tech_passport_photo_url, 'Техпаспорт')">
               <img
                 alt="Техпаспорт"
-                class="h-44 w-full rounded-2xl bg-black/20 object-cover"
+                class="h-44 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
                 :src="mediaUrl(vehicle.tech_passport_photo_url)"
               >
-            </a>
+            </button>
             <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
               Техпаспорт
             </figcaption>
@@ -274,17 +296,17 @@ function photos(items: Array<{ label: string, url: null | string }>) {
 
         <div class="grid mt-4 gap-3 sm:grid-cols-2">
           <figure v-if="face.face_photo_url">
-            <a :href="mediaUrl(face.face_photo_url)" rel="noopener" target="_blank">
-              <img alt="Селфи" class="h-52 w-full rounded-2xl bg-black/20 object-cover" :src="mediaUrl(face.face_photo_url)">
-            </a>
+            <button class="block w-full" type="button" @click="openPhoto(face.face_photo_url, 'Селфи')">
+              <img alt="Селфи" class="h-52 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80" :src="mediaUrl(face.face_photo_url)">
+            </button>
             <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
               Селфи
             </figcaption>
           </figure>
           <figure v-if="face.id_document_url">
-            <a :href="mediaUrl(face.id_document_url)" rel="noopener" target="_blank">
-              <img alt="Документ" class="h-52 w-full rounded-2xl bg-black/20 object-cover" :src="mediaUrl(face.id_document_url)">
-            </a>
+            <button class="block w-full" type="button" @click="openPhoto(face.id_document_url, 'Удостоверение / паспорт')">
+              <img alt="Документ" class="h-52 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80" :src="mediaUrl(face.id_document_url)">
+            </button>
             <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
               Удостоверение / паспорт
             </figcaption>
@@ -356,19 +378,44 @@ function photos(items: Array<{ label: string, url: null | string }>) {
             ])"
             :key="photo.label"
           >
-            <a :href="mediaUrl(photo.url)" rel="noopener" target="_blank">
+            <button class="block w-full" type="button" @click="openPhoto(photo.url, photo.label)">
               <img
                 :alt="photo.label"
-                class="h-36 w-full rounded-2xl bg-black/20 object-cover"
+                class="h-36 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
                 :src="mediaUrl(photo.url)"
               >
-            </a>
+            </button>
             <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
               {{ photo.label }}
             </figcaption>
           </figure>
         </div>
       </article>
+    </div>
+
+    <!-- Лайтбокс: просмотр фото без ухода со страницы -->
+    <div
+      v-if="previewPhoto"
+      class="fixed inset-0 z-80 flex flex-col items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+      @click.self="closePhoto"
+    >
+      <button
+        aria-label="Закрыть"
+        class="absolute right-4 top-4 h-11 w-11 flex items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+        type="button"
+        @click="closePhoto"
+      >
+        <span class="i-mdi-close text-6" />
+      </button>
+      <img
+        :alt="previewPhoto.alt"
+        class="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl shadow-black/60"
+        :src="previewPhoto.url"
+        @click.stop
+      >
+      <p class="mt-3 text-sm text-white/70 font-800">
+        {{ previewPhoto.alt }}
+      </p>
     </div>
   </WebPageShell>
 </template>

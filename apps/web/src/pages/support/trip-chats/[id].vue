@@ -67,6 +67,24 @@ function senderLabel(senderId: string) {
 function formatTime(value: string) {
   return new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
 }
+
+// Лайтбокс: фото открывается в оверлее, а не переходом по /uploads/... (404 на
+// домене веб-аппа).
+const previewUrl = ref('')
+
+function openPhoto(url?: null | string) {
+  const resolved = url ? mediaUrl(url) : ''
+  if (resolved)
+    previewUrl.value = resolved
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape')
+    previewUrl.value = ''
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
@@ -101,19 +119,19 @@ function formatTime(value: string) {
             <p v-if="senderLabel(msg.sender_id)" class="text-[11px] font-900" :class="isPassenger(msg.sender_id) ? 'text-white/45' : 'text-cyan-200/80'">
               {{ senderLabel(msg.sender_id) }}
             </p>
-            <a
+            <button
               v-if="msg.image_url"
-              :href="mediaUrl(msg.image_url)"
-              target="_blank"
-              rel="noopener"
+              class="block w-full"
+              type="button"
+              @click="openPhoto(msg.image_url)"
             >
               <img
                 :src="mediaUrl(msg.image_url)"
                 alt="Вложение"
-                class="mt-1 max-h-72 w-full rounded-2xl object-cover"
+                class="mt-1 max-h-72 w-full rounded-2xl object-cover transition hover:opacity-80"
                 loading="lazy"
               >
-            </a>
+            </button>
             <p v-if="msg.content" class="mt-1 text-sm text-white leading-[1.5]">
               {{ msg.content }}
             </p>
@@ -123,6 +141,28 @@ function formatTime(value: string) {
           </article>
         </div>
       </div>
+    </div>
+
+    <!-- Лайтбокс: просмотр вложения без ухода со страницы -->
+    <div
+      v-if="previewUrl"
+      class="fixed inset-0 z-80 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+      @click.self="previewUrl = ''"
+    >
+      <button
+        aria-label="Закрыть"
+        class="absolute right-4 top-4 h-11 w-11 flex items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+        type="button"
+        @click="previewUrl = ''"
+      >
+        <span class="i-mdi-close text-6" />
+      </button>
+      <img
+        alt="Вложение"
+        class="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl shadow-black/60"
+        :src="previewUrl"
+        @click.stop
+      >
     </div>
   </WebPageShell>
 </template>
