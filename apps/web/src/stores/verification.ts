@@ -5,8 +5,11 @@ import {
   listPendingFaces,
   listPendingVehicles,
   reviewDailyCheck,
+  reviewDailyCheckChecklist,
   reviewFace,
+  reviewFaceChecklist,
   reviewVehicle,
+  reviewVehicleChecklist,
 } from '~/api/verification'
 import { useStoreAction } from '~/composables/useStoreAction'
 
@@ -67,6 +70,30 @@ export const useVerificationStore = defineStore('verification', () => {
     }, 'Не удалось обновить ежедневную проверку.')
   }
 
+  // --- Решения по чек-листу: пер-блочные вердикты, итог approved только
+  // когда все блоки ок; при отказе причина обязательна.
+
+  async function decideVehicleChecklist(id: string, photosOk: boolean, docsOk: boolean, reason = '') {
+    return withLoading(isMutating, async () => {
+      await reviewVehicleChecklist(id, photosOk, docsOk, reason)
+      vehicles.value = vehicles.value.filter(v => v.id !== id)
+    }, 'Не удалось сохранить решение по машине.')
+  }
+
+  async function decideDailyCheckChecklist(id: string, selfieOk: boolean, vehicleOk: boolean, reason = '') {
+    return withLoading(isMutating, async () => {
+      await reviewDailyCheckChecklist(id, selfieOk, vehicleOk, reason)
+      dailyChecks.value = dailyChecks.value.filter(c => c.id !== id)
+    }, 'Не удалось сохранить решение по ежедневной проверке.')
+  }
+
+  async function decideFaceChecklist(driverId: string, selfieOk: boolean, documentOk: boolean, reason = '') {
+    return withLoading(isMutating, async () => {
+      await reviewFaceChecklist(driverId, selfieOk, documentOk, reason)
+      faces.value = faces.value.filter(f => f.driver_id !== driverId)
+    }, 'Не удалось сохранить решение по проверке лица.')
+  }
+
   function clearVerificationState() {
     vehicles.value = []
     dailyChecks.value = []
@@ -82,8 +109,11 @@ export const useVerificationStore = defineStore('verification', () => {
     clearVerificationState,
     dailyChecks,
     decideDailyCheck,
+    decideDailyCheckChecklist,
     decideFace,
+    decideFaceChecklist,
     decideVehicle,
+    decideVehicleChecklist,
     errorMessage,
     faces,
     isLoadingDailyChecks,

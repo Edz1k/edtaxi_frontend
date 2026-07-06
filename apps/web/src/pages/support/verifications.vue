@@ -29,13 +29,18 @@ const VEHICLE_PHOTO_SLOTS: Array<{ slot: string, label: string, required: boolea
   { slot: 'doc_insurance', label: 'Страховой полис', required: false, group: 'doc' },
 ]
 
+interface PhotoCard {
+  label: string
+  url: null | string
+}
+
 function categoryLabel(category: string) {
   return (CATEGORY_LABELS as Record<string, string>)[category] ?? category
 }
 
 function vehiclePhotoCards(vehicle: PendingVehicle) {
   const bySlot = new Map((vehicle.photos ?? []).map(p => [p.slot, p.photo_url]))
-  const cards: Array<{ slot: string, label: string, url: null | string, group: PhotoGroup }> = []
+  const cards: Array<PhotoCard & { slot: string, group: PhotoGroup }> = []
   for (const { slot, label, required, group } of VEHICLE_PHOTO_SLOTS) {
     const url = bySlot.get(slot) ?? null
     bySlot.delete(slot)
@@ -47,22 +52,6 @@ function vehiclePhotoCards(vehicle: PendingVehicle) {
   for (const [slot, url] of bySlot)
     cards.push({ slot, label: slot, url, group: 'doc' })
   return cards
-}
-
-function carPhotoCards(vehicle: PendingVehicle) {
-  return vehiclePhotoCards(vehicle).filter(card => card.group === 'car')
-}
-
-function docPhotoCards(vehicle: PendingVehicle) {
-  return vehiclePhotoCards(vehicle).filter(card => card.group === 'doc')
-}
-
-// «Сначала заявка, потом фото»: карточки машин по умолчанию свёрнуты. Фото (и их
-// сетевые загрузки) появляются только когда поддержка раскрывает конкретную
-// заявку — раньше все фото всех машин грузились сразу.
-const openVehicles = reactive<Record<string, boolean>>({})
-function toggleVehicle(id: string) {
-  openVehicles[id] = !openVehicles[id]
 }
 
 function vehiclePhotoCount(vehicle: PendingVehicle) {
@@ -79,6 +68,178 @@ function vehiclePhotoCount(vehicle: PendingVehicle) {
 // Ручной ввод ИИН с документа для водителей, не приложивших его при онбординге:
 // поддержка вбивает номер с фото и сразу видит, сходится ли контрольная сумма.
 const manualIin = reactive<Record<string, string>>({})
+
+// --- Заявка открывается в модалке; решение — по чек-листу из двух блоков.
+// Итог «Одобрить» доступен только когда ОБА блока отмечены «всё в порядке»;
+// «Отклонить» — когда чек-лист заполнен, есть проблемный блок и указана причина
+// (её увидит водитель в своём фотоконтроле).
+
+type RequestKind = 'daily' | 'face' | 'vehicle'
+const activeRequest = ref<null | { kind: RequestKind, id: string }>(null)
+// Вердикты по двум блокам текущей заявки: null — ещё не отмечено.
+const checks = reactive<{ first: boolean | null, second: boolean | null }>({ first: null, second: null })
+const rejectReason = ref('')
+
+const activeVehicle = computed(() =>
+  activeRequest.value?.kind === 'vehicle'
+    ? verification.vehicles.find(v => v.id === activeRequest.value?.id) ?? null
+    : null,
+)
+const activeFace = computed(() =>
+  activeRequest.value?.kind === 'face'
+    ? verification.faces.find(f => f.driver_id === activeRequest.value?.id) ?? null
+    : null,
+)
+const activeDaily = computed(() =>
+  activeRequest.value?.kind === 'daily'
+    ? verification.dailyChecks.find(c => c.id === activeRequest.value?.id) ?? null
+    : null,
+)
+
+interface ChecklistBlock {
+  key: 'first' | 'second'
+  title: string
+  hint: string
+  cards: PhotoCard[]
+  // required-заглушки «нет фото» показываем только для машин.
+  showPlaceholders?: boolean
+}
+
+function presentCards(cards: PhotoCard[]) {
+  return cards.filter(card => card.url)
+}
+
+// Два блока чек-листа для текущей заявки (фото сгруппированы по смыслу решения).
+const activeBlocks = computed<ChecklistBlock[]>(() => {
+  const vehicle = activeVehicle.value
+  if (vehicle) {
+    const cards = vehiclePhotoCards(vehicle)
+    const hasReport = Boolean(vehicle.photos?.length)
+    return [
+      {
+        key: 'first',
+        title: 'Фото машины',
+        hint: 'Кузов и салон соответствуют анкете, без повреждений и чужих номеров.',
+        cards: hasReport
+          ? cards.filter(card => card.group === 'car')
+          : [{ label: 'Фото машины', url: vehicle.verification_photo_url }],
+        showPlaceholders: hasReport,
+      },
+      {
+        key: 'second',
+        title: 'Документы',
+        hint: 'Техпаспорт читается, данные совпадают с анкетой (госномер, VIN, владелец).',
+        cards: hasReport
+          ? cards.filter(card => card.group === 'doc')
+          : [{ label: 'Техпаспорт', url: vehicle.tech_passport_photo_url ?? null }],
+        showPlaceholders: hasReport,
+      },
+    ]
+  }
+
+  const face = activeFace.value
+  if (face) {
+    return [
+      {
+        key: 'first',
+        title: 'Селфи',
+        hint: 'Лицо хорошо видно, без очков и головных уборов, фото не с экрана.',
+        cards: [{ label: 'Селфи', url: face.face_photo_url }],
+      },
+      {
+        key: 'second',
+        title: 'Удостоверение',
+        hint: 'Документ читается, лицо совпадает с селфи, ИИН сходится.',
+        cards: [{ label: 'Удостоверение / паспорт', url: face.id_document_url }],
+      },
+    ]
+  }
+
+  const daily = activeDaily.value
+  if (daily) {
+    return [
+      {
+        key: 'first',
+        title: 'Селфи',
+        hint: 'Лицо на сегодняшнем селфи совпадает с эталоном и удостоверением.',
+        cards: [
+          { label: 'Селфи сейчас', url: daily.selfie_url },
+          { label: 'Эталон лица', url: daily.driver_face_photo_url },
+          { label: 'Удостоверение', url: daily.driver_id_document_url },
+        ],
+      },
+      {
+        key: 'second',
+        title: 'Машина',
+        hint: 'Сегодняшнее фото — та же машина, что в техпаспорте, без повреждений.',
+        cards: [
+          { label: 'Фото машины', url: daily.vehicle_photo_url },
+          { label: 'Техпаспорт', url: daily.vehicle_tech_passport_photo_url },
+        ],
+      },
+    ]
+  }
+  return []
+})
+
+const activeTitle = computed(() => {
+  const vehicle = activeVehicle.value
+  if (vehicle)
+    return `${vehicle.make} ${vehicle.model} · ${vehicle.year}`
+  if (activeFace.value)
+    return 'Идентификация личности'
+  if (activeDaily.value)
+    return 'Ежедневная проверка'
+  return ''
+})
+
+const activeDriverName = computed(() =>
+  activeVehicle.value?.driver_name
+  ?? activeFace.value?.driver_name
+  ?? activeDaily.value?.driver_name
+  ?? 'Водитель',
+)
+
+const activeIin = computed(() =>
+  activeFace.value?.iin ?? activeDaily.value?.driver_iin ?? null,
+)
+
+const checklistComplete = computed(() => checks.first !== null && checks.second !== null)
+const canApprove = computed(() => checks.first === true && checks.second === true)
+const canReject = computed(() =>
+  checklistComplete.value
+  && (checks.first === false || checks.second === false)
+  && rejectReason.value.trim().length > 0,
+)
+
+function openRequest(kind: RequestKind, id: string) {
+  activeRequest.value = { kind, id }
+  checks.first = null
+  checks.second = null
+  rejectReason.value = ''
+}
+
+function closeRequest() {
+  activeRequest.value = null
+}
+
+async function submitDecision(approve: boolean) {
+  const request = activeRequest.value
+  if (!request || (approve ? !canApprove.value : !canReject.value))
+    return
+  const first = checks.first === true
+  const second = checks.second === true
+  const reason = approve ? '' : rejectReason.value.trim()
+
+  if (request.kind === 'vehicle')
+    await verification.decideVehicleChecklist(request.id, first, second, reason)
+  else if (request.kind === 'face')
+    await verification.decideFaceChecklist(request.id, first, second, reason)
+  else
+    await verification.decideDailyCheckChecklist(request.id, first, second, reason)
+
+  closeRequest()
+}
 
 definePage({
   meta: {
@@ -98,10 +259,6 @@ onMounted(() => {
   verification.loadFaces().catch(() => {})
 })
 
-function photos(items: Array<{ label: string, url: null | string }>) {
-  return items.filter(item => item.url)
-}
-
 // Лайтбокс: фото открывается в оверлее прямо на странице, а не переходом по
 // прямой ссылке /uploads/... (на домене веб-аппа такого пути нет — был 404).
 const previewPhoto = ref<null | { alt: string, url: string }>(null)
@@ -117,8 +274,13 @@ function closePhoto() {
 }
 
 function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape')
+  if (event.key !== 'Escape')
+    return
+  // Сначала закрывается лайтбокс, при повторном Escape — сама заявка.
+  if (previewPhoto.value)
     closePhoto()
+  else
+    closeRequest()
 }
 
 onMounted(() => window.addEventListener('keydown', onKeydown))
@@ -129,7 +291,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   <WebPageShell
     back-label="Поддержка"
     back-to="/support"
-    description="Проверяйте фото машин при онбординге и ежедневные проверки водителей перед выходом на линию."
+    description="Открывайте заявку водителя, отмечайте каждый блок фотоконтроля и выносите решение по полному чек-листу."
     title="Верификация водителей"
   >
     <div class="mt-5 inline-flex gap-1 rounded-2xl bg-white/8 p-1">
@@ -162,7 +324,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </button>
     </div>
 
-    <!-- Vehicles -->
+    <!-- Vehicles: компактный список заявок, решение — внутри заявки -->
     <div v-if="tab === 'vehicles'" class="mt-5 space-y-3">
       <div v-if="verification.isLoadingVehicles" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
         Загружаем заявки...
@@ -175,151 +337,45 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         v-for="vehicle in verification.vehicles"
         v-else
         :key="vehicle.id"
-        class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur"
+        class="flex flex-wrap items-center justify-between gap-4 border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur"
       >
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div class="min-w-0">
-            <p class="text-base font-950">
-              {{ vehicle.make }} {{ vehicle.model }} · {{ vehicle.year }}
-            </p>
-            <p class="mt-0.5 text-sm text-white/60 font-800">
-              {{ vehicle.plate_number }} · {{ vehicle.color }} · {{ vehicle.category }}
-            </p>
-            <div v-if="vehicle.categories?.length" class="mt-1.5 flex flex-wrap gap-1.5">
-              <span
-                v-for="cat in vehicle.categories"
-                :key="cat"
-                class="rounded-lg bg-cyan-300/15 px-2 py-0.5 text-xs text-cyan-200 font-800"
-              >
-                {{ categoryLabel(cat) }}
-              </span>
-            </div>
-            <p class="mt-1 text-xs text-white/45">
-              <RouterLink
-                v-if="vehicle.driver_user_id"
-                :to="`/drivers/${vehicle.driver_user_id}`"
-                class="text-cyan-200 font-800 hover:underline"
-              >
-                {{ vehicle.driver_name || 'Водитель' }}
-              </RouterLink>
-              <span v-else class="font-800">{{ vehicle.driver_name || 'Водитель' }}</span>
-              · {{ formatDate(vehicle.created_at) }}
-            </p>
-          </div>
-
-          <div class="flex shrink-0 gap-2">
-            <button
-              :disabled="verification.isMutating"
-              class="h-10 rounded-xl bg-emerald-400 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
-              type="button"
-              @click="verification.decideVehicle(vehicle.id, true)"
+        <div class="min-w-0">
+          <p class="text-base font-950">
+            {{ vehicle.make }} {{ vehicle.model }} · {{ vehicle.year }}
+          </p>
+          <p class="mt-0.5 text-sm text-white/60 font-800">
+            {{ vehicle.plate_number }} · {{ vehicle.color }}
+          </p>
+          <div v-if="vehicle.categories?.length" class="mt-1.5 flex flex-wrap gap-1.5">
+            <span
+              v-for="cat in vehicle.categories"
+              :key="cat"
+              class="rounded-lg bg-cyan-300/15 px-2 py-0.5 text-xs text-cyan-200 font-800"
             >
-              Одобрить
-            </button>
-            <button
-              :disabled="verification.isMutating"
-              class="h-10 rounded-xl bg-red-500/15 px-4 text-sm text-red-300 font-900 transition active:scale-[0.98] hover:bg-red-500/25 disabled:opacity-50"
-              type="button"
-              @click="verification.decideVehicle(vehicle.id, false)"
-            >
-              Отклонить
-            </button>
+              {{ categoryLabel(cat) }}
+            </span>
           </div>
+          <p class="mt-1 text-xs text-white/45">
+            <RouterLink
+              v-if="vehicle.driver_user_id"
+              :to="`/drivers/${vehicle.driver_user_id}`"
+              class="text-cyan-200 font-800 hover:underline"
+            >
+              {{ vehicle.driver_name || 'Водитель' }}
+            </RouterLink>
+            <span v-else class="font-800">{{ vehicle.driver_name || 'Водитель' }}</span>
+            · {{ formatDate(vehicle.created_at) }}
+          </p>
         </div>
 
-        <!-- «Сначала заявка»: фото свёрнуты, грузятся только при открытии. -->
-        <div class="mt-4">
-          <button
-            class="h-10 inline-flex items-center gap-2 border border-white/12 rounded-xl bg-white/6 px-4 text-sm font-900 transition hover:bg-white/12"
-            type="button"
-            @click="toggleVehicle(vehicle.id)"
-          >
-            <span class="text-5 text-cyan-200" :class="openVehicles[vehicle.id] ? 'i-mdi-chevron-up' : 'i-mdi-image-multiple-outline'" />
-            {{ openVehicles[vehicle.id] ? 'Свернуть фото' : `Открыть заявку · ${vehiclePhotoCount(vehicle)} фото` }}
-          </button>
-
-          <template v-if="openVehicles[vehicle.id]">
-            <!-- Пофотовый отчёт: машина и документы — раздельными блоками. -->
-            <template v-if="vehicle.photos?.length">
-              <div class="mt-4">
-                <p class="mb-2 text-xs text-white/42 font-900 uppercase">
-                  Фото машины
-                </p>
-                <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 sm:grid-cols-3">
-                  <figure v-for="card in carPhotoCards(vehicle)" :key="card.slot">
-                    <button v-if="card.url" class="block w-full" type="button" @click="openPhoto(card.url, card.label)">
-                      <img
-                        :alt="card.label"
-                        class="h-32 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
-                        :src="mediaUrl(card.url)"
-                      >
-                    </button>
-                    <div v-else class="h-32 w-full flex items-center justify-center border border-white/15 rounded-2xl border-dashed bg-white/4 text-xs text-white/35 font-700">
-                      нет фото
-                    </div>
-                    <figcaption class="mt-1 text-center text-xs font-700" :class="card.url ? 'text-white/50' : 'text-white/30'">
-                      {{ card.label }}
-                    </figcaption>
-                  </figure>
-                </div>
-              </div>
-
-              <div class="mt-5">
-                <p class="mb-2 text-xs text-white/42 font-900 uppercase">
-                  Документы
-                </p>
-                <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 sm:grid-cols-3">
-                  <figure v-for="card in docPhotoCards(vehicle)" :key="card.slot">
-                    <button v-if="card.url" class="block w-full" type="button" @click="openPhoto(card.url, card.label)">
-                      <img
-                        :alt="card.label"
-                        class="h-32 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
-                        :src="mediaUrl(card.url)"
-                      >
-                    </button>
-                    <div v-else class="h-32 w-full flex items-center justify-center border border-white/15 rounded-2xl border-dashed bg-white/4 text-xs text-white/35 font-700">
-                      нет фото
-                    </div>
-                    <figcaption class="mt-1 text-center text-xs font-700" :class="card.url ? 'text-white/50' : 'text-white/30'">
-                      {{ card.label }}
-                    </figcaption>
-                  </figure>
-                </div>
-              </div>
-            </template>
-
-            <!-- Старые заявки без пофотового отчёта: одно фото машины + техпаспорт. -->
-            <div v-else-if="vehicle.verification_photo_url || vehicle.tech_passport_photo_url" class="grid mt-4 gap-3 sm:grid-cols-2">
-              <figure v-if="vehicle.verification_photo_url">
-                <button class="block w-full" type="button" @click="openPhoto(vehicle.verification_photo_url, `Фото ${vehicle.plate_number}`)">
-                  <img
-                    :alt="`Фото ${vehicle.plate_number}`"
-                    class="h-44 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
-                    :src="mediaUrl(vehicle.verification_photo_url)"
-                  >
-                </button>
-                <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
-                  Фото машины
-                </figcaption>
-              </figure>
-              <figure v-if="vehicle.tech_passport_photo_url">
-                <button class="block w-full" type="button" @click="openPhoto(vehicle.tech_passport_photo_url, 'Техпаспорт')">
-                  <img
-                    alt="Техпаспорт"
-                    class="h-44 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
-                    :src="mediaUrl(vehicle.tech_passport_photo_url)"
-                  >
-                </button>
-                <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
-                  Техпаспорт
-                </figcaption>
-              </figure>
-            </div>
-            <p v-else class="mt-4 text-xs text-amber-300/80 font-700">
-              Водитель не приложил фото машины.
-            </p>
-          </template>
-        </div>
+        <button
+          class="h-11 inline-flex shrink-0 items-center gap-2 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98]"
+          type="button"
+          @click="openRequest('vehicle', vehicle.id)"
+        >
+          <span class="i-mdi-clipboard-check-outline text-5" />
+          Открыть заявку · {{ vehiclePhotoCount(vehicle) }} фото
+        </button>
       </article>
     </div>
 
@@ -336,104 +392,32 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         v-for="face in verification.faces"
         v-else
         :key="face.driver_id"
-        class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur"
+        class="flex flex-wrap items-center justify-between gap-4 border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur"
       >
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div class="min-w-0">
-            <RouterLink
-              v-if="face.driver_user_id"
-              :to="`/drivers/${face.driver_user_id}`"
-              class="text-base text-cyan-200 font-950 hover:underline"
-            >
-              {{ face.driver_name }}
-            </RouterLink>
-            <p v-else class="text-base font-950">
-              {{ face.driver_name }}
-            </p>
-            <p class="mt-0.5 text-xs text-white/40">
-              {{ face.driver_phone }} · {{ formatDate(face.created_at) }}
-            </p>
-          </div>
-
-          <div class="flex shrink-0 gap-2">
-            <button
-              :disabled="verification.isMutating"
-              class="h-10 rounded-xl bg-emerald-400 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
-              type="button"
-              @click="verification.decideFace(face.driver_id, true)"
-            >
-              Одобрить
-            </button>
-            <button
-              :disabled="verification.isMutating"
-              class="h-10 rounded-xl bg-red-500/15 px-4 text-sm text-red-300 font-900 transition active:scale-[0.98] hover:bg-red-500/25 disabled:opacity-50"
-              type="button"
-              @click="verification.decideFace(face.driver_id, false)"
-            >
-              Отклонить
-            </button>
-          </div>
+        <div class="min-w-0">
+          <RouterLink
+            v-if="face.driver_user_id"
+            :to="`/drivers/${face.driver_user_id}`"
+            class="text-base text-cyan-200 font-950 hover:underline"
+          >
+            {{ face.driver_name }}
+          </RouterLink>
+          <p v-else class="text-base font-950">
+            {{ face.driver_name }}
+          </p>
+          <p class="mt-0.5 text-xs text-white/40">
+            {{ face.driver_phone }} · {{ formatDate(face.created_at) }}
+          </p>
         </div>
 
-        <div class="grid mt-4 gap-3 sm:grid-cols-2">
-          <figure v-if="face.face_photo_url">
-            <button class="block w-full" type="button" @click="openPhoto(face.face_photo_url, 'Селфи')">
-              <img alt="Селфи" class="h-52 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80" :src="mediaUrl(face.face_photo_url)">
-            </button>
-            <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
-              Селфи
-            </figcaption>
-          </figure>
-          <figure v-if="face.id_document_url">
-            <button class="block w-full" type="button" @click="openPhoto(face.id_document_url, 'Удостоверение / паспорт')">
-              <img alt="Документ" class="h-52 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80" :src="mediaUrl(face.id_document_url)">
-            </button>
-            <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
-              Удостоверение / паспорт
-            </figcaption>
-          </figure>
-        </div>
-
-        <!-- ИИН: бейдж контрольной суммы для сверки с документом. Если водитель
-             не приложил номер — поддержка вбивает его с фото вручную. -->
-        <div class="mt-3 border border-white/8 rounded-2xl bg-white/4 p-3">
-          <template v-if="face.iin">
-            <p class="text-xs text-white/42 font-900 uppercase">
-              ИИН (с онбординга)
-            </p>
-            <p class="mt-1 flex flex-wrap items-center gap-2">
-              <span class="text-base font-950 tracking-wide">{{ face.iin }}</span>
-              <span
-                class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-900"
-                :class="validateIin(face.iin).valid ? 'bg-emerald-500/12 text-emerald-300' : 'bg-red-500/12 text-red-300'"
-              >
-                <span class="text-4" :class="validateIin(face.iin).valid ? 'i-mdi-check-decagram' : 'i-mdi-alert-decagram'" />
-                {{ validateIin(face.iin).valid ? 'Контрольная сумма сходится' : 'Контрольная сумма НЕ сходится' }}
-              </span>
-            </p>
-          </template>
-          <template v-else>
-            <label class="grid max-w-xs gap-1.5">
-              <span class="text-xs text-white/42 font-900 uppercase">ИИН с документа (проверить)</span>
-              <input
-                v-model="manualIin[face.driver_id]"
-                class="h-10 border border-white/10 rounded-xl bg-white/8 px-3 text-sm outline-none focus:border-cyan-300/40"
-                inputmode="numeric"
-                maxlength="12"
-                placeholder="12 цифр с удостоверения"
-              >
-            </label>
-            <p v-if="manualIin[face.driver_id]?.length === 12" class="mt-1.5">
-              <span
-                class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-900"
-                :class="validateIin(manualIin[face.driver_id]).valid ? 'bg-emerald-500/12 text-emerald-300' : 'bg-red-500/12 text-red-300'"
-              >
-                <span class="text-4" :class="validateIin(manualIin[face.driver_id]).valid ? 'i-mdi-check-decagram' : 'i-mdi-alert-decagram'" />
-                {{ validateIin(manualIin[face.driver_id]).valid ? 'Контрольная сумма сходится' : 'Контрольная сумма НЕ сходится' }}
-              </span>
-            </p>
-          </template>
-        </div>
+        <button
+          class="h-11 inline-flex shrink-0 items-center gap-2 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98]"
+          type="button"
+          @click="openRequest('face', face.driver_id)"
+        >
+          <span class="i-mdi-clipboard-check-outline text-5" />
+          Открыть заявку
+        </button>
       </article>
     </div>
 
@@ -450,85 +434,228 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         v-for="check in verification.dailyChecks"
         v-else
         :key="check.id"
-        class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur"
+        class="flex flex-wrap items-center justify-between gap-4 border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur"
       >
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div class="min-w-0">
-            <p class="text-base font-950">
-              Ежедневная проверка
-            </p>
-            <p class="mt-1 text-xs text-white/45">
-              <RouterLink
-                v-if="check.driver_user_id"
-                :to="`/drivers/${check.driver_user_id}`"
-                class="text-cyan-200 font-800 hover:underline"
-              >
-                {{ check.driver_name || 'Водитель' }}
-              </RouterLink>
-              <span v-else class="font-800">{{ check.driver_name || 'Водитель' }}</span>
-              · {{ formatDate(check.created_at) }}
-            </p>
-          </div>
-
-          <div class="flex shrink-0 gap-2">
-            <button
-              :disabled="verification.isMutating"
-              class="h-10 rounded-xl bg-emerald-400 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
-              type="button"
-              @click="verification.decideDailyCheck(check.id, true)"
+        <div class="min-w-0">
+          <p class="text-base font-950">
+            Ежедневная проверка
+          </p>
+          <p class="mt-1 text-xs text-white/45">
+            <RouterLink
+              v-if="check.driver_user_id"
+              :to="`/drivers/${check.driver_user_id}`"
+              class="text-cyan-200 font-800 hover:underline"
             >
-              Одобрить
-            </button>
-            <button
-              :disabled="verification.isMutating"
-              class="h-10 rounded-xl bg-red-500/15 px-4 text-sm text-red-300 font-900 transition active:scale-[0.98] hover:bg-red-500/25 disabled:opacity-50"
-              type="button"
-              @click="verification.decideDailyCheck(check.id, false)"
-            >
-              Отклонить
-            </button>
-          </div>
+              {{ check.driver_name || 'Водитель' }}
+            </RouterLink>
+            <span v-else class="font-800">{{ check.driver_name || 'Водитель' }}</span>
+            · {{ formatDate(check.created_at) }}
+          </p>
         </div>
 
-        <div class="grid grid-cols-2 mt-4 gap-3 lg:grid-cols-5 sm:grid-cols-3">
-          <figure
-            v-for="photo in photos([
-              { label: 'Селфи сейчас', url: check.selfie_url },
-              { label: 'Эталон лица', url: check.driver_face_photo_url },
-              { label: 'Удостоверение', url: check.driver_id_document_url },
-              { label: 'Фото машины', url: check.vehicle_photo_url },
-              { label: 'Техпаспорт', url: check.vehicle_tech_passport_photo_url },
-            ])"
-            :key="photo.label"
-          >
-            <button class="block w-full" type="button" @click="openPhoto(photo.url, photo.label)">
-              <img
-                :alt="photo.label"
-                class="h-36 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
-                :src="mediaUrl(photo.url)"
-              >
-            </button>
-            <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
-              {{ photo.label }}
-            </figcaption>
-          </figure>
-        </div>
-
-        <!-- ИИН с онбординга + бейдж контрольной суммы: поддержке удобно сверять
-             лицо на селфи с удостоверением и номером. -->
-        <p v-if="check.driver_iin" class="mt-3 flex flex-wrap items-center gap-2 text-sm">
-          <span class="text-xs text-white/42 font-900 uppercase">ИИН:</span>
-          <span class="font-950 tracking-wide">{{ check.driver_iin }}</span>
-          <span
-            class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-900"
-            :class="validateIin(check.driver_iin).valid ? 'bg-emerald-500/12 text-emerald-300' : 'bg-red-500/12 text-red-300'"
-          >
-            <span class="text-4" :class="validateIin(check.driver_iin).valid ? 'i-mdi-check-decagram' : 'i-mdi-alert-decagram'" />
-            {{ validateIin(check.driver_iin).valid ? 'Сумма сходится' : 'Сумма НЕ сходится' }}
-          </span>
-        </p>
+        <button
+          class="h-11 inline-flex shrink-0 items-center gap-2 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98]"
+          type="button"
+          @click="openRequest('daily', check.id)"
+        >
+          <span class="i-mdi-clipboard-check-outline text-5" />
+          Открыть заявку
+        </button>
       </article>
     </div>
+
+    <!-- Заявка: чек-лист из двух блоков, решение только по полному чек-листу -->
+    <Teleport to="body">
+      <div
+        v-if="activeRequest && activeBlocks.length"
+        class="fixed inset-0 z-70 flex items-end justify-center bg-black/55 p-4 backdrop-blur-sm sm:items-center"
+        @click.self="closeRequest"
+      >
+        <div class="max-h-[92vh] max-w-3xl w-full flex flex-col overflow-hidden border border-white/10 rounded-3xl bg-#071a38 shadow-2xl">
+          <header class="flex items-start justify-between gap-4 border-b border-white/8 p-5">
+            <div class="min-w-0">
+              <h2 class="truncate text-xl font-950">
+                {{ activeTitle }}
+              </h2>
+              <p class="mt-1 text-sm text-white/55">
+                {{ activeDriverName }}
+                <template v-if="activeVehicle">
+                  · {{ activeVehicle.plate_number }} · {{ activeVehicle.color }}
+                </template>
+              </p>
+            </div>
+            <button
+              aria-label="Закрыть"
+              class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-white/8 transition hover:bg-white/15"
+              type="button"
+              @click="closeRequest"
+            >
+              <span class="i-mdi-close text-5" />
+            </button>
+          </header>
+
+          <div class="flex-1 overflow-y-auto p-5 space-y-5">
+            <section
+              v-for="block in activeBlocks"
+              :key="block.key"
+              class="border rounded-2xl p-4 transition"
+              :class="checks[block.key] === true
+                ? 'border-emerald-400/30 bg-emerald-400/6'
+                : checks[block.key] === false
+                  ? 'border-red-400/30 bg-red-500/6'
+                  : 'border-white/10 bg-white/4'"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="text-base font-950">
+                    {{ block.title }}
+                  </h3>
+                  <p class="mt-0.5 text-xs text-white/45 leading-5">
+                    {{ block.hint }}
+                  </p>
+                </div>
+
+                <!-- Вердикт блока -->
+                <div class="inline-flex shrink-0 gap-1 rounded-xl bg-white/6 p-1">
+                  <button
+                    class="h-9 inline-flex items-center gap-1.5 rounded-lg px-3 text-xs font-900 transition"
+                    :class="checks[block.key] === true ? 'bg-emerald-400 text-#06142f' : 'text-white/55 hover:text-white'"
+                    type="button"
+                    @click="checks[block.key] = true"
+                  >
+                    <span class="i-mdi-check-bold text-4" />
+                    Всё в порядке
+                  </button>
+                  <button
+                    class="h-9 inline-flex items-center gap-1.5 rounded-lg px-3 text-xs font-900 transition"
+                    :class="checks[block.key] === false ? 'bg-red-400 text-#06142f' : 'text-white/55 hover:text-white'"
+                    type="button"
+                    @click="checks[block.key] = false"
+                  >
+                    <span class="i-mdi-close-thick text-4" />
+                    Есть проблема
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="block.showPlaceholders ? block.cards.length : presentCards(block.cards).length" class="grid grid-cols-2 mt-4 gap-3 sm:grid-cols-3">
+                <figure
+                  v-for="card in (block.showPlaceholders ? block.cards : presentCards(block.cards))"
+                  :key="card.label"
+                >
+                  <button v-if="card.url" class="block w-full" type="button" @click="openPhoto(card.url, card.label)">
+                    <img
+                      :alt="card.label"
+                      class="h-32 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
+                      :src="mediaUrl(card.url)"
+                    >
+                  </button>
+                  <div v-else class="h-32 w-full flex items-center justify-center border border-white/15 rounded-2xl border-dashed bg-white/4 text-xs text-white/35 font-700">
+                    нет фото
+                  </div>
+                  <figcaption class="mt-1 text-center text-xs font-700" :class="card.url ? 'text-white/50' : 'text-white/30'">
+                    {{ card.label }}
+                  </figcaption>
+                </figure>
+              </div>
+              <p v-else class="mt-4 text-xs text-amber-300/80 font-700">
+                Водитель не приложил фото этого блока.
+              </p>
+            </section>
+
+            <!-- ИИН: бейдж контрольной суммы для сверки с документом. Если водитель
+                 не приложил номер — поддержка вбивает его с фото вручную. -->
+            <section v-if="activeFace || activeDaily" class="border border-white/8 rounded-2xl bg-white/4 p-4">
+              <template v-if="activeIin">
+                <p class="text-xs text-white/42 font-900 uppercase">
+                  ИИН (с онбординга)
+                </p>
+                <p class="mt-1 flex flex-wrap items-center gap-2">
+                  <span class="text-base font-950 tracking-wide">{{ activeIin }}</span>
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-900"
+                    :class="validateIin(activeIin).valid ? 'bg-emerald-500/12 text-emerald-300' : 'bg-red-500/12 text-red-300'"
+                  >
+                    <span class="text-4" :class="validateIin(activeIin).valid ? 'i-mdi-check-decagram' : 'i-mdi-alert-decagram'" />
+                    {{ validateIin(activeIin).valid ? 'Контрольная сумма сходится' : 'Контрольная сумма НЕ сходится' }}
+                  </span>
+                </p>
+              </template>
+              <template v-else>
+                <label class="grid max-w-xs gap-1.5">
+                  <span class="text-xs text-white/42 font-900 uppercase">ИИН с документа (проверить)</span>
+                  <input
+                    v-model="manualIin[activeRequest.id]"
+                    class="h-10 border border-white/10 rounded-xl bg-white/8 px-3 text-sm outline-none focus:border-cyan-300/40"
+                    inputmode="numeric"
+                    maxlength="12"
+                    placeholder="12 цифр с удостоверения"
+                  >
+                </label>
+                <p v-if="manualIin[activeRequest.id]?.length === 12" class="mt-1.5">
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-900"
+                    :class="validateIin(manualIin[activeRequest.id]).valid ? 'bg-emerald-500/12 text-emerald-300' : 'bg-red-500/12 text-red-300'"
+                  >
+                    <span class="text-4" :class="validateIin(manualIin[activeRequest.id]).valid ? 'i-mdi-check-decagram' : 'i-mdi-alert-decagram'" />
+                    {{ validateIin(manualIin[activeRequest.id]).valid ? 'Контрольная сумма сходится' : 'Контрольная сумма НЕ сходится' }}
+                  </span>
+                </p>
+              </template>
+            </section>
+
+            <!-- Причина отказа: обязательна, когда хотя бы один блок с проблемой -->
+            <section v-if="checks.first === false || checks.second === false">
+              <label class="grid gap-1.5">
+                <span class="text-xs text-white/42 font-900 uppercase">Причина отказа (увидит водитель)</span>
+                <textarea
+                  v-model="rejectReason"
+                  class="w-full border border-white/10 rounded-xl bg-white/8 px-4 py-3 text-sm outline-none focus:border-cyan-300/40"
+                  maxlength="500"
+                  placeholder="Например: техпаспорт не читается, переснимите обе стороны без бликов."
+                  rows="2"
+                />
+              </label>
+            </section>
+          </div>
+
+          <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 p-5">
+            <p class="text-xs text-white/45">
+              <template v-if="!checklistComplete">
+                Отметьте оба блока, чтобы вынести решение.
+              </template>
+              <template v-else-if="canApprove">
+                Все блоки в порядке — можно одобрять.
+              </template>
+              <template v-else-if="!rejectReason.trim()">
+                Укажите причину отказа — водитель увидит её в фотоконтроле.
+              </template>
+              <template v-else>
+                Заявка будет отклонена с указанной причиной.
+              </template>
+            </p>
+            <div class="flex gap-2">
+              <button
+                :disabled="!canApprove || verification.isMutating"
+                class="h-11 rounded-xl bg-emerald-400 px-5 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-40"
+                type="button"
+                @click="submitDecision(true)"
+              >
+                Одобрить
+              </button>
+              <button
+                :disabled="!canReject || verification.isMutating"
+                class="h-11 rounded-xl bg-red-500/15 px-5 text-sm text-red-300 font-900 transition active:scale-[0.98] hover:bg-red-500/25 disabled:opacity-40"
+                type="button"
+                @click="submitDecision(false)"
+              >
+                Отклонить
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Лайтбокс: просмотр фото без ухода со страницы -->
     <div
