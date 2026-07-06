@@ -1,25 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 128">
-  <!-- переднее колесо -->
-  <rect x="24" y="4" width="12" height="30" rx="6" fill="#20242c"/>
-  <rect x="27" y="8" width="6" height="22" rx="3" fill="#3a4048"/>
+  <defs>
+    <linearGradient id="moto-tank" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c98f13"/>
+      <stop offset="0.5" stop-color="#ffcf4d"/>
+      <stop offset="1" stop-color="#c98f13"/>
+    </linearGradient>
+  </defs>
+  <!-- переднее колесо с крылом -->
+  <rect x="24.5" y="5" width="11" height="28" rx="5.5" fill="#171b22"/>
+  <rect x="27.2" y="8.5" width="5.6" height="21" rx="2.8" fill="#39404b"/>
+  <rect x="22.5" y="14" width="15" height="7" rx="3" fill="#e6ad2e"/>
   <!-- вилка -->
-  <rect x="20" y="24" width="4" height="18" rx="2" fill="#8a94a2"/>
-  <rect x="36" y="24" width="4" height="18" rx="2" fill="#8a94a2"/>
-  <!-- руль -->
-  <rect x="8" y="38" width="44" height="6" rx="3" fill="#20242c"/>
-  <circle cx="10" cy="41" r="4.5" fill="#2c313a"/>
-  <circle cx="50" cy="41" r="4.5" fill="#2c313a"/>
+  <rect x="20.5" y="24" width="3.6" height="17" rx="1.8" fill="#97a1af"/>
+  <rect x="35.9" y="24" width="3.6" height="17" rx="1.8" fill="#97a1af"/>
+  <!-- руль с грипсами -->
+  <rect x="7" y="37.5" width="46" height="5.5" rx="2.75" fill="#20242c"/>
+  <rect x="7" y="36.8" width="9" height="7" rx="3.5" fill="#2e3440"/>
+  <rect x="44" y="36.8" width="9" height="7" rx="3.5" fill="#2e3440"/>
   <!-- фара -->
-  <circle cx="30" cy="39" r="5" fill="#ffe9a8" stroke="#c78f16" stroke-width="1.5"/>
+  <circle cx="30" cy="38.5" r="5.2" fill="#fff3c4" stroke="#c78f16" stroke-width="1.6"/>
   <!-- бак -->
-  <path d="M30 46c-8 0-12 5-12 13 0 7 4 11 12 11s12-4 12-11c0-8-4-13-12-13Z" fill="#e6ad2e" stroke="#b8860b" stroke-width="2"/>
-  <rect x="27" y="52" width="6" height="12" rx="3" fill="#fff" opacity="0.35"/>
+  <path d="M30 45.5c-8.2 0-12.4 5-12.4 13.2 0 7 4.2 11.3 12.4 11.3s12.4-4.3 12.4-11.3c0-8.2-4.2-13.2-12.4-13.2Z" fill="url(#moto-tank)" stroke="#a87908" stroke-width="1.8"/>
+  <path d="M30 49c-3.4 0-5.6 1.6-6.6 4.4 1.8-1.2 4-1.8 6.6-1.8s4.8.6 6.6 1.8C35.6 50.6 33.4 49 30 49Z" fill="#fff" opacity="0.45"/>
+  <!-- выхлопные трубы -->
+  <rect x="15.5" y="72" width="4.5" height="40" rx="2.25" fill="#aeb7c2"/>
+  <rect x="40" y="72" width="4.5" height="40" rx="2.25" fill="#aeb7c2"/>
   <!-- заднее колесо -->
-  <rect x="23" y="94" width="14" height="30" rx="7" fill="#20242c"/>
-  <rect x="26" y="98" width="8" height="22" rx="4" fill="#3a4048"/>
-  <!-- сиденье поверх колеса -->
-  <path d="M30 68c-7 0-10 4-10 12v16c0 7 3 10 10 10s10-3 10-10V80c0-8-3-12-10-12Z" fill="#20242c"/>
-  <rect x="24" y="72" width="12" height="14" rx="5" fill="#343a44"/>
-  <!-- хвост -->
-  <rect x="22" y="104" width="16" height="7" rx="3.5" fill="#e6ad2e"/>
+  <rect x="23" y="92" width="14" height="31" rx="7" fill="#171b22"/>
+  <rect x="26.4" y="96" width="7.2" height="23" rx="3.6" fill="#39404b"/>
+  <!-- сиденье/хвост -->
+  <path d="M30 66c-6.6 0-9.6 3.6-9.6 11v16c0 6.6 3 9.8 9.6 9.8s9.6-3.2 9.6-9.8V77c0-7.4-3-11-9.6-11Z" fill="#20242c"/>
+  <rect x="23.5" y="99" width="13" height="7" rx="3.5" fill="#e6ad2e"/>
+  <!-- водитель: плечи и шлем -->
+  <path d="M30 60c-8 0-12.6 3.4-13.6 9.4L20 73c1.6-3.4 5-5.2 10-5.2s8.4 1.8 10 5.2l3.6-3.6C42.6 63.4 38 60 30 60Z" fill="#2c313a"/>
+  <circle cx="30" cy="72" r="9.4" fill="#e6ad2e" stroke="#a87908" stroke-width="1.6"/>
+  <path d="M30 65.4c-3.4 0-5.9 1.5-7 4 2-1.2 4.4-1.8 7-1.8s5 .6 7 1.8c-1.1-2.5-3.6-4-7-4Z" fill="#fff" opacity="0.5"/>
 </svg>

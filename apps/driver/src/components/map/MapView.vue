@@ -23,6 +23,8 @@ const props = withDefaults(defineProps<{
   pickerMode?: MapPickerMode | null
   pickupPlace?: GeoPlace | null
   routeCoordinates?: RouteCoordinate[]
+  // Класс собственной машины водителя — выбирает иконку маркера (driverView).
+  selfCategory?: null | string
   showRoute?: boolean
   userCoordinates?: UserCoordinates | null
 }>(), {
@@ -34,6 +36,7 @@ const props = withDefaults(defineProps<{
   pickerMode: null,
   pickupPlace: null,
   routeCoordinates: () => [],
+  selfCategory: null,
   showRoute: false,
   userCoordinates: null,
 })
@@ -231,7 +234,7 @@ watch(
     const shouldFocus = props.focusUserOnFirstFix && !hasFocusedUser
 
     if (props.driverView)
-      showSelfCarLocation(coordinates, { focus: shouldFocus })
+      showSelfCarLocation(coordinates, { category: props.selfCategory, focus: shouldFocus })
     else
       showUserLocation(coordinates, { focus: shouldFocus })
 
@@ -257,7 +260,7 @@ onMounted(async () => {
   await initializeMap(() => {
     if (props.userCoordinates) {
       if (props.driverView)
-        showSelfCarLocation(props.userCoordinates, { focus: props.focusUserOnFirstFix })
+        showSelfCarLocation(props.userCoordinates, { category: props.selfCategory, focus: props.focusUserOnFirstFix })
       else
         showUserLocation(props.userCoordinates, { focus: props.focusUserOnFirstFix })
     }
