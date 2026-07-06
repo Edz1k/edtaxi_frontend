@@ -36,6 +36,8 @@ const userName = computed(() => {
 })
 
 const accessCards = computed(() => {
+  // staffScope — админ/суперадмин: «Кабинет таксопарка» ведёт в гараж платформы.
+  const staffScope = auth.hasAnyRole(['admin', 'superadmin'])
   const cards: Array<{
     description: string
     icon: string
@@ -65,11 +67,16 @@ const accessCards = computed(() => {
       to: '/support/verifications',
     },
     {
-      description: 'Профиль парка, приглашения водителей, аналитика и чат с водителями.',
+      // Для админа/суперадмина «Кабинет таксопарка» = гараж платформы (создать,
+      // если ещё нет; там же водители-партнёры, заявки, комиссия и статистика).
+      // Владельцу стороннего парка (роль park) — его собственный кабинет /park.
+      description: staffScope
+        ? 'Гараж платформы: водители-партнёры, заявки, комиссия и статистика.'
+        : 'Профиль парка, приглашения водителей, аналитика и чат с водителями.',
       icon: 'i-mdi-office-building-marker',
       roles: ['admin', 'superadmin', 'park'],
       title: 'Кабинет таксопарка',
-      to: '/park',
+      to: staffScope ? '/admin/garage' : '/park',
     },
   ]
 
