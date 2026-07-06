@@ -2,6 +2,9 @@ export type RouteCoordinate = [number, number]
 
 export interface GeoPlace {
   address: string
+  // Расстояние от пользователя (точки А) до места в метрах — бэкенд считает
+  // его для гео-саджеста; null, когда координаты пользователя неизвестны.
+  distanceM?: null | number
   id: string
   lat: number
   lng: number
@@ -16,6 +19,7 @@ export interface GeocodingSuggestPayload {
 }
 
 export interface GeocodingSuggestion {
+  distance_m?: null | number
   lat: number
   lng: number
   subtitle: string

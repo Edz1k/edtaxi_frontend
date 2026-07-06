@@ -18,6 +18,7 @@ function getSuggestResults(response: GeocodingSuggestResponse) {
 function suggestionToPlace(suggestion: GeocodingSuggestion, index: number): GeoPlace {
   return {
     address: [suggestion.title, suggestion.subtitle].filter(Boolean).join(', '),
+    distanceM: suggestion.distance_m ?? null,
     id: `${suggestion.lat}:${suggestion.lng}:${index}`,
     lat: suggestion.lat,
     lng: suggestion.lng,
@@ -57,13 +58,20 @@ export function getRoute(payload: RoutePayload) {
   })
 }
 
-export async function searchPlaces(query: string) {
+// near — координаты пользователя (обычно точка А): с ними бэкенд ищет сначала
+// в городе пользователя, затем в остальных, и проставляет расстояния до
+// подсказок (distance_m). Без near — как раньше, без гео-приоритета.
+export async function searchPlaces(query: string, near?: { lat: number, lng: number } | null) {
   const trimmedQuery = query.trim()
 
   if (trimmedQuery.length < 3)
     return []
 
-  const results = getSuggestResults(await suggestAddresses({ query: trimmedQuery }))
+  const results = getSuggestResults(await suggestAddresses({
+    query: trimmedQuery,
+    lat: near?.lat,
+    lng: near?.lng,
+  }))
 
   return results.map(suggestionToPlace)
 }

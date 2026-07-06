@@ -14,6 +14,18 @@ const emit = defineEmits<{
 function getSuggestionIcon(place: GeoPlace) {
   return place.name.toLowerCase().includes('аэропорт') ? 'i-mdi-airplane' : 'i-mdi-map-marker-outline'
 }
+
+// «974 км» рядом с подсказкой — чтобы адрес из другого города был заметен
+// и пассажир случайно не заказал поездку за тысячу километров.
+function formatDistance(m?: null | number) {
+  if (m == null)
+    return ''
+  if (m < 1000)
+    return `${m} м`
+  if (m < 10_000)
+    return `${(m / 1000).toFixed(1).replace('.', ',')} км`
+  return `${Math.round(m / 1000)} км`
+}
 </script>
 
 <template>
@@ -37,6 +49,12 @@ function getSuggestionIcon(place: GeoPlace) {
       <span class="min-w-0 flex-1 overflow-hidden">
         <span class="block truncate text-sm font-800">{{ place.name }}</span>
         <span class="block truncate text-xs text-slate-400">{{ place.address }}</span>
+      </span>
+      <span
+        v-if="formatDistance(place.distanceM)"
+        class="shrink-0 text-xs text-slate-400 font-700"
+      >
+        {{ formatDistance(place.distanceM) }}
       </span>
     </button>
 
