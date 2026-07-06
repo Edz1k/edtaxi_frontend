@@ -54,7 +54,18 @@ export interface TripDriver {
   phone?: string
   rating: number
   total_trips: number
+  user_id?: string
   vehicle?: TripDriverVehicle
+  // Последняя известная позиция машины (синк с бэка ~раз в 10с) — для первого
+  // кадра карты и ETA до прихода live-координат по WebSocket.
+  location?: null | { lat: number, lng: number }
+}
+
+// Оценка, которую пассажир уже поставил за поездку (бэкенд кладёт my_rating в
+// завершённые поездки) — по ней экран завершения показывает выставленные звёзды.
+export interface TripMyRating {
+  comment?: null | string
+  score: number
 }
 
 export interface Trip {
@@ -78,6 +89,7 @@ export interface Trip {
   fare_quotes?: Record<string, TripFareQuote>
   final_fare?: null | number
   id: string
+  my_rating?: null | TripMyRating
   passenger_id?: string
   pickup_address: string
   pickup_lat: number

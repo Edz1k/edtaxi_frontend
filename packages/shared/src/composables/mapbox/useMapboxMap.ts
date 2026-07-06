@@ -10,6 +10,25 @@ export const ALMATY_CENTER: [number, number] = [76.9286, 43.2389]
 
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined
 
+// Иконка машины на карте зависит от класса поездки: эконом — жёлтое такси,
+// бизнес — чёрный седан, мото — мотоцикл и т.д. Набор SVG одинаковый во всех
+// приложениях (passenger/driver/share кладут его в /public/car-markers).
+const CAR_MARKER_ASSETS: Record<string, string> = {
+  business: '/car-markers/business.svg',
+  comfort: '/car-markers/comfort.svg',
+  economy: '/car-markers/economy.svg',
+  minivan: '/car-markers/minivan.svg',
+  moto: '/car-markers/moto.svg',
+}
+
+function carMarkerAsset(category?: null | string) {
+  if (category && CAR_MARKER_ASSETS[category])
+    return CAR_MARKER_ASSETS[category]
+
+  // Фолбэк для неизвестной категории и старых вызовов без неё.
+  return '/taxi_top_view.svg'
+}
+
 export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
   const map = shallowRef<Map>()
   const mapboxglModule = shallowRef<MapboxModule>()
@@ -17,6 +36,10 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
   const pickupMarker = shallowRef<Marker>()
   const destinationMarker = shallowRef<Marker>()
   const userMarker = shallowRef<Marker>()
+  // Классы, с которыми созданы маркеры машин: при смене класса маркер
+  // пересоздаётся с нужной иконкой (см. showDriverLocation/showSelfCarLocation).
+  let driverMarkerCategory: null | string = null
+  let selfMarkerCategory: null | string = null
   const favoriteMarkers: Marker[] = []
   const mapError = ref('')
   let resizeObserver: ResizeObserver | undefined
@@ -293,21 +316,22 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
     return element
   }
 
-  function createDriverMarkerElement() {
-    return createCarMarkerElement()
+  function createDriverMarkerElement(category?: null | string) {
+    return createCarMarkerElement(category)
   }
 
-  function createCarMarkerElement() {
+  function createCarMarkerElement(category?: null | string) {
     const element = document.createElement('div')
     const image = document.createElement('img')
 
-    image.src = '/taxi_top_view.svg'
+    image.src = carMarkerAsset(category)
     image.alt = ''
     image.draggable = false
 
     assignStyles(image, {
       display: 'block',
       height: '64px',
+      objectFit: 'contain',
       pointerEvents: 'none',
       userSelect: 'none',
       width: '30px',
@@ -402,12 +426,21 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
     }
   }
 
-  function showSelfCarLocation(coordinates: UserCoordinates, options: { focus?: boolean } = {}) {
+  function showSelfCarLocation(coordinates: UserCoordinates, options: { category?: null | string, focus?: boolean } = {}) {
     if (!map.value || !mapboxglModule.value)
       return
 
     const lngLat: [number, number] = [coordinates.lng, coordinates.lat]
     const heading = coordinates.heading ?? 0
+
+    // Смена класса машины (редкость, но бывает при смене активного ТС) —
+    // пересоздаём маркер с новой иконкой. undefined = «категорию не знаем,
+    // оставить как есть», чтобы вызовы без категории не сбрасывали иконку.
+    const category = options.category === undefined ? selfMarkerCategory : options.category
+    if (userMarker.value && category !== selfMarkerCategory) {
+      userMarker.value.remove()
+      userMarker.value = undefined
+    }
 
     if (userMarker.value) {
       userMarker.value.setLngLat(lngLat)
@@ -418,9 +451,10 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
       return
     }
 
+    selfMarkerCategory = category ?? null
     userMarker.value = new mapboxglModule.value.default.Marker({
       anchor: 'center',
-      element: createCarMarkerElement(),
+      element: createCarMarkerElement(category),
       rotation: heading,
       rotationAlignment: 'map',
     })
@@ -432,11 +466,17 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
     }
   }
 
-  function showDriverLocation(location: PassengerDriverLocation, options: { focus?: boolean } = {}) {
+  function showDriverLocation(location: PassengerDriverLocation, options: { category?: null | string, focus?: boolean } = {}) {
     if (!map.value || !mapboxglModule.value)
       return
 
     const lngLat: [number, number] = [location.lng, location.lat]
+
+    const category = options.category === undefined ? driverMarkerCategory : options.category
+    if (driverMarker.value && category !== driverMarkerCategory) {
+      driverMarker.value.remove()
+      driverMarker.value = undefined
+    }
 
     if (driverMarker.value) {
       driverMarker.value.setLngLat(lngLat)
@@ -451,9 +491,10 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
       return
     }
 
+    driverMarkerCategory = category ?? null
     driverMarker.value = new mapboxglModule.value.default.Marker({
       anchor: 'center',
-      element: createDriverMarkerElement(),
+      element: createDriverMarkerElement(category),
       rotation: location.heading ?? 0,
       rotationAlignment: 'map',
     })

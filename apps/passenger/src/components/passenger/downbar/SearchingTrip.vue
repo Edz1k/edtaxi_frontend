@@ -2,9 +2,12 @@
 import type { EstimateTripResponse, Trip, VehicleCategory } from '~/types/trips'
 import { mediaUrl } from '~/api/client'
 import { shareTripLink } from '~/api/share'
+import { useToast } from '~/composables/useToast'
 import { formatFare, TARIFF_META } from '~/constants/tariffs'
 import { usePlacesStore } from '~/stores/places'
 import { useTripChatStore } from '~/stores/tripChat'
+import { useTripsStore } from '~/stores/trips'
+import { coarseEtaSeconds } from '~/utils/eta'
 
 const props = defineProps<{
   activeTrip: null | Trip
@@ -17,6 +20,52 @@ const props = defineProps<{
 
 // Пока водитель не найден — крутим «радар» и тикающий таймер поиска.
 const isSearchingStatus = computed(() => !props.activeTrip || props.activeTrip.status === 'searching')
+
+const trips = useTripsStore()
+
+// ETA: приоритет — живой eta_sec из WebSocket (бэк считает по скорости
+// водителя); до первого пинга — грубая оценка от последней известной позиции
+// машины из пейлоада поездки. Цель зависит от этапа: до посадки — точка А,
+// в пути — точка Б.
+const etaSecondsValue = computed(() => {
+  const trip = props.activeTrip
+  if (!trip)
+    return null
+
+  const status = trip.status
+  if (status !== 'driver_assigned' && status !== 'in_progress')
+    return null
+
+  const live = trips.driverLocation
+  if (live?.eta_sec != null && live.eta_sec > 0)
+    return live.eta_sec
+
+  const location = live ?? trip.driver?.location
+  if (!location)
+    return null
+
+  const target = status === 'in_progress'
+    ? { lat: trip.dropoff_lat, lng: trip.dropoff_lng }
+    : { lat: trip.pickup_lat, lng: trip.pickup_lng }
+
+  return coarseEtaSeconds(location.lat, location.lng, target.lat, target.lng)
+})
+
+const etaMinutes = computed(() => {
+  if (etaSecondsValue.value == null)
+    return null
+  return Math.max(1, Math.round(etaSecondsValue.value / 60))
+})
+
+const etaChip = computed(() => {
+  if (etaMinutes.value == null)
+    return null
+  if (props.activeTrip?.status === 'driver_assigned')
+    return `Водитель приедет через ~${etaMinutes.value} мин`
+  if (props.activeTrip?.status === 'in_progress')
+    return `Прибытие через ~${etaMinutes.value} мин`
+  return null
+})
 
 const elapsedLabel = computed(() => {
   const mm = Math.floor(props.elapsedSeconds / 60)
@@ -136,6 +185,73 @@ async function toggleSaveFavorite(event: Event) {
       lng: trip.dropoff_lng,
     })
     isFavoriteSaved.value = true
+  }
+  catch {}
+}
+
+// ===== Итог завершённой поездки: время пути, стоимость, оценка водителя =====
+
+const toast = useToast()
+
+function formatClock(value: null | string | undefined) {
+  if (!value)
+    return null
+  const date = new Date(value)
+  if (!Number.isFinite(date.getTime()))
+    return null
+  return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(date)
+}
+
+// Фактическое время пути: completed_at - started_at (после refresh поездки
+// оба таймстампа приходят с бэка). До прихода completed_at — не показываем.
+const tripDurationText = computed(() => {
+  const trip = props.activeTrip
+  if (!trip?.started_at || !trip.completed_at)
+    return null
+
+  const ms = new Date(trip.completed_at).getTime() - new Date(trip.started_at).getTime()
+  if (!Number.isFinite(ms) || ms <= 0)
+    return null
+
+  const totalMinutes = Math.max(1, Math.round(ms / 60000))
+  if (totalMinutes < 60)
+    return `${totalMinutes} мин`
+
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return minutes ? `${hours} ч ${minutes} мин` : `${hours} ч`
+})
+
+const completedAtText = computed(() => formatClock(props.activeTrip?.completed_at))
+
+const finalFareText = computed(() => {
+  const trip = props.activeTrip
+  if (!trip)
+    return null
+  const fare = trip.final_fare ?? trip.estimated_fare
+  return `${Math.round(fare).toLocaleString('ru-RU')} ₸`
+})
+
+// Оценка: если поездка уже оценена (my_rating с бэка или только что отправили),
+// показываем звёзды в режиме «спасибо»; иначе — форму с 5 звёздами и комментарием.
+const ratingScore = ref(5)
+const ratingComment = ref('')
+const ratedScore = computed(() => props.activeTrip?.my_rating?.score ?? null)
+
+// Новая поездка на экране — чистая форма оценки.
+watch(() => props.activeTrip?.id, () => {
+  ratingScore.value = 5
+  ratingComment.value = ''
+})
+
+async function submitTripRating() {
+  const trip = props.activeTrip
+  if (!trip || trips.isRating)
+    return
+
+  try {
+    await trips.submitRating(trip.id, ratingScore.value, ratingComment.value)
+    toast.success('Спасибо', 'Оценка отправлена.')
   }
   catch {}
 }
@@ -303,6 +419,12 @@ async function shareTrip() {
       <span class="text-sm font-950 tabular-nums">{{ elapsedLabel }}</span>
     </div>
 
+    <!-- Живой ETA: водитель едет к вам / до прибытия в точку Б -->
+    <div v-else-if="etaChip" class="mt-3 inline-flex items-center gap-2 rounded-full bg-main-500/14 px-4 py-1.5">
+      <span class="i-mdi-clock-fast text-4 text-main-300" aria-hidden="true" />
+      <span class="text-sm text-main-200 font-950 tabular-nums">{{ etaChip }}</span>
+    </div>
+
     <div class="mt-4 rounded-2xl bg-white/5 px-4 py-3 text-left">
       <p class="flex items-center gap-2 text-sm font-800">
         <span class="i-mdi-near-me shrink-0 text-4.5 text-main-300" aria-hidden="true" />
@@ -388,6 +510,90 @@ async function shareTrip() {
       </button>
     </div>
 
+    <!-- Итог завершённой поездки: время пути, время завершения, стоимость -->
+    <div v-if="isCompleted" class="grid grid-cols-3 mt-3 gap-2">
+      <div class="rounded-2xl bg-white/5 px-2 py-2.5">
+        <p class="text-[11px] text-slate-500 font-800">
+          Время пути
+        </p>
+        <p class="mt-1 text-sm font-950">
+          {{ tripDurationText ?? '—' }}
+        </p>
+      </div>
+      <div class="rounded-2xl bg-white/5 px-2 py-2.5">
+        <p class="text-[11px] text-slate-500 font-800">
+          Завершена
+        </p>
+        <p class="mt-1 text-sm font-950">
+          {{ completedAtText ?? '—' }}
+        </p>
+      </div>
+      <div class="rounded-2xl bg-white/5 px-2 py-2.5">
+        <p class="text-[11px] text-slate-500 font-800">
+          Стоимость
+        </p>
+        <p class="mt-1 text-sm font-950">
+          {{ finalFareText ?? '—' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Оценка водителя: форма после завершения, «спасибо» — если уже оценено -->
+    <div v-if="isCompleted && driver" class="mt-3 rounded-2xl bg-white/5 px-4 py-4 text-left">
+      <template v-if="ratedScore">
+        <p class="text-center text-sm font-900">
+          Ваша оценка
+        </p>
+        <div class="mt-2 flex justify-center gap-1">
+          <span
+            v-for="star in 5"
+            :key="star"
+            class="i-mdi-star text-7"
+            :class="star <= ratedScore ? 'text-main-300' : 'text-slate-600'"
+            aria-hidden="true"
+          />
+        </div>
+        <p class="mt-2 text-center text-xs text-emerald-300 font-800">
+          Спасибо за оценку!
+        </p>
+      </template>
+
+      <template v-else>
+        <p class="text-center text-sm font-900">
+          Оцените поездку
+        </p>
+        <div class="mt-2 flex justify-center gap-1">
+          <button
+            v-for="star in 5"
+            :key="star"
+            :aria-label="`Поставить оценку ${star}`"
+            class="h-11 w-11 flex items-center justify-center rounded-full transition active:scale-[0.94]"
+            :class="star <= ratingScore ? 'text-main-300' : 'text-slate-600'"
+            type="button"
+            @click="ratingScore = star"
+          >
+            <span class="i-mdi-star text-8" aria-hidden="true" />
+          </button>
+        </div>
+        <textarea
+          v-model="ratingComment"
+          aria-label="Комментарий к поездке"
+          class="mt-3 min-h-20 w-full resize-none border border-white/10 rounded-2xl bg-white/6 p-3 text-sm outline-none focus:border-main-400"
+          maxlength="500"
+          name="trip_rating_comment"
+          placeholder="Комментарий к заказу, если хотите"
+        />
+        <button
+          :disabled="trips.isRating"
+          class="mt-3 h-12 w-full rounded-2xl bg-main-500 text-sm text-white font-950 transition active:scale-[0.98] disabled:opacity-60"
+          type="button"
+          @click="submitTripRating"
+        >
+          {{ trips.isRating ? 'Отправляем...' : 'Отправить оценку' }}
+        </button>
+      </template>
+    </div>
+
     <label
       v-if="isCompleted && !isAlreadyFavorite"
       class="mt-3 flex cursor-pointer items-center gap-2.5 rounded-2xl bg-white/5 px-3 py-2.5 text-left transition active:scale-[0.99]"
@@ -405,7 +611,7 @@ async function shareTrip() {
     </label>
 
     <button
-      v-if="activeTrip?.status === 'in_progress'"
+      v-if="isChatAvailable"
       :disabled="isSharing"
       class="mt-4 h-11 w-full rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98] disabled:opacity-60"
       type="button"

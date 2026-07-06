@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 128">
+  <!-- переднее колесо -->
+  <rect x="24" y="4" width="12" height="30" rx="6" fill="#20242c"/>
+  <rect x="27" y="8" width="6" height="22" rx="3" fill="#3a4048"/>
+  <!-- вилка -->
+  <rect x="20" y="24" width="4" height="18" rx="2" fill="#8a94a2"/>
+  <rect x="36" y="24" width="4" height="18" rx="2" fill="#8a94a2"/>
+  <!-- руль -->
+  <rect x="8" y="38" width="44" height="6" rx="3" fill="#20242c"/>
+  <circle cx="10" cy="41" r="4.5" fill="#2c313a"/>
+  <circle cx="50" cy="41" r="4.5" fill="#2c313a"/>
+  <!-- фара -->
+  <circle cx="30" cy="39" r="5" fill="#ffe9a8" stroke="#c78f16" stroke-width="1.5"/>
+  <!-- бак -->
+  <path d="M30 46c-8 0-12 5-12 13 0 7 4 11 12 11s12-4 12-11c0-8-4-13-12-13Z" fill="#e6ad2e" stroke="#b8860b" stroke-width="2"/>
+  <rect x="27" y="52" width="6" height="12" rx="3" fill="#fff" opacity="0.35"/>
+  <!-- заднее колесо -->
+  <rect x="23" y="94" width="14" height="30" rx="7" fill="#20242c"/>
+  <rect x="26" y="98" width="8" height="22" rx="4" fill="#3a4048"/>
+  <!-- сиденье поверх колеса -->
+  <path d="M30 68c-7 0-10 4-10 12v16c0 7 3 10 10 10s10-3 10-10V80c0-8-3-12-10-12Z" fill="#20242c"/>
+  <rect x="24" y="72" width="12" height="14" rx="5" fill="#343a44"/>
+  <!-- хвост -->
+  <rect x="22" y="104" width="16" height="7" rx="3.5" fill="#e6ad2e"/>
+</svg>

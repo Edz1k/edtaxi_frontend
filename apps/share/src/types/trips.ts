@@ -1,13 +1,41 @@
 export type TripStatus = 'cancelled' | 'completed' | 'driver_arriving' | 'driver_assigned' | 'in_progress' | 'searching'
 export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
 
+// Публичный срез данных о водителе для share-страницы: без телефона и
+// прочих контактов (ссылка доступна любому, у кого она есть).
+export interface ShareTripDriverVehicle {
+  category?: string
+  color: string
+  make: string
+  model: string
+  plate_number: string
+}
+
+export interface ShareTripDriverLocation {
+  eta_sec?: number
+  lat: number
+  lng: number
+}
+
+export interface ShareTripDriver {
+  avatar_url?: null | string
+  // Последняя известная позиция машины + грубый ETA (только пока поездка активна).
+  location?: null | ShareTripDriverLocation
+  name?: string
+  rating: number
+  total_trips: number
+  vehicle?: ShareTripDriverVehicle
+}
+
 export interface Trip {
+  arrived_at?: null | string
   cancelled_at?: null | string
   cancelled_by?: null | string
   category: VehicleCategory
   completed_at?: null | string
   created_at?: string
   distance_km: number
+  driver?: null | ShareTripDriver
   driver_assigned_at?: null | string
   driver_id?: null | string
   dropoff_address: string

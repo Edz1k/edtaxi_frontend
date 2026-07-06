@@ -142,6 +142,14 @@ export function useDriverTrackingSocket() {
         return
       }
 
+      // Оффер истёк на сервере: закрываем модалку (и мелодию), пока водитель
+      // не принял заказ, который уже ушёл другому.
+      if (message.type === 'trip_offer_expired') {
+        if (driver.expireOffer(message.data.trip_id))
+          toast.warning('Заказ ушёл', 'Время на ответ истекло — заказ предложен другому водителю.')
+        return
+      }
+
       if (message.type === 'trip_status') {
         driver.applyTripStatus(message.data.trip_id, message.data.status)
         driver.refreshActiveTrip().catch(() => {})

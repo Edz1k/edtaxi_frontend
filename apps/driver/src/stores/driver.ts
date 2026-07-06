@@ -174,6 +174,16 @@ export const useDriverStore = defineStore('driver', () => {
     pendingOffer.value = null
   }
 
+  // expireOffer закрывает оффер по сигналу trip_offer_expired с сервера.
+  // Возвращает true, если закрыли именно показанный сейчас оффер.
+  function expireOffer(tripId: string) {
+    if (pendingOffer.value?.trip_id !== tripId)
+      return false
+
+    clearOffer()
+    return true
+  }
+
   async function acceptOffer() {
     if (!pendingOffer.value)
       return
@@ -191,6 +201,9 @@ export const useDriverStore = defineStore('driver', () => {
     }
     catch (error) {
       errorMessage.value = showErrorToast(error, 'Не удалось принять заказ.')
+      // Оффер после неудачного принятия почти наверняка мёртв (истёк или заказ
+      // ушёл другому) — закрываем модалку, чтобы она и мелодия не висели вечно.
+      clearOffer()
       throw error
     }
     finally {
@@ -388,6 +401,7 @@ export const useDriverStore = defineStore('driver', () => {
     currentTripId,
     ensureProfile,
     errorMessage,
+    expireOffer,
     hasActiveTrip,
     hasLoadedCategories,
     isAvailable,

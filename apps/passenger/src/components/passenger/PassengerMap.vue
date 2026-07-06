@@ -5,7 +5,7 @@ import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { PassengerDriverLocation } from '~/types/websocket'
 import { useTripsStore } from '~/stores/trips'
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   destinationPlace?: GeoPlace | null
   driverLocation?: PassengerDriverLocation | null
   favoritePlaces?: GeoPlace[]
@@ -31,6 +31,26 @@ const emit = defineEmits<{
 
 const trips = useTripsStore()
 
+// Класс машины поездки — от него зависит иконка на карте (эконом/бизнес/мото...).
+const driverCategory = computed(() =>
+  trips.activeTrip?.driver?.vehicle?.category ?? trips.activeTrip?.category ?? null,
+)
+
+// Позиция машины: live-координаты из WebSocket, а до первого пинга — последняя
+// известная позиция из пейлоада поездки, чтобы машина была видна сразу.
+const liveDriverLocation = computed(() => {
+  if (props.driverLocation)
+    return props.driverLocation
+
+  const status = trips.activeTrip?.status
+  const isLive = status === 'driver_assigned' || status === 'driver_arriving' || status === 'in_progress'
+  const location = trips.activeTrip?.driver?.location
+  if (!isLive || !location)
+    return null
+
+  return { lat: location.lat, lng: location.lng }
+})
+
 function handleConfirmPicker(place: GeoPlace, mode: MapPickerMode) {
   emit('confirmPicker', place, mode)
 }
@@ -39,7 +59,8 @@ function handleConfirmPicker(place: GeoPlace, mode: MapPickerMode) {
 <template>
   <MapView
     :destination-place="destinationPlace"
-    :driver-location="driverLocation"
+    :driver-category="driverCategory"
+    :driver-location="liveDriverLocation"
     :favorite-places="favoritePlaces"
     :picker-mode="pickerMode"
     :pickup-place="pickupPlace"
