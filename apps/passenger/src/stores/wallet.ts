@@ -1,7 +1,7 @@
-import type { Wallet, WalletTransaction } from '@edtaxi/shared/types/wallet'
+import type { PaymentCard, Wallet, WalletTransaction } from '@edtaxi/shared/types/wallet'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { showErrorToast } from '~/api/errors'
-import { getWallet, getWalletHistory, topUpWallet } from '~/api/wallet'
+import { bindCard as bindCardApi, getMyCard, getWallet, getWalletHistory, topUpWallet, unbindCard as unbindCardApi } from '~/api/wallet'
 
 export const useWalletStore = defineStore('wallet', () => {
   const wallet = ref<Wallet | null>(null)
@@ -12,6 +12,11 @@ export const useWalletStore = defineStore('wallet', () => {
   const isLoadingHistory = ref(false)
   const isMutating = ref(false)
   const errorMessage = ref('')
+
+  // Привязанная карта. isCardLoaded отличает «ещё не загружали» от «карты нет»
+  // — чтобы подсказки про привязку не мигали до первого ответа бэка.
+  const card = ref<null | PaymentCard>(null)
+  const isCardLoaded = ref(false)
 
   async function loadWallet() {
     isLoading.value = true
@@ -84,6 +89,54 @@ export const useWalletStore = defineStore('wallet', () => {
     }
   }
 
+  // loadCard — тихая загрузка (без тостов): вызывается и из поллинга привязки,
+  // и из селектора способа оплаты.
+  async function loadCard() {
+    try {
+      card.value = (await getMyCard()).card
+      isCardLoaded.value = true
+      return card.value
+    }
+    catch {
+      return card.value
+    }
+  }
+
+  // bindCard создаёт платёж привязки и возвращает redirect_url — карта
+  // появится после оплаты (страница опрашивает loadCard, пока фрейм открыт).
+  async function bindCard() {
+    isMutating.value = true
+    errorMessage.value = ''
+
+    try {
+      return await bindCardApi()
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось начать привязку карты.')
+      throw error
+    }
+    finally {
+      isMutating.value = false
+    }
+  }
+
+  async function unbindCard() {
+    isMutating.value = true
+    errorMessage.value = ''
+
+    try {
+      await unbindCardApi()
+      card.value = null
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось отвязать карту.')
+      throw error
+    }
+    finally {
+      isMutating.value = false
+    }
+  }
+
   function resetHistory() {
     transactions.value = []
     offset.value = 0
@@ -92,6 +145,8 @@ export const useWalletStore = defineStore('wallet', () => {
 
   function clearWalletState() {
     wallet.value = null
+    card.value = null
+    isCardLoaded.value = false
     resetHistory()
     isLoading.value = false
     isLoadingHistory.value = false
@@ -100,12 +155,16 @@ export const useWalletStore = defineStore('wallet', () => {
   }
 
   return {
+    bindCard,
+    card,
     clearWalletState,
     errorMessage,
     hasMore,
+    isCardLoaded,
     isLoading,
     isLoadingHistory,
     isMutating,
+    loadCard,
     loadHistory,
     loadMore,
     loadWallet,
@@ -113,6 +172,7 @@ export const useWalletStore = defineStore('wallet', () => {
     resetHistory,
     topUp,
     transactions,
+    unbindCard,
     wallet,
   }
 })
