@@ -105,11 +105,27 @@ export const useTripsStore = defineStore('trips', () => {
     destination.value = trip.dropoff_address
   }
 
-  function finishActiveTrip(trip: Trip) {
+  // finishActiveTrip переводит поездку в терминальное состояние. По умолчанию
+  // она ОСТАЁТСЯ на экране (пассажир видит итог, ставит оценку и заказывает
+  // следующую машину сам) — раньше здесь был мгновенный resetActiveTrip, из-за
+  // которого после завершения «ничего не высвечивалось». keepOnScreen=false —
+  // для самостоятельной отмены пассажиром: сразу возвращаем форму заказа.
+  function finishActiveTrip(trip: Trip, options: { keepOnScreen?: boolean } = {}) {
     history.value = [trip, ...history.value.filter(item => item.id !== trip.id)]
     syncRouteDraftFromTrip(trip)
-    clearEstimate()
-    resetActiveTrip()
+
+    if (options.keepOnScreen === false) {
+      clearEstimate()
+      resetActiveTrip()
+      return
+    }
+
+    activeTrip.value = trip
+    driverLocation.value = null
+    searchStartedAt.value = null
+    searchElapsedSeconds.value = 0
+    stopSearchTimer()
+    stopActiveTripPolling()
   }
 
   function syncActiveTrip(trip: Trip) {
@@ -420,10 +436,12 @@ export const useTripsStore = defineStore('trips', () => {
 
     try {
       await cancelTrip(activeTrip.value.id)
+      // Свою отмену пассажир не разглядывает — сразу назад к форме заказа
+      // (маршрут остаётся заполненным, можно заказать заново в один тап).
       finishActiveTrip({
         ...activeTrip.value,
         status: 'cancelled',
-      })
+      }, { keepOnScreen: false })
     }
     catch (error) {
       errorMessage.value = showErrorToast(error, 'Не удалось отменить поездку.')
@@ -480,6 +498,12 @@ export const useTripsStore = defineStore('trips', () => {
 
     try {
       const response = await rateTrip(tripId, { comment, score })
+      // Локально помечаем поездку оценённой: экран завершения и история сразу
+      // показывают звёзды вместо формы, не дожидаясь перезагрузки с бэка.
+      const rated = { comment: comment || null, score }
+      if (activeTrip.value?.id === tripId)
+        activeTrip.value = { ...activeTrip.value, my_rating: rated }
+      history.value = history.value.map(item => item.id === tripId ? { ...item, my_rating: rated } : item)
       return response
     }
     catch (error) {

@@ -94,6 +94,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/menu/about': RouteRecordInfo<
+      '/menu/about',
+      '/menu/about',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/menu/history': RouteRecordInfo<
       '/menu/history',
       '/menu/history',
@@ -111,6 +118,13 @@ declare module 'vue-router/auto-routes' {
     '/menu/profile/': RouteRecordInfo<
       '/menu/profile/',
       '/menu/profile',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/menu/safety': RouteRecordInfo<
+      '/menu/safety',
+      '/menu/safety',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -228,6 +242,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    'src/pages/menu/about.vue': {
+      routes:
+        | '/menu/about'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     'src/pages/menu/history.vue': {
       routes:
         | '/menu/history'
@@ -247,6 +269,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/menu/profile/index.vue': {
       routes:
         | '/menu/profile/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/safety.vue': {
+      routes:
+        | '/menu/safety'
       views:
         | never
       pathParamNames:

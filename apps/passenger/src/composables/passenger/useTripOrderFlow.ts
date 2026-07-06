@@ -30,7 +30,9 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
 
   const canSubmit = computed(() => options.pickup.value.trim().length >= 3 && options.destination.value.trim().length >= 3)
   const isTariffsVisible = computed(() => trips.tripFlowState === 'tariffs')
-  const isSearching = computed(() => trips.hasActiveTrip)
+  // Экран поездки показывается и для терминальных статусов (completed/cancelled):
+  // там пассажир видит итог, ставит оценку и заказывает следующую машину.
+  const isSearching = computed(() => Boolean(trips.activeTrip))
   const isBusy = computed(() => trips.isEstimating || trips.isCreating || trips.isCancelling || trips.isRestoringActiveTrip || isResolvingRoute.value)
   // Самый дешёвый из выбранных тарифов — от него считается цена «от N ₸».
   const selectedEstimate = computed(() => trips.cheapestSelectedEstimate)
@@ -54,7 +56,7 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
   })
 
   watch([options.pickup, options.destination], () => {
-    if (trips.hasActiveTrip || isSubmittingRoute.value)
+    if (trips.activeTrip || isSubmittingRoute.value)
       return
 
     trips.clearEstimate()

@@ -16,6 +16,8 @@ interface PassengerMapPickerExpose {
 
 const props = withDefaults(defineProps<{
   destinationPlace?: GeoPlace | null
+  // Класс машины поездки — выбирает иконку маркера (эконом/бизнес/мото...).
+  driverCategory?: null | string
   driverLocation?: PassengerDriverLocation | null
   driverView?: boolean
   favoritePlaces?: GeoPlace[]
@@ -27,6 +29,7 @@ const props = withDefaults(defineProps<{
   userCoordinates?: UserCoordinates | null
 }>(), {
   destinationPlace: null,
+  driverCategory: null,
   driverLocation: null,
   driverView: false,
   favoritePlaces: () => [],
@@ -240,14 +243,14 @@ watch(
 )
 
 watch(
-  () => props.driverLocation,
-  (location) => {
+  [() => props.driverLocation, () => props.driverCategory],
+  ([location]) => {
     if (!location) {
       hideDriverLocation()
       return
     }
 
-    showDriverLocation(location)
+    showDriverLocation(location, { category: props.driverCategory })
   },
 )
 
@@ -267,7 +270,7 @@ onMounted(async () => {
     }
 
     if (props.driverLocation)
-      showDriverLocation(props.driverLocation)
+      showDriverLocation(props.driverLocation, { category: props.driverCategory })
 
     if (props.pickupPlace && !hasRoute.value) {
       showPickupLocation(props.pickupPlace, {

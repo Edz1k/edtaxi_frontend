@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { UserStatsResponse } from '~/api/users'
 import { readSavedAccounts } from '@edtaxi/shared/composables/auth/saved-accounts'
+import { getUserStats } from '~/api/users'
 import { SAVED_ACCOUNTS_KEY, useAuthStore } from '~/stores/auth'
 import { usePassengerStore } from '~/stores/passenger'
 
@@ -10,6 +12,7 @@ const passenger = usePassengerStore()
 // «Кабинет» намеренно не дублируем пунктом меню — в профиль ведёт тап по имени
 // в шапке выше.
 const menuItems = [
+  { label: 'Акции и бонусы', description: 'Все акции и реферальная программа', icon: 'i-mdi-gift-outline', to: '/bonus' },
   { label: 'История', description: 'Поездки и оценки', icon: 'i-mdi-clock-outline', to: '/menu/history' },
   { label: 'Избранные адреса', description: 'Сохранённые места', icon: 'i-mdi-heart-outline', to: '/menu/places' },
   { label: 'Безопасность', description: 'Вызов 112 и отправка маршрута', icon: 'i-mdi-shield-check-outline', to: '/menu/safety' },
@@ -17,6 +20,9 @@ const menuItems = [
   { label: 'Настройки', description: 'Профиль и приложение', icon: 'i-mdi-cog-outline', to: '/menu/settings' },
   { label: 'О приложении', description: 'Тарифы и о сервисе EdTaxi', icon: 'i-mdi-information-outline', to: '/menu/about' },
 ]
+
+// Статистик-бар «Нас уже N, вы — №K»: пока не загрузился (или упал) — не рисуем.
+const userStats = ref<null | UserStatsResponse>(null)
 
 definePage({
   meta: {
@@ -39,6 +45,11 @@ async function logout() {
 }
 
 onMounted(async () => {
+  getUserStats()
+    .then((stats) => {
+      userStats.value = stats
+    })
+    .catch(() => {})
   await passenger.loadProfile().catch(() => {})
 })
 </script>
@@ -69,6 +80,20 @@ onMounted(async () => {
 
         <span class="i-mdi-chevron-right shrink-0 text-7 text-slate-500" />
       </RouterLink>
+
+      <!-- Статистик-бар: рост платформы и номер пользователя -->
+      <div
+        v-if="userStats"
+        class="relative mt-6 overflow-hidden border border-main-500/25 rounded-3xl from-main-500/18 via-white/4 to-transparent bg-gradient-to-br px-4 py-4"
+      >
+        <span class="i-mdi-account-group pointer-events-none absolute text-24 text-main-300/12 -right-3 -top-4" aria-hidden="true" />
+        <p class="text-sm font-950">
+          Нас уже {{ userStats.total_users.toLocaleString('ru-RU') }}!
+        </p>
+        <p class="mt-1 text-xs text-slate-300 font-700 leading-5">
+          Вы — пользователь №{{ userStats.user_number.toLocaleString('ru-RU') }} сервиса EdTaxi. Спасибо, что с нами 🚕
+        </p>
+      </div>
 
       <nav class="mt-8 space-y-3">
         <RouterLink

@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import type { BonusPromotion } from '@edtaxi/shared/types/bonus'
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { QuickDestination } from '~/components/passenger/downbar/AddressForm.vue'
+import { getMyPromotions } from '@edtaxi/shared/api/bonus'
+import { mediaUrl } from '~/api/client'
 
 defineProps<{
   quickDestinations: QuickDestination[]
@@ -15,6 +18,18 @@ const emit = defineEmits<{
   // Быстрый адрес — сразу выбрать назначение (дальше уходим к тарифам).
   selectDestination: [place: GeoPlace]
 }>()
+
+// Действующие акции — компактной лентой на главном экране; тап ведёт на /bonus.
+// Ошибку глотаем: без акций лента просто не показывается.
+const promotions = ref<BonusPromotion[]>([])
+
+onMounted(() => {
+  getMyPromotions()
+    .then((response) => {
+      promotions.value = response.promotions ?? []
+    })
+    .catch(() => {})
+})
 </script>
 
 <template>
@@ -41,6 +56,40 @@ const emit = defineEmits<{
       </span>
       <span class="i-mdi-chevron-right shrink-0 text-5 text-white/40" aria-hidden="true" />
     </button>
+
+    <!-- Акции: горизонтальная лента, тап — все акции и бонусы -->
+    <div
+      v-if="promotions.length"
+      class="[scrollbar-width:none] flex gap-2 overflow-x-auto pb-1 -mx-1 [&::-webkit-scrollbar]:hidden"
+    >
+      <RouterLink
+        v-for="promo in promotions"
+        :key="promo.id"
+        class="relative h-20 w-60 shrink-0 overflow-hidden border border-white/10 rounded-[1.35rem] transition first:ml-1 last:mr-1 active:scale-[0.98]"
+        to="/bonus"
+      >
+        <img
+          v-if="promo.image_url"
+          alt=""
+          class="absolute inset-0 h-full w-full object-cover"
+          :src="mediaUrl(promo.image_url)"
+        >
+        <div
+          class="absolute inset-0"
+          :class="promo.image_url
+            ? 'bg-gradient-to-r from-secondary-950/90 via-secondary-950/55 to-transparent'
+            : 'bg-gradient-to-br from-main-500/25 via-secondary-900 to-secondary-950'"
+        />
+        <div class="relative z-10 h-full flex flex-col justify-center px-3.5">
+          <p class="line-clamp-1 text-sm font-950">
+            {{ promo.title }}
+          </p>
+          <p class="line-clamp-1 mt-0.5 text-xs text-main-200 font-800">
+            +{{ promo.reward.toLocaleString('ru-RU') }} бонусов за {{ promo.target_trips }} поездок
+          </p>
+        </div>
+      </RouterLink>
+    </div>
 
     <!-- Частые адреса — быстрый выбор -->
     <div v-if="quickDestinations.length" class="space-y-0.5">

@@ -92,6 +92,51 @@ const isActiveTripFinished = computed(() => {
   return trips.activeTrip?.status === 'cancelled' || trips.activeTrip?.status === 'completed'
 })
 
+// После завершения предлагаем заказать ещё одну машину (маршрут уже заполнен),
+// после отмены — просто новую поездку.
+const finishedButtonLabel = computed(() =>
+  trips.activeTrip?.status === 'completed' ? 'Заказать ещё одну машину' : 'Новая поездка',
+)
+
+// Кнопка отмены: пока идёт поиск — «Отменить поиск» в один тап; когда водитель
+// уже назначен/едет/в пути — «Отменить заказ» с подтверждением вторым тапом
+// (4 секунды на передумать), чтобы заказ не отменялся случайным касанием.
+const isCancelArmed = ref(false)
+let cancelArmTimer: number | undefined
+
+const cancelButtonLabel = computed(() => {
+  if (trips.isCancelling)
+    return 'Отменяем...'
+  if (isCancelArmed.value)
+    return 'Точно отменить? Нажмите ещё раз'
+  return trips.activeTrip?.status === 'searching' ? 'Отменить поиск' : 'Отменить заказ'
+})
+
+function disarmCancel() {
+  isCancelArmed.value = false
+  if (cancelArmTimer !== undefined) {
+    window.clearTimeout(cancelArmTimer)
+    cancelArmTimer = undefined
+  }
+}
+
+function requestCancel() {
+  if (trips.isCancelling)
+    return
+
+  const status = trips.activeTrip?.status
+  if (status && status !== 'searching' && !isCancelArmed.value) {
+    isCancelArmed.value = true
+    cancelArmTimer = window.setTimeout(disarmCancel, 4000)
+    return
+  }
+
+  disarmCancel()
+  cancelSearch()
+}
+
+onBeforeUnmount(disarmCancel)
+
 // Выбор адреса назначения (быстрый на первом экране или из поиска) → сразу
 // считаем тарифы и уходим на тарифный этап.
 function chooseDestination(place: GeoPlace) {
@@ -268,17 +313,18 @@ function onHandleKeydown(event: KeyboardEvent) {
                 type="button"
                 @click="startNewTrip"
               >
-                Новая поездка
+                {{ finishedButtonLabel }}
               </button>
 
               <button
                 v-else
                 :disabled="trips.isCancelling"
-                class="mt-3 h-13 w-full rounded-[1.35rem] bg-red-500/12 text-sm text-red-300 font-950 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+                class="mt-3 h-13 w-full rounded-[1.35rem] text-sm font-950 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+                :class="isCancelArmed ? 'bg-red-500 text-white shadow-[0_12px_30px_rgba(239,68,68,0.3)]' : 'bg-red-500/12 text-red-300'"
                 type="button"
-                @click="cancelSearch"
+                @click="requestCancel"
               >
-                {{ trips.isCancelling ? 'Отменяем...' : 'Отменить поиск' }}
+                {{ cancelButtonLabel }}
               </button>
             </template>
 
