@@ -36,6 +36,13 @@ const plannedRoute = computed(() => {
 
 const canShareRoute = computed(() => trips.hasActiveTrip || Boolean(plannedRoute.value))
 
+// Экстренный вызов: в Telegram-вебвью обычный <a href="tel:"> часто не
+// срабатывает — принудительный переход location.href надёжно открывает
+// системный диалог набора и на iOS, и на Android.
+function call112() {
+  window.location.href = 'tel:112'
+}
+
 function shareRoute() {
   const trip = trips.hasActiveTrip ? trips.activeTrip : null
   const lines: string[] = ['Я еду на такси EdTaxi.']
@@ -99,13 +106,16 @@ const safetyChecks = [
           </div>
         </div>
 
-        <a
+        <!-- В Telegram-вебвью клик по <a href="tel:"> нередко «проглатывается»
+             без перехода — принудительно уводим на tel: через location. -->
+        <button
           class="mt-4 h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-red-500 text-base font-950 transition active:scale-[0.98]"
-          href="tel:112"
+          type="button"
+          @click="call112"
         >
           <span class="i-mdi-phone text-5.5" />
           Позвонить 112
-        </a>
+        </button>
       </section>
 
       <!-- Отправить маршрут -->

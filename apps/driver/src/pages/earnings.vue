@@ -175,16 +175,23 @@ function formatDate(value: string) {
 
       <section class="mt-6 border border-main-500/20 rounded-3xl bg-white/6 p-5">
         <p class="text-xs text-slate-400 font-800 uppercase">
-          Баланс для выхода на линию
+          Баланс
         </p>
         <p class="mt-2 text-4xl text-main-200 font-950">
           {{ formatMoney(earnings.wallet?.available_balance ?? 0) }}
         </p>
-        <p v-if="earnings.wallet && earnings.wallet.debt_balance > 0" class="mt-1 text-sm text-red-300">
-          Долг по наличным поездкам: {{ formatMoney(earnings.wallet.debt_balance) }}
-        </p>
+        <!-- Долг не блокирует работу: комиссии наличных поездок копятся и
+             автоматически списываются при следующем пополнении. -->
+        <template v-if="earnings.wallet && earnings.wallet.debt_balance > 0">
+          <p class="mt-1 text-sm text-red-300">
+            Долг по наличным поездкам: {{ formatMoney(earnings.wallet.debt_balance) }}
+          </p>
+          <p class="mt-0.5 text-xs text-slate-400 leading-4">
+            Долг не мешает выходить на линию — спишется автоматически при следующем пополнении (это будет видно в истории).
+          </p>
+        </template>
         <p v-else class="mt-1 text-sm text-slate-400">
-          Минимум для выхода на линию: {{ formatMoney(earnings.wallet?.min_balance_to_go_online ?? 0) }}
+          Выходить на линию можно с любым балансом.
         </p>
 
         <form class="grid grid-cols-[1fr_auto] mt-5 gap-2" @submit.prevent="submitTopUp">
