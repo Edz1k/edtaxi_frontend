@@ -18,6 +18,10 @@ export interface PendingVehicle {
   color: string
   is_active: boolean
   verification_status: VerificationStatus
+  // Пер-блочные вердикты чек-листа: фото машины / документы + причина отказа.
+  photos_check?: VerificationStatus
+  docs_check?: VerificationStatus
+  rejection_reason?: null | string
   verification_photo_url: null | string
   tech_passport_photo_url?: null | string
   // Фотоотчёт по слотам; старые заявки приходят без него.
@@ -43,6 +47,9 @@ export interface DailyCheck {
   driver_iin?: null | string
   vehicle_tech_passport_photo_url: null | string
   status: VerificationStatus
+  // Пер-блочные вердикты чек-листа дэйлика: селфи / фото машины.
+  selfie_check?: VerificationStatus
+  vehicle_check?: VerificationStatus
   rejection_reason: null | string
   reviewed_by: null | string
   reviewed_at: null | string

@@ -57,6 +57,11 @@ export interface DriverVehicleVerification {
   color: string
   is_active: boolean
   verification_status: VerificationStatus
+  // Пер-блочные вердикты фотоконтроля: фото машины / документы + причина
+  // отказа (что именно исправить).
+  photos_check?: VerificationStatus
+  docs_check?: VerificationStatus
+  rejection_reason?: null | string
   verification_photo_url: string | null
   reviewed_by: string | null
   reviewed_at: string | null
@@ -69,10 +74,16 @@ export interface DriverVerificationsResponse {
   // поддержкой. face_photo_url появляется после загрузки селфи.
   face_status: 'approved' | 'none' | 'pending' | 'rejected'
   face_photo_url: null | string
+  // Пер-блочные вердикты идентификации личности + причина отказа.
+  face_selfie_check?: VerificationStatus
+  face_doc_check?: VerificationStatus
+  face_rejection_reason?: null | string
   // has_approved_vehicle — есть хотя бы одна одобренная машина. Именно так
   // бэкенд решает, пускать ли водителя на линию.
   has_approved_vehicle: boolean
   daily_check_valid: boolean
+  // Последний дэйлик с блочными вердиктами (null, если проверок не было).
+  latest_daily_check?: DailyCheck | null
   vehicles: DriverVehicleVerification[]
 }
 
@@ -91,6 +102,9 @@ export interface DailyCheck {
   selfie_url: string
   vehicle_photo_url: string
   status: VerificationStatus
+  // Пер-блочные вердикты дэйлика: селфи / фото машины.
+  selfie_check?: VerificationStatus
+  vehicle_check?: VerificationStatus
   rejection_reason: string | null
   reviewed_by: string | null
   reviewed_at: string | null
