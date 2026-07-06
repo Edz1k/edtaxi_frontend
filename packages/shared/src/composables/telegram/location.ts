@@ -76,6 +76,24 @@ export async function requestTelegramLocation(): Promise<TelegramCoords | null> 
   }
 }
 
+// isTelegramLocationAccessGranted — тихая проверка, выдал ли пользователь
+// доступ к геолокации в Telegram (сигнал isAccessGranted у LocationManager).
+// Не показывает никакого UI, поэтому годится для фонового поллинга гейта:
+// пока false — requestLocation звать нельзя (он открыл бы консент-скрин).
+export async function isTelegramLocationAccessGranted(): Promise<boolean> {
+  if (!isTelegramLocationSupported())
+    return false
+  if (!(await ensureMounted()))
+    return false
+
+  try {
+    return Boolean(locationManager.isAccessGranted())
+  }
+  catch {
+    return false
+  }
+}
+
 // openTelegramLocationSettings открывает нативный экран согласия Telegram на
 // доступ к геолокации. Должен вызываться из пользовательского жеста (тап по
 // баннеру). Возвращает true, если экран удалось открыть.

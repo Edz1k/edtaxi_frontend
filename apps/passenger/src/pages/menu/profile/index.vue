@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import type { PassengerOverview } from '@edtaxi/shared/types/passenger'
+import PhotoEditorModal from '@edtaxi/shared/components/photo/PhotoEditorModal.vue'
+import PhotoSourceSheet from '@edtaxi/shared/components/photo/PhotoSourceSheet.vue'
+import { usePhotoCapture } from '@edtaxi/shared/composables/photo/usePhotoCapture'
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui'
 import { mediaUrl } from '~/api/client'
 import { getPassengerOverview, uploadPassengerAvatar } from '~/api/passenger'
@@ -10,34 +13,14 @@ const data = ref<PassengerOverview | null>(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
 
-// Смена аватарки: тап по аватару открывает выбор файла, после загрузки
-// профиль обновляется и в кабинете, и в шапке меню (passenger store).
+// Смена аватарки: тап по аватару → «галерея или камера» → редактор
+// (зум/поворот/центрирование, круглая маска) → загрузка. После — профиль
+// обновляется и в кабинете, и в шапке меню (passenger store).
 const toast = useToast()
 const passenger = usePassengerStore()
-const avatarInput = ref<HTMLInputElement | null>(null)
 const isUploadingAvatar = ref(false)
 
-function pickAvatar() {
-  if (!isUploadingAvatar.value)
-    avatarInput.value?.click()
-}
-
-async function onAvatarSelected(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = '' // повторный выбор того же файла тоже должен сработать
-  if (!file)
-    return
-
-  if (!['image/jpeg', 'image/png'].includes(file.type)) {
-    toast.warning('Не тот формат', 'Аватарка — это JPEG или PNG.')
-    return
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    toast.warning('Слишком большой файл', 'Максимум 5 МБ.')
-    return
-  }
-
+const avatarCapture = usePhotoCapture(async (file) => {
   isUploadingAvatar.value = true
   try {
     const profile = await uploadPassengerAvatar(file)
@@ -52,6 +35,11 @@ async function onAvatarSelected(event: Event) {
   finally {
     isUploadingAvatar.value = false
   }
+})
+
+function pickAvatar() {
+  if (!isUploadingAvatar.value)
+    avatarCapture.open()
 }
 
 definePage({
@@ -164,13 +152,21 @@ function formatDate(value: string) {
                 <span :class="isUploadingAvatar ? 'i-mdi-loading animate-spin' : 'i-mdi-camera'" class="text-3.5" />
               </span>
             </button>
-            <input
-              ref="avatarInput"
-              accept="image/jpeg,image/png"
-              class="hidden"
-              type="file"
-              @change="onAvatarSelected"
-            >
+            <PhotoSourceSheet
+              camera-facing="user"
+              :open="avatarCapture.isSourceOpen.value"
+              title="Новая аватарка"
+              @close="avatarCapture.closeSource"
+              @selected="avatarCapture.onSelected"
+            />
+            <PhotoEditorModal
+              :file="avatarCapture.editorFile.value"
+              :output-size="512"
+              round
+              title="Подгоните аватарку"
+              @cancel="avatarCapture.onCancel"
+              @done="avatarCapture.onDone"
+            />
             <div class="min-w-0 flex-1">
               <h1 class="truncate text-xl font-950">
                 {{ fullName }}

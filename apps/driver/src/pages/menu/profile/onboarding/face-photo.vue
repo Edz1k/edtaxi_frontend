@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import PhotoEditorModal from '@edtaxi/shared/components/photo/PhotoEditorModal.vue'
+import PhotoSourceSheet from '@edtaxi/shared/components/photo/PhotoSourceSheet.vue'
+import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import AuthButton from '~/components/auth/AuthButton.vue'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
@@ -34,29 +37,59 @@ onMounted(() => {
     driver.loadVerification().catch(() => {})
 })
 
+// Пока фото на проверке — статус обновляется сам (поллинг + возврат на экран),
+// водителю не нужно вручную перезаходить, чтобы увидеть одобрение.
+useAutoRefresh(() => driver.loadVerification(), {
+  enabled: computed(() => faceStatus.value === 'pending'),
+  intervalMs: 12_000,
+})
+
 const selfieFile = ref<File | null>(null)
 const selfiePreview = ref('')
 const idFile = ref<File | null>(null)
 const idPreview = ref('')
 
-// capture: 'user' открывает фронтальную камеру для селфи; для документа — обычный
-// выбор файла/тыловая камера. В будущем селфи можно заменить на live-камеру.
+// Флоу выбора фото: шторка «галерея или камера» (раньше iPhone сразу открывал
+// камеру, Android — галерею) → редактор (зум/поворот/центрирование) → превью.
+type PickTarget = 'id' | 'selfie'
+const pickTarget = ref<PickTarget>('selfie')
+const isSourceOpen = ref(false)
+const editorFile = ref<File | null>(null)
+
+const editorProps = computed(() => pickTarget.value === 'selfie'
+  ? { aspect: 1, cameraFacing: 'user' as const, round: true, title: 'Подгоните селфи' }
+  : { aspect: 1.58, cameraFacing: 'environment' as const, round: false, title: 'Подгоните фото документа' })
+
 function pickSelfie() {
-  pickImage('user', (file, url) => {
+  pickTarget.value = 'selfie'
+  isSourceOpen.value = true
+}
+
+function pickId() {
+  pickTarget.value = 'id'
+  isSourceOpen.value = true
+}
+
+function onSourceSelected(file: File) {
+  isSourceOpen.value = false
+  editorFile.value = file
+}
+
+function onEditorDone(file: File) {
+  editorFile.value = null
+  const url = URL.createObjectURL(file)
+  if (pickTarget.value === 'selfie') {
     if (selfiePreview.value)
       URL.revokeObjectURL(selfiePreview.value)
     selfieFile.value = file
     selfiePreview.value = url
-  })
-}
-
-function pickId() {
-  pickImage('environment', (file, url) => {
+  }
+  else {
     if (idPreview.value)
       URL.revokeObjectURL(idPreview.value)
     idFile.value = file
     idPreview.value = url
-  })
+  }
 }
 
 onUnmounted(() => {
@@ -65,20 +98,6 @@ onUnmounted(() => {
   if (idPreview.value)
     URL.revokeObjectURL(idPreview.value)
 })
-
-function pickImage(capture: string, onPick: (file: File, url: string) => void) {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  input.capture = capture
-  input.onchange = (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (!file)
-      return
-    onPick(file, URL.createObjectURL(file))
-  }
-  input.click()
-}
 
 async function submit() {
   if (!selfieFile.value || !idFile.value || driver.isLoading)
@@ -226,6 +245,23 @@ async function submit() {
           @click="submit"
         />
       </template>
+
+      <PhotoSourceSheet
+        :camera-facing="editorProps.cameraFacing"
+        :open="isSourceOpen"
+        :title="pickTarget === 'selfie' ? 'Селфи' : 'Фото документа'"
+        @close="isSourceOpen = false"
+        @selected="onSourceSelected"
+      />
+      <PhotoEditorModal
+        :aspect="editorProps.aspect"
+        :file="editorFile"
+        :output-size="1440"
+        :round="editorProps.round"
+        :title="editorProps.title"
+        @cancel="editorFile = null"
+        @done="onEditorDone"
+      />
     </section>
   </main>
 </template>

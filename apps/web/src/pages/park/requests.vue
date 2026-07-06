@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ParkJoinRequest } from '~/types/promotions'
+import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import { showErrorToast } from '~/api/errors'
 import { approveParkJoinRequest, listParkJoinRequests, rejectParkJoinRequest } from '~/api/promotions'
 import WebPageShell from '~/components/app/WebPageShell.vue'
@@ -23,6 +24,14 @@ const isLoading = ref(false)
 const mutatingId = ref('')
 
 onMounted(load)
+
+// Новые заявки появляются сами (возврат на вкладку + фоновый поллинг) — без
+// спиннера, чтобы список не мигал; кнопка «Обновить» остаётся для ручного
+// обновления с индикатором.
+useAutoRefresh(async () => {
+  const response = await listParkJoinRequests()
+  requests.value = response.requests.filter(request => request.status === 'pending')
+}, { intervalMs: 20_000 })
 
 async function load() {
   isLoading.value = true

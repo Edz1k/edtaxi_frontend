@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { isTelegramWebApp } from '../auth/telegram'
 import {
+  isTelegramLocationAccessGranted,
   isTelegramLocationSupported,
   openTelegramLocationSettings,
   requestTelegramLocation,
@@ -71,6 +72,72 @@ async function openSettings(): Promise<void> {
   if (await openTelegramLocationSettings())
     return
   await requestAccess()
+}
+
+// ===== Автодетект выдачи доступа =====
+// Раньше пользователь выдавал доступ (в настройках Telegram/системы) и
+// возвращался к заглушке, которая требовала ещё раз нажать кнопку. Теперь гейт
+// сам замечает выдачу: Permissions API (onchange), возврат вкладки в фокус и
+// фоновый поллинг раз в 4с — всё ТИХО, без повторных промптов (getCurrentPosition
+// зовём только когда разрешение уже granted).
+
+const AUTO_DETECT_INTERVAL_MS = 4000
+let autoDetectStarted = false
+
+async function checkAccessSilently(): Promise<void> {
+  if (status.value === 'granted' || isRequesting.value)
+    return
+
+  // Telegram: тихий сигнал isAccessGranted; координаты забираем только когда
+  // доступ уже есть (иначе requestLocation открыл бы консент-скрин).
+  if (isTelegramWebApp() && isTelegramLocationSupported()) {
+    if (await isTelegramLocationAccessGranted()) {
+      const tg = await requestTelegramLocation()
+      if (tg)
+        status.value = 'granted'
+    }
+    return
+  }
+
+  // Браузер: без Permissions API тихо проверить нельзя (getCurrentPosition
+  // показал бы промпт) — тогда полагаемся на кнопку гейта.
+  try {
+    const permission = await navigator.permissions?.query({ name: 'geolocation' })
+    if (permission?.state === 'granted' && await requestBrowserLocation())
+      status.value = 'granted'
+  }
+  catch {}
+}
+
+// startLocationAutoDetect запускается гейтом один раз на приложение.
+export function startLocationAutoDetect(): void {
+  if (autoDetectStarted || typeof window === 'undefined')
+    return
+  autoDetectStarted = true
+
+  // Мгновенная реакция на переключение разрешения в браузере.
+  try {
+    navigator.permissions?.query({ name: 'geolocation' })
+      .then((permission) => {
+        permission.onchange = () => {
+          if (permission.state === 'granted')
+            void checkAccessSilently()
+        }
+      })
+      .catch(() => {})
+  }
+  catch {}
+
+  // Возврат в приложение (из настроек ОС/Telegram) — проверяем сразу.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden)
+      void checkAccessSilently()
+  })
+
+  // Фоновый поллинг, пока доступа нет; после granted просто no-op (дёшево).
+  window.setInterval(() => {
+    void checkAccessSilently()
+  }, AUTO_DETECT_INTERVAL_MS)
 }
 
 export function useLocationAccess() {

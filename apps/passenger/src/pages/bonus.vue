@@ -2,6 +2,7 @@
 import type { BonusOverview, BonusPromotion } from '@edtaxi/shared/types/bonus'
 import { getBonusOverview, getMyPromotions, redeemReferralCode } from '@edtaxi/shared/api/bonus'
 import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
+import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import { mediaUrl } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
 
@@ -32,6 +33,14 @@ useHead({
 })
 
 onMounted(load)
+
+// Баланс и прогресс акций обновляются сами при возврате на экран — начисления
+// за поездки видны без ручной перезагрузки.
+useAutoRefresh(async () => {
+  const [me, promos] = await Promise.all([getBonusOverview(), getMyPromotions()])
+  overview.value = me
+  promotions.value = promos.promotions
+})
 
 async function load() {
   try {
