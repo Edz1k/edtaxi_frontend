@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 128">
+  <defs>
+    <linearGradient id="eco-body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f0b429"/>
+      <stop offset="0.5" stop-color="#ffd75e"/>
+      <stop offset="1" stop-color="#f0b429"/>
+    </linearGradient>
+  </defs>
+  <!-- колёса -->
+  <g fill="#20242c">
+    <rect x="1" y="24" width="8" height="20" rx="4"/>
+    <rect x="51" y="24" width="8" height="20" rx="4"/>
+    <rect x="1" y="84" width="8" height="20" rx="4"/>
+    <rect x="51" y="84" width="8" height="20" rx="4"/>
+  </g>
+  <!-- кузов -->
+  <path d="M30 3C16 3 7 12 7 28v72c0 16 9 25 23 25s23-9 23-25V28C53 12 44 3 30 3Z" fill="url(#eco-body)" stroke="#c78f16" stroke-width="2"/>
+  <!-- зеркала -->
+  <g fill="#e8a51c">
+    <rect x="2" y="46" width="7" height="12" rx="3.5"/>
+    <rect x="51" y="46" width="7" height="12" rx="3.5"/>
+  </g>
+  <!-- фары -->
+  <rect x="14" y="7" width="10" height="4" rx="2" fill="#fff" opacity="0.55"/>
+  <rect x="36" y="7" width="10" height="4" rx="2" fill="#fff" opacity="0.55"/>
+  <!-- лобовое стекло -->
+  <path d="M13 34c3-6 9-9 17-9s14 3 17 9l-3 12c-8-4-20-4-28 0Z" fill="#191d24"/>
+  <!-- заднее стекло -->
+  <path d="M14 96c8 4 24 4 32 0l2 10c-9 4-27 4-36 0Z" fill="#191d24" opacity="0.9"/>
+  <!-- крыша -->
+  <rect x="13" y="52" width="34" height="40" rx="10" fill="#ffde72"/>
+  <!-- шашечки такси -->
+  <g fill="#20242c">
+    <rect x="22" y="58" width="5" height="5"/>
+    <rect x="33" y="58" width="5" height="5"/>
+    <rect x="27.5" y="63" width="5" height="5"/>
+    <rect x="22" y="68" width="5" height="5"/>
+    <rect x="33" y="68" width="5" height="5"/>
+  </g>
+</svg>

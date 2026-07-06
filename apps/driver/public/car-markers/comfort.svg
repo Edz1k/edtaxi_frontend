@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 128">
+  <defs>
+    <linearGradient id="cmf-body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#93a7c1"/>
+      <stop offset="0.5" stop-color="#d3deec"/>
+      <stop offset="1" stop-color="#93a7c1"/>
+    </linearGradient>
+  </defs>
+  <!-- колёса -->
+  <g fill="#1c2027">
+    <rect x="1" y="23" width="8" height="21" rx="4"/>
+    <rect x="51" y="23" width="8" height="21" rx="4"/>
+    <rect x="1" y="84" width="8" height="21" rx="4"/>
+    <rect x="51" y="84" width="8" height="21" rx="4"/>
+  </g>
+  <!-- кузов -->
+  <path d="M30 2C16 2 7 11 7 27v74c0 16 9 25 23 25s23-9 23-25V27C53 11 44 2 30 2Z" fill="url(#cmf-body)" stroke="#6e819a" stroke-width="2"/>
+  <!-- зеркала -->
+  <g fill="#7d90a9">
+    <rect x="2" y="45" width="7" height="12" rx="3.5"/>
+    <rect x="51" y="45" width="7" height="12" rx="3.5"/>
+  </g>
+  <!-- фары -->
+  <rect x="13" y="6" width="11" height="4" rx="2" fill="#fff" opacity="0.7"/>
+  <rect x="36" y="6" width="11" height="4" rx="2" fill="#fff" opacity="0.7"/>
+  <!-- лобовое стекло -->
+  <path d="M13 33c3-6 9-9 17-9s14 3 17 9l-3 12c-8-4-20-4-28 0Z" fill="#171b22"/>
+  <!-- заднее стекло -->
+  <path d="M14 96c8 4 24 4 32 0l2 10c-9 4-27 4-36 0Z" fill="#171b22" opacity="0.9"/>
+  <!-- крыша с люком -->
+  <rect x="13" y="51" width="34" height="41" rx="10" fill="#dde6f1"/>
+  <rect x="20" y="57" width="20" height="12" rx="4" fill="#171b22" opacity="0.85"/>
+</svg>
