@@ -28,6 +28,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -82,8 +83,7 @@ function parkStatusLabel(park: TaxiPark) {
 
 <template>
   <WebPageShell
-    back-label="Админка"
-    back-to="/admin"
+    embedded
     description="Здесь менеджеры видят созданные таксопарки, подтверждают готовые карточки и отклоняют лишние заявки."
     title="Таксопарки"
   >

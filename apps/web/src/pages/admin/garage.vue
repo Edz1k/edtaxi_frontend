@@ -12,6 +12,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -179,8 +180,7 @@ async function resolveRequest(request: ParkJoinRequest, approved: boolean) {
 
 <template>
   <WebPageShell
-    back-label="Админка"
-    back-to="/admin"
+    embedded
     description="Платформенный парк с нулевой парковой комиссией: сюда падают заявки водителей «Стать партнёром платформы», водитель платит только процент платформы."
     title="Гараж платформы"
   >

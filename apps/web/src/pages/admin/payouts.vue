@@ -23,6 +23,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -86,8 +87,7 @@ function statusClass(status: PayoutStatus) {
 
 <template>
   <WebPageShell
-    back-label="Админка"
-    back-to="/admin"
+    embedded
     description="Заявки водителей и парков на вывод средств. Перевод выполняется вручную вне системы, после чего заявку нужно отметить оплаченной."
     title="Выплаты"
   >

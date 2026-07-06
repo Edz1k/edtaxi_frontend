@@ -66,6 +66,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -182,8 +183,7 @@ function blockedLabel(user: AdminUser) {
 
 <template>
   <WebPageShell
-    back-label="Админка"
-    back-to="/admin"
+    embedded
     description="Назначайте базовые роли через меню. Таксопарки и техподдержка подключаются через отдельные процессы."
     title="Пользователи"
   >

@@ -29,6 +29,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -81,8 +82,7 @@ function statusClass(status: SupportRoomStatus) {
 
 <template>
   <WebPageShell
-    back-label="Админка"
-    back-to="/admin"
+    embedded
     description="Все обращения в поддержку: назначайте агента (обращение закрепится за вами) и закрывайте решённые вопросы."
     title="Обращения поддержки"
   >

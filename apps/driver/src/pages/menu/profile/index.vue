@@ -73,11 +73,22 @@ const verificationOk = computed(() => {
 
 const ratingIsGood = computed(() => (data.value?.driver.rating ?? 0) >= 4.5)
 
-// r=27 → circumference ≈ 169.65
-const ratingDash = computed(() => {
-  const r = data.value?.driver.rating ?? 0
+// Кольцо в кабинете показывает АКТИВНОСТЬ водителя (activity_percent с бэка),
+// а не рейтинг — рейтинг и так виден числом, звёздами и прогресс-баром.
+const activityPercent = computed(() => Math.round(data.value?.driver.activity_percent ?? 0))
+const activityColor = computed(() => {
+  const a = activityPercent.value
+  if (a >= 70)
+    return 'text-emerald-400'
+  if (a >= 40)
+    return 'text-main-300'
+  return 'text-slate-500'
+})
+// r=27 → длина окружности ≈ 169.65
+const activityDash = computed(() => {
+  const a = Math.min(1, Math.max(0, activityPercent.value / 100))
   const c = 2 * Math.PI * 27
-  return `${(r / 5) * c} ${c}`
+  return `${a * c} ${c}`
 })
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -173,20 +184,23 @@ function formatDate(value: string) {
                 >★</span>
               </div>
             </div>
-            <!-- SVG-кольцо рейтинга -->
+            <!-- SVG-кольцо активности водителя -->
             <div class="relative h-20 w-20 shrink-0">
               <svg viewBox="0 0 64 64" class="h-full w-full -rotate-90">
                 <circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5" class="text-white/8" />
                 <circle
                   cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5"
-                  :stroke-dasharray="ratingDash"
-                  :class="ratingIsGood ? 'text-emerald-400' : 'text-amber-400'"
+                  :stroke-dasharray="activityDash"
+                  :class="activityColor"
                   stroke-linecap="round"
                 />
               </svg>
-              <div class="absolute inset-0 flex items-center justify-center">
-                <span class="text-[10px] text-slate-400 font-900">
-                  {{ Math.round((data.driver.rating / 5) * 100) }}%
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-sm font-950 leading-none" :class="activityColor">
+                  {{ activityPercent }}%
+                </span>
+                <span class="mt-0.5 text-[8px] text-slate-500 font-900 tracking-wide uppercase">
+                  Актив
                 </span>
               </div>
             </div>

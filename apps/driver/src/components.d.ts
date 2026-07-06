@@ -19,6 +19,7 @@ declare module 'vue' {
     DriverMap: typeof import('./components/driver/DriverMap.vue')['default']
     DriverStatusPanel: typeof import('./components/driver/DriverStatusPanel.vue')['default']
     DriverTripOffer: typeof import('./components/driver/DriverTripOffer.vue')['default']
+    FaceCaptureCamera: typeof import('./components/verification/FaceCaptureCamera.vue')['default']
     MapView: typeof import('./components/map/MapView.vue')['default']
     OtpInput: typeof import('./components/auth/OtpInput.vue')['default']
     OtpSelect: typeof import('./components/auth/OtpSelect.vue')['default']
