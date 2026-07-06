@@ -2,13 +2,21 @@
 import type { DriverOverview, DriverRatingEvent } from '~/types/driver-overview'
 import { useRoute as useVueRoute } from 'vue-router'
 import { mediaUrl } from '~/api/client'
-import { getDriverOverview } from '~/api/driver'
+import { adminClearRatingEvents, adminDeleteRatingEvent, adminSetDriverRating, getDriverOverview } from '~/api/driver'
+import { showErrorToast } from '~/api/errors'
 import { reviewVehicle } from '~/api/verification'
 import WebPageShell from '~/components/app/WebPageShell.vue'
+import { useToast } from '~/composables/useToast'
+import { useAuthStore } from '~/stores/auth'
 import { formatDate } from '~/utils/format'
 
 const route = useVueRoute()
 const userId = computed(() => (route.params as Record<string, string>).id)
+
+const auth = useAuthStore()
+const toast = useToast()
+// Ручные правки рейтинга — только админам (не техподдержке).
+const isAdmin = computed(() => auth.hasAnyRole(['admin', 'superadmin']))
 
 const data = ref<DriverOverview | null>(null)
 const isLoading = ref(true)
@@ -109,6 +117,121 @@ const isBlocked = computed(() => {
   const until = data.value?.driver.blocked_until
   return Boolean(until) && new Date(until as string) > new Date()
 })
+
+// --- Верификации: что пройдено, что нет; клик ведёт на страницу проверки ---
+
+interface VerificationRow {
+  label: string
+  status: string
+  tab: 'daily' | 'faces' | 'vehicles'
+  reason?: null | string
+}
+
+const FACE_STATUS_LABELS: Record<string, string> = {
+  approved: 'Пройдена',
+  none: 'Не загружена',
+  pending: 'На проверке',
+  rejected: 'Не пройдена',
+}
+
+const verificationRows = computed<VerificationRow[]>(() => {
+  const d = data.value
+  if (!d)
+    return []
+  const rows: VerificationRow[] = [{
+    label: 'Идентификация личности',
+    status: d.driver.face_status ?? 'none',
+    tab: 'faces',
+    reason: d.driver.face_status === 'rejected' ? d.driver.face_rejection_reason : null,
+  }]
+  for (const v of d.vehicles) {
+    rows.push({
+      label: `Фотоконтроль: ${v.make} ${v.model} (${v.plate_number})`,
+      status: v.verification_status,
+      tab: 'vehicles',
+      reason: v.verification_status === 'rejected' ? (v as { rejection_reason?: null | string }).rejection_reason : null,
+    })
+  }
+  const daily = d.latest_daily_check
+  rows.push({
+    label: 'Ежедневная проверка',
+    status: daily ? daily.status : 'none',
+    tab: 'daily',
+    reason: daily?.status === 'rejected' ? daily.rejection_reason : null,
+  })
+  return rows
+})
+
+function verificationStatusLabel(status: string) {
+  return FACE_STATUS_LABELS[status] ?? VERIFICATION_LABELS[status] ?? status
+}
+
+// --- Ручное управление рейтингом (только админ) ---
+
+const isRatingOpen = ref(false)
+const ratingForm = reactive({ rating: 5, reason: '' })
+const isSavingRating = ref(false)
+
+function openRating() {
+  ratingForm.rating = data.value?.driver.rating ?? 5
+  ratingForm.reason = ''
+  isRatingOpen.value = true
+}
+
+async function saveRating() {
+  if (isSavingRating.value || !ratingForm.reason.trim())
+    return
+  isSavingRating.value = true
+  try {
+    await adminSetDriverRating(userId.value, Number(ratingForm.rating), ratingForm.reason.trim())
+    toast.success('Рейтинг обновлён', `Новый рейтинг: ${Number(ratingForm.rating).toFixed(2)}`)
+    isRatingOpen.value = false
+    await load()
+  }
+  catch (error) {
+    showErrorToast(error, 'Не удалось изменить рейтинг.')
+  }
+  finally {
+    isSavingRating.value = false
+  }
+}
+
+const mutatingEventId = ref('')
+
+async function deleteEvent(eventId: string) {
+  if (mutatingEventId.value)
+    return
+  mutatingEventId.value = eventId
+  try {
+    await adminDeleteRatingEvent(userId.value, eventId)
+    if (data.value)
+      data.value.rating_events = data.value.rating_events.filter(e => e.id !== eventId)
+  }
+  catch (error) {
+    showErrorToast(error, 'Не удалось удалить запись.')
+  }
+  finally {
+    mutatingEventId.value = ''
+  }
+}
+
+async function clearEvents() {
+  if (mutatingEventId.value)
+    return
+  mutatingEventId.value = 'all'
+  try {
+    await adminClearRatingEvents(userId.value)
+    if (data.value)
+      data.value.rating_events = []
+    toast.success('История очищена', 'Все записи истории рейтинга удалены.')
+  }
+  catch (error) {
+    showErrorToast(error, 'Не удалось очистить историю.')
+  }
+  finally {
+    mutatingEventId.value = ''
+  }
+}
 </script>
 
 <template>
@@ -180,6 +303,16 @@ const isBlocked = computed(() => {
             <p class="mt-1 text-2xl font-950" :class="data.driver.rating < 4.5 ? 'text-amber-300' : 'text-emerald-300'">
               {{ data.driver.rating.toFixed(2) }}
             </p>
+            <!-- Ручная правка рейтинга — только админ -->
+            <button
+              v-if="isAdmin"
+              class="mt-2 inline-flex items-center gap-1 text-xs text-cyan-200 font-800 hover:underline"
+              type="button"
+              @click="openRating"
+            >
+              <span class="i-mdi-pencil-outline text-3.5" />
+              Изменить
+            </button>
           </div>
           <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
             <p class="text-xs text-white/45 font-800 uppercase">
@@ -204,6 +337,52 @@ const isBlocked = computed(() => {
             <p class="mt-1 text-2xl font-950" :class="data.driver.cancel_count_today > 0 ? 'text-amber-300' : ''">
               {{ data.driver.cancel_count_today }}
             </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Верификации: что пройдено, что нет; клик — в проверку -->
+      <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-950">
+            Верификации
+          </h2>
+          <RouterLink
+            class="inline-flex items-center gap-1.5 text-sm text-cyan-200 font-900 hover:underline"
+            to="/support/verifications"
+          >
+            <span class="i-mdi-shield-car text-4.5" />
+            Открыть проверку
+          </RouterLink>
+        </div>
+        <div class="mt-4 space-y-2">
+          <div
+            v-for="row in verificationRows"
+            :key="row.label"
+            class="flex flex-wrap items-center justify-between gap-3 border border-white/8 rounded-2xl bg-white/5 px-4 py-3"
+          >
+            <div class="min-w-0">
+              <p class="truncate text-sm font-900">
+                {{ row.label }}
+              </p>
+              <p v-if="row.reason" class="mt-0.5 text-xs text-red-300">
+                {{ row.reason }}
+              </p>
+            </div>
+            <div class="flex shrink-0 items-center gap-2">
+              <span class="rounded-full px-2.5 py-1 text-xs font-900" :class="verificationClass(row.status)">
+                {{ verificationStatusLabel(row.status) }}
+              </span>
+              <!-- Не пройдено/на проверке — быстрый переход в раздел проверки -->
+              <RouterLink
+                v-if="row.status === 'pending' || row.status === 'rejected'"
+                class="inline-flex items-center gap-1 rounded-full bg-cyan-300/10 px-2.5 py-1 text-xs text-cyan-200 font-900 hover:bg-cyan-300/20"
+                :to="`/support/verifications?tab=${row.tab}`"
+              >
+                Проверить
+                <span class="i-mdi-arrow-right text-3.5" />
+              </RouterLink>
+            </div>
           </div>
         </div>
       </div>
@@ -257,19 +436,36 @@ const isBlocked = computed(() => {
 
       <!-- История снижения рейтинга -->
       <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
-        <h2 class="text-lg font-950">
-          История рейтинга
-        </h2>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-950">
+            История рейтинга
+          </h2>
+          <button
+            v-if="isAdmin && data.rating_events.length"
+            :disabled="mutatingEventId === 'all'"
+            class="inline-flex items-center gap-1 rounded-xl bg-red-500/12 px-3 py-1.5 text-xs text-red-300 font-900 transition hover:bg-red-500/20 disabled:opacity-50"
+            type="button"
+            @click="clearEvents"
+          >
+            <span class="i-mdi-delete-sweep-outline text-4" />
+            Очистить историю
+          </button>
+        </div>
         <p v-if="!data.rating_events.length" class="mt-3 text-sm text-white/50">
           Штрафов к рейтингу не было.
         </p>
         <div v-else class="mt-4 space-y-2">
           <div v-for="e in data.rating_events" :key="e.id" class="flex items-start gap-3 border border-white/8 rounded-2xl bg-white/5 px-4 py-3">
-            <span class="i-mdi-trending-down mt-0.5 shrink-0 text-5 text-red-300" />
+            <span
+              class="mt-0.5 shrink-0 text-5"
+              :class="e.delta >= 0 ? 'i-mdi-trending-up text-emerald-300' : 'i-mdi-trending-down text-red-300'"
+            />
             <div class="min-w-0 flex-1">
               <p class="text-sm font-900">
                 {{ eventLabel(e) }}
-                <span class="text-red-300">{{ e.delta.toFixed(2) }}</span>
+                <span :class="e.delta >= 0 ? 'text-emerald-300' : 'text-red-300'">
+                  {{ e.delta >= 0 ? '+' : '' }}{{ e.delta.toFixed(2) }}
+                </span>
               </p>
               <p v-if="e.reason" class="mt-0.5 text-xs text-white/55">
                 {{ e.reason }}
@@ -283,6 +479,17 @@ const isBlocked = computed(() => {
                 → {{ e.rating_after.toFixed(2) }}
               </p>
             </div>
+            <!-- Удаление записи — только админ -->
+            <button
+              v-if="isAdmin"
+              :disabled="mutatingEventId === e.id"
+              aria-label="Удалить запись"
+              class="h-7 w-7 flex shrink-0 items-center justify-center rounded-full bg-white/6 text-white/40 transition hover:bg-red-500/15 hover:text-red-300 disabled:opacity-50"
+              type="button"
+              @click="deleteEvent(e.id)"
+            >
+              <span class="i-mdi-close text-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -310,5 +517,66 @@ const isBlocked = computed(() => {
         </div>
       </div>
     </div>
+
+    <!-- Модалка ручной правки рейтинга (только админ) -->
+    <Teleport to="body">
+      <div
+        v-if="isRatingOpen"
+        class="fixed inset-0 z-70 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+        @click.self="isRatingOpen = false"
+      >
+        <form
+          class="max-w-sm w-full border border-white/10 rounded-3xl bg-#071a38 p-5 shadow-2xl"
+          @submit.prevent="saveRating"
+        >
+          <h3 class="text-lg font-950">
+            Изменить рейтинг
+          </h3>
+          <p class="mt-1 text-xs text-white/50 leading-5">
+            Ручная правка попадёт в историю рейтинга с причиной и вашим именем.
+          </p>
+
+          <label class="grid mt-4 gap-1.5">
+            <span class="text-xs text-white/42 font-900 uppercase">Новый рейтинг (1–5)</span>
+            <input
+              v-model.number="ratingForm.rating"
+              class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40"
+              max="5"
+              min="1"
+              step="0.01"
+              type="number"
+            >
+          </label>
+
+          <label class="grid mt-3 gap-1.5">
+            <span class="text-xs text-white/42 font-900 uppercase">Причина (обязательно)</span>
+            <textarea
+              v-model="ratingForm.reason"
+              class="w-full border border-white/10 rounded-xl bg-white/8 px-4 py-3 text-sm outline-none focus:border-cyan-300/40"
+              maxlength="300"
+              placeholder="Например: компенсация несправедливой оценки по жалобе #123"
+              rows="2"
+            />
+          </label>
+
+          <div class="mt-4 flex gap-2">
+            <button
+              :disabled="isSavingRating || !ratingForm.reason.trim() || ratingForm.rating < 1 || ratingForm.rating > 5"
+              class="h-11 flex-1 rounded-2xl bg-cyan-300 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
+              type="submit"
+            >
+              {{ isSavingRating ? 'Сохраняем...' : 'Сохранить' }}
+            </button>
+            <button
+              class="h-11 border border-white/12 rounded-2xl bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12"
+              type="button"
+              @click="isRatingOpen = false"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </Teleport>
   </WebPageShell>
 </template>

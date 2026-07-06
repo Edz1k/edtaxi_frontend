@@ -30,6 +30,11 @@ export interface DriverOverviewDriver {
   cancel_count_today: number
   blocked_until: null | string
   face_photo_url: null | string
+  // Идентификация личности: статус + пер-блочные вердикты + причина отказа.
+  face_status?: 'approved' | 'none' | 'pending' | 'rejected'
+  face_selfie_check?: 'approved' | 'pending' | 'rejected'
+  face_doc_check?: 'approved' | 'pending' | 'rejected'
+  face_rejection_reason?: null | string
   created_at: string
 }
 
@@ -66,10 +71,21 @@ export interface DriverRecentRating {
   created_at: string
 }
 
+// Последний дэйлик водителя — статус ежедневной проверки в кабинете.
+export interface OverviewDailyCheck {
+  id: string
+  status: 'approved' | 'pending' | 'rejected'
+  selfie_check?: 'approved' | 'pending' | 'rejected'
+  vehicle_check?: 'approved' | 'pending' | 'rejected'
+  rejection_reason: null | string
+  created_at: string
+}
+
 export interface DriverOverview {
   user: DriverOverviewUser
   driver: DriverOverviewDriver
   vehicles: DriverOverviewVehicle[]
+  latest_daily_check?: null | OverviewDailyCheck
   rating_events: DriverRatingEvent[]
   recent_ratings: DriverRecentRating[]
 }

@@ -10,6 +10,13 @@ import { validateIin } from '~/utils/iin'
 const verification = useVerificationStore()
 const tab = ref<'daily' | 'faces' | 'vehicles'>('vehicles')
 
+// ?tab=faces|daily|vehicles — прямой переход из кабинета водителя на нужную
+// вкладку проверки.
+const route = useRoute()
+const initialTab = route.query.tab
+if (initialTab === 'faces' || initialTab === 'daily' || initialTab === 'vehicles')
+  tab.value = initialTab
+
 // Слоты фотоотчёта машины в порядке показа; первые 10 обязательны. group
 // делит их на блоки: 'car' — кузов/салон, 'doc' — документы (техпаспорт, VIN,
 // страховка).
