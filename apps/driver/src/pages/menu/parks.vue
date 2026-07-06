@@ -19,8 +19,8 @@ const driver = useDriverStore()
 const parks = ref<AvailablePark[]>([])
 const myRequest = ref<null | ParkJoinRequest>(null)
 const isPlatformAvailable = ref(false)
-// park_id из обзора водителя: если он есть — водитель уже в парке и подача
-// заявок недоступна.
+// park_id из обзора водителя: если он есть — водитель уже в парке (тогда доступна
+// смена парка, а не первичное вступление).
 const parkId = ref<null | string>(null)
 const isLoading = ref(true)
 const isApplying = ref(false)
@@ -34,6 +34,10 @@ const isLoadingDetails = ref(false)
 // Код приглашения от владельца парка — прямое вступление без заявки
 // (бывшая отдельная страница /menu/park-invite, объединена сюда).
 const inviteToken = ref('')
+
+// Подтверждение смены парка: когда водитель уже в парке, заявка в другой парк
+// означает уход из текущего — спрашиваем подтверждение перед отправкой.
+const switchTarget = ref<null | { name: string, run: () => Promise<void> }>(null)
 
 definePage({
   meta: {
@@ -54,7 +58,12 @@ const hasPark = computed(() => Boolean(parkId.value))
 const pendingRequest = computed(() =>
   myRequest.value?.status === 'pending' ? myRequest.value : null,
 )
-const canApply = computed(() => !hasPark.value && !pendingRequest.value)
+// Отправить заявку (вступление или смена) можно, пока нет активной заявки.
+const canRequest = computed(() => !pendingRequest.value)
+// В режиме смены парка не показываем в списке текущий парк водителя.
+const displayedParks = computed(() =>
+  hasPark.value ? parks.value.filter(park => park.id !== parkId.value) : parks.value,
+)
 
 onMounted(async () => {
   try {
@@ -126,7 +135,10 @@ async function apply(id: string) {
   isApplying.value = true
   try {
     await applyToPark(id)
-    toast.success('Заявка отправлена', 'Парк рассмотрит её и примет решение.')
+    toast.success(
+      hasPark.value ? 'Заявка на смену отправлена' : 'Заявка отправлена',
+      'Парк рассмотрит её и примет решение.',
+    )
     await refreshRequest()
   }
   catch (error) {
@@ -134,19 +146,6 @@ async function apply(id: string) {
   }
   finally {
     isApplying.value = false
-  }
-}
-
-async function acceptInvite() {
-  await driver.acceptParkInvite(inviteToken.value.trim())
-  inviteToken.value = ''
-  toast.success('Готово', 'Вы присоединились к таксопарку.')
-  // Обновляем членство, чтобы страница сразу показала «Вы состоите в таксопарке»
-  try {
-    parkId.value = (await getDriverOverview()).driver.park_id
-  }
-  catch {
-    // не критично: статус подтянется при следующем открытии страницы
   }
 }
 
@@ -165,6 +164,42 @@ async function applyPlatform() {
   }
   finally {
     isApplying.value = false
+  }
+}
+
+// В парке — сначала подтверждение (уход из текущего), без парка — заявка сразу.
+function requestPark(park: AvailablePark) {
+  if (hasPark.value)
+    switchTarget.value = { name: park.name, run: () => apply(park.id) }
+  else
+    apply(park.id)
+}
+
+function requestPlatform() {
+  if (hasPark.value)
+    switchTarget.value = { name: 'партнёрство с платформой', run: applyPlatform }
+  else
+    applyPlatform()
+}
+
+async function confirmSwitch() {
+  const target = switchTarget.value
+  if (!target)
+    return
+  switchTarget.value = null
+  await target.run()
+}
+
+async function acceptInvite() {
+  await driver.acceptParkInvite(inviteToken.value.trim())
+  inviteToken.value = ''
+  toast.success('Готово', 'Вы присоединились к таксопарку.')
+  // Обновляем членство, чтобы страница сразу показала «Вы состоите в таксопарке»
+  try {
+    parkId.value = (await getDriverOverview()).driver.park_id
+  }
+  catch {
+    // не критично: статус подтянётся при следующем открытии страницы
   }
 }
 </script>
@@ -189,7 +224,7 @@ async function applyPlatform() {
       </div>
 
       <template v-else>
-        <!-- Уже в парке — заявки не нужны -->
+        <!-- Уже в парке -->
         <div v-if="hasPark" class="mt-6 flex items-center gap-3 rounded-3xl bg-emerald-500/12 p-4">
           <span class="i-mdi-check-decagram shrink-0 text-7 text-emerald-300" />
           <div class="min-w-0">
@@ -202,12 +237,28 @@ async function applyPlatform() {
           </div>
         </div>
 
-        <!-- Заявка уже отправлена — ждём решения парка -->
+        <!-- Заявка отправлена (первичное вступление, без парка) -->
         <div v-else-if="pendingRequest" class="mt-6 flex items-center gap-3 rounded-3xl bg-amber-500/12 p-4">
           <span class="i-mdi-clock-outline shrink-0 text-7 text-amber-300" />
           <p class="min-w-0 text-sm text-amber-200 font-800 leading-5">
             Заявка отправлена в {{ pendingRequest.park_name || 'таксопарк' }}, ждём одобрения парка.
           </p>
+        </div>
+
+        <!-- Заявка на СМЕНУ парка отправлена: имя парка + статус ожидания -->
+        <div v-if="hasPark && pendingRequest" class="mt-3 flex items-center justify-between gap-3 rounded-3xl bg-amber-500/12 p-4">
+          <div class="min-w-0">
+            <p class="text-xs text-amber-300/70 font-900 uppercase">
+              Заявка на смену парка
+            </p>
+            <p class="mt-0.5 truncate text-base text-amber-100 font-950">
+              {{ pendingRequest.park_name || 'Новый таксопарк' }}
+            </p>
+          </div>
+          <span class="inline-flex shrink-0 items-center gap-1.5 rounded-2xl bg-amber-500/18 px-3.5 py-2.5 text-xs text-amber-200 font-950">
+            <span class="i-mdi-clock-outline text-4.5" />
+            Ожидание
+          </span>
         </div>
 
         <!-- Код приглашения: прямое вступление, если владелец парка выдал token -->
@@ -233,18 +284,22 @@ async function applyPlatform() {
           </button>
         </form>
 
-        <!-- Список парков -->
-        <section class="mt-6">
+        <!-- Список парков: вступление (без парка) или смена (в парке).
+             Пока есть активная заявка — список прячем, показываем статус выше. -->
+        <section v-if="canRequest" class="mt-6">
           <h2 class="text-xs text-slate-400 font-800 uppercase">
-            Доступные парки
+            {{ hasPark ? 'Сменить таксопарк' : 'Доступные парки' }}
           </h2>
+          <p v-if="hasPark" class="mt-1 text-xs text-slate-500 leading-4">
+            Выберите новый парк и отправьте заявку — после одобрения вы перейдёте в него из текущего.
+          </p>
 
-          <p v-if="!parks.length" class="mt-3 text-sm text-slate-500">
-            Пока нет парков, открытых для вступления.
+          <p v-if="!displayedParks.length" class="mt-3 text-sm text-slate-500">
+            {{ hasPark ? 'Других парков для перехода пока нет.' : 'Пока нет парков, открытых для вступления.' }}
           </p>
 
           <div v-else class="mt-3 space-y-2">
-            <article v-for="park in parks" :key="park.id" class="overflow-hidden rounded-2xl bg-white/5">
+            <article v-for="park in displayedParks" :key="park.id" class="overflow-hidden rounded-2xl bg-white/5">
               <button
                 class="w-full p-4 text-left transition active:bg-white/6"
                 type="button"
@@ -307,13 +362,12 @@ async function applyPlatform() {
                   </div>
 
                   <button
-                    v-if="canApply"
                     :disabled="isApplying"
                     class="mt-3 h-12 w-full rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
                     type="button"
-                    @click="apply(park.id)"
+                    @click="requestPark(park)"
                   >
-                    {{ isApplying ? 'Отправляем...' : 'Подать заявку' }}
+                    {{ isApplying ? 'Отправляем...' : 'Отправить заявку' }}
                   </button>
                 </template>
               </div>
@@ -322,15 +376,15 @@ async function applyPlatform() {
         </section>
 
         <!-- Партнёрство с платформой -->
-        <section v-if="isPlatformAvailable && canApply" class="mt-8">
+        <section v-if="isPlatformAvailable && canRequest" class="mt-8">
           <button
             :disabled="isApplying"
             class="h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-main-500 text-sm font-950 shadow-[0_12px_30px_rgba(230,173,46,0.28)] transition active:scale-[0.98] disabled:opacity-60"
             type="button"
-            @click="applyPlatform"
+            @click="requestPlatform"
           >
             <span class="i-mdi-handshake text-6" />
-            {{ isApplying ? 'Отправляем...' : 'Стать партнёром платформы' }}
+            {{ isApplying ? 'Отправляем...' : (hasPark ? 'Перейти к партнёрству платформы' : 'Стать партнёром платформы') }}
           </button>
           <p class="mt-2 text-center text-xs text-slate-400 leading-4">
             Работайте напрямую с платформой — комиссия всего 7%
@@ -338,5 +392,46 @@ async function applyPlatform() {
         </section>
       </template>
     </section>
+
+    <!-- Подтверждение смены парка -->
+    <Teleport to="body">
+      <div
+        v-if="switchTarget"
+        class="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+        @click.self="switchTarget = null"
+      >
+        <div class="max-w-sm w-full border border-white/10 rounded-3xl bg-secondary-900 p-5 shadow-2xl">
+          <span class="h-12 w-12 flex items-center justify-center rounded-2xl bg-amber-500/14 text-amber-300">
+            <span class="i-mdi-swap-horizontal text-7" />
+          </span>
+          <h3 class="mt-4 text-lg font-950">
+            Сменить таксопарк?
+          </h3>
+          <p class="mt-2 text-sm text-slate-400 leading-5">
+            Вы уверены, что хотите уйти из текущего таксопарка и присоединиться к
+            «{{ switchTarget.name }}»? Заявку рассмотрит новый парк, а переход
+            произойдёт после её одобрения.
+          </p>
+
+          <div class="mt-5 flex gap-2">
+            <button
+              class="h-12 flex-1 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+              type="button"
+              @click="switchTarget = null"
+            >
+              Нет
+            </button>
+            <button
+              :disabled="isApplying"
+              class="h-12 flex-1 rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
+              type="button"
+              @click="confirmSwitch"
+            >
+              Да, сменить
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </main>
 </template>
