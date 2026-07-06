@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AdminSidebar: typeof import('./components/admin/AdminSidebar.vue')['default']
     AppSelectDropdown: typeof import('./components/app/AppSelectDropdown.vue')['default']
     AppToaster: typeof import('./components/app/AppToaster.vue')['default']
     AuthButton: typeof import('./components/auth/AuthButton.vue')['default']

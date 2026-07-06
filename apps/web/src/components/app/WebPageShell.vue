@@ -3,25 +3,32 @@ withDefaults(defineProps<{
   backLabel?: string
   backTo?: string
   description?: string
+  // Встроенный режим: страница внутри лейаута с сайдбаром — рисуем только шапку
+  // и контент, без фулскрин-фона (его даёт лейаут).
+  embedded?: boolean
   eyebrow?: string
   title: string
 }>(), {
   backLabel: '',
   backTo: '',
   description: '',
+  embedded: false,
   eyebrow: '',
 })
 </script>
 
 <template>
-  <main class="min-h-screen overflow-hidden bg-#06142f px-5 py-6 text-white">
-    <div class="pointer-events-none fixed inset-0">
+  <component
+    :is="embedded ? 'div' : 'main'"
+    :class="embedded ? '' : 'min-h-screen overflow-hidden bg-#06142f px-5 py-6 text-white'"
+  >
+    <div v-if="!embedded" class="pointer-events-none fixed inset-0">
       <div class="absolute left-[-18%] top-[-12%] h-78 w-78 rounded-full bg-cyan-300/16 blur-3xl" />
       <div class="absolute right-[-18%] top-36 h-92 w-92 rounded-full bg-blue-500/16 blur-3xl" />
       <div class="bg-size-[64px_64px] absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px)] opacity-12" />
     </div>
 
-    <section class="relative mx-auto max-w-1180px">
+    <section class="relative" :class="{ 'mx-auto max-w-1180px': !embedded }">
       <header class="flex flex-wrap items-center justify-between gap-4 border border-white/12 rounded-3xl bg-white/8 px-5 py-4 backdrop-blur-xl">
         <div>
           <RouterLink
@@ -52,5 +59,5 @@ withDefaults(defineProps<{
 
       <slot />
     </section>
-  </main>
+  </component>
 </template>

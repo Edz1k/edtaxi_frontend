@@ -14,6 +14,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -38,8 +39,7 @@ async function submit() {
 
 <template>
   <WebPageShell
-    back-label="Админка"
-    back-to="/admin"
+    embedded
     description="Управляйте номерами, которым разрешён отдельный вход в кабинет техподдержки."
     title="Техподдержка"
   >

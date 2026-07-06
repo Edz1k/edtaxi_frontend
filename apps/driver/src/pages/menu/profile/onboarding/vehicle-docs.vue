@@ -128,6 +128,16 @@ const vehicleId = computed(() => currentVehicle.value?.id ?? '')
 const hasVehicle = computed(() => Boolean(vehicleId.value))
 const isMoto = computed(() => currentVehicle.value?.category === 'moto')
 
+// Машина уже одобрена — показываем статус, а не сетку повторной загрузки.
+// Только 'approved' (однозначно): pending у машины неотличим от «новая, ещё не
+// отправлена» (VerificationStatus без 'none'), поэтому форму по нему не прячем.
+const vehicleApproved = computed(() => currentVehicle.value?.verification_status === 'approved')
+const vehicleRejectionReason = computed(() =>
+  currentVehicle.value?.verification_status === 'rejected'
+    ? currentVehicle.value?.rejection_reason ?? ''
+    : '',
+)
+
 // ?section=car — только фото машины, ?section=docs — только документы,
 // без параметра — всё вместе (старые точки входа).
 const route = useRoute()
@@ -242,7 +252,40 @@ async function submit() {
         </RouterLink>
       </div>
 
+      <!-- Уже проверено — показываем статус, а не сетку загрузки -->
+      <template v-else-if="vehicleApproved">
+        <div class="mt-8 rounded-3xl bg-emerald-500/10 p-5">
+          <div class="flex items-center gap-4">
+            <span class="h-14 w-14 flex shrink-0 items-center justify-center rounded-2xl bg-emerald-500/16 text-emerald-300">
+              <span class="i-mdi-shield-check text-8" />
+            </span>
+            <div class="min-w-0">
+              <h2 class="text-xl text-emerald-100 font-950">
+                {{ isMoto ? 'Фото мотоцикла проверены' : 'Фото машины проверены' }}
+              </h2>
+              <p class="mt-0.5 text-sm text-emerald-300/85 leading-5">
+                Фотоконтроль пройден — повторная загрузка не нужна.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <RouterLink
+          to="/menu/profile/onboarding"
+          class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-base text-white font-800 transition active:scale-[0.98]"
+        >
+          <span class="i-mdi-format-list-checks text-5" />
+          К списку проверок
+        </RouterLink>
+      </template>
+
       <div v-else class="mt-6 space-y-6">
+        <!-- Причина отказа поддержки — что исправить перед повторной отправкой -->
+        <div v-if="vehicleRejectionReason" class="flex items-start gap-3 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-300 leading-5">
+          <span class="i-mdi-alert-circle shrink-0 text-5 text-red-400" />
+          <span>{{ vehicleRejectionReason }}</span>
+        </div>
+
         <!-- Подсказки по качеству фото -->
         <div class="rounded-2xl bg-white/5 p-4">
           <p class="mb-2 text-xs text-slate-300 font-800 uppercase">
