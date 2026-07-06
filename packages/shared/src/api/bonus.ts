@@ -18,3 +18,11 @@ export function redeemReferralCode(code: string) {
 export function getMyPromotions() {
   return apiRequest<BonusPromotionsResponse>('/bonus/promotions')
 }
+
+// Вступить в парковую акцию («Участвовать») — прогресс считается с этого
+// момента; идемпотентно.
+export function joinPromotion(id: string) {
+  return apiRequest<{ message: string }>(`/bonus/promotions/${id}/join`, {
+    method: 'POST',
+  })
+}

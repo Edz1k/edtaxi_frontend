@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BonusOverview, BonusPromotion } from '@edtaxi/shared/types/bonus'
-import { getBonusOverview, getMyPromotions, redeemReferralCode } from '@edtaxi/shared/api/bonus'
+import { getBonusOverview, getMyPromotions, joinPromotion, redeemReferralCode } from '@edtaxi/shared/api/bonus'
 import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
 import { mediaUrl } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
@@ -96,6 +96,26 @@ function promoProgress(promo: BonusPromotion) {
   if (promo.target_trips <= 0)
     return 0
   return Math.min(100, Math.round((promo.my_trips / promo.target_trips) * 100))
+}
+
+// Парковые акции — opt-in: прогресс считается после кнопки «Участвовать».
+const joiningPromoId = ref('')
+
+async function joinPromo(promo: BonusPromotion) {
+  if (joiningPromoId.value)
+    return
+  joiningPromoId.value = promo.id
+  try {
+    await joinPromotion(promo.id)
+    const promos = await getMyPromotions()
+    promotions.value = promos.promotions
+  }
+  catch (error) {
+    showErrorToast(error, 'Не удалось вступить в акцию.')
+  }
+  finally {
+    joiningPromoId.value = ''
+  }
 }
 </script>
 
@@ -248,13 +268,26 @@ function promoProgress(promo: BonusPromotion) {
                 {{ promo.message }}
               </p>
 
-              <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">
-                <div class="h-full rounded-full bg-main-400" :style="{ width: `${promoProgress(promo)}%` }" />
-              </div>
-              <div class="mt-2 flex items-center justify-between text-xs font-700">
-                <span class="text-slate-400">{{ promo.my_trips }} / {{ promo.target_trips }} заказов</span>
-                <span class="text-slate-500">до {{ formatDeadline(promo.ends_at) }}</span>
-              </div>
+              <!-- Парковая акция без вступления: прогресс начнётся после
+                   «Участвовать». Остальные — прогресс-бар как раньше. -->
+              <button
+                v-if="promo.joined === false"
+                :disabled="joiningPromoId === promo.id"
+                class="mt-3 h-11 w-full rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
+                type="button"
+                @click="joinPromo(promo)"
+              >
+                {{ joiningPromoId === promo.id ? 'Подключаем...' : 'Участвовать' }}
+              </button>
+              <template v-else>
+                <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">
+                  <div class="h-full rounded-full bg-main-400" :style="{ width: `${promoProgress(promo)}%` }" />
+                </div>
+                <div class="mt-2 flex items-center justify-between text-xs font-700">
+                  <span class="text-slate-400">{{ promo.my_trips }} / {{ promo.target_trips }} заказов</span>
+                  <span class="text-slate-500">до {{ formatDeadline(promo.ends_at) }}</span>
+                </div>
+              </template>
             </article>
           </div>
         </section>

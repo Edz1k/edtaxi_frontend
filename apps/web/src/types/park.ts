@@ -78,6 +78,9 @@ export interface ParkInvitesResponse {
 export interface ParkDriver {
   id: string
   is_online: boolean
+  // Имя/телефон водителя — чтобы владелец парка видел людей, а не UUID.
+  name?: null | string
+  phone?: null | string
   rating: number
   total_trips: number
   user_id: string
