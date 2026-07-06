@@ -150,12 +150,15 @@ function startRefreshPolling() {
   if (typeof window === 'undefined')
     return
 
+  // Живое отслеживание: позиция машины на бэке обновляется каждые ~2 сек
+  // (Redis), поэтому опрашиваем часто — маркер двигается почти в реальном
+  // времени. Для завершённых поездок опрос прекращается.
   refreshTimer = window.setInterval(() => {
     if (!shareStore.trip || shareStore.isTerminal)
       return
 
     shareStore.load(token.value, { silent: true }).catch(() => {})
-  }, 10_000)
+  }, 4_000)
 }
 
 function stopRefreshPolling() {

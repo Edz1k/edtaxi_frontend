@@ -25,8 +25,10 @@ function carMarkerAsset(category?: null | string) {
   if (category && CAR_MARKER_ASSETS[category])
     return CAR_MARKER_ASSETS[category]
 
-  // Фолбэк для неизвестной категории и старых вызовов без неё.
-  return '/taxi_top_view.svg'
+  // Фолбэк для неизвестной категории и старых вызовов без неё: жёлтый эконом.
+  // Раньше здесь был легаси /taxi_top_view.svg — тёмная машина, из-за которой
+  // «даже на эконом приезжала чёрная».
+  return CAR_MARKER_ASSETS.economy
 }
 
 export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {

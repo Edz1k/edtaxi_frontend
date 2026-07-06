@@ -2,11 +2,57 @@
 import type { PassengerOverview } from '@edtaxi/shared/types/passenger'
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui'
 import { mediaUrl } from '~/api/client'
-import { getPassengerOverview } from '~/api/passenger'
+import { getPassengerOverview, uploadPassengerAvatar } from '~/api/passenger'
+import { useToast } from '~/composables/useToast'
+import { usePassengerStore } from '~/stores/passenger'
 
 const data = ref<PassengerOverview | null>(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
+
+// Смена аватарки: тап по аватару открывает выбор файла, после загрузки
+// профиль обновляется и в кабинете, и в шапке меню (passenger store).
+const toast = useToast()
+const passenger = usePassengerStore()
+const avatarInput = ref<HTMLInputElement | null>(null)
+const isUploadingAvatar = ref(false)
+
+function pickAvatar() {
+  if (!isUploadingAvatar.value)
+    avatarInput.value?.click()
+}
+
+async function onAvatarSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = '' // повторный выбор того же файла тоже должен сработать
+  if (!file)
+    return
+
+  if (!['image/jpeg', 'image/png'].includes(file.type)) {
+    toast.warning('Не тот формат', 'Аватарка — это JPEG или PNG.')
+    return
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    toast.warning('Слишком большой файл', 'Максимум 5 МБ.')
+    return
+  }
+
+  isUploadingAvatar.value = true
+  try {
+    const profile = await uploadPassengerAvatar(file)
+    if (data.value)
+      data.value = { ...data.value, user: { ...data.value.user, avatar_url: profile.avatar_url } }
+    passenger.loadProfile().catch(() => {})
+    toast.success('Готово', 'Аватарка обновлена.')
+  }
+  catch {
+    toast.error('Не получилось', 'Не удалось загрузить аватарку. Попробуйте ещё раз.')
+  }
+  finally {
+    isUploadingAvatar.value = false
+  }
+}
 
 definePage({
   meta: {
@@ -90,9 +136,14 @@ function formatDate(value: string) {
       <template v-else-if="data">
         <!-- Карточка профиля -->
         <div class="overflow-hidden rounded-3xl bg-white/5">
-          <!-- Аватар + имя -->
+          <!-- Аватар + имя (тап по аватару — сменить фото) -->
           <div class="flex items-center gap-4 px-5 pt-5">
-            <div class="shrink-0">
+            <button
+              aria-label="Сменить аватарку"
+              class="relative shrink-0 transition active:scale-[0.96]"
+              type="button"
+              @click="pickAvatar"
+            >
               <AvatarRoot
                 class="h-18 w-18 flex items-center justify-center overflow-hidden rounded-[20px] text-main-200"
                 :class="ratingIsGood ? 'ring-2 ring-emerald-400/40 bg-emerald-500/10' : 'ring-2 ring-amber-400/30 bg-amber-500/10'"
@@ -106,7 +157,20 @@ function formatDate(value: string) {
                   <span class="i-mdi-account text-10" />
                 </AvatarFallback>
               </AvatarRoot>
-            </div>
+              <span
+                class="absolute h-7 w-7 flex items-center justify-center border-2 border-secondary-900 rounded-full bg-main-500 text-white -bottom-1.5 -right-1.5"
+                aria-hidden="true"
+              >
+                <span :class="isUploadingAvatar ? 'i-mdi-loading animate-spin' : 'i-mdi-camera'" class="text-3.5" />
+              </span>
+            </button>
+            <input
+              ref="avatarInput"
+              accept="image/jpeg,image/png"
+              class="hidden"
+              type="file"
+              @change="onAvatarSelected"
+            >
             <div class="min-w-0 flex-1">
               <h1 class="truncate text-xl font-950">
                 {{ fullName }}

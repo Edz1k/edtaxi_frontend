@@ -17,3 +17,14 @@ export function updatePassengerProfile(payload: UpdatePassengerProfilePayload) {
     body: payload,
   })
 }
+
+// Загрузка аватарки пассажира: JPEG/PNG, бэкенд кладёт файл в /uploads/avatars
+// и сразу сохраняет ссылку в профиле.
+export function uploadPassengerAvatar(file: File) {
+  const form = new FormData()
+  form.append('photo', file)
+  return apiRequest<PassengerProfile>('/passenger/me/avatar', {
+    method: 'POST',
+    body: form,
+  })
+}

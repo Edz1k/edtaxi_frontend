@@ -1,9 +1,8 @@
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { Trip } from '~/types/trips'
-import { getDrivingRoute } from '@edtaxi/shared/api/geocoding'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
-import { getSharedTrip } from '~/api/share'
+import { getSharedTrip, getSharedTripRoute } from '~/api/share'
 
 export const useShareStore = defineStore('share', () => {
   const trip = ref<Trip | null>(null)
@@ -73,25 +72,34 @@ export const useShareStore = defineStore('share', () => {
     return Number.isFinite(lat) && Number.isFinite(lng)
   }
 
-  async function refreshRoute() {
+  // Маршрут строится через публичный /share/:token/route (штатный POST /route
+  // требует авторизацию, из-за чего страница раньше рисовала прямую линию).
+  // Геометрия A→B не меняется — грузим один раз, при ошибке падаем на прямую.
+  async function refreshRoute(token: string) {
     const from = pickupPlace.value
     const to = destinationPlace.value
 
-    routeCoordinates.value = []
-
-    if (!from || !to)
+    if (!from || !to) {
+      routeCoordinates.value = []
       return
+    }
+
+    if (routeCoordinates.value.length > 2)
+      return // настоящий маршрут уже загружен
 
     try {
-      const route = await getDrivingRoute(from, to)
-      routeCoordinates.value = route.geometry
+      const route = await getSharedTripRoute(token)
+      if (route.coordinates.length >= 2) {
+        routeCoordinates.value = route.coordinates
+        return
+      }
     }
-    catch {
-      routeCoordinates.value = [
-        [from.lng, from.lat],
-        [to.lng, to.lat],
-      ]
-    }
+    catch {}
+
+    routeCoordinates.value = [
+      [from.lng, from.lat],
+      [to.lng, to.lat],
+    ]
   }
 
   async function load(token: string, options: { silent?: boolean } = {}) {
@@ -111,7 +119,7 @@ export const useShareStore = defineStore('share', () => {
       viewCount.value = response.view_count
       expiresAt.value = response.expires_at
       isMissing.value = false
-      await refreshRoute()
+      await refreshRoute(token)
     }
     catch (error) {
       if (error instanceof ApiError && error.status === 404) {
