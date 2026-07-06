@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { BonusPromotion } from '@edtaxi/shared/types/bonus'
 import type { AvailablePark, ParkInfo, ParkJoinRequest } from '~/types/park'
+import { getMyPromotions, joinPromotion } from '@edtaxi/shared/api/bonus'
 import { getDriverOverview } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
 import {
@@ -24,6 +26,13 @@ const isPlatformAvailable = ref(false)
 const parkId = ref<null | string>(null)
 const isLoading = ref(true)
 const isApplying = ref(false)
+
+// Карточка СВОЕГО парка (имя/комиссия) + его акции с прогрессом. Пока водитель
+// в парке, список чужих парков спрятан за кнопкой «Сменить таксопарк».
+const myPark = ref<null | ParkInfo>(null)
+const myPromos = ref<BonusPromotion[]>([])
+const joiningPromoId = ref('')
+const showSwitchList = ref(false)
 
 // Раскрытая карточка парка: детали (описание, телефон, акции) подгружаются
 // по клику и кэшируются, чтобы не дёргать бэк при повторном раскрытии.
@@ -82,11 +91,57 @@ onMounted(async () => {
       parks.value = list.value.parks
     if (platform.status === 'fulfilled')
       isPlatformAvailable.value = platform.value.available
+
+    if (parkId.value)
+      await Promise.allSettled([loadMyPark(parkId.value), loadMyPromotions()])
   }
   finally {
     isLoading.value = false
   }
 })
+
+async function loadMyPark(id: string) {
+  try {
+    myPark.value = await getParkInfo(id)
+  }
+  catch {
+    // имя/комиссия не критичны — карточка покажет общую надпись
+  }
+}
+
+// Парковые акции с прогрессом (joined=false → прогресс ещё не считается).
+async function loadMyPromotions() {
+  try {
+    const response = await getMyPromotions()
+    myPromos.value = response.promotions.filter(promo => promo.scope === 'park')
+  }
+  catch {
+    myPromos.value = []
+  }
+}
+
+async function joinPromo(promo: BonusPromotion) {
+  if (joiningPromoId.value)
+    return
+  joiningPromoId.value = promo.id
+  try {
+    await joinPromotion(promo.id)
+    toast.success('Вы участвуете!', 'Заказы начнут засчитываться с этого момента.')
+    await loadMyPromotions()
+  }
+  catch (error) {
+    showErrorToast(error, 'Не удалось вступить в акцию.')
+  }
+  finally {
+    joiningPromoId.value = ''
+  }
+}
+
+function promoProgress(promo: BonusPromotion) {
+  if (promo.target_trips <= 0)
+    return 0
+  return Math.min(100, Math.round((promo.my_trips / promo.target_trips) * 100))
+}
 
 // commission_rate приходит долей (0.03 → 3%)
 function commissionLabel(rate: number) {
@@ -224,18 +279,75 @@ async function acceptInvite() {
       </div>
 
       <template v-else>
-        <!-- Уже в парке -->
-        <div v-if="hasPark" class="mt-6 flex items-center gap-3 rounded-3xl bg-emerald-500/12 p-4">
-          <span class="i-mdi-check-decagram shrink-0 text-7 text-emerald-300" />
-          <div class="min-w-0">
-            <p class="text-sm text-emerald-200 font-950">
-              Вы состоите в таксопарке
-            </p>
-            <p class="mt-0.5 text-xs text-emerald-300/70 leading-4">
-              Связаться с парком можно в разделе «Чат с парком».
-            </p>
+        <!-- Уже в парке: карточка своего парка с комиссией -->
+        <div v-if="hasPark" class="mt-6 rounded-3xl bg-emerald-500/12 p-4">
+          <div class="flex items-center gap-3">
+            <span class="i-mdi-check-decagram shrink-0 text-7 text-emerald-300" />
+            <div class="min-w-0">
+              <p class="text-sm text-emerald-200 font-950">
+                Успешно работаете с парком {{ myPark?.name ? `«${myPark.name}»` : '' }}
+              </p>
+              <p v-if="myPark" class="mt-0.5 text-xs text-emerald-300/80 font-800 leading-4">
+                Комиссия парка составляет {{ commissionLabel(myPark.commission_rate) }}
+              </p>
+              <p class="mt-0.5 text-xs text-emerald-300/60 leading-4">
+                Связаться с парком можно в разделе «Чат с парком».
+              </p>
+            </div>
           </div>
         </div>
+
+        <!-- Акции моего парка: прогресс считается после кнопки «Участвовать» -->
+        <section v-if="hasPark && myPromos.length" class="mt-4">
+          <h2 class="text-xs text-slate-400 font-800 uppercase">
+            Акции парка
+          </h2>
+          <div class="mt-2 space-y-2">
+            <article
+              v-for="promo in myPromos"
+              :key="promo.id"
+              class="rounded-2xl bg-white/5 p-4"
+            >
+              <div class="flex items-start justify-between gap-2">
+                <p class="min-w-0 text-sm font-950">
+                  {{ promo.title }}
+                </p>
+                <span class="shrink-0 text-xs text-main-200 font-900">
+                  +{{ Math.floor(promo.reward).toLocaleString('ru-RU') }} бонусов
+                </span>
+              </div>
+              <p v-if="promo.description" class="mt-1 text-xs text-slate-400 leading-4">
+                {{ promo.description }}
+              </p>
+              <p class="mt-1 text-xs text-slate-500 font-700">
+                {{ promo.target_trips }} заказов · до {{ formatDeadline(promo.ends_at) }}
+              </p>
+
+              <!-- Участвует: прогресс-бар. Нет: кнопка «Участвовать». -->
+              <template v-if="promo.joined">
+                <div class="mt-3 h-2 overflow-hidden rounded-full bg-white/8">
+                  <div
+                    class="h-full rounded-full bg-main-400 transition-all"
+                    :style="{ width: `${promoProgress(promo)}%` }"
+                  />
+                </div>
+                <p class="mt-1.5 text-xs text-slate-400 font-800">
+                  {{ promo.my_trips }} из {{ promo.target_trips }} заказов
+                  <span class="text-slate-500 font-600">· прогресс с момента вступления</span>
+                </p>
+              </template>
+              <button
+                v-else
+                :disabled="joiningPromoId === promo.id"
+                class="mt-3 h-11 w-full rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
+                type="button"
+                @click="joinPromo(promo)"
+              >
+                {{ joiningPromoId === promo.id ? 'Подключаем...' : 'Участвовать' }}
+              </button>
+            </article>
+          </div>
+        </section>
 
         <!-- Заявка отправлена (первичное вступление, без парка) -->
         <div v-else-if="pendingRequest" class="mt-6 flex items-center gap-3 rounded-3xl bg-amber-500/12 p-4">
@@ -284,9 +396,22 @@ async function acceptInvite() {
           </button>
         </form>
 
-        <!-- Список парков: вступление (без парка) или смена (в парке).
-             Пока есть активная заявка — список прячем, показываем статус выше. -->
-        <section v-if="canRequest" class="mt-6">
+        <!-- В парке список чужих парков спрятан: «водитель видит только свой
+             парк». Смена — осознанное действие по кнопке ниже. -->
+        <button
+          v-if="hasPark && canRequest && !showSwitchList"
+          class="mt-6 h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/6 text-sm text-slate-300 font-900 transition active:scale-[0.98]"
+          type="button"
+          @click="showSwitchList = true"
+        >
+          <span class="i-mdi-swap-horizontal text-5" />
+          Сменить таксопарк
+        </button>
+
+        <!-- Список парков: вступление (без парка) или смена (в парке, после
+             нажатия «Сменить таксопарк»). Пока есть активная заявка — список
+             прячем, показываем статус выше. -->
+        <section v-if="canRequest && (!hasPark || showSwitchList)" class="mt-6">
           <h2 class="text-xs text-slate-400 font-800 uppercase">
             {{ hasPark ? 'Сменить таксопарк' : 'Доступные парки' }}
           </h2>
@@ -375,8 +500,8 @@ async function acceptInvite() {
           </div>
         </section>
 
-        <!-- Партнёрство с платформой -->
-        <section v-if="isPlatformAvailable && canRequest" class="mt-8">
+        <!-- Партнёрство с платформой (в парке — только в режиме смены) -->
+        <section v-if="isPlatformAvailable && canRequest && (!hasPark || showSwitchList)" class="mt-8">
           <button
             :disabled="isApplying"
             class="h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-main-500 text-sm font-950 shadow-[0_12px_30px_rgba(230,173,46,0.28)] transition active:scale-[0.98] disabled:opacity-60"

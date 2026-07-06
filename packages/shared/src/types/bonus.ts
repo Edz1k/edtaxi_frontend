@@ -19,6 +19,9 @@ export interface BonusPromotion {
   ends_at: string
   id: string
   image_url?: string | null
+  // joined — только у парковых акций (opt-in): false = кнопка «Участвовать»
+  // ещё не нажата, прогресс не считается; отсутствует у платформенных.
+  joined?: boolean
   message?: string
   my_trips: number
   reward: number

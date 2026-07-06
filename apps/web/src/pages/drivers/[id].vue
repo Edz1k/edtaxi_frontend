@@ -152,6 +152,17 @@ const isBlocked = computed(() => {
             <span class="rounded-full px-3 py-1 text-xs font-900" :class="data.driver.is_online ? 'bg-emerald-500/12 text-emerald-300' : 'bg-white/8 text-white/45'">
               {{ data.driver.is_online ? 'На линии' : 'Не на линии' }}
             </span>
+            <!-- С каким парком работает водитель (+ комиссия парка) -->
+            <span v-if="data.driver.park_name" class="inline-flex items-center gap-1 rounded-full bg-cyan-300/10 px-3 py-1 text-xs text-cyan-200 font-900">
+              <span class="i-mdi-office-building-marker text-3.5" />
+              {{ data.driver.park_is_platform ? 'Гараж платформы' : data.driver.park_name }}
+              <span v-if="data.driver.park_commission_rate != null" class="text-cyan-200/70">
+                · {{ (data.driver.park_commission_rate * 100).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) }}%
+              </span>
+            </span>
+            <span v-else-if="!data.driver.park_id" class="rounded-full bg-amber-300/10 px-3 py-1 text-xs text-amber-200 font-900">
+              Без таксопарка
+            </span>
             <span v-if="isBlocked" class="rounded-full bg-red-500/12 px-3 py-1 text-xs text-red-300 font-900">
               Заблокирован до {{ formatDate(data.driver.blocked_until as string) }}
             </span>

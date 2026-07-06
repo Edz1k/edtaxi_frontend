@@ -18,6 +18,10 @@ export interface DriverOverviewUser {
 export interface DriverOverviewDriver {
   id: string
   park_id: null | string
+  // Парк водителя: имя/комиссия/платформенность — «с кем работает».
+  park_name?: null | string
+  park_commission_rate?: null | number
+  park_is_platform?: boolean
   is_online: boolean
   is_available: boolean
   rating: number
