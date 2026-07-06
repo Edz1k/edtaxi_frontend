@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TripStatus } from '~/types/trips'
+import { mediaUrl } from '~/api/client'
 import MapView from '~/components/map/MapView.vue'
 import { TARIFF_META } from '~/constants/tariffs'
 import { useShareStore } from '~/stores/share'
@@ -86,6 +87,48 @@ const expiresAtText = computed(() => formatDateTime(shareStore.expiresAt))
 const startedAtText = computed(() => formatDateTime(shareStore.trip?.started_at ?? ''))
 const completedAtText = computed(() => formatDateTime(shareStore.trip?.completed_at ?? ''))
 
+const driver = computed(() => shareStore.trip?.driver ?? null)
+
+// ETA для получателя ссылки: до посадки — «водитель приедет через ~N мин»,
+// в пути — «прибытие через ~N мин». Значение считает бэкенд, страница
+// обновляет его поллингом раз в 10 секунд.
+const etaText = computed(() => {
+  const eta = shareStore.driverEtaSeconds
+  const status = shareStore.trip?.status
+  if (!eta || !status)
+    return ''
+
+  const minutes = Math.max(1, Math.round(eta / 60))
+  if (status === 'driver_assigned')
+    return `Водитель приедет через ~${minutes} мин`
+  if (status === 'in_progress')
+    return `Прибытие через ~${minutes} мин`
+  return ''
+})
+
+// Фактическое время пути для завершённой поездки.
+const durationText = computed(() => {
+  const trip = shareStore.trip
+  if (!trip?.started_at || !trip.completed_at)
+    return ''
+
+  const ms = new Date(trip.completed_at).getTime() - new Date(trip.started_at).getTime()
+  if (!Number.isFinite(ms) || ms <= 0)
+    return ''
+
+  const totalMinutes = Math.max(1, Math.round(ms / 60000))
+  if (totalMinutes < 60)
+    return `${totalMinutes} мин`
+
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return minutes ? `${hours} ч ${minutes} мин` : `${hours} ч`
+})
+
+const driverCategory = computed(() =>
+  driver.value?.vehicle?.category ?? shareStore.trip?.category ?? null,
+)
+
 function formatDateTime(value: null | string | undefined) {
   if (!value)
     return ''
@@ -140,6 +183,8 @@ onBeforeUnmount(() => {
       <MapView
         v-if="shareStore.canShowMap"
         :destination-place="shareStore.destinationPlace"
+        :driver-category="driverCategory"
+        :driver-location="shareStore.driverLocation"
         :pickup-place="shareStore.pickupPlace"
         :route-coordinates="shareStore.routeCoordinates"
         :show-route="shareStore.canShowRoute"
@@ -206,6 +251,33 @@ onBeforeUnmount(() => {
               </div>
             </div>
 
+            <!-- Живой ETA -->
+            <div v-if="etaText" class="mt-3 inline-flex items-center gap-2 rounded-full bg-main-500/14 px-4 py-1.5">
+              <span class="i-mdi-clock-fast text-4 text-main-300" aria-hidden="true" />
+              <span class="text-sm text-main-200 font-950 tabular-nums">{{ etaText }}</span>
+            </div>
+
+            <!-- Карточка водителя: имя, рейтинг, машина и номер -->
+            <div v-if="driver" class="mt-4 flex items-center gap-3 rounded-[1.35rem] bg-white/5 px-3 py-3">
+              <div class="h-13 w-13 flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10">
+                <img v-if="driver.avatar_url" alt="" class="h-full w-full object-cover" :src="mediaUrl(driver.avatar_url)">
+                <span v-else class="i-mdi-account text-7 text-slate-400" aria-hidden="true" />
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <p class="flex items-center gap-1.5 truncate text-sm font-900">
+                  {{ driver.name || 'Водитель' }}
+                  <span class="shrink-0 text-xs text-amber-300 font-800">★ {{ driver.rating.toFixed(1) }}</span>
+                </p>
+                <p v-if="driver.vehicle" class="mt-0.5 truncate text-xs text-slate-400 font-700">
+                  {{ driver.vehicle.make }} {{ driver.vehicle.model }} · {{ driver.vehicle.color }}
+                </p>
+                <p v-if="driver.vehicle" class="mt-0.5 inline-block rounded-md bg-white/10 px-2 py-0.5 text-xs font-900 tracking-wide">
+                  {{ driver.vehicle.plate_number }}
+                </p>
+              </div>
+            </div>
+
             <div class="mt-4 rounded-[1.35rem] bg-white/5 p-3 space-y-3">
               <div class="flex gap-3">
                 <span class="mt-0.5 h-6 w-6 flex shrink-0 items-center justify-center rounded-full bg-main-500 text-xs text-white font-950">A</span>
@@ -268,9 +340,27 @@ onBeforeUnmount(() => {
                   {{ completedAtText }}
                 </p>
               </div>
+
+              <div v-if="durationText" class="rounded-[1.15rem] bg-white/5 px-3 py-2.5">
+                <p class="text-xs text-slate-500 font-800">
+                  Время пути
+                </p>
+                <p class="mt-1 text-sm font-900">
+                  {{ durationText }}
+                </p>
+              </div>
             </div>
 
-            <div class="mt-4 flex items-center justify-between rounded-[1.15rem] bg-white/5 px-3 py-2.5 text-xs text-slate-400 font-800">
+            <!-- Кнопка паники: мгновенный звонок в экстренные службы -->
+            <a
+              class="mt-4 h-13 w-full flex items-center justify-center gap-2 rounded-[1.35rem] bg-red-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(239,68,68,0.3)] transition active:scale-[0.98]"
+              href="tel:112"
+            >
+              <span class="i-mdi-alarm-light text-5" aria-hidden="true" />
+              SOS — позвонить 112
+            </a>
+
+            <div class="mt-3 flex items-center justify-between rounded-[1.15rem] bg-white/5 px-3 py-2.5 text-xs text-slate-400 font-800">
               <span>Просмотров: {{ shareStore.viewCount }}</span>
               <span v-if="expiresAtText">До {{ expiresAtText }}</span>
             </div>

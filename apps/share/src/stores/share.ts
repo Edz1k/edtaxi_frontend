@@ -45,6 +45,24 @@ export const useShareStore = defineStore('share', () => {
   const canShowRoute = computed(() => canShowMap.value && routeCoordinates.value.length >= 2)
   const isTerminal = computed(() => trip.value?.status === 'cancelled' || trip.value?.status === 'completed')
 
+  // Живой маркер машины: бэкенд кладёт последнюю известную позицию водителя
+  // в driver.location, страница обновляет её поллингом раз в 10 секунд.
+  const driverLocation = computed(() => {
+    const location = trip.value?.driver?.location
+    if (!location || isTerminal.value)
+      return null
+
+    return { lat: location.lat, lng: location.lng }
+  })
+
+  const driverEtaSeconds = computed(() => {
+    if (isTerminal.value)
+      return null
+
+    const eta = trip.value?.driver?.location?.eta_sec
+    return typeof eta === 'number' && eta > 0 ? eta : null
+  })
+
   function hasTripCoordinates(point: 'dropoff' | 'pickup') {
     if (!trip.value)
       return false
@@ -126,6 +144,8 @@ export const useShareStore = defineStore('share', () => {
     canShowMap,
     canShowRoute,
     destinationPlace,
+    driverEtaSeconds,
+    driverLocation,
     errorMessage,
     expiresAt,
     isLoading,
