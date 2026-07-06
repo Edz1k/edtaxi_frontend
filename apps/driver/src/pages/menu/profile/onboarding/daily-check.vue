@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AuthButton from '~/components/auth/AuthButton.vue'
+import FaceCaptureCamera from '~/components/verification/FaceCaptureCamera.vue'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
 const router = useRouter()
@@ -38,6 +39,28 @@ onMounted(async () => {
   if (!driver.verification)
     await driver.loadVerification().catch(() => {})
 })
+
+// Селфи снимается ТОЛЬКО живой камерой внутри приложения (овал + автоснимок по
+// детекции лица) — системный выбор файла открывал на Android галерею, что для
+// ежедневной проверки недопустимо. Системный input остаётся только фолбэком,
+// когда доступ к камере запрещён.
+const isCameraOpen = ref(false)
+
+function openSelfieCamera() {
+  isCameraOpen.value = true
+}
+
+function onSelfieCaptured(file: File) {
+  if (selfiePreview.value)
+    URL.revokeObjectURL(selfiePreview.value)
+  selfieFile.value = file
+  selfiePreview.value = URL.createObjectURL(file)
+}
+
+// Камера недоступна (нет разрешения/устройства) — системная камера как фолбэк.
+function onCameraFallback() {
+  pickFile('selfie')
+}
 
 function pickFile(type: 'selfie' | 'vehicle') {
   const input = document.createElement('input')
@@ -117,7 +140,28 @@ async function submit() {
       </div>
 
       <div v-else class="mt-8 space-y-6">
-        <!-- Селфи -->
+        <!-- Памятка (как в Я.Про) -->
+        <div class="rounded-2xl bg-white/5 p-4">
+          <p class="mb-2 text-xs text-slate-300 font-800 uppercase">
+            Чтобы сделать правильное фото
+          </p>
+          <ul class="text-xs text-slate-400 leading-5 space-y-1.5">
+            <li class="flex items-start gap-2">
+              <span class="i-mdi-white-balance-sunny mt-0.5 shrink-0 text-3.5 text-amber-300" />
+              Найдите место с хорошим освещением
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="i-mdi-face-mask-outline mt-0.5 shrink-0 text-3.5 text-slate-300" />
+              Снимите маску и тёмные очки
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="i-mdi-cellphone mt-0.5 shrink-0 text-3.5 text-main-300" />
+              Держите телефон на уровне лица
+            </li>
+          </ul>
+        </div>
+
+        <!-- Селфи: живая камера с овалом и автоснимком -->
         <div>
           <p class="mb-3 text-sm text-slate-300 font-700">
             Ваше селфи
@@ -126,7 +170,7 @@ async function submit() {
             class="relative mx-auto block h-52 w-52 overflow-hidden border-2 rounded-full border-dashed transition active:scale-[0.98]"
             :class="selfiePreview ? 'border-transparent' : 'border-white/16 bg-white/4'"
             type="button"
-            @click="pickFile('selfie')"
+            @click="openSelfieCamera"
           >
             <img
               v-if="selfiePreview"
@@ -135,15 +179,15 @@ async function submit() {
               alt="Селфи"
             >
             <div v-else class="h-full flex flex-col items-center justify-center gap-2 text-slate-400">
-              <span class="i-mdi-account text-12" />
-              <span class="text-xs font-700">Передняя камера</span>
+              <span class="i-mdi-face-recognition text-12" />
+              <span class="px-4 text-center text-xs font-700 leading-4">Поместите лицо в овал — снимок сделается сам</span>
             </div>
             <div
               v-if="selfiePreview"
               class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/50 py-2 text-xs text-white font-700 backdrop-blur-sm"
             >
-              <span class="i-mdi-pencil text-3.5" />
-              Изменить
+              <span class="i-mdi-camera-retake text-3.5" />
+              Переснять
             </div>
           </button>
         </div>
@@ -194,5 +238,13 @@ async function submit() {
         />
       </div>
     </section>
+
+    <!-- Живая камера: овал, детекция лица, автоснимок -->
+    <FaceCaptureCamera
+      :open="isCameraOpen"
+      @capture="onSelfieCaptured"
+      @close="isCameraOpen = false"
+      @fallback="onCameraFallback"
+    />
   </main>
 </template>

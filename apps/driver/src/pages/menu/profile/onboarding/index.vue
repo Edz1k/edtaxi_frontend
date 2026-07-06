@@ -133,7 +133,8 @@ const items = computed<OnboardingItem[]>(() => {
       label: 'Фотоконтроль машины',
       description: statusDescription(vehiclePhotosStatus.value, 'Фото кузова и салона'),
       icon: 'i-mdi-car-outline',
-      to: '/menu/profile/onboarding/vehicle-docs',
+      // section=car — внутри только фото машины, без документов.
+      to: '/menu/profile/onboarding/vehicle-docs?section=car',
       status: vehiclePhotosStatus.value,
       reason: vehiclePhotosStatus.value === 'rejected' ? vehicle?.rejection_reason : null,
     },
@@ -141,7 +142,8 @@ const items = computed<OnboardingItem[]>(() => {
       label: 'Фотоконтроль документов',
       description: statusDescription(vehicleDocsStatus.value, 'Техпаспорт, VIN и страховка'),
       icon: 'i-mdi-card-account-details-outline',
-      to: '/menu/profile/onboarding/vehicle-docs',
+      // section=docs — внутри только документы (техпаспорт/VIN/страховка).
+      to: '/menu/profile/onboarding/vehicle-docs?section=docs',
       status: vehicleDocsStatus.value,
       reason: vehicleDocsStatus.value === 'rejected' ? vehicle?.rejection_reason : null,
     },

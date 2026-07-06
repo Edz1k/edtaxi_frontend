@@ -33,12 +33,17 @@ interface SlotMeta {
 
 interface SlotGroup {
   title: string
+  // kind делит группы на «фото машины» и «документы»: пункты онбординга
+  // «Фотоконтроль машины» / «Фотоконтроль документов» открывают только свою
+  // часть (?section=car|docs), чтобы водитель не путал, что куда загружать.
+  kind: 'car' | 'docs'
   slots: SlotMeta[]
 }
 
 const CAR_SLOT_GROUPS: SlotGroup[] = [
   {
     title: 'Кузов автомобиля',
+    kind: 'car',
     slots: [
       { slot: 'exterior_front', label: 'Спереди', icon: 'i-mdi-car', capture: 'environment' },
       { slot: 'exterior_back', label: 'Сзади', icon: 'i-mdi-car-back', capture: 'environment' },
@@ -48,6 +53,7 @@ const CAR_SLOT_GROUPS: SlotGroup[] = [
   },
   {
     title: 'Салон',
+    kind: 'car',
     slots: [
       { slot: 'interior_front', label: 'Передние сиденья', icon: 'i-mdi-car-seat', capture: 'environment' },
       { slot: 'interior_back', label: 'Задний ряд сидений', icon: 'i-mdi-seat', capture: 'environment' },
@@ -56,12 +62,14 @@ const CAR_SLOT_GROUPS: SlotGroup[] = [
   },
   {
     title: 'Багажник',
+    kind: 'car',
     slots: [
       { slot: 'trunk', label: 'Багажник', icon: 'i-mdi-bag-suitcase', capture: 'environment' },
     ],
   },
   {
     title: 'Документы',
+    kind: 'docs',
     slots: [
       { slot: 'doc_registration_front', label: 'Техпаспорт (лицевая сторона)', icon: 'i-mdi-file-document', capture: null },
       { slot: 'doc_registration_back', label: 'Техпаспорт (обратная сторона)', icon: 'i-mdi-file-document-outline', capture: null },
@@ -70,6 +78,7 @@ const CAR_SLOT_GROUPS: SlotGroup[] = [
   },
   {
     title: 'VIN',
+    kind: 'docs',
     slots: [
       { slot: 'vin', label: 'VIN-номер', icon: 'i-mdi-barcode-scan', capture: 'environment', optional: true },
     ],
@@ -81,6 +90,7 @@ const CAR_SLOT_GROUPS: SlotGroup[] = [
 const MOTO_SLOT_GROUPS: SlotGroup[] = [
   {
     title: 'Мотоцикл',
+    kind: 'car',
     slots: [
       { slot: 'exterior_front', label: 'Спереди', icon: 'i-mdi-motorbike', capture: 'environment' },
       { slot: 'exterior_back', label: 'Сзади', icon: 'i-mdi-motorbike', capture: 'environment' },
@@ -90,12 +100,14 @@ const MOTO_SLOT_GROUPS: SlotGroup[] = [
   },
   {
     title: 'Экипировка',
+    kind: 'car',
     slots: [
       { slot: 'moto_second_helmet', label: 'Второй шлем для пассажира', icon: 'i-mdi-racing-helmet', capture: 'environment' },
     ],
   },
   {
     title: 'Документы',
+    kind: 'docs',
     slots: [
       { slot: 'doc_registration_front', label: 'Техпаспорт (лицевая сторона)', icon: 'i-mdi-file-document', capture: null },
       { slot: 'doc_registration_back', label: 'Техпаспорт (обратная сторона)', icon: 'i-mdi-file-document-outline', capture: null },
@@ -104,6 +116,7 @@ const MOTO_SLOT_GROUPS: SlotGroup[] = [
   },
   {
     title: 'VIN',
+    kind: 'docs',
     slots: [
       { slot: 'vin', label: 'VIN-номер', icon: 'i-mdi-barcode-scan', capture: 'environment', optional: true },
     ],
@@ -115,7 +128,28 @@ const vehicleId = computed(() => currentVehicle.value?.id ?? '')
 const hasVehicle = computed(() => Boolean(vehicleId.value))
 const isMoto = computed(() => currentVehicle.value?.category === 'moto')
 
-const slotGroups = computed(() => isMoto.value ? MOTO_SLOT_GROUPS : CAR_SLOT_GROUPS)
+// ?section=car — только фото машины, ?section=docs — только документы,
+// без параметра — всё вместе (старые точки входа).
+const route = useRoute()
+const section = computed<'all' | 'car' | 'docs'>(() => {
+  const value = route.query.section
+  return value === 'car' || value === 'docs' ? value : 'all'
+})
+
+const pageTitle = computed(() => {
+  if (section.value === 'docs')
+    return 'Документы машины'
+  if (section.value === 'car')
+    return isMoto.value ? 'Фото мотоцикла' : 'Фото машины'
+  return isMoto.value ? 'Фото мотоцикла' : 'Фото машины'
+})
+
+const slotGroups = computed(() => {
+  const groups = isMoto.value ? MOTO_SLOT_GROUPS : CAR_SLOT_GROUPS
+  if (section.value === 'all')
+    return groups
+  return groups.filter(group => group.kind === section.value)
+})
 
 const uploadedRequiredCount = computed(() =>
   Math.max(0, driver.requiredPhotoSlots.length - driver.missingPhotoSlots.length),
@@ -180,11 +214,14 @@ async function submit() {
         </div>
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
-            {{ isMoto ? 'Фото мотоцикла' : 'Фото машины' }}
+            {{ pageTitle }}
           </h1>
           <p class="mt-1 text-sm text-slate-400 leading-5">
             <template v-if="hasVehicle && driver.requiredPhotoSlots.length">
               Загружено {{ uploadedRequiredCount }} из {{ driver.requiredPhotoSlots.length }} обязательных
+            </template>
+            <template v-else-if="section === 'docs'">
+              Загрузите документы машины для проверки.
             </template>
             <template v-else>
               Загрузите фото автомобиля и документы для проверки.

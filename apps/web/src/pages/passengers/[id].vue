@@ -2,12 +2,21 @@
 import type { PassengerOverview, PassengerTrip } from '~/types/passenger-overview'
 import { useRoute as useVueRoute } from 'vue-router'
 import { mediaUrl } from '~/api/client'
+import { adminSetPassengerRating } from '~/api/driver'
+import { showErrorToast } from '~/api/errors'
 import { getPassengerOverview } from '~/api/passenger'
 import WebPageShell from '~/components/app/WebPageShell.vue'
+import { useToast } from '~/composables/useToast'
+import { useAuthStore } from '~/stores/auth'
 import { formatDate } from '~/utils/format'
 
 const route = useVueRoute()
 const userId = computed(() => (route.params as Record<string, string>).id)
+
+const auth = useAuthStore()
+const toast = useToast()
+// Ручная правка рейтинга пассажира — только админам (не техподдержке).
+const isAdmin = computed(() => auth.hasAnyRole(['admin', 'superadmin']))
 
 const data = ref<PassengerOverview | null>(null)
 const isLoading = ref(true)
@@ -75,6 +84,35 @@ function tripFare(t: PassengerTrip) {
   const amount = t.final_fare ?? t.estimated_fare
   return `${Math.round(amount).toLocaleString('ru-RU')} ₸`
 }
+
+// --- Изменение рейтинга пассажира (только админ) ---
+
+const isRatingOpen = ref(false)
+const ratingForm = reactive({ rating: 5 })
+const isSavingRating = ref(false)
+
+function openRating() {
+  ratingForm.rating = data.value?.user.passenger_rating ?? 5
+  isRatingOpen.value = true
+}
+
+async function saveRating() {
+  if (isSavingRating.value)
+    return
+  isSavingRating.value = true
+  try {
+    await adminSetPassengerRating(userId.value, Number(ratingForm.rating))
+    toast.success('Рейтинг обновлён', `Новый рейтинг пассажира: ${Number(ratingForm.rating).toFixed(2)}`)
+    isRatingOpen.value = false
+    await load()
+  }
+  catch (error) {
+    showErrorToast(error, 'Не удалось изменить рейтинг.')
+  }
+  finally {
+    isSavingRating.value = false
+  }
+}
 </script>
 
 <template>
@@ -129,6 +167,16 @@ function tripFare(t: PassengerTrip) {
             <p class="mt-1 text-2xl font-950" :class="data.user.passenger_rating < 4.5 ? 'text-amber-300' : 'text-emerald-300'">
               {{ data.user.passenger_rating.toFixed(2) }}
             </p>
+            <!-- Ручная правка — только админ -->
+            <button
+              v-if="isAdmin"
+              class="mt-1 inline-flex items-center gap-1 text-xs text-cyan-200 font-800 hover:underline"
+              type="button"
+              @click="openRating"
+            >
+              <span class="i-mdi-pencil-outline text-3.5" />
+              Изменить
+            </button>
           </div>
           <div class="border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
             <p class="text-xs text-white/45 font-800 uppercase">
@@ -168,5 +216,50 @@ function tripFare(t: PassengerTrip) {
         </div>
       </div>
     </div>
+
+    <!-- Модалка правки рейтинга пассажира (только админ) -->
+    <Teleport to="body">
+      <div
+        v-if="isRatingOpen"
+        class="fixed inset-0 z-70 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+        @click.self="isRatingOpen = false"
+      >
+        <form
+          class="max-w-sm w-full border border-white/10 rounded-3xl bg-#071a38 p-5 shadow-2xl"
+          @submit.prevent="saveRating"
+        >
+          <h3 class="text-lg font-950">
+            Изменить рейтинг пассажира
+          </h3>
+          <label class="grid mt-4 gap-1.5">
+            <span class="text-xs text-white/42 font-900 uppercase">Новый рейтинг (1–5)</span>
+            <input
+              v-model.number="ratingForm.rating"
+              class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40"
+              max="5"
+              min="1"
+              step="0.01"
+              type="number"
+            >
+          </label>
+          <div class="mt-4 flex gap-2">
+            <button
+              :disabled="isSavingRating || ratingForm.rating < 1 || ratingForm.rating > 5"
+              class="h-11 flex-1 rounded-2xl bg-cyan-300 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
+              type="submit"
+            >
+              {{ isSavingRating ? 'Сохраняем...' : 'Сохранить' }}
+            </button>
+            <button
+              class="h-11 border border-white/12 rounded-2xl bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12"
+              type="button"
+              @click="isRatingOpen = false"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </Teleport>
   </WebPageShell>
 </template>
