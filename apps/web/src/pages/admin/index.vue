@@ -8,6 +8,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -84,8 +85,7 @@ const adminCards = computed(() => [
 
 <template>
   <WebPageShell
-    back-label="Кабинет"
-    back-to="/dashboard"
+    embedded
     description="Управление web-ролями, заявками таксопарков и операционными данными."
     title="Админка"
   >

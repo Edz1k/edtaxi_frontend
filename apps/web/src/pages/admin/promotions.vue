@@ -10,6 +10,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -72,8 +73,7 @@ async function stop(promotion: Promotion) {
 
 <template>
   <WebPageShell
-    back-label="Админка"
-    back-to="/admin"
+    embedded
     description="Платформенные акции «N поездок → X бонусов» для пассажиров или водителей. При запуске вся аудитория получает рассылку в Telegram."
     title="Акции"
   >

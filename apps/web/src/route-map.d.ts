@@ -129,6 +129,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/dev-admin': RouteRecordInfo<
+      '/dev-admin',
+      '/dev-admin',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/drivers/[id]': RouteRecordInfo<
       '/drivers/[id]',
       '/drivers/:id',
@@ -368,6 +375,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/dashboard.vue': {
       routes:
         | '/dashboard'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/dev-admin.vue': {
+      routes:
+        | '/dev-admin'
       views:
         | never
       pathParamNames:

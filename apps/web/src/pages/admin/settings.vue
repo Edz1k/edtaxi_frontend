@@ -9,6 +9,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -44,8 +45,7 @@ function selectTab(tab: SettingsTab) {
 
 <template>
   <WebPageShell
-    back-label="Админка"
-    back-to="/admin"
+    embedded
     description="Глобальные настройки платформы: комиссия с поездок, коэффициент цены, тарифы по категориям и аналитика спроса. Изменения применяются к новым заказам сразу."
     title="Настройки"
   >

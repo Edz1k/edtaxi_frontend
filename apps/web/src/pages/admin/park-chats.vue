@@ -18,6 +18,7 @@ definePage({
   meta: {
     authRedirect: '/login',
     requiresAuth: true,
+    layout: 'admin',
     requiredRole: ['admin', 'superadmin'],
   },
 })
@@ -39,8 +40,7 @@ function loadChats() {
 
 <template>
   <WebPageShell
-    back-label="Админка"
-    back-to="/admin"
+    embedded
     description="Служебный список диалогов между таксопарками и водителями."
     title="Чаты парков"
   >
