@@ -37,6 +37,10 @@ export interface DailyCheck {
   selfie_url: null | string
   vehicle_photo_url: null | string
   driver_face_photo_url: null | string
+  // Удостоверение с онбординга + заявленный ИИН — для сверки лица и документа
+  // тех.поддержкой прямо на ежедневной проверке.
+  driver_id_document_url: null | string
+  driver_iin?: null | string
   vehicle_tech_passport_photo_url: null | string
   status: VerificationStatus
   rejection_reason: null | string
@@ -53,6 +57,9 @@ export interface FaceVerification {
   driver_phone: string
   face_photo_url: null | string
   id_document_url: null | string
+  // ИИН, заявленный водителем; бэкенд уже проверил контрольную сумму, фронт
+  // повторяет проверку для наглядного бейджа рядом с документом.
+  iin?: null | string
   created_at: string
 }
 

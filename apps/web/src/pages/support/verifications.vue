@@ -5,24 +5,28 @@ import WebPageShell from '~/components/app/WebPageShell.vue'
 import { CATEGORY_LABELS } from '~/constants/admin'
 import { useVerificationStore } from '~/stores/verification'
 import { formatDate } from '~/utils/format'
+import { validateIin } from '~/utils/iin'
 
 const verification = useVerificationStore()
 const tab = ref<'daily' | 'faces' | 'vehicles'>('vehicles')
 
-// Слоты фотоотчёта машины в порядке показа; первые 10 обязательны.
-const VEHICLE_PHOTO_SLOTS: Array<{ slot: string, label: string, required: boolean }> = [
-  { slot: 'exterior_front', label: 'Спереди', required: true },
-  { slot: 'exterior_back', label: 'Сзади', required: true },
-  { slot: 'exterior_left', label: 'Левый бок', required: true },
-  { slot: 'exterior_right', label: 'Правый бок', required: true },
-  { slot: 'interior_front', label: 'Передние сиденья', required: true },
-  { slot: 'interior_back', label: 'Задний ряд сидений', required: true },
-  { slot: 'dashboard', label: 'Панель приборов (с одометром)', required: true },
-  { slot: 'trunk', label: 'Багажник', required: true },
-  { slot: 'doc_registration_front', label: 'Техпаспорт (лицевая сторона)', required: true },
-  { slot: 'doc_registration_back', label: 'Техпаспорт (обратная сторона)', required: true },
-  { slot: 'vin', label: 'VIN-номер', required: false },
-  { slot: 'doc_insurance', label: 'Страховой полис', required: false },
+// Слоты фотоотчёта машины в порядке показа; первые 10 обязательны. group
+// делит их на блоки: 'car' — кузов/салон, 'doc' — документы (техпаспорт, VIN,
+// страховка).
+type PhotoGroup = 'car' | 'doc'
+const VEHICLE_PHOTO_SLOTS: Array<{ slot: string, label: string, required: boolean, group: PhotoGroup }> = [
+  { slot: 'exterior_front', label: 'Спереди', required: true, group: 'car' },
+  { slot: 'exterior_back', label: 'Сзади', required: true, group: 'car' },
+  { slot: 'exterior_left', label: 'Левый бок', required: true, group: 'car' },
+  { slot: 'exterior_right', label: 'Правый бок', required: true, group: 'car' },
+  { slot: 'interior_front', label: 'Передние сиденья', required: true, group: 'car' },
+  { slot: 'interior_back', label: 'Задний ряд сидений', required: true, group: 'car' },
+  { slot: 'dashboard', label: 'Панель приборов (с одометром)', required: true, group: 'car' },
+  { slot: 'trunk', label: 'Багажник', required: true, group: 'car' },
+  { slot: 'doc_registration_front', label: 'Техпаспорт (лицевая сторона)', required: true, group: 'doc' },
+  { slot: 'doc_registration_back', label: 'Техпаспорт (обратная сторона)', required: true, group: 'doc' },
+  { slot: 'vin', label: 'VIN-номер', required: false, group: 'doc' },
+  { slot: 'doc_insurance', label: 'Страховой полис', required: false, group: 'doc' },
 ]
 
 function categoryLabel(category: string) {
@@ -31,18 +35,50 @@ function categoryLabel(category: string) {
 
 function vehiclePhotoCards(vehicle: PendingVehicle) {
   const bySlot = new Map((vehicle.photos ?? []).map(p => [p.slot, p.photo_url]))
-  const cards: Array<{ slot: string, label: string, url: null | string }> = []
-  for (const { slot, label, required } of VEHICLE_PHOTO_SLOTS) {
+  const cards: Array<{ slot: string, label: string, url: null | string, group: PhotoGroup }> = []
+  for (const { slot, label, required, group } of VEHICLE_PHOTO_SLOTS) {
     const url = bySlot.get(slot) ?? null
     bySlot.delete(slot)
     // Необязательные слоты без фото не показываем, обязательные — как заглушку.
     if (url || required)
-      cards.push({ slot, label, url })
+      cards.push({ slot, label, url, group })
   }
+  // Нераспознанные слоты (на будущее) — в блок документов.
   for (const [slot, url] of bySlot)
-    cards.push({ slot, label: slot, url })
+    cards.push({ slot, label: slot, url, group: 'doc' })
   return cards
 }
+
+function carPhotoCards(vehicle: PendingVehicle) {
+  return vehiclePhotoCards(vehicle).filter(card => card.group === 'car')
+}
+
+function docPhotoCards(vehicle: PendingVehicle) {
+  return vehiclePhotoCards(vehicle).filter(card => card.group === 'doc')
+}
+
+// «Сначала заявка, потом фото»: карточки машин по умолчанию свёрнуты. Фото (и их
+// сетевые загрузки) появляются только когда поддержка раскрывает конкретную
+// заявку — раньше все фото всех машин грузились сразу.
+const openVehicles = reactive<Record<string, boolean>>({})
+function toggleVehicle(id: string) {
+  openVehicles[id] = !openVehicles[id]
+}
+
+function vehiclePhotoCount(vehicle: PendingVehicle) {
+  if (vehicle.photos?.length)
+    return vehicle.photos.length
+  let count = 0
+  if (vehicle.verification_photo_url)
+    count++
+  if (vehicle.tech_passport_photo_url)
+    count++
+  return count
+}
+
+// Ручной ввод ИИН с документа для водителей, не приложивших его при онбординге:
+// поддержка вбивает номер с фото и сразу видит, сходится ли контрольная сумма.
+const manualIin = reactive<Record<string, string>>({})
 
 definePage({
   meta: {
@@ -191,54 +227,99 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           </div>
         </div>
 
-        <div v-if="vehicle.photos?.length" class="grid grid-cols-2 mt-4 gap-3 lg:grid-cols-4 sm:grid-cols-3">
-          <figure v-for="card in vehiclePhotoCards(vehicle)" :key="card.slot">
-            <button v-if="card.url" class="block w-full" type="button" @click="openPhoto(card.url, card.label)">
-              <img
-                :alt="card.label"
-                class="h-32 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
-                :src="mediaUrl(card.url)"
-              >
-            </button>
-            <div v-else class="h-32 w-full flex items-center justify-center border border-white/15 rounded-2xl border-dashed bg-white/4 text-xs text-white/35 font-700">
-              нет фото
-            </div>
-            <figcaption class="mt-1 text-center text-xs font-700" :class="card.url ? 'text-white/50' : 'text-white/30'">
-              {{ card.label }}
-            </figcaption>
-          </figure>
-        </div>
+        <!-- «Сначала заявка»: фото свёрнуты, грузятся только при открытии. -->
+        <div class="mt-4">
+          <button
+            class="h-10 inline-flex items-center gap-2 border border-white/12 rounded-xl bg-white/6 px-4 text-sm font-900 transition hover:bg-white/12"
+            type="button"
+            @click="toggleVehicle(vehicle.id)"
+          >
+            <span class="text-5 text-cyan-200" :class="openVehicles[vehicle.id] ? 'i-mdi-chevron-up' : 'i-mdi-image-multiple-outline'" />
+            {{ openVehicles[vehicle.id] ? 'Свернуть фото' : `Открыть заявку · ${vehiclePhotoCount(vehicle)} фото` }}
+          </button>
 
-        <!-- Старые заявки без пофотового отчёта: одно фото машины + техпаспорт. -->
-        <div v-else-if="vehicle.verification_photo_url || vehicle.tech_passport_photo_url" class="grid mt-4 gap-3 sm:grid-cols-2">
-          <figure v-if="vehicle.verification_photo_url">
-            <button class="block w-full" type="button" @click="openPhoto(vehicle.verification_photo_url, `Фото ${vehicle.plate_number}`)">
-              <img
-                :alt="`Фото ${vehicle.plate_number}`"
-                class="h-44 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
-                :src="mediaUrl(vehicle.verification_photo_url)"
-              >
-            </button>
-            <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
-              Фото машины
-            </figcaption>
-          </figure>
-          <figure v-if="vehicle.tech_passport_photo_url">
-            <button class="block w-full" type="button" @click="openPhoto(vehicle.tech_passport_photo_url, 'Техпаспорт')">
-              <img
-                alt="Техпаспорт"
-                class="h-44 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
-                :src="mediaUrl(vehicle.tech_passport_photo_url)"
-              >
-            </button>
-            <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
-              Техпаспорт
-            </figcaption>
-          </figure>
+          <template v-if="openVehicles[vehicle.id]">
+            <!-- Пофотовый отчёт: машина и документы — раздельными блоками. -->
+            <template v-if="vehicle.photos?.length">
+              <div class="mt-4">
+                <p class="mb-2 text-xs text-white/42 font-900 uppercase">
+                  Фото машины
+                </p>
+                <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 sm:grid-cols-3">
+                  <figure v-for="card in carPhotoCards(vehicle)" :key="card.slot">
+                    <button v-if="card.url" class="block w-full" type="button" @click="openPhoto(card.url, card.label)">
+                      <img
+                        :alt="card.label"
+                        class="h-32 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
+                        :src="mediaUrl(card.url)"
+                      >
+                    </button>
+                    <div v-else class="h-32 w-full flex items-center justify-center border border-white/15 rounded-2xl border-dashed bg-white/4 text-xs text-white/35 font-700">
+                      нет фото
+                    </div>
+                    <figcaption class="mt-1 text-center text-xs font-700" :class="card.url ? 'text-white/50' : 'text-white/30'">
+                      {{ card.label }}
+                    </figcaption>
+                  </figure>
+                </div>
+              </div>
+
+              <div class="mt-5">
+                <p class="mb-2 text-xs text-white/42 font-900 uppercase">
+                  Документы
+                </p>
+                <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 sm:grid-cols-3">
+                  <figure v-for="card in docPhotoCards(vehicle)" :key="card.slot">
+                    <button v-if="card.url" class="block w-full" type="button" @click="openPhoto(card.url, card.label)">
+                      <img
+                        :alt="card.label"
+                        class="h-32 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
+                        :src="mediaUrl(card.url)"
+                      >
+                    </button>
+                    <div v-else class="h-32 w-full flex items-center justify-center border border-white/15 rounded-2xl border-dashed bg-white/4 text-xs text-white/35 font-700">
+                      нет фото
+                    </div>
+                    <figcaption class="mt-1 text-center text-xs font-700" :class="card.url ? 'text-white/50' : 'text-white/30'">
+                      {{ card.label }}
+                    </figcaption>
+                  </figure>
+                </div>
+              </div>
+            </template>
+
+            <!-- Старые заявки без пофотового отчёта: одно фото машины + техпаспорт. -->
+            <div v-else-if="vehicle.verification_photo_url || vehicle.tech_passport_photo_url" class="grid mt-4 gap-3 sm:grid-cols-2">
+              <figure v-if="vehicle.verification_photo_url">
+                <button class="block w-full" type="button" @click="openPhoto(vehicle.verification_photo_url, `Фото ${vehicle.plate_number}`)">
+                  <img
+                    :alt="`Фото ${vehicle.plate_number}`"
+                    class="h-44 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
+                    :src="mediaUrl(vehicle.verification_photo_url)"
+                  >
+                </button>
+                <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
+                  Фото машины
+                </figcaption>
+              </figure>
+              <figure v-if="vehicle.tech_passport_photo_url">
+                <button class="block w-full" type="button" @click="openPhoto(vehicle.tech_passport_photo_url, 'Техпаспорт')">
+                  <img
+                    alt="Техпаспорт"
+                    class="h-44 w-full rounded-2xl bg-black/20 object-cover transition hover:opacity-80"
+                    :src="mediaUrl(vehicle.tech_passport_photo_url)"
+                  >
+                </button>
+                <figcaption class="mt-1 text-center text-xs text-white/50 font-700">
+                  Техпаспорт
+                </figcaption>
+              </figure>
+            </div>
+            <p v-else class="mt-4 text-xs text-amber-300/80 font-700">
+              Водитель не приложил фото машины.
+            </p>
+          </template>
         </div>
-        <p v-else class="mt-4 text-xs text-amber-300/80 font-700">
-          Водитель не приложил фото машины.
-        </p>
       </article>
     </div>
 
@@ -312,6 +393,47 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </figcaption>
           </figure>
         </div>
+
+        <!-- ИИН: бейдж контрольной суммы для сверки с документом. Если водитель
+             не приложил номер — поддержка вбивает его с фото вручную. -->
+        <div class="mt-3 border border-white/8 rounded-2xl bg-white/4 p-3">
+          <template v-if="face.iin">
+            <p class="text-xs text-white/42 font-900 uppercase">
+              ИИН (с онбординга)
+            </p>
+            <p class="mt-1 flex flex-wrap items-center gap-2">
+              <span class="text-base font-950 tracking-wide">{{ face.iin }}</span>
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-900"
+                :class="validateIin(face.iin).valid ? 'bg-emerald-500/12 text-emerald-300' : 'bg-red-500/12 text-red-300'"
+              >
+                <span class="text-4" :class="validateIin(face.iin).valid ? 'i-mdi-check-decagram' : 'i-mdi-alert-decagram'" />
+                {{ validateIin(face.iin).valid ? 'Контрольная сумма сходится' : 'Контрольная сумма НЕ сходится' }}
+              </span>
+            </p>
+          </template>
+          <template v-else>
+            <label class="grid max-w-xs gap-1.5">
+              <span class="text-xs text-white/42 font-900 uppercase">ИИН с документа (проверить)</span>
+              <input
+                v-model="manualIin[face.driver_id]"
+                class="h-10 border border-white/10 rounded-xl bg-white/8 px-3 text-sm outline-none focus:border-cyan-300/40"
+                inputmode="numeric"
+                maxlength="12"
+                placeholder="12 цифр с удостоверения"
+              >
+            </label>
+            <p v-if="manualIin[face.driver_id]?.length === 12" class="mt-1.5">
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-900"
+                :class="validateIin(manualIin[face.driver_id]).valid ? 'bg-emerald-500/12 text-emerald-300' : 'bg-red-500/12 text-red-300'"
+              >
+                <span class="text-4" :class="validateIin(manualIin[face.driver_id]).valid ? 'i-mdi-check-decagram' : 'i-mdi-alert-decagram'" />
+                {{ validateIin(manualIin[face.driver_id]).valid ? 'Контрольная сумма сходится' : 'Контрольная сумма НЕ сходится' }}
+              </span>
+            </p>
+          </template>
+        </div>
       </article>
     </div>
 
@@ -368,11 +490,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           </div>
         </div>
 
-        <div class="grid mt-4 gap-3 lg:grid-cols-4 sm:grid-cols-2">
+        <div class="grid grid-cols-2 mt-4 gap-3 lg:grid-cols-5 sm:grid-cols-3">
           <figure
             v-for="photo in photos([
               { label: 'Селфи сейчас', url: check.selfie_url },
               { label: 'Эталон лица', url: check.driver_face_photo_url },
+              { label: 'Удостоверение', url: check.driver_id_document_url },
               { label: 'Фото машины', url: check.vehicle_photo_url },
               { label: 'Техпаспорт', url: check.vehicle_tech_passport_photo_url },
             ])"
@@ -390,6 +513,20 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </figcaption>
           </figure>
         </div>
+
+        <!-- ИИН с онбординга + бейдж контрольной суммы: поддержке удобно сверять
+             лицо на селфи с удостоверением и номером. -->
+        <p v-if="check.driver_iin" class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <span class="text-xs text-white/42 font-900 uppercase">ИИН:</span>
+          <span class="font-950 tracking-wide">{{ check.driver_iin }}</span>
+          <span
+            class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-900"
+            :class="validateIin(check.driver_iin).valid ? 'bg-emerald-500/12 text-emerald-300' : 'bg-red-500/12 text-red-300'"
+          >
+            <span class="text-4" :class="validateIin(check.driver_iin).valid ? 'i-mdi-check-decagram' : 'i-mdi-alert-decagram'" />
+            {{ validateIin(check.driver_iin).valid ? 'Сумма сходится' : 'Сумма НЕ сходится' }}
+          </span>
+        </p>
       </article>
     </div>
 

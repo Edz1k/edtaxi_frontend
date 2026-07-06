@@ -34,6 +34,9 @@ const createForm = reactive({
   name: 'Гараж платформы',
   description: '',
   phone: '',
+  // Комиссия парка в процентах. У гаража обычно 0 (водитель платит только
+  // процент платформы), но задаём настраиваемой прямо при создании.
+  commissionPercent: 0,
 })
 
 const isEditOpen = ref(false)
@@ -54,6 +57,18 @@ const commissionLabel = computed(() => {
   return `${(rate * 100).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`
 })
 
+// Сводная статистика по водителям гаража — считаем на клиенте из списка,
+// без отдельного эндпоинта: всего / онлайн сейчас / суммарные поездки / рейтинг.
+const stats = computed(() => {
+  const drivers = garage.value?.drivers ?? []
+  const online = drivers.filter(driver => driver.is_online).length
+  const totalTrips = drivers.reduce((sum, driver) => sum + (driver.total_trips ?? 0), 0)
+  const avgRating = drivers.length
+    ? drivers.reduce((sum, driver) => sum + (driver.rating ?? 0), 0) / drivers.length
+    : 0
+  return { count: drivers.length, online, totalTrips, avgRating }
+})
+
 onMounted(load)
 
 async function load() {
@@ -63,7 +78,10 @@ async function load() {
     notCreated.value = false
   }
   catch (error) {
-    if (error instanceof ApiError && error.status === 404) {
+    // 404 — новый бэкенд («platform garage is not created yet»); 503 — старый
+    // бэкенд до редеплоя («platform partner park is not configured»). В обоих
+    // случаях гаража ещё нет — показываем форму создания, а не «ошибку сервиса».
+    if (error instanceof ApiError && (error.status === 404 || error.status === 503)) {
       garage.value = null
       notCreated.value = true
     }
@@ -81,11 +99,15 @@ async function create() {
     return
   isMutating.value = true
   try {
-    await createPlatformGarage({
+    const park = await createPlatformGarage({
       name: createForm.name.trim(),
       description: createForm.description.trim() || undefined,
       phone: createForm.phone.trim() || undefined,
     })
+    // Эндпоинт создания держит комиссию 0; если задали ненулевую — доставляем
+    // её отдельным PUT.
+    if (createForm.commissionPercent > 0)
+      await updateAdminPark(park.id, { commission_rate: createForm.commissionPercent / 100 })
     toast.success('Гараж создан', 'Заявки водителей «Стать партнёром платформы» будут падать сюда.')
     await load()
   }
@@ -307,6 +329,18 @@ async function resolveRequest(request: ParkJoinRequest, approved: boolean) {
             type="tel"
           >
         </label>
+        <label class="grid gap-1.5">
+          <span class="text-xs text-white/42 font-900 uppercase">Комиссия парка, % (обычно 0)</span>
+          <input
+            v-model.number="createForm.commissionPercent"
+            class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40"
+            max="100"
+            min="0"
+            step="0.1"
+            type="number"
+          >
+          <span class="text-xs text-white/40 leading-5">Смысл гаража — нулевая парковая комиссия: водитель платит только процент платформы. Оставьте 0, если не уверены — потом можно изменить.</span>
+        </label>
         <button
           :disabled="isMutating || !createForm.name.trim()"
           class="h-11 w-fit rounded-2xl bg-cyan-300 px-6 text-sm text-#06142f font-900 transition hover:bg-cyan-200 disabled:opacity-60"
@@ -365,6 +399,43 @@ async function resolveRequest(request: ParkJoinRequest, approved: boolean) {
             <span class="i-mdi-pencil-outline text-4.5 text-cyan-200" />
             Редактировать
           </button>
+        </div>
+      </section>
+
+      <!-- Статистика по водителям гаража -->
+      <section class="grid grid-cols-2 mt-6 gap-3 lg:grid-cols-4">
+        <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+          <p class="text-xs text-white/42 font-900 uppercase">
+            Водители
+          </p>
+          <p class="mt-1 text-3xl font-950">
+            {{ stats.count }}
+          </p>
+        </div>
+        <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+          <p class="text-xs text-white/42 font-900 uppercase">
+            Онлайн сейчас
+          </p>
+          <p class="mt-1 text-3xl text-emerald-300 font-950">
+            {{ stats.online }}
+          </p>
+        </div>
+        <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+          <p class="text-xs text-white/42 font-900 uppercase">
+            Поездок всего
+          </p>
+          <p class="mt-1 text-3xl font-950">
+            {{ stats.totalTrips.toLocaleString('ru-RU') }}
+          </p>
+        </div>
+        <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
+          <p class="text-xs text-white/42 font-900 uppercase">
+            Средний рейтинг
+          </p>
+          <p class="mt-1 inline-flex items-center gap-1.5 text-3xl font-950">
+            <span class="i-mdi-star text-6 text-amber-300" />
+            {{ stats.avgRating ? stats.avgRating.toFixed(2) : '—' }}
+          </p>
         </div>
       </section>
 
