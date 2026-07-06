@@ -2,6 +2,9 @@ import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import { searchPlaces } from '@edtaxi/shared/api/geocoding'
 
 interface UseAddressSearchOptions {
+  // near — от какой точки бэкенду искать и мерить расстояния (обычно точка А
+  // пассажира). Без неё саджест теряет гео-приоритет своего города.
+  near?: Ref<GeoPlace | null>
   query: Ref<string>
   selectedPlace: Ref<GeoPlace | null>
 }
@@ -29,7 +32,8 @@ export function useAddressSearch(options: UseAddressSearchOptions) {
     isSearching.value = true
 
     try {
-      const places = await searchPlaces(query)
+      const near = options.near?.value
+      const places = await searchPlaces(query, near ? { lat: near.lat, lng: near.lng } : undefined)
 
       if (lastQuery.value === query)
         suggestions.value = places
