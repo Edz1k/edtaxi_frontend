@@ -2,6 +2,7 @@
 import type { VehicleCategory } from '~/types/trips'
 import { formatFare, PAYMENT_META, PAYMENT_ORDER, TARIFF_META, TARIFF_ORDER } from '~/constants/tariffs'
 import { useTripsStore } from '~/stores/trips'
+import { useWalletStore } from '~/stores/wallet'
 
 defineProps<{
   primaryText: string
@@ -14,6 +15,19 @@ const emit = defineEmits<{
 }>()
 
 const trips = useTripsStore()
+const wallet = useWalletStore()
+
+// Есть ли привязанная карта — для подсказки при выборе оплаты картой.
+// Заказ не блокируем: бэкенд при отсутствии карты сам откатится на
+// баланс кошелька / наличные при завершении поездки.
+onMounted(() => {
+  if (!wallet.isCardLoaded)
+    wallet.loadCard()
+})
+
+const showBindCardHint = computed(() =>
+  trips.paymentMethod === 'card' && wallet.isCardLoaded && !wallet.card,
+)
 
 // Тарифы в каноничном порядке (стор наполняет по мере оценки).
 const tariffs = computed(() =>
@@ -106,7 +120,7 @@ function isSelected(category: VehicleCategory) {
       </div>
     </div>
 
-    <!-- Способ оплаты (пока UI-only) -->
+    <!-- Способ оплаты -->
     <div class="flex items-center gap-1 rounded-[1.65rem] bg-white/5 p-1.5">
       <span class="shrink-0 pl-2 pr-1 text-[11px] text-slate-400 font-800 uppercase">
         Оплата
@@ -124,6 +138,19 @@ function isSelected(category: VehicleCategory) {
         {{ PAYMENT_META[method].label }}
       </button>
     </div>
+
+    <!-- Оплата картой выбрана, но карта не привязана -->
+    <RouterLink
+      v-if="showBindCardHint"
+      class="flex items-start gap-2 rounded-2xl bg-main-500/12 px-3 py-2.5 transition active:scale-[0.99]"
+      to="/wallet"
+    >
+      <span class="i-mdi-credit-card-plus-outline mt-0.5 shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+      <p class="text-[12px] text-main-100 leading-4">
+        Карта ещё не привязана — привяжите её в «Кошельке», и поездка спишется с карты автоматически.
+      </p>
+      <span class="i-mdi-chevron-right mt-0.5 shrink-0 text-4.5 text-main-300/70" aria-hidden="true" />
+    </RouterLink>
 
     <!-- Заказать -->
     <button

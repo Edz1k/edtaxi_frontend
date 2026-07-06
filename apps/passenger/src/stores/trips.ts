@@ -389,6 +389,8 @@ export const useTripsStore = defineStore('trips', () => {
         // Legacy-поле для старого сервера: самый дешёвый из выбранных тарифов.
         category: selectedCategory.value,
         categories: [...selectedCategories.value],
+        // card — списание с привязанной карты при завершении поездки.
+        payment_method: paymentMethod.value,
       }))
       startSearchTimer()
       startActiveTripPolling()
