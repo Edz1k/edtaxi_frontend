@@ -9,11 +9,11 @@ interface UseRoutePlannerOptions {
   pickupPlace: Ref<GeoPlace | null>
 }
 
-async function resolvePlace(value: string, selectedPlace: GeoPlace | null) {
+async function resolvePlace(value: string, selectedPlace: GeoPlace | null, near?: GeoPlace | null) {
   if (selectedPlace)
     return selectedPlace
 
-  const suggestions = await searchPlaces(value)
+  const suggestions = await searchPlaces(value, near ? { lat: near.lat, lng: near.lng } : undefined)
   const place = suggestions[0]
 
   if (!place)
@@ -30,7 +30,9 @@ export function useRoutePlanner(options: UseRoutePlannerOptions) {
 
     try {
       const resolvedPickup = await resolvePlace(options.pickup.value, options.pickupPlace.value)
-      const resolvedDestination = await resolvePlace(options.destination.value, options.destinationPlace.value)
+      // Куда — резолвим относительно точки А: адрес без города трактуем как
+      // адрес в городе посадки, а не в одноимённой улице за сотни километров.
+      const resolvedDestination = await resolvePlace(options.destination.value, options.destinationPlace.value, resolvedPickup)
       const route = await getDrivingRoute(resolvedPickup, resolvedDestination)
 
       options.pickupPlace.value = resolvedPickup

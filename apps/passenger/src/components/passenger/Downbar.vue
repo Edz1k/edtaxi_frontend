@@ -29,6 +29,7 @@ const {
   selectPlace: selectPickup,
   suggestions: pickupSuggestions,
 } = useAddressSearch({
+  near: pickupPlace,
   query: pickup,
   selectedPlace: pickupPlace,
 })
@@ -40,6 +41,8 @@ const {
   selectPlace: selectDestination,
   suggestions: destinationSuggestions,
 } = useAddressSearch({
+  // Расстояния и приоритет города меряем от точки А.
+  near: pickupPlace,
   query: destination,
   selectedPlace: destinationPlace,
 })

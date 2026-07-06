@@ -30,6 +30,7 @@ describe('searchPlaces', () => {
     expect(places).toEqual([
       {
         address: 'Аэропорт, Алматы',
+        distanceM: null,
         id: '43.35:77.04:0',
         lat: 43.35,
         lng: 77.04,
@@ -37,6 +38,20 @@ describe('searchPlaces', () => {
         subtitle: 'Алматы',
       },
     ])
+  })
+
+  it('passes the near point to the backend and maps distance_m', async () => {
+    apiRequestMock.mockResolvedValue([
+      { title: 'мкр Мирас, 62а', subtitle: 'Алматы', lat: 43.186, lng: 76.877, distance_m: 973_000 },
+    ])
+
+    const places = await searchPlaces('Мирас 62', { lat: 51.1168, lng: 71.4163 })
+
+    expect(apiRequestMock).toHaveBeenCalledWith('/geocoding/suggest', {
+      method: 'POST',
+      body: { query: 'Мирас 62', lat: 51.1168, lng: 71.4163 },
+    })
+    expect(places[0].distanceM).toBe(973_000)
   })
 
   it('accepts the wrapped { results } response shape', async () => {
