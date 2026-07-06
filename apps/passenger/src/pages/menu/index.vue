@@ -7,8 +7,9 @@ const router = useRouter()
 const auth = useAuthStore()
 const passenger = usePassengerStore()
 
+// «Кабинет» намеренно не дублируем пунктом меню — в профиль ведёт тап по имени
+// в шапке выше.
 const menuItems = [
-  { label: 'Кабинет', description: 'Профиль и рейтинг', icon: 'i-mdi-account-circle-outline', to: '/menu/profile' },
   { label: 'История', description: 'Поездки и оценки', icon: 'i-mdi-clock-outline', to: '/menu/history' },
   { label: 'Избранные адреса', description: 'Сохранённые места', icon: 'i-mdi-heart-outline', to: '/menu/places' },
   { label: 'Безопасность', description: 'Вызов 112 и отправка маршрута', icon: 'i-mdi-shield-check-outline', to: '/menu/safety' },

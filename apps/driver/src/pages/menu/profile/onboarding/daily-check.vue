@@ -34,6 +34,17 @@ const canSubmit = computed(() =>
   hasVehicle.value && selfieFile.value !== null && vehiclePhotoFile.value !== null,
 )
 
+// Статус сегодняшней проверки: если уже отправлена (пройдена или на проверке) —
+// показываем статус, а не форму. daily_check_valid покрывает approved+pending.
+const latestDaily = computed(() => driver.verification?.latest_daily_check ?? null)
+const dailyValid = computed(() => Boolean(driver.verification?.daily_check_valid))
+const dailyPending = computed(() => dailyValid.value && latestDaily.value?.status === 'pending')
+const dailyRejectionReason = computed(() =>
+  !dailyValid.value && latestDaily.value?.status === 'rejected'
+    ? latestDaily.value?.rejection_reason ?? ''
+    : '',
+)
+
 onMounted(async () => {
   if (!driver.verification)
     await driver.loadVerification().catch(() => {})
@@ -116,7 +127,48 @@ async function submit() {
         </RouterLink>
       </div>
 
+      <!-- Уже отправлено сегодня — пройдено или на проверке: статус, а не форма -->
+      <template v-else-if="dailyValid">
+        <div
+          class="mt-8 rounded-3xl p-5"
+          :class="dailyPending ? 'bg-amber-500/10' : 'bg-emerald-500/10'"
+        >
+          <div class="flex items-center gap-4">
+            <span
+              class="h-14 w-14 flex shrink-0 items-center justify-center rounded-2xl"
+              :class="dailyPending ? 'bg-amber-500/16 text-amber-300' : 'bg-emerald-500/16 text-emerald-300'"
+            >
+              <span :class="dailyPending ? 'i-mdi-shield-sync' : 'i-mdi-shield-check'" class="text-8" />
+            </span>
+            <div class="min-w-0">
+              <h2 class="text-xl font-950" :class="dailyPending ? 'text-amber-100' : 'text-emerald-100'">
+                {{ dailyPending ? 'Проверка на проверке' : 'Проверка пройдена' }}
+              </h2>
+              <p class="mt-0.5 text-sm leading-5" :class="dailyPending ? 'text-amber-300/85' : 'text-emerald-300/85'">
+                {{ dailyPending
+                  ? 'Мы проверяем ваше селфи и фото машины. Обычно это занимает недолго.'
+                  : 'Ежедневный фотоконтроль пройден — можно на линию. Следующий перед завтрашней сменой.' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <RouterLink
+          to="/menu/profile/onboarding"
+          class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-base text-white font-800 transition active:scale-[0.98]"
+        >
+          <span class="i-mdi-format-list-checks text-5" />
+          К списку проверок
+        </RouterLink>
+      </template>
+
       <div v-else class="mt-8 space-y-6">
+        <!-- Причина отказа поддержки — что исправить перед повторной отправкой -->
+        <div v-if="dailyRejectionReason" class="flex items-start gap-3 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-300 leading-5">
+          <span class="i-mdi-alert-circle shrink-0 text-5 text-red-400" />
+          <span>{{ dailyRejectionReason }}</span>
+        </div>
+
         <!-- Селфи -->
         <div>
           <p class="mb-3 text-sm text-slate-300 font-700">

@@ -162,6 +162,44 @@ const items = computed<OnboardingItem[]>(() => {
   ]
 })
 
+// --- Общий статус для экрана-героя сверху -------------------------------
+// approved — всё пройдено; action — что-то не загружено/отклонено (нужно
+// действие водителя); pending — всё загружено, ждём проверки поддержкой.
+const overall = computed<'action' | 'approved' | 'pending'>(() => {
+  const list = items.value
+  if (list.every(i => i.status === 'ok'))
+    return 'approved'
+  if (list.some(i => i.status === 'rejected' || i.status === 'missing'))
+    return 'action'
+  return 'pending'
+})
+
+const hero = computed(() => {
+  if (overall.value === 'approved') {
+    return {
+      icon: 'i-mdi-shield-check',
+      text: 'Все проверки успешно пройдены — можно выходить на линию.',
+      title: 'Верификация пройдена',
+      tone: 'emerald' as const,
+    }
+  }
+  return {
+    icon: 'i-mdi-shield-sync',
+    text: 'Мы проверяем загруженные данные. Обычно это занимает недолго — сообщим о результате.',
+    title: 'Данные на проверке',
+    tone: 'amber' as const,
+  }
+})
+
+// «Следующая проверка» — про ежедневный фотоконтроль (он повторяется каждую смену).
+const nextCheckLine = computed(() => {
+  if (driver.verification?.daily_check_valid)
+    return 'Ежедневный фотоконтроль пройден. Следующий — перед завтрашней сменой.'
+  if (dailyStatus.value === 'pending')
+    return 'Ежедневный фотоконтроль на проверке.'
+  return 'Проходите ежедневный фотоконтроль перед каждой сменой.'
+})
+
 function statusDescription(status: ItemStatus, fallback: string) {
   if (status === 'ok')
     return 'Пройдено'
@@ -240,7 +278,9 @@ function blockIcon(status: ItemStatus) {
           Фотоконтроль
         </h1>
         <p class="mt-2 text-sm text-slate-400 leading-5">
-          Пройдите все проверки, чтобы выйти на линию. Если проверка не пройдена — внутри написано, что исправить.
+          {{ overall === 'action'
+            ? 'Пройдите все проверки, чтобы выйти на линию. Если проверка не пройдена — внутри написано, что исправить.'
+            : 'Статусы ваших проверок — ниже.' }}
         </p>
       </header>
 
@@ -249,56 +289,86 @@ function blockIcon(status: ItemStatus) {
         Загружаем статус...
       </div>
 
-      <nav v-else class="mt-8 space-y-3">
-        <RouterLink
-          v-for="item in items"
-          :key="item.label"
-          :to="item.to"
-          class="block rounded-3xl px-4 py-4 text-white transition active:scale-[0.98]"
-          :class="itemBg(item.status)"
+      <template v-else>
+        <!-- Экран-статус: показываем, когда всё загружено (на проверке) или пройдено -->
+        <div
+          v-if="overall !== 'action'"
+          class="mt-6 rounded-3xl p-5"
+          :class="hero.tone === 'emerald' ? 'bg-emerald-500/10' : 'bg-amber-500/10'"
         >
-          <span class="flex items-center gap-4">
+          <div class="flex items-center gap-4">
             <span
-              class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl"
-              :class="iconBg(item.status)"
+              class="h-14 w-14 flex shrink-0 items-center justify-center rounded-2xl"
+              :class="hero.tone === 'emerald' ? 'bg-emerald-500/16 text-emerald-300' : 'bg-amber-500/16 text-amber-300'"
             >
-              <span :class="item.icon" class="text-7" />
+              <span :class="hero.icon" class="text-8" aria-hidden="true" />
             </span>
+            <div class="min-w-0">
+              <h2 class="text-xl font-950" :class="hero.tone === 'emerald' ? 'text-emerald-100' : 'text-amber-100'">
+                {{ hero.title }}
+              </h2>
+              <p class="mt-0.5 text-sm leading-5" :class="hero.tone === 'emerald' ? 'text-emerald-300/85' : 'text-amber-300/85'">
+                {{ hero.text }}
+              </p>
+            </div>
+          </div>
+          <p class="mt-4 flex items-center gap-2 rounded-2xl bg-black/20 px-3.5 py-2.5 text-xs text-slate-300 font-700 leading-5">
+            <span class="i-mdi-calendar-clock shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+            {{ nextCheckLine }}
+          </p>
+        </div>
 
-            <span class="min-w-0 flex-1">
-              <span class="block text-lg font-900">
-                {{ item.label }}
-              </span>
-              <span class="mt-0.5 block truncate text-xs font-600" :class="statusColor(item.status)">
-                {{ item.description }}
-              </span>
-            </span>
-
-            <span class="text-7" :class="[statusIcon(item.status), statusColor(item.status)]" />
-          </span>
-
-          <!-- Пер-блочные вердикты поддержки: видно, какой именно блок не прошёл -->
-          <span v-if="item.blocks" class="mt-3 flex flex-wrap gap-1.5">
-            <span
-              v-for="block in item.blocks"
-              :key="block.label"
-              class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-800"
-              :class="blockBadge(block.status)"
-            >
-              <span :class="blockIcon(block.status)" class="text-3.5" />
-              {{ block.label }}
-            </span>
-          </span>
-
-          <!-- Причина отказа от поддержки -->
-          <span
-            v-if="item.reason"
-            class="mt-2 block rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-300 leading-5"
+        <nav class="mt-6 space-y-3">
+          <RouterLink
+            v-for="item in items"
+            :key="item.label"
+            :to="item.to"
+            class="block rounded-3xl px-4 py-4 text-white transition active:scale-[0.98]"
+            :class="itemBg(item.status)"
           >
-            {{ item.reason }}
-          </span>
-        </RouterLink>
-      </nav>
+            <span class="flex items-center gap-4">
+              <span
+                class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl"
+                :class="iconBg(item.status)"
+              >
+                <span :class="item.icon" class="text-7" />
+              </span>
+
+              <span class="min-w-0 flex-1">
+                <span class="block text-lg font-900">
+                  {{ item.label }}
+                </span>
+                <span class="mt-0.5 block truncate text-xs font-600" :class="statusColor(item.status)">
+                  {{ item.description }}
+                </span>
+              </span>
+
+              <span class="text-7" :class="[statusIcon(item.status), statusColor(item.status)]" />
+            </span>
+
+            <!-- Пер-блочные вердикты поддержки: видно, какой именно блок не прошёл -->
+            <span v-if="item.blocks" class="mt-3 flex flex-wrap gap-1.5">
+              <span
+                v-for="block in item.blocks"
+                :key="block.label"
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-800"
+                :class="blockBadge(block.status)"
+              >
+                <span :class="blockIcon(block.status)" class="text-3.5" />
+                {{ block.label }}
+              </span>
+            </span>
+
+            <!-- Причина отказа от поддержки -->
+            <span
+              v-if="item.reason"
+              class="mt-2 block rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-300 leading-5"
+            >
+              {{ item.reason }}
+            </span>
+          </RouterLink>
+        </nav>
+      </template>
     </section>
   </main>
 </template>
