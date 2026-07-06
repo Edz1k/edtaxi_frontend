@@ -37,6 +37,7 @@ const faceAvatar = computed(() => {
 
 // Верификация перенесена в личный кабинет (/menu/profile) — здесь её больше нет.
 const menuItems = computed(() => [
+  { label: 'Акции и бонусы', description: 'Все акции, бонусы и рефералка', icon: 'i-mdi-gift-outline', to: '/bonus', badge: false },
   { label: 'Автомобиль', description: 'Данные машины и тариф', icon: 'i-mdi-car-info', to: '/menu/vehicle', badge: false },
   { label: 'История поездок', description: 'Ваши заказы', icon: 'i-mdi-history', to: '/menu/history', badge: false },
   { label: 'Таксопарк', description: 'Вступление, код приглашения, партнёрство', icon: 'i-mdi-office-building', to: '/menu/parks', badge: false },

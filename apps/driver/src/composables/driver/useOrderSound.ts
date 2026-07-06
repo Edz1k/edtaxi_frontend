@@ -37,6 +37,12 @@ export function useOrderSound() {
     if (unlocked)
       return
     const el = ensureAudio()
+    // Мелодия уже легитимно играет (оффер на экране, жест её и разблокировал) —
+    // не глушим её прогревочным muted play→pause.
+    if (!el.paused) {
+      unlocked = true
+      return
+    }
     el.muted = true
     el.play()
       .then(() => {
@@ -75,6 +81,16 @@ export function useOrderSound() {
       if (offer)
         play()
       else
+        stop()
+    },
+  )
+
+  // Страховка: с началом активной поездки мелодии быть не должно, каким бы
+  // путём ни закрылся оффер (accept, restore после перезагрузки, гонка WS).
+  watch(
+    () => driver.hasActiveTrip,
+    (active) => {
+      if (active)
         stop()
     },
   )

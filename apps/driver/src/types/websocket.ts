@@ -37,6 +37,15 @@ export interface DriverTripOfferWireMessage {
   type: 'trip_offer'
 }
 
+// Оффер истёк на сервере (водитель не ответил за timeout_sec): модалку заказа
+// надо закрыть и остановить мелодию — иначе они висят до бесконечности.
+export interface TripOfferExpiredWireMessage {
+  data: {
+    trip_id: string
+  }
+  type: 'trip_offer_expired'
+}
+
 export interface TripStatusWireMessage {
   data: {
     status: TripStatus
@@ -83,7 +92,7 @@ export interface TripChatMessageWireMessage {
   type: 'trip_chat_message'
 }
 
-export type DriverWebSocketMessage = ChatMessageWireMessage | DriverTripOfferWireMessage | ParkChatMessageWireMessage | TripChatMessageWireMessage | TripStatusWireMessage
+export type DriverWebSocketMessage = ChatMessageWireMessage | DriverTripOfferWireMessage | ParkChatMessageWireMessage | TripChatMessageWireMessage | TripOfferExpiredWireMessage | TripStatusWireMessage
 
 export interface PassengerDriverLocationWireMessage {
   data: PassengerDriverLocation
