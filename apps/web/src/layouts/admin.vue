@@ -12,37 +12,37 @@ watch(() => route.path, () => {
 </script>
 
 <template>
-  <div class="min-h-screen overflow-hidden bg-#06142f text-white">
+  <div class="relative min-h-screen bg-#06142f text-white">
     <!-- Фон: мягкие блики + сетка (единый визуальный язык с кабинетом) -->
-    <div class="pointer-events-none fixed inset-0">
+    <div class="pointer-events-none fixed inset-0 overflow-hidden">
       <div class="absolute left-[-14%] top-[-12%] h-80 w-80 rounded-full bg-cyan-300/14 blur-3xl" />
       <div class="absolute right-[-14%] top-40 h-96 w-96 rounded-full bg-blue-500/14 blur-3xl" />
       <div class="bg-size-[64px_64px] absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px)] opacity-10" />
     </div>
 
-    <div class="relative mx-auto max-w-[1600px] flex gap-5 px-4 py-4 lg:px-6 lg:py-6">
-      <!-- Десктоп: постоянный сайдбар -->
-      <aside class="hidden w-72 shrink-0 lg:block">
-        <div class="sticky top-6 h-[calc(100vh-3rem)]">
-          <AdminSidebar />
-        </div>
-      </aside>
+    <!-- Десктоп: фиксированный сайдбар во всю высоту, с зазором сверху/снизу.
+         position: fixed (а не sticky) — не зависит от overflow предков, не уезжает
+         при скролле и не упирается в самый край экрана. -->
+    <aside class="fixed inset-y-6 left-6 z-40 hidden w-72 lg:block">
+      <AdminSidebar />
+    </aside>
 
-      <!-- Контент -->
-      <main class="min-w-0 flex-1">
-        <!-- Мобильная шапка с кнопкой меню -->
-        <div class="mb-4 flex items-center gap-3 border border-white/10 rounded-2xl bg-white/6 px-3 py-2.5 backdrop-blur-xl lg:hidden">
-          <button
-            aria-label="Открыть меню разделов"
-            class="h-10 w-10 flex shrink-0 items-center justify-center rounded-xl bg-white/8 text-white transition active:scale-95 hover:bg-white/14"
-            type="button"
-            @click="isDrawerOpen = true"
-          >
-            <span class="i-mdi-menu text-6" aria-hidden="true" />
-          </button>
-          <span class="text-base font-950">Админка</span>
-        </div>
+    <!-- Контент: сдвинут вправо под фикс-сайдбар; скроллится окном. -->
+    <div class="relative px-4 py-4 lg:py-6 lg:pl-[calc(18rem+3rem)] lg:pr-8">
+      <!-- Мобильная шапка с кнопкой меню -->
+      <div class="mb-4 flex items-center gap-3 border border-white/10 rounded-2xl bg-white/6 px-3 py-2.5 backdrop-blur-xl lg:hidden">
+        <button
+          aria-label="Открыть меню разделов"
+          class="h-10 w-10 flex shrink-0 items-center justify-center rounded-xl bg-white/8 text-white transition active:scale-95 hover:bg-white/14"
+          type="button"
+          @click="isDrawerOpen = true"
+        >
+          <span class="i-mdi-menu text-6" aria-hidden="true" />
+        </button>
+        <span class="text-base font-950">Админка</span>
+      </div>
 
+      <main class="mx-auto max-w-[1400px]">
         <RouterView />
       </main>
     </div>
