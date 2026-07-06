@@ -4,6 +4,7 @@ import type { GeoPlace } from '../../types/geocoding'
 import type { PassengerDriverLocation } from '../../types/websocket'
 import type { UserCoordinates } from './useUserLocation'
 import { ref, shallowRef } from 'vue'
+import { currentMapStyleUrl } from './useMapStyle'
 
 export type MapboxModule = typeof import('mapbox-gl')
 export const ALMATY_CENTER: [number, number] = [76.9286, 43.2389]
@@ -99,7 +100,8 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
       center: initialCenter ?? ALMATY_CENTER,
       container: mapContainer.value,
       pitch: 10,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      // Тема карты — выбранная пользователем (Схема/Спутник/Ночная).
+      style: currentMapStyleUrl(),
       zoom: 12,
     })
 
@@ -114,6 +116,13 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
 
     syncMapResize()
     initResizeTimer = window.setTimeout(resizeMap, 100)
+  }
+
+  // Смена темы карты на лету. DOM-маркеры (машина, пины, избранное) переживают
+  // setStyle, а кастомные слои (линия маршрута) сбрасываются — вызывающий
+  // перерисовывает их по событию map 'style.load'.
+  function setMapStyle(styleUrl: string) {
+    map.value?.setStyle(styleUrl)
   }
 
   function showCurrentPosition(clearRoute?: () => void) {
@@ -539,6 +548,7 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
     mapError,
     pickupMarker,
     resizeMap,
+    setMapStyle,
     showDestinationLocation,
     showDriverLocation,
     showFavoriteLocations,

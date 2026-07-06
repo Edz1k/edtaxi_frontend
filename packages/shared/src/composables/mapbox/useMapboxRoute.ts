@@ -202,8 +202,20 @@ export function useMapboxRoute(options: UseMapboxRouteOptions) {
     fitRoute()
   }
 
+  // restoreRoute перерисовывает линию и метки БЕЗ повторного fitBounds — для
+  // восстановления маршрута после смены темы карты (setStyle сбрасывает
+  // кастомные слои, а дёргать камеру при переключении темы не нужно).
+  function restoreRoute() {
+    if (!options.map.value || !options.hasRoute.value)
+      return
+
+    renderRoute()
+    renderRouteMarkers()
+  }
+
   return {
     clearRoute,
+    restoreRoute,
     showTripRoute,
   }
 }
