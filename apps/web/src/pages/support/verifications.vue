@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PendingVehicle } from '~/types/verification'
+import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import { mediaUrl } from '~/api/client'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { CATEGORY_LABELS } from '~/constants/admin'
@@ -266,6 +267,16 @@ onMounted(() => {
   verification.loadFaces().catch(() => {})
 })
 
+// Списки верификаций живые: новые заявки водителей и решения коллег
+// подтягиваются сами (возврат на вкладку + фоновый поллинг), без ручной
+// перезагрузки страницы. Заглушки «загрузка» показываются только при пустом
+// списке, чтобы фоновое обновление не мигало.
+useAutoRefresh(() => Promise.all([
+  verification.loadVehicles(),
+  verification.loadDailyChecks('pending'),
+  verification.loadFaces(),
+]), { intervalMs: 15_000 })
+
 // Лайтбокс: фото открывается в оверлее прямо на странице, а не переходом по
 // прямой ссылке /uploads/... (на домене веб-аппа такого пути нет — был 404).
 const previewPhoto = ref<null | { alt: string, url: string }>(null)
@@ -333,7 +344,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
     <!-- Vehicles: компактный список заявок, решение — внутри заявки -->
     <div v-if="tab === 'vehicles'" class="mt-5 space-y-3">
-      <div v-if="verification.isLoadingVehicles" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
+      <div v-if="verification.isLoadingVehicles && !verification.vehicles.length" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
         Загружаем заявки...
       </div>
       <div v-else-if="!verification.vehicles.length" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
@@ -388,7 +399,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
     <!-- Faces -->
     <div v-else-if="tab === 'faces'" class="mt-5 space-y-3">
-      <div v-if="verification.isLoadingFaces" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
+      <div v-if="verification.isLoadingFaces && !verification.faces.length" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
         Загружаем заявки...
       </div>
       <div v-else-if="!verification.faces.length" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
@@ -430,7 +441,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
     <!-- Daily checks -->
     <div v-else class="mt-5 space-y-3">
-      <div v-if="verification.isLoadingDailyChecks" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
+      <div v-if="verification.isLoadingDailyChecks && !verification.dailyChecks.length" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
         Загружаем проверки...
       </div>
       <div v-else-if="!verification.dailyChecks.length" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">

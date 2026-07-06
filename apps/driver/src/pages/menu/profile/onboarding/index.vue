@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { VerificationStatus } from '~/types/driver'
+import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
 const driver = useDriverOnboardingStore()
@@ -23,6 +24,10 @@ useHead({
 onMounted(async () => {
   await driver.loadVerification().catch(() => {})
 })
+
+// Статусы проверок обновляются сами (возврат на экран + фоновый поллинг):
+// одобрение поддержки видно сразу, без ручного перезахода на страницу.
+useAutoRefresh(() => driver.loadVerification(), { intervalMs: 12_000 })
 
 type ItemStatus = 'missing' | 'ok' | 'pending' | 'rejected'
 

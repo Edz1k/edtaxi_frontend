@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import PhotoEditorModal from '@edtaxi/shared/components/photo/PhotoEditorModal.vue'
+import PhotoSourceSheet from '@edtaxi/shared/components/photo/PhotoSourceSheet.vue'
+import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import AuthButton from '~/components/auth/AuthButton.vue'
 import FaceCaptureCamera from '~/components/verification/FaceCaptureCamera.vue'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
@@ -51,6 +54,13 @@ onMounted(async () => {
     await driver.loadVerification().catch(() => {})
 })
 
+// Пока дэйлик на проверке — вердикт поддержки подтягивается сам (поллинг +
+// возврат на экран), без ручного перезахода.
+useAutoRefresh(() => driver.loadVerification(), {
+  enabled: computed(() => dailyPending.value),
+  intervalMs: 12_000,
+})
+
 // Селфи снимается ТОЛЬКО живой камерой внутри приложения (овал + автоснимок по
 // детекции лица) — системный выбор файла открывал на Android галерею, что для
 // ежедневной проверки недопустимо. Системный input остаётся только фолбэком,
@@ -69,37 +79,44 @@ function onSelfieCaptured(file: File) {
 }
 
 // Камера недоступна (нет разрешения/устройства) — системная камера как фолбэк.
+// Селфи дэйлика намеренно НЕ ходит через галерею (антифрод): только живая
+// камера, а фолбэк — системная камера с capture.
 function onCameraFallback() {
-  pickFile('selfie')
-}
-
-function pickFile(type: 'selfie' | 'vehicle') {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  if (type === 'selfie')
-    input.capture = 'user'
-  else
-    input.capture = 'environment'
+  input.capture = 'user'
   input.onchange = (e) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (!file)
       return
-    const url = URL.createObjectURL(file)
-    if (type === 'selfie') {
-      if (selfiePreview.value)
-        URL.revokeObjectURL(selfiePreview.value)
-      selfieFile.value = file
-      selfiePreview.value = url
-    }
-    else {
-      if (vehiclePhotoPreview.value)
-        URL.revokeObjectURL(vehiclePhotoPreview.value)
-      vehiclePhotoFile.value = file
-      vehiclePhotoPreview.value = url
-    }
+    if (selfiePreview.value)
+      URL.revokeObjectURL(selfiePreview.value)
+    selfieFile.value = file
+    selfiePreview.value = URL.createObjectURL(file)
   }
   input.click()
+}
+
+// Фото машины: шторка «галерея или камера» → редактор (зум/поворот) → превью.
+const isVehicleSourceOpen = ref(false)
+const vehicleEditorFile = ref<File | null>(null)
+
+function pickVehiclePhoto() {
+  isVehicleSourceOpen.value = true
+}
+
+function onVehicleSourceSelected(file: File) {
+  isVehicleSourceOpen.value = false
+  vehicleEditorFile.value = file
+}
+
+function onVehicleEditorDone(file: File) {
+  vehicleEditorFile.value = null
+  if (vehiclePhotoPreview.value)
+    URL.revokeObjectURL(vehiclePhotoPreview.value)
+  vehiclePhotoFile.value = file
+  vehiclePhotoPreview.value = URL.createObjectURL(file)
 }
 
 onUnmounted(() => {
@@ -253,7 +270,7 @@ async function submit() {
             class="relative h-44 w-full overflow-hidden border-2 rounded-3xl border-dashed transition active:scale-[0.98]"
             :class="vehiclePhotoPreview ? 'border-transparent' : 'border-white/16 bg-white/4'"
             type="button"
-            @click="pickFile('vehicle')"
+            @click="pickVehiclePhoto"
           >
             <img
               v-if="vehiclePhotoPreview"
@@ -297,6 +314,22 @@ async function submit() {
       @capture="onSelfieCaptured"
       @close="isCameraOpen = false"
       @fallback="onCameraFallback"
+    />
+
+    <PhotoSourceSheet
+      camera-facing="environment"
+      :open="isVehicleSourceOpen"
+      title="Фото машины"
+      @close="isVehicleSourceOpen = false"
+      @selected="onVehicleSourceSelected"
+    />
+    <PhotoEditorModal
+      :aspect="4 / 3"
+      :file="vehicleEditorFile"
+      :output-size="1600"
+      title="Подгоните фото машины"
+      @cancel="vehicleEditorFile = null"
+      @done="onVehicleEditorDone"
     />
   </main>
 </template>

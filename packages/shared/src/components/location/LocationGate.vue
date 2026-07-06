@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useLocationAccess } from '../../composables/location/useLocationAccess'
+import { startLocationAutoDetect, useLocationAccess } from '../../composables/location/useLocationAccess'
 
 // Полноэкранная заглушка на входе: не пускает в основной экран, пока не выдан
-// доступ к геолокации. Как только доступ появляется (в т.ч. через фоновый
-// поллинг/watch на карте) — статус становится granted и заглушка исчезает.
+// доступ к геолокации. Заглушка исчезает сама, как только доступ появился:
+// автодетект (Permissions API + возврат в приложение + тихий поллинг) снимает
+// её без ручного повторного нажатия кнопки.
 const { isGranted, isRequesting, openSettings, requestAccess, status } = useLocationAccess()
 
 onMounted(() => {
+  startLocationAutoDetect()
   if (!isGranted.value)
     void requestAccess()
 })

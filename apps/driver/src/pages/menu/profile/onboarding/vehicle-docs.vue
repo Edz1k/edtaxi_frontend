@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import type { VehiclePhotoSlot } from '~/types/driver'
+import PhotoEditorModal from '@edtaxi/shared/components/photo/PhotoEditorModal.vue'
+import PhotoSourceSheet from '@edtaxi/shared/components/photo/PhotoSourceSheet.vue'
+import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import { mediaUrl } from '~/api/client'
 import AuthButton from '~/components/auth/AuthButton.vue'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
@@ -181,25 +184,53 @@ onMounted(async () => {
     await driver.loadVehiclePhotos(vehicleId.value).catch(() => {})
 })
 
+// Пока фото на проверке — вердикты поддержки подтягиваются сами (поллинг +
+// возврат на экран), без ручного перезахода на страницу.
+useAutoRefresh(async () => {
+  await driver.loadVerification()
+  if (vehicleId.value)
+    await driver.loadVehiclePhotos(vehicleId.value)
+}, {
+  enabled: computed(() => hasVehicle.value && !vehicleApproved.value),
+  intervalMs: 15_000,
+})
+
+// Флоу загрузки слота: шторка «галерея или камера» (раньше iPhone с capture
+// сразу открывал камеру, без шанса выбрать готовое фото) → редактор
+// (зум/поворот/центрирование) → аплоад в слот.
+const pendingSlot = ref<null | SlotMeta>(null)
+const isSourceOpen = ref(false)
+const editorFile = ref<File | null>(null)
+
+// Кадры: документы-карточки — вытянутые, полис — вертикальный лист, фото
+// машины/салона — альбомные 4:3.
+const editorAspect = computed(() => {
+  const slot = pendingSlot.value?.slot ?? ''
+  if (slot === 'doc_insurance')
+    return 3 / 4
+  if (slot.startsWith('doc_'))
+    return 1.58
+  return 4 / 3
+})
+
 function pickSlotFile(meta: SlotMeta) {
   if (!vehicleId.value || isUploading(meta.slot))
     return
+  pendingSlot.value = meta
+  isSourceOpen.value = true
+}
 
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  if (meta.capture)
-    input.capture = meta.capture
+function onSourceSelected(file: File) {
+  isSourceOpen.value = false
+  editorFile.value = file
+}
 
-  input.onchange = async (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (!file)
-      return
-
-    await driver.doUploadVehicleSlotPhoto(vehicleId.value, meta.slot, file).catch(() => {})
-  }
-
-  input.click()
+async function onEditorDone(file: File) {
+  const meta = pendingSlot.value
+  editorFile.value = null
+  if (!meta || !vehicleId.value)
+    return
+  await driver.doUploadVehicleSlotPhoto(vehicleId.value, meta.slot, file).catch(() => {})
 }
 
 async function submit() {
@@ -375,6 +406,22 @@ async function submit() {
           @click="submit"
         />
       </div>
+
+      <PhotoSourceSheet
+        camera-facing="environment"
+        :open="isSourceOpen"
+        :title="pendingSlot?.label ?? 'Добавить фото'"
+        @close="isSourceOpen = false"
+        @selected="onSourceSelected"
+      />
+      <PhotoEditorModal
+        :aspect="editorAspect"
+        :file="editorFile"
+        :output-size="1600"
+        :title="pendingSlot?.label ?? 'Подгоните фото'"
+        @cancel="editorFile = null"
+        @done="onEditorDone"
+      />
     </section>
   </main>
 </template>
