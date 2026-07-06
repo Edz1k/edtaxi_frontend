@@ -84,8 +84,12 @@ export interface AdminUpdateUserRolesResponse {
 }
 
 export interface AdminListTripsParams {
+  // city — фильтр по городу подачи (ближайший к точке pickup, справочник /admin/cities).
+  city?: string
   limit?: number
   offset?: number
+  // search — поиск по пассажиру/водителю (имя, телефон) и адресам маршрута.
+  search?: string
   status?: TripStatus | ''
 }
 

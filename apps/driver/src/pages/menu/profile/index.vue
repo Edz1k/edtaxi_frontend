@@ -3,9 +3,14 @@ import type { DriverOverview } from '~/types/driver-overview'
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui'
 import { mediaUrl } from '~/api/client'
 import { getDriverOverview } from '~/api/driver'
+import { useOrderSoundEnabled } from '~/composables/driver/useOrderSound'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
 const onboarding = useDriverOnboardingStore()
+
+// Тумблер «Мелодия заказа»: включает звук при поступлении заказа (хранится
+// локально на устройстве). Тот же ключ читает плеер на экране карты.
+const orderSoundEnabled = useOrderSoundEnabled()
 
 const data = ref<DriverOverview | null>(null)
 const isLoading = ref(true)
@@ -267,6 +272,39 @@ function formatDate(value: string) {
           </span>
           <span class="i-mdi-chevron-right text-7 text-slate-500" />
         </RouterLink>
+
+        <!-- Настройки: мелодия заказа -->
+        <h2 class="mt-8 text-sm text-main-300 font-900 uppercase">
+          Настройки
+        </h2>
+        <div class="mt-3 flex items-center gap-4 rounded-3xl bg-white/5 px-4 py-4">
+          <span
+            class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl"
+            :class="orderSoundEnabled ? 'bg-main-500/16 text-main-300' : 'bg-white/8 text-slate-500'"
+          >
+            <span :class="orderSoundEnabled ? 'i-mdi-music-note' : 'i-mdi-music-note-off'" class="text-7" />
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-lg font-900">Мелодия заказа</span>
+            <span class="mt-0.5 block truncate text-xs text-slate-400 font-600">
+              {{ orderSoundEnabled ? 'Звучит при новом заказе' : 'Выключена' }}
+            </span>
+          </span>
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="orderSoundEnabled"
+            aria-label="Мелодия заказа"
+            class="relative h-7 w-12 shrink-0 rounded-full transition"
+            :class="orderSoundEnabled ? 'bg-main-500' : 'bg-white/14'"
+            @click="orderSoundEnabled = !orderSoundEnabled"
+          >
+            <span
+              class="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all"
+              :class="orderSoundEnabled ? 'left-6' : 'left-1'"
+            />
+          </button>
+        </div>
 
         <!-- Смена номера телефона -->
         <RouterLink
