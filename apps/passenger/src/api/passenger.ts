@@ -28,3 +28,20 @@ export function uploadPassengerAvatar(file: File) {
     body: form,
   })
 }
+
+// Смена номера телефона: код в WhatsApp на новый номер, затем подтверждение.
+// merged=true — номер принадлежал другому аккаунту, бэкенд объединил их и
+// перевыпустил сессию.
+export function sendPassengerPhoneOtp(phone: string) {
+  return apiRequest<{ message: string, phone: string }>('/passenger/me/phone/send', {
+    method: 'POST',
+    body: { phone },
+  })
+}
+
+export function verifyPassengerPhone(phone: string, code: string) {
+  return apiRequest<{ merged?: boolean, message: string, phone: string }>('/passenger/me/phone/verify', {
+    method: 'POST',
+    body: { code, phone },
+  })
+}

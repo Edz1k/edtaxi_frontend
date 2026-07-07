@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { sendDriverPhoneOtp, verifyDriverPhone } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
+import { sendPassengerPhoneOtp, verifyPassengerPhone } from '~/api/passenger'
 import OtpInput from '~/components/auth/OtpInput.vue'
 import PhoneInput from '~/components/auth/PhoneInput.vue'
 import { isKazakhstanPhoneComplete, toKazakhstanE164 } from '~/composables/auth/phone'
 import { useToast } from '~/composables/useToast'
 import { useAuthStore } from '~/stores/auth'
+import { usePassengerStore } from '~/stores/passenger'
 
 const router = useRouter()
 const auth = useAuthStore()
+const passenger = usePassengerStore()
 const toast = useToast()
 
 const step = ref<'code' | 'phone'>('phone')
@@ -24,9 +26,9 @@ const newPhone = computed(() => toKazakhstanE164(phoneInput.value))
 definePage({
   meta: {
     authRedirect: '/login',
-    layout: 'driver',
+    layout: 'passenger',
     requiresAuth: true,
-    requiredRole: 'driver',
+    requiredRole: 'passenger',
     backTo: '/menu/settings',
     screenSubtitle: 'Назад в настройки',
     screenTitle: 'Смена номера',
@@ -34,7 +36,7 @@ definePage({
 })
 
 useHead({
-  title: 'Смена номера | EdTaxi Driver',
+  title: 'Смена номера | EdTaxi',
 })
 
 async function sendCode() {
@@ -43,7 +45,7 @@ async function sendCode() {
 
   isSending.value = true
   try {
-    await sendDriverPhoneOtp(newPhone.value)
+    await sendPassengerPhoneOtp(newPhone.value)
     code.value = ''
     step.value = 'code'
   }
@@ -61,10 +63,11 @@ async function verifyCode() {
 
   isVerifying.value = true
   try {
-    const response = await verifyDriverPhone(newPhone.value, code.value)
+    const response = await verifyPassengerPhone(newPhone.value, code.value)
     // Если номер принадлежал другому аккаунту, бэкенд объединил аккаунты и
     // перевыпустил сессию — перечитываем её в любом случае.
-    await auth.restoreSession({ force: true, preferredRole: 'driver' }).catch(() => {})
+    await auth.restoreSession({ force: true, preferredRole: 'passenger' }).catch(() => {})
+    passenger.loadProfile().catch(() => {})
     toast.success(
       'Готово',
       response.merged ? 'Номер подтверждён, аккаунты объединены.' : 'Номер телефона обновлён.',

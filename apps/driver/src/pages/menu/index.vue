@@ -16,8 +16,10 @@ const onboarding = useDriverOnboardingStore()
 const parkId = ref<null | string>(null)
 
 const driverMeta = computed(() => {
+  // toFixed(2), как в личном кабинете: toFixed(1) округлял 4.96 до «5.0», и
+  // меню спорило с кабинетом о рейтинге.
   if (driver.profile)
-    return `Рейтинг ${driver.profile.rating.toFixed(1)} · ${driver.profile.total_trips} поездок`
+    return `Рейтинг ${driver.profile.rating.toFixed(2)} · ${driver.profile.total_trips} поездок`
 
   return driver.isOnline ? 'На линии' : 'Офлайн'
 })
@@ -81,6 +83,18 @@ onMounted(async () => {
 <template>
   <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+7.25rem)] pt-[calc(var(--app-safe-area-top)+1.35rem)] text-white">
     <section class="mx-auto max-w-sm">
+      <!-- Настройки: шестерёнка слева сверху. Ряд в потоке контента (ниже
+           safe-area), поэтому не попадает под телеграмовскую кнопку «Закрыть». -->
+      <div class="mb-4 flex">
+        <RouterLink
+          aria-label="Настройки"
+          class="h-11 w-11 flex items-center justify-center rounded-full bg-white/8 text-main-200 transition active:scale-95"
+          to="/menu/settings"
+        >
+          <span class="i-mdi-cog text-6" />
+        </RouterLink>
+      </div>
+
       <RouterLink to="/menu/profile" class="flex items-center gap-4 transition active:scale-[0.98]">
         <div class="relative h-16 w-16 flex shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-main-500/16 text-main-200">
           <img v-if="faceAvatar" :src="faceAvatar" alt="" class="h-full w-full object-cover">
