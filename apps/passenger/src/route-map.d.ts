@@ -101,6 +101,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/menu/change-phone': RouteRecordInfo<
+      '/menu/change-phone',
+      '/menu/change-phone',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/menu/history': RouteRecordInfo<
       '/menu/history',
       '/menu/history',
@@ -245,6 +252,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/menu/about.vue': {
       routes:
         | '/menu/about'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/change-phone.vue': {
+      routes:
+        | '/menu/change-phone'
       views:
         | never
       pathParamNames:

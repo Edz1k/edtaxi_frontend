@@ -34,3 +34,12 @@ export interface BonusPromotion {
 export interface BonusPromotionsResponse {
   promotions: BonusPromotion[]
 }
+
+// Ответ погашения реферального кода: суммы и имя пригласившего — для
+// приветственного окна «вы присоединились по ссылке друга N».
+export interface RedeemReferralResponse {
+  invitee_reward?: number
+  inviter_name?: string
+  message: string
+  owner_reward?: number
+}

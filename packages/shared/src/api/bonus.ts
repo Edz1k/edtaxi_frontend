@@ -1,4 +1,4 @@
-import type { BonusOverview, BonusPromotionsResponse } from '../types/bonus'
+import type { BonusOverview, BonusPromotionsResponse, RedeemReferralResponse } from '../types/bonus'
 import { apiRequest } from './client'
 
 // Бонусы платформы: баланс, реферальный код (создаётся на бэке при первом
@@ -8,7 +8,7 @@ export function getBonusOverview() {
 }
 
 export function redeemReferralCode(code: string) {
-  return apiRequest<{ message: string }>('/bonus/referral/redeem', {
+  return apiRequest<RedeemReferralResponse>('/bonus/referral/redeem', {
     method: 'POST',
     body: { code },
   })
