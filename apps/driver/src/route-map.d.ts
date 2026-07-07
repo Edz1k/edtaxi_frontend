@@ -171,6 +171,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/menu/settings': RouteRecordInfo<
+      '/menu/settings',
+      '/menu/settings',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/menu/support': RouteRecordInfo<
       '/menu/support',
       '/menu/support',
@@ -360,6 +367,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/menu/profile/rating-history.vue': {
       routes:
         | '/menu/profile/rating-history'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/menu/settings.vue': {
+      routes:
+        | '/menu/settings'
       views:
         | never
       pathParamNames:

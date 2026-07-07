@@ -174,8 +174,8 @@ const sheetSnaps = computed<SheetSnap[]>(() => {
       // (карусель + оплата + заказ), полный экран.
       return ['peek', 'half', 'full']
     default:
-      // Адрес: первый экран (Такси + Куда едем + частые) ↔ полный поиск.
-      return ['half', 'full']
+      // Адрес: свернуть к карте (peek) ↔ первый экран ↔ полный поиск.
+      return ['peek', 'half', 'full']
   }
 })
 
@@ -187,6 +187,13 @@ const { active, sheetStyle, snapTo } = useBottomSheet({
   initialSnap: trips.expandOnReturn ? 'full' : 'half',
   sheetEl,
   snaps: sheetSnaps,
+})
+
+// Касание карты приопускает шторку (peek), чтобы карту было видно целиком —
+// родитель (map.vue) дергает это по pointerdown на карте. Вернуть шторку:
+// свайп/тап по граберу.
+defineExpose({
+  collapseToMap: () => snapTo('peek'),
 })
 
 // Выбор точки с карты/избранного → раскрываем поиск адреса (2-й экран).

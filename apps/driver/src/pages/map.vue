@@ -23,6 +23,9 @@ import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { offerToPlace } from '~/utils/geoPlace'
 
 const driver = useDriverStore()
+
+// Панель-шторка: касание карты приопускает её (collapseToMap).
+const statusPanelRef = ref<null | { collapseToMap: () => void }>(null)
 const onboarding = useDriverOnboardingStore()
 const tracking = useDriverTrackingSocket()
 
@@ -251,11 +254,13 @@ async function toggleOnline() {
       </div>
     </div>
 
+    <!-- Касание карты приопускает панель — карту видно целиком -->
     <DriverMap
       :destination-place="destinationPlace"
       :pickup-place="pickupPlace"
       :route-coordinates="routeCoordinates"
       :user-coordinates="liveCoordinates"
+      @pointerdown="statusPanelRef?.collapseToMap()"
     />
 
     <!-- Напоминание о незавершённой верификации -->
@@ -266,6 +271,7 @@ async function toggleOnline() {
     />
 
     <DriverStatusPanel
+      ref="statusPanelRef"
       :is-location-granted="isLocationGranted"
       :online-block-message="onlineBlockMessage"
       :show-route-loading="Boolean(mapOffer && isRouteLoading)"
