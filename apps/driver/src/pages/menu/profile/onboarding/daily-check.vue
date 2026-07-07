@@ -80,14 +80,22 @@ function onSelfieCaptured(file: File) {
 
 // Камера недоступна (нет разрешения/устройства) — системная камера как фолбэк.
 // Селфи дэйлика намеренно НЕ ходит через галерею (антифрод): только живая
-// камера, а фолбэк — системная камера с capture.
+// камера, а фолбэк — системная камера с capture. Инпут обязан быть в DOM и
+// НЕ display:none: Android-вебвью Telegram иначе игнорирует .click().
 function onCameraFallback() {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
   input.capture = 'user'
+  input.style.position = 'fixed'
+  input.style.top = '-100px'
+  input.style.width = '1px'
+  input.style.height = '1px'
+  input.style.opacity = '0'
+  document.body.appendChild(input)
   input.onchange = (e) => {
     const file = (e.target as HTMLInputElement).files?.[0]
+    input.remove()
     if (!file)
       return
     if (selfiePreview.value)
@@ -95,6 +103,7 @@ function onCameraFallback() {
     selfieFile.value = file
     selfiePreview.value = URL.createObjectURL(file)
   }
+  window.addEventListener('focus', () => setTimeout(() => input.remove(), 3000), { once: true })
   input.click()
 }
 

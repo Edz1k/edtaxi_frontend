@@ -58,12 +58,16 @@ async function start() {
   }
 
   try {
+    // 9:16 вместо дефолтных 3:4 сенсора: портретный стрим почти совпадает с
+    // экраном, и object-cover почти не режет кадр по бокам — без этого камера
+    // выглядела «приближенной в 2 раза» и лицо не влезало в овал.
     stream = await navigator.mediaDevices.getUserMedia({
       audio: false,
       video: {
         facingMode: 'user',
-        width: { ideal: 1080 },
-        height: { ideal: 1440 },
+        width: { ideal: 720 },
+        height: { ideal: 1280 },
+        aspectRatio: { ideal: 9 / 16 },
       },
     })
   }
@@ -148,6 +152,8 @@ function startDetection() {
 
 // Лицо считается «в овале», когда его центр внутри центральной зоны кадра и
 // оно достаточно крупное (не силуэт в углу и не человек в трёх метрах).
+// Пороги подобраны под 9:16-стрим (более широкое поле зрения): лицо на
+// комфортной дистанции занимает меньшую долю кадра, чем при 3:4.
 function faceInsideOval(faces: Array<{ boundingBox: DOMRectReadOnly }>, video: HTMLVideoElement) {
   if (!faces.length)
     return false
@@ -158,8 +164,8 @@ function faceInsideOval(faces: Array<{ boundingBox: DOMRectReadOnly }>, video: H
     return false
   const cx = (box.x + box.width / 2) / vw
   const cy = (box.y + box.height / 2) / vh
-  const sizeOK = box.width >= vw * 0.22 && box.width <= vw * 0.85
-  return sizeOK && cx > 0.28 && cx < 0.72 && cy > 0.2 && cy < 0.72
+  const sizeOK = box.width >= vw * 0.16 && box.width <= vw * 0.9
+  return sizeOK && cx > 0.25 && cx < 0.75 && cy > 0.18 && cy < 0.75
 }
 
 async function snap(auto: boolean) {
@@ -240,11 +246,14 @@ function stop() {
 <template>
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 z-90 bg-black">
-      <!-- Живое видео (зеркалим как привычное селфи) -->
+      <!-- Живое видео (зеркалим как привычное селфи). object-contain, а не
+           cover: cover обрезал бока 3:4-стрима под узкий экран, и камера
+           выглядела «приближенной в 2 раза» — с contain поле зрения полное,
+           а поля по краям прячутся под чёрным фоном и маской. -->
       <video
         ref="videoRef"
         autoplay
-        class="absolute inset-0 h-full w-full scale-x--100 transform object-cover"
+        class="absolute inset-0 h-full w-full scale-x--100 transform object-contain"
         muted
         playsinline
       />
