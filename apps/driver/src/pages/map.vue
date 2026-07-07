@@ -2,6 +2,7 @@
 import type { VerificationReminder } from '~/types/driver'
 import { getBonusOverview } from '@edtaxi/shared/api/bonus'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
+import MapStyleSwitcher from '@edtaxi/shared/components/map/MapStyleSwitcher.vue'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
@@ -205,6 +206,11 @@ async function toggleOnline() {
           <span class="i-mdi-star-four-points text-3.5 text-main-300" />
           {{ bonusBalance.toLocaleString('ru-RU') }}
         </RouterLink>
+
+        <!-- Тема карты: схема / спутник / ночная -->
+        <div class="absolute right-0 top-12">
+          <MapStyleSwitcher />
+        </div>
       </div>
     </div>
 

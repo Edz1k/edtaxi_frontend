@@ -6,6 +6,7 @@ import type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
 import { useMapboxMap } from '@edtaxi/shared/composables/mapbox/useMapboxMap'
 import { useMapboxPicker } from '@edtaxi/shared/composables/mapbox/useMapboxPicker'
 import { useMapboxRoute } from '@edtaxi/shared/composables/mapbox/useMapboxRoute'
+import { useMapStyle } from '@edtaxi/shared/composables/mapbox/useMapStyle'
 import { loadCachedLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import PassengerMapPicker from '~/components/passenger/PassengerMapPicker.vue'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -65,6 +66,7 @@ const {
   map,
   mapboxglModule,
   mapError,
+  setMapStyle,
   showDestinationLocation,
   showDriverLocation,
   showFavoriteLocations,
@@ -75,6 +77,7 @@ const {
 
 const {
   clearRoute,
+  restoreRoute,
   showTripRoute,
 } = useMapboxRoute({
   destinationPlace: computed(() => props.destinationPlace),
@@ -284,8 +287,19 @@ onMounted(async () => {
     }
 
     syncFavoriteMarkers()
+
+    // Смена темы карты сбрасывает кастомные слои (линию маршрута) — рисуем их
+    // заново на свежем стиле, не дёргая камеру.
+    map.value?.on('style.load', () => {
+      if (hasRoute.value)
+        restoreRoute()
+    })
   }, cachedCenter ?? undefined)
 })
+
+// Тема карты применяется на лету — выбор в переключателе виден сразу.
+const { currentUrl: mapStyleUrl } = useMapStyle()
+watch(mapStyleUrl, url => setMapStyle(url))
 
 onBeforeUnmount(() => {
   stopPickerLayoutSync()
