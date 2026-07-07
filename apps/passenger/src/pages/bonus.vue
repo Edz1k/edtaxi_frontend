@@ -2,9 +2,11 @@
 import type { BonusOverview, BonusPromotion } from '@edtaxi/shared/types/bonus'
 import { getBonusOverview, getMyPromotions, redeemReferralCode } from '@edtaxi/shared/api/bonus'
 import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
+import { buildReferralShareUrl } from '@edtaxi/shared/composables/telegram/referral'
 import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import { mediaUrl } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
+import { TG_BOT_USERNAME } from '~/constants/telegram'
 
 // Баннер акции уже приходит с бэкенда, но поле ещё не добавлено в shared-тип
 // Promotion — расширяем локально, чтобы не менять packages/shared.
@@ -72,12 +74,15 @@ function copyCode() {
     copy(overview.value.referral_code)
 }
 
+// «Поделиться» шлёт диплинк на бота: друг открывает ссылку, мини-апп
+// запускается сам, и после входа бонусы начисляются автоматически — вводить
+// код руками больше не нужно.
 function shareCode() {
   if (!overview.value)
     return
 
-  const text = `Поехали с EdTaxi! Введи мой код ${overview.value.referral_code} в разделе «Бонусы» — получишь +${formatBonus(overview.value.invitee_reward)} бонусов на счёт.`
-  openExternalLink(`https://t.me/share/url?url=&text=${encodeURIComponent(text)}`)
+  const text = `Поехали с EdTaxi! Открой ссылку и войди — получишь +${formatBonus(overview.value.invitee_reward)} бонусов на первый счёт 🚕`
+  openExternalLink(buildReferralShareUrl(TG_BOT_USERNAME, overview.value.referral_code, text))
 }
 
 async function redeem() {

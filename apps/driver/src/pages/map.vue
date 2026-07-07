@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { VerificationReminder } from '~/types/driver'
-import { getBonusOverview } from '@edtaxi/shared/api/bonus'
+import { getBonusOverview, redeemReferralCode } from '@edtaxi/shared/api/bonus'
+import ReferralWelcomeModal from '@edtaxi/shared/components/bonus/ReferralWelcomeModal.vue'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import MapStyleSwitcher from '@edtaxi/shared/components/map/MapStyleSwitcher.vue'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
+import { captureReferralStartParam, takePendingReferralCode } from '@edtaxi/shared/composables/telegram/referral'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
 import { ApiError } from '~/api/client'
 import { getVerificationReminder } from '~/api/driver'
@@ -68,6 +70,40 @@ const bonusBalance = ref<null | number>(null)
 // После завершения поездки предлагаем оценить пассажира.
 const ratePassengerTripId = ref('')
 
+// Автопогашение реферального кода из диплинка (t.me/bot?startapp=ref_КОД):
+// код перехватывается на старте и гасится сразу после входа; при успехе
+// показываем приветствие с именем друга и суммой. Ошибки (код уже погашен,
+// свой код, лимит) — молча: бэкенд всё равно не даст начислить дважды.
+const referralWelcome = ref<null | { inviterName: null | string, ownerReward: number, reward: number }>(null)
+const router = useRouter()
+
+async function autoRedeemReferral() {
+  captureReferralStartParam()
+  const code = takePendingReferralCode()
+  if (!code)
+    return
+
+  try {
+    const result = await redeemReferralCode(code)
+    referralWelcome.value = {
+      inviterName: result.inviter_name ?? null,
+      ownerReward: result.owner_reward ?? 1000,
+      reward: result.invitee_reward ?? 500,
+    }
+    getBonusOverview()
+      .then((bonus) => {
+        bonusBalance.value = Math.floor(bonus.balance)
+      })
+      .catch(() => {})
+  }
+  catch {}
+}
+
+async function goShareReferral() {
+  referralWelcome.value = null
+  await router.push('/bonus')
+}
+
 const trackingLabel = computed(() => {
   if (tracking.status.value === 'open')
     return 'Подключен'
@@ -113,6 +149,7 @@ onMounted(async () => {
       bonusBalance.value = Math.floor(bonus.balance)
     })
     .catch(() => {})
+  autoRedeemReferral().catch(() => {})
   await driver.restoreActiveTrip().catch(() => {})
   // ensureProfile сам подтягивает доступные/активные тарифы (available/active
   // categories) — нужны панели статуса, даже если водитель зашёл сразу на карту.
@@ -249,6 +286,16 @@ async function toggleOnline() {
       v-if="ratePassengerTripId"
       :trip-id="ratePassengerTripId"
       @close="ratePassengerTripId = ''"
+    />
+
+    <!-- Приветствие приглашённого: бонусы за вход по ссылке друга начислены -->
+    <ReferralWelcomeModal
+      :inviter-name="referralWelcome?.inviterName ?? null"
+      :open="Boolean(referralWelcome)"
+      :owner-reward="referralWelcome?.ownerReward ?? 1000"
+      :reward="referralWelcome?.reward ?? 500"
+      @close="referralWelcome = null"
+      @share="goShareReferral"
     />
   </main>
 </template>
