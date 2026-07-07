@@ -90,7 +90,7 @@ async function start() {
     const track = stream.getVideoTracks()[0]
     const caps = (track?.getCapabilities?.() ?? {}) as { zoom?: { min?: number } }
     if (track && caps.zoom?.min !== undefined)
-      await track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] } as MediaTrackConstraints)
+      await track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] } as unknown as MediaTrackConstraints)
   }
   catch {
     // zoom не поддерживается — не критично, contain уже сохраняет полный кадр.
