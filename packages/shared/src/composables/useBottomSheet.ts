@@ -1,7 +1,7 @@
 import type { MaybeRefOrGetter } from 'vue'
 import { isTMA, swipeBehavior } from '@telegram-apps/sdk'
-import { useElementSize, useEventListener } from '@vueuse/core'
-import { computed, onMounted, ref, toValue, watch } from 'vue'
+import { useElementSize, useEventListener, usePreferredReducedMotion } from '@vueuse/core'
+import { computed, onMounted, onScopeDispose, ref, toValue, watch } from 'vue'
 
 // Снап-точки пассажирской шторки. Набор точек и дефолт задаёт вызывающий
 // компонент под текущее состояние (адрес / тарифы / поиск).
