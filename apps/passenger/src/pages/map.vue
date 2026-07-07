@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
-import { getBonusOverview } from '@edtaxi/shared/api/bonus'
+import { getBonusOverview, redeemReferralCode } from '@edtaxi/shared/api/bonus'
+import ReferralWelcomeModal from '@edtaxi/shared/components/bonus/ReferralWelcomeModal.vue'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import MapStyleSwitcher from '@edtaxi/shared/components/map/MapStyleSwitcher.vue'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
+import { captureReferralStartParam, takePendingReferralCode } from '@edtaxi/shared/composables/telegram/referral'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
 import { usePassengerTripSocket } from '~/composables/passenger/usePassengerTripSocket'
 import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
@@ -65,12 +67,48 @@ definePage({
 // показываем, чтобы не рисовать пустышку поверх карты.
 const bonusBalance = ref<null | number>(null)
 
+// Автопогашение реферального кода из диплинка (t.me/bot?startapp=ref_КОД):
+// код перехватывается на старте и гасится сразу после входа; при успехе
+// показываем приветствие с именем друга и суммой. Ошибки (код уже погашен,
+// свой код, лимит) — молча: бэкенд всё равно не даст начислить дважды.
+const referralWelcome = ref<null | { inviterName: null | string, ownerReward: number, reward: number }>(null)
+const router = useRouter()
+
+async function autoRedeemReferral() {
+  captureReferralStartParam()
+  const code = takePendingReferralCode()
+  if (!code)
+    return
+
+  try {
+    const result = await redeemReferralCode(code)
+    referralWelcome.value = {
+      inviterName: result.inviter_name ?? null,
+      ownerReward: result.owner_reward ?? 1000,
+      reward: result.invitee_reward ?? 500,
+    }
+    getBonusOverview()
+      .then((bonus) => {
+        bonusBalance.value = Math.floor(bonus.balance)
+      })
+      .catch(() => {})
+  }
+  catch {}
+}
+
+async function goShareReferral() {
+  referralWelcome.value = null
+  await router.push('/bonus')
+}
+
 onMounted(async () => {
   getBonusOverview()
     .then((bonus) => {
       bonusBalance.value = Math.floor(bonus.balance)
     })
     .catch(() => {})
+
+  autoRedeemReferral().catch(() => {})
 
   try {
     await passenger.loadProfile()
@@ -151,6 +189,16 @@ async function setPickupFromCurrentLocation() {
       v-model:pickup-place="trips.pickupPlace"
       @locate-user="setPickupFromCurrentLocation"
       @pick-from-map="trips.startMapPicker"
+    />
+
+    <!-- Приветствие приглашённого: бонусы за вход по ссылке друга начислены -->
+    <ReferralWelcomeModal
+      :inviter-name="referralWelcome?.inviterName ?? null"
+      :open="Boolean(referralWelcome)"
+      :owner-reward="referralWelcome?.ownerReward ?? 1000"
+      :reward="referralWelcome?.reward ?? 500"
+      @close="referralWelcome = null"
+      @share="goShareReferral"
     />
   </div>
 </template>
