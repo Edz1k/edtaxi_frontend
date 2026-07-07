@@ -142,6 +142,28 @@ function formatDate(value: string) {
         <p class="mt-2 text-4xl text-main-200 font-950">
           {{ formatMoney(earnings.earnings?.total_earned ?? 0) }}
         </p>
+
+        <!-- Разбивка дохода: наличными (получено в руки) и картой/кошельком -->
+        <div class="grid grid-cols-2 mt-4 gap-2">
+          <div class="rounded-2xl bg-white/6 px-3 py-2.5">
+            <p class="flex items-center gap-1 text-xs text-slate-400 font-800">
+              <span class="i-mdi-cash text-4 text-emerald-300" />
+              Наличными
+            </p>
+            <p class="mt-0.5 text-lg font-950">
+              {{ formatMoney(earnings.earnings?.cash_earned ?? 0) }}
+            </p>
+          </div>
+          <div class="rounded-2xl bg-white/6 px-3 py-2.5">
+            <p class="flex items-center gap-1 text-xs text-slate-400 font-800">
+              <span class="i-mdi-credit-card-outline text-4 text-main-300" />
+              Картой
+            </p>
+            <p class="mt-0.5 text-lg font-950">
+              {{ formatMoney(earnings.earnings?.card_earned ?? 0) }}
+            </p>
+          </div>
+        </div>
       </section>
 
       <div class="grid grid-cols-2 mt-4 gap-3">
