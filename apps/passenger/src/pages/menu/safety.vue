@@ -36,11 +36,12 @@ const plannedRoute = computed(() => {
 
 const canShareRoute = computed(() => trips.hasActiveTrip || Boolean(plannedRoute.value))
 
-// Экстренный вызов: в Telegram-вебвью обычный <a href="tel:"> часто не
-// срабатывает — принудительный переход location.href надёжно открывает
-// системный диалог набора и на iOS, и на Android.
+// Экстренный вызов: Telegram-вебвью блокирует ЛЮБУЮ tel:-навигацию внутри
+// мини-аппа (и <a href>, и location.href) — поэтому открываем во внешнем
+// браузере крошечную страницу /call-112.html с нашего же домена: она сама
+// набирает 112, а если браузер требует явный тап — там большая кнопка.
 function call112() {
-  window.location.href = 'tel:112'
+  openExternalLink(`${window.location.origin}/call-112.html`)
 }
 
 function shareRoute() {
