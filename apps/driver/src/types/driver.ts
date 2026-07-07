@@ -162,6 +162,9 @@ export interface DriverTripActionResponse {
 
 export interface DriverEarnings {
   total_earned: number
+  // Разбивка чистого дохода: наличными (пассажир платил в руки) и картой/кошельком.
+  cash_earned: number
+  card_earned: number
   trip_count: number
 }
 

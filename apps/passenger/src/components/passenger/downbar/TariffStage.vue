@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { VehicleCategory } from '~/types/trips'
+import type { EstimateTripResponse, VehicleCategory } from '~/types/trips'
+import { getBonusOverview } from '@edtaxi/shared/api/bonus'
 import { formatFare, PAYMENT_META, PAYMENT_ORDER, TARIFF_META, TARIFF_ORDER } from '~/constants/tariffs'
 import { useTripsStore } from '~/stores/trips'
 import { useWalletStore } from '~/stores/wallet'
@@ -24,6 +25,27 @@ onMounted(() => {
   if (!wallet.isCardLoaded)
     wallet.loadCard()
 })
+
+// Оплата части поездки бонусами (до 50%): при включённом тумблере цены
+// показываются со скидкой (зачёркнутая полная + актуальная), фактическое
+// списание происходит на завершении по балансу на тот момент.
+const bonusBalance = ref(0)
+
+onMounted(() => {
+  getBonusOverview()
+    .then(overview => (bonusBalance.value = Math.floor(overview.balance)))
+    .catch(() => {}) // без баланса тумблер просто не показываем
+})
+
+function bonusDiscountFor(estimate: EstimateTripResponse) {
+  return Math.floor(Math.min(bonusBalance.value, estimate.estimated_fare * 0.5))
+}
+
+function discountedFare(estimate: EstimateTripResponse) {
+  return `${Math.max(0, Math.round(estimate.estimated_fare - bonusDiscountFor(estimate))).toLocaleString('ru-RU')} ₸`
+}
+
+const showBonusPrices = computed(() => trips.useBonuses && bonusBalance.value > 0)
 
 const showBindCardHint = computed(() =>
   trips.paymentMethod === 'card' && wallet.isCardLoaded && !wallet.card,
@@ -98,7 +120,16 @@ function isSelected(category: VehicleCategory) {
           <span class="text-sm text-white font-900">
             {{ TARIFF_META[tariff.category].label }}
           </span>
-          <span class="text-sm text-white font-950">
+          <!-- Бонусы включены: зачёркнутая полная цена + актуальная со скидкой -->
+          <template v-if="showBonusPrices && bonusDiscountFor(tariff) > 0">
+            <span class="text-[11px] text-slate-500 leading-3 line-through">
+              {{ formatFare(tariff) }}
+            </span>
+            <span class="text-sm text-main-200 font-950">
+              {{ discountedFare(tariff) }}
+            </span>
+          </template>
+          <span v-else class="text-sm text-white font-950">
             {{ formatFare(tariff) }}
           </span>
         </button>
@@ -138,6 +169,39 @@ function isSelected(category: VehicleCategory) {
         {{ PAYMENT_META[method].label }}
       </button>
     </div>
+
+    <!-- Оплатить часть поездки бонусами (до 50%) -->
+    <button
+      v-if="bonusBalance > 0"
+      class="w-full flex items-center gap-3 rounded-[1.65rem] p-3 text-left transition active:scale-[0.99]"
+      :class="trips.useBonuses ? 'bg-main-500/16 border border-main-400/40' : 'bg-white/5 border border-transparent'"
+      type="button"
+      @click="trips.useBonuses = !trips.useBonuses"
+    >
+      <span
+        class="h-10 w-10 flex shrink-0 items-center justify-center rounded-2xl"
+        :class="trips.useBonuses ? 'bg-main-500/22 text-main-200' : 'bg-white/8 text-slate-300'"
+      >
+        <span class="i-mdi-star-four-points text-5.5" aria-hidden="true" />
+      </span>
+      <span class="min-w-0 flex-1">
+        <span class="block text-sm text-white font-900">
+          Списать бонусы — до 50% поездки
+        </span>
+        <span class="block text-[12px] text-slate-400 leading-4">
+          У вас {{ bonusBalance.toLocaleString('ru-RU') }} бонусов · спишутся при завершении поездки
+        </span>
+      </span>
+      <span
+        class="h-6 w-11 shrink-0 rounded-full p-0.5 transition"
+        :class="trips.useBonuses ? 'bg-main-500' : 'bg-white/12'"
+      >
+        <span
+          class="block h-5 w-5 rounded-full bg-white transition"
+          :class="trips.useBonuses ? 'translate-x-5' : ''"
+        />
+      </span>
+    </button>
 
     <!-- Оплата картой выбрана, но карта не привязана -->
     <RouterLink
