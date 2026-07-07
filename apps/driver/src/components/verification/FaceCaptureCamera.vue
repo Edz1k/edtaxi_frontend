@@ -83,6 +83,19 @@ async function start() {
     return
   }
   video.srcObject = stream
+
+  // Третий слой против «приближенной» камеры: если трек умеет аппаратный
+  // zoom (iOS 17+, часть Android) — принудительно ставим минимальный.
+  try {
+    const track = stream.getVideoTracks()[0]
+    const caps = (track?.getCapabilities?.() ?? {}) as { zoom?: { min?: number } }
+    if (track && caps.zoom?.min !== undefined)
+      await track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] } as MediaTrackConstraints)
+  }
+  catch {
+    // zoom не поддерживается — не критично, contain уже сохраняет полный кадр.
+  }
+
   try {
     await video.play()
   }
