@@ -27,9 +27,9 @@ const FLING_VELOCITY = 0.4
 const PEEK_EXTRA_PX = 72
 // Нижний предел рабочей высоты, чтобы `half` не схлопывался под коротким контентом.
 const MIN_HALF_PX = 200
-// Вертикальные отступы контента (px) в content-fit: нижний паддинг обёртки +
-// запас на бордеры/скругления/рендеринг шрифтов, чтобы нижняя кнопка не
-// подрезалась краем шторки на реальных устройствах.
+// Запас content-fit (px) сверх border-box замеров грабера и контента: нижний
+// паддинг скролл-обёртки + бордеры шторки + резерв на рендеринг шрифтов,
+// чтобы нижняя кнопка не подрезалась краем шторки на реальных устройствах.
 const CONTENT_PAD_PX = 24
 // Смещение пальца, ниже которого жест считаем тапом (тап по граберу = раскрыть).
 const TAP_PX = 6
@@ -59,8 +59,11 @@ export function useBottomSheet(options: UseBottomSheetOptions) {
   const reducedMotion = usePreferredReducedMotion()
 
   const { height: boundsHeight } = useElementSize(() => toValue(options.boundsEl))
-  const { height: handleHeight } = useElementSize(() => toValue(options.handleEl))
-  const { height: contentHeight } = useElementSize(() => toValue(options.contentEl))
+  // Грабер и контент меряем по border-box: у них есть собственные паддинги
+  // (pt/pb грабера, pb контента), и дефолтный content-box замер их терял —
+  // half получался ниже нужного, нижняя кнопка подрезалась, вылезал скролл.
+  const { height: handleHeight } = useElementSize(() => toValue(options.handleEl), { width: 0, height: 0 }, { box: 'border-box' })
+  const { height: contentHeight } = useElementSize(() => toValue(options.contentEl), { width: 0, height: 0 }, { box: 'border-box' })
 
   const active = ref<SheetSnap>(options.initialSnap ?? 'half')
   const height = ref(0)
