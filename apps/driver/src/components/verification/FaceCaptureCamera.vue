@@ -30,13 +30,35 @@ let stream: MediaStream | null = null
 let detectTimer: ReturnType<typeof setInterval> | null = null
 let stableTicks = 0
 
-// Видео вписываем «contain» вручную — размер в px по метаданным потока.
-// Почему вручную: на Telegram-вебвью (и Android, и iOS) object-fit на <video>
-// с CSS transform местами игнорируется, и превью рисовалось узкой полосой.
-// Почему contain, а не cover: cover обрезал бока стрима под узкий экран, и
-// камера выглядела «приближенной в 2 раза» — с contain поле зрения полное,
-// а поля по краям прячутся под чёрным фоном и маской (стрим и так ~9:16).
+// Видео растягиваем вручную — размер в px по метаданным потока: на
+// Telegram-вебвью (и Android, и iOS) object-fit на <video> с CSS transform
+// местами игнорируется, и превью рисовалось узкой полосой.
+//
+// Ориентация: часть вебвью игнорирует запрошенный портрет 9:16 и отдаёт кадр
+// в «сенсорной» ориентации — длинной стороной ГОРИЗОНТАЛЬНО (1280×720), хотя
+// телефон вертикальный. Тогда доворачиваем кадр на 90° (и превью, и снимок —
+// см. snap), а масштаб считаем по ДОВЁРНУТЫМ габаритам: длинная сторона кадра
+// ложится на длинную сторону экрана, никаких полос.
+//
+// Масштаб — «cover с ограничителем»: обычный cover на весь экран (никаких
+// чёрных рамок), но не больше чем contain×MAX_CROP_SCALE — чтобы квадратный
+// 3:4-кадр не выглядел «приближенным в 2 раза» (останутся узкие поля).
+const MAX_CROP_SCALE = 1.4
 const videoStyle = ref<Record<string, string>>({})
+const isRotated = ref(false)
+
+function computeRotation() {
+  const video = videoRef.value
+  const sw = video?.videoWidth ?? 0
+  const sh = video?.videoHeight ?? 0
+  if (!sw || !sh) {
+    isRotated.value = false
+    return
+  }
+  const screenPortrait = window.innerHeight >= window.innerWidth
+  const streamPortrait = sh >= sw
+  isRotated.value = screenPortrait !== streamPortrait
+}
 
 function fitVideo() {
   const video = videoRef.value
@@ -53,15 +75,26 @@ function fitVideo() {
     return
   }
 
-  const scale = Math.min(vw / sw, vh / sh)
+  computeRotation()
+
+  // Эффективные габариты — какими кадр ЛЯЖЕТ на экран (с учётом доворота).
+  const effW = isRotated.value ? sh : sw
+  const effH = isRotated.value ? sw : sh
+
+  const coverScale = Math.max(vw / effW, vh / effH)
+  const containScale = Math.min(vw / effW, vh / effH)
+  const scale = Math.min(coverScale, containScale * MAX_CROP_SCALE)
+
+  // Бокс элемента — в «сырых» габаритах кадра; rotate вокруг центра сам
+  // меняет визуальные стороны местами, центр при этом не сдвигается.
   const width = Math.ceil(sw * scale)
   const height = Math.ceil(sh * scale)
   videoStyle.value = {
     height: `${height}px`,
     left: `${Math.round((vw - width) / 2)}px`,
     top: `${Math.round((vh - height) / 2)}px`,
-    // Зеркалим, как привычное селфи.
-    transform: 'scaleX(-1)',
+    // Зеркалим, как привычное селфи; при несовпадении ориентаций — доворот.
+    transform: isRotated.value ? 'scaleX(-1) rotate(90deg)' : 'scaleX(-1)',
     width: `${width}px`,
   }
 }
@@ -227,12 +260,30 @@ async function snap(auto: boolean) {
   if (!video || !video.videoWidth)
     return
   const canvas = document.createElement('canvas')
-  canvas.width = video.videoWidth
-  canvas.height = video.videoHeight
-  const ctx = canvas.getContext('2d')
+  const ctx = (() => {
+    if (isRotated.value) {
+      // Кадр пришёл боком (сенсорная ориентация) — снимок доворачиваем на те
+      // же 90°, что и превью: поддержка получает вертикальное фото, а не лежачее.
+      canvas.width = video.videoHeight
+      canvas.height = video.videoWidth
+      const context = canvas.getContext('2d')
+      if (!context)
+        return null
+      context.translate(canvas.width / 2, canvas.height / 2)
+      context.rotate(Math.PI / 2)
+      context.drawImage(video, -video.videoWidth / 2, -video.videoHeight / 2)
+      return context
+    }
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const context = canvas.getContext('2d')
+    if (!context)
+      return null
+    context.drawImage(video, 0, 0)
+    return context
+  })()
   if (!ctx)
     return
-  ctx.drawImage(video, 0, 0)
 
   const blob = await new Promise<Blob | null>(resolve =>
     canvas.toBlob(resolve, 'image/jpeg', 0.92))
