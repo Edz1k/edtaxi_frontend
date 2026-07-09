@@ -39,12 +39,17 @@ useHead({
 
 onMounted(() => {
   loadParks()
+  admin.loadParkChangeRequests().catch(() => {})
 })
 
 watch(statusFilter, () => loadParks())
 
 function loadParks() {
   admin.loadParks({ status: statusFilter.value || undefined }).catch(() => {})
+}
+
+function pctLabel(rate: null | number | undefined) {
+  return rate == null ? '—' : `${+(rate * 100).toFixed(1)}%`
 }
 
 function openRejectModal(park: TaxiPark) {
@@ -150,6 +155,73 @@ function parkStatusLabel(park: TaxiPark) {
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Заявки парков на изменение БИН/комиссии (одобряет админ) -->
+    <section
+      v-if="admin.parkChangeRequests.length"
+      class="mt-5 border border-amber-300/18 rounded-3xl bg-amber-300/8 p-5 backdrop-blur"
+    >
+      <div class="flex items-center gap-2">
+        <span class="i-mdi-file-document-edit-outline text-5 text-amber-300" />
+        <h2 class="text-lg font-950">
+          Заявки на изменение БИН / комиссии
+        </h2>
+        <span class="rounded-full bg-amber-300/16 px-2.5 py-0.5 text-xs text-amber-200 font-900">
+          {{ admin.parkChangeRequests.length }}
+        </span>
+      </div>
+
+      <div class="grid mt-4 gap-2">
+        <div
+          v-for="req in admin.parkChangeRequests"
+          :key="req.id"
+          class="grid gap-3 border border-white/8 rounded-2xl bg-black/14 p-4 md:grid-cols-[minmax(160px,1fr)_1fr_auto] md:items-center"
+        >
+          <div class="min-w-0">
+            <p class="truncate text-sm font-900">
+              {{ req.park_name || 'Парк' }}
+            </p>
+            <p class="mt-0.5 text-xs text-white/42">
+              {{ formatDate(req.created_at, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) }}
+            </p>
+          </div>
+
+          <div class="grid gap-1 text-sm">
+            <p v-if="req.requested_bin != null" class="text-white/70">
+              <span class="text-white/42">БИН:</span>
+              <span class="text-white/40">{{ req.current_bin || '—' }}</span>
+              <span class="i-mdi-arrow-right mx-1 inline-block align-middle text-3.5 text-cyan-200" />
+              <span class="font-900">{{ req.requested_bin }}</span>
+            </p>
+            <p v-if="req.requested_commission_rate != null" class="text-white/70">
+              <span class="text-white/42">Комиссия:</span>
+              <span class="text-white/40">{{ pctLabel(req.current_commission_rate) }}</span>
+              <span class="i-mdi-arrow-right mx-1 inline-block align-middle text-3.5 text-cyan-200" />
+              <span class="font-900">{{ pctLabel(req.requested_commission_rate) }}</span>
+            </p>
+          </div>
+
+          <div class="flex shrink-0 gap-2">
+            <button
+              :disabled="admin.isMutating"
+              class="h-10 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
+              type="button"
+              @click="admin.decideParkChangeRequest(req.id, true)"
+            >
+              Одобрить
+            </button>
+            <button
+              :disabled="admin.isMutating"
+              class="h-10 rounded-xl bg-red-500/12 px-4 text-sm text-red-300 font-900 transition active:scale-[0.98] disabled:opacity-50"
+              type="button"
+              @click="admin.decideParkChangeRequest(req.id, false)"
+            >
+              Отклонить
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <div class="mt-5 overflow-hidden border border-white/10 rounded-3xl bg-white/8 backdrop-blur">
       <div class="grid-cols-[minmax(180px,1fr)_130px_130px_130px_220px] hidden gap-3 border-b border-white/8 px-4 py-3 text-xs text-white/42 font-900 uppercase md:grid">

@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import type { ParkStatus } from '~/types/park'
+import type { ParkChangeRequestPayload, ParkStatus } from '~/types/park'
+import { buildParkInviteDeepLink } from '@edtaxi/shared/composables/telegram/parkInvite'
+import QRCode from 'qrcode'
 import { useRoute as useVueRoute } from 'vue-router'
 import WebPageShell from '~/components/app/WebPageShell.vue'
+import { useToast } from '~/composables/useToast'
+import { TG_DRIVER_BOT_USERNAME } from '~/constants/telegram'
 import { useParkStore } from '~/stores/park'
 import { formatRevenue } from '~/utils/format'
 
 const route = useVueRoute()
 const parkStore = useParkStore()
+const toast = useToast()
 
 // Присутствие ?park_id= означает, что кабинет открыт «подглядыванием» чужого
 // парка (доступно только хардкоженным SuperAdmin — бэкенд игнорирует
@@ -19,8 +24,21 @@ const viewParkId = computed(() => {
 })
 const isPeeking = computed(() => !!viewParkId.value)
 
+// Быстрая правка — только имя/описание/телефон (см. saveEdit).
 const isEditing = ref(false)
-const editForm = reactive({ name: '', description: '', bin: '', phone: '', commission_rate_pct: 0 })
+const editForm = reactive({ name: '', description: '', phone: '' })
+
+// Заявка на изменение БИН/комиссии — отдельная модалка, применяется после
+// одобрения администратором.
+const isChangeOpen = ref(false)
+const changeForm = reactive({ bin: '', commission_rate_pct: 0 })
+
+// QR-приглашение: ссылка на водительский бот, показывается в модалке.
+const isQrOpen = ref(false)
+const qrToken = ref('')
+const qrLink = ref('')
+const qrImage = ref('')
+
 const { copy, copied } = useClipboard({ legacy: true })
 const copiedToken = ref('')
 
@@ -37,6 +55,28 @@ const parkStatusClasses: Record<ParkStatus, string> = {
 }
 
 const parkStatus = computed<ParkStatus>(() => parkStore.park?.status ?? 'pending')
+
+// Активная заявка на изменение (баннер + блокировка кнопки).
+const pendingChange = computed(() =>
+  parkStore.changeRequest?.status === 'pending' ? parkStore.changeRequest : null,
+)
+
+// Краткое описание запрошенных изменений для баннера «на рассмотрении».
+const pendingChangeSummary = computed(() => {
+  const req = pendingChange.value
+  if (!req)
+    return ''
+  const parts: string[] = []
+  if (req.requested_bin)
+    parts.push(`БИН → ${req.requested_bin}`)
+  if (req.requested_commission_rate != null)
+    parts.push(`Комиссия → ${+(req.requested_commission_rate * 100).toFixed(1)}%`)
+  return parts.join(' · ')
+})
+
+const commissionPct = computed(() =>
+  parkStore.park ? +(parkStore.park.commission_rate * 100).toFixed(1) : 0,
+)
 
 definePage({
   meta: {
@@ -65,26 +105,68 @@ function openEdit() {
     return
   editForm.name = parkStore.park.name
   editForm.description = parkStore.park.description ?? ''
-  editForm.bin = parkStore.park.bin ?? ''
   editForm.phone = parkStore.park.phone ?? ''
-  editForm.commission_rate_pct = +(parkStore.park.commission_rate * 100).toFixed(1)
   isEditing.value = true
 }
 
 async function saveEdit() {
-  const payload = {
+  // Быстрая правка меняет только имя/описание/телефон. БИН и комиссия — через
+  // заявку с одобрением админа (openChange/submitChange).
+  await parkStore.update({
     name: editForm.name || undefined,
     description: editForm.description || undefined,
-    bin: editForm.bin || undefined,
     phone: editForm.phone || undefined,
-    commission_rate: editForm.commission_rate_pct ? +(editForm.commission_rate_pct / 100).toFixed(4) : undefined,
-  }
-  await parkStore.update(payload)
+  })
   isEditing.value = false
 }
 
-async function copyToken(token: string) {
-  await copy(token)
+function openChange() {
+  if (!parkStore.park)
+    return
+  changeForm.bin = parkStore.park.bin ?? ''
+  changeForm.commission_rate_pct = commissionPct.value
+  isChangeOpen.value = true
+}
+
+async function submitChange() {
+  const bin = changeForm.bin.trim()
+  const currentBin = (parkStore.park?.bin ?? '').trim()
+  const payload: ParkChangeRequestPayload = {}
+
+  if (bin && bin !== currentBin)
+    payload.bin = bin
+  if (changeForm.commission_rate_pct !== commissionPct.value)
+    payload.commission_rate = +(changeForm.commission_rate_pct / 100).toFixed(4)
+
+  if (payload.bin === undefined && payload.commission_rate === undefined) {
+    toast.info('Ничего не изменилось', 'Измените БИН или комиссию перед отправкой заявки.')
+    return
+  }
+
+  await parkStore.submitChangeRequest(payload)
+  isChangeOpen.value = false
+  toast.success('Заявка отправлена', 'Изменения применятся после одобрения администратором.')
+}
+
+async function openQr(token: string) {
+  qrToken.value = token
+  qrLink.value = buildParkInviteDeepLink(TG_DRIVER_BOT_USERNAME, token)
+  qrImage.value = ''
+  isQrOpen.value = true
+  try {
+    qrImage.value = await QRCode.toDataURL(qrLink.value, {
+      width: 320,
+      margin: 2,
+      color: { dark: '#06142f', light: '#ffffff' },
+    })
+  }
+  catch {
+    qrImage.value = ''
+  }
+}
+
+async function copyInviteLink(token: string) {
+  await copy(buildParkInviteDeepLink(TG_DRIVER_BOT_USERNAME, token))
   copiedToken.value = token
 }
 </script>
@@ -121,7 +203,7 @@ async function copyToken(token: string) {
       </button>
     </template>
 
-    <!-- Edit modal -->
+    <!-- Quick edit modal: имя / описание / телефон -->
     <Teleport to="body">
       <Transition enter-active-class="transition duration-150" enter-from-class="opacity-0" leave-active-class="transition duration-100" leave-to-class="opacity-0">
         <div
@@ -136,6 +218,9 @@ async function copyToken(token: string) {
             <h2 class="text-xl font-950">
               Редактировать парк
             </h2>
+            <p class="mt-1 text-sm text-white/50 leading-5">
+              Название, описание и телефон. БИН и комиссию можно изменить отдельной заявкой.
+            </p>
 
             <div class="grid mt-5 gap-3">
               <label class="grid gap-1.5">
@@ -147,16 +232,8 @@ async function copyToken(token: string) {
                 <textarea v-model="editForm.description" class="w-full border border-white/10 rounded-xl bg-white/8 px-4 py-3 text-sm outline-none focus:border-cyan-300/40" rows="3" />
               </label>
               <label class="grid gap-1.5">
-                <span class="text-xs text-white/42 font-900 uppercase">БИН</span>
-                <input v-model="editForm.bin" class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40" type="text">
-              </label>
-              <label class="grid gap-1.5">
                 <span class="text-xs text-white/42 font-900 uppercase">Телефон</span>
                 <input v-model="editForm.phone" class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40" type="tel">
-              </label>
-              <label class="grid gap-1.5">
-                <span class="text-xs text-white/42 font-900 uppercase">Комиссия (%)</span>
-                <input v-model.number="editForm.commission_rate_pct" class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40" type="number" step="0.1" min="0" max="3">
               </label>
             </div>
 
@@ -177,6 +254,108 @@ async function copyToken(token: string) {
               </button>
             </div>
           </form>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Change-request modal: БИН + комиссия (через одобрение админа) -->
+    <Teleport to="body">
+      <Transition enter-active-class="transition duration-150" enter-from-class="opacity-0" leave-active-class="transition duration-100" leave-to-class="opacity-0">
+        <div
+          v-if="isChangeOpen"
+          class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 backdrop-blur-sm sm:items-center"
+          @click.self="isChangeOpen = false"
+        >
+          <form
+            class="max-w-lg w-full border border-white/10 rounded-3xl bg-#071a38 p-6 shadow-2xl"
+            @submit.prevent="submitChange()"
+          >
+            <h2 class="text-xl font-950">
+              Изменить БИН и комиссию
+            </h2>
+            <p class="mt-1 text-sm text-white/50 leading-5">
+              Эти поля меняются только через заявку — изменения применятся после одобрения администратором.
+            </p>
+
+            <div class="grid mt-5 gap-3">
+              <label class="grid gap-1.5">
+                <span class="text-xs text-white/42 font-900 uppercase">БИН</span>
+                <input v-model="changeForm.bin" class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40" inputmode="numeric" maxlength="12" placeholder="123456789012" type="text">
+              </label>
+              <label class="grid gap-1.5">
+                <span class="text-xs text-white/42 font-900 uppercase">Комиссия парка (%)</span>
+                <input v-model.number="changeForm.commission_rate_pct" class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40" max="3" min="0" step="0.1" type="number">
+                <span class="text-xs text-white/38">Максимум 3%. Комиссия платформы (7%) добавляется отдельно.</span>
+              </label>
+            </div>
+
+            <div class="mt-5 flex gap-3">
+              <button
+                :disabled="parkStore.isMutating"
+                class="h-11 flex-1 rounded-2xl bg-cyan-300 text-sm text-#06142f font-900 transition hover:bg-cyan-200 disabled:opacity-60"
+                type="submit"
+              >
+                {{ parkStore.isMutating ? 'Отправляем...' : 'Отправить заявку' }}
+              </button>
+              <button
+                class="h-11 border border-white/12 rounded-2xl bg-white/8 px-5 text-sm font-900 transition hover:bg-white/12"
+                type="button"
+                @click="isChangeOpen = false"
+              >
+                Отмена
+              </button>
+            </div>
+          </form>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- QR-приглашение водителя -->
+    <Teleport to="body">
+      <Transition enter-active-class="transition duration-150" enter-from-class="opacity-0" leave-active-class="transition duration-100" leave-to-class="opacity-0">
+        <div
+          v-if="isQrOpen"
+          class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 backdrop-blur-sm sm:items-center"
+          @click.self="isQrOpen = false"
+        >
+          <div class="max-w-sm w-full border border-white/10 rounded-3xl bg-#071a38 p-6 text-center shadow-2xl">
+            <h2 class="text-xl font-950">
+              Пригласить водителя
+            </h2>
+            <p class="mt-1 text-sm text-white/55 leading-5">
+              Водитель сканирует QR — приложение предложит вступить в парк (или сменить текущий).
+            </p>
+
+            <div class="mt-5 flex justify-center">
+              <div class="border border-white/10 rounded-2xl bg-white p-3">
+                <img v-if="qrImage" alt="QR-приглашение" class="h-56 w-56" :src="qrImage">
+                <div v-else class="h-56 w-56 flex items-center justify-center text-sm text-#06142f/60">
+                  Генерируем...
+                </div>
+              </div>
+            </div>
+
+            <p class="mt-4 break-all text-xs text-white/45 font-mono">
+              {{ qrLink }}
+            </p>
+
+            <div class="mt-4 flex gap-3">
+              <button
+                class="h-11 flex-1 rounded-2xl bg-cyan-300 text-sm text-#06142f font-900 transition hover:bg-cyan-200"
+                type="button"
+                @click="copyInviteLink(qrToken)"
+              >
+                {{ copied && copiedToken === qrToken ? 'Скопировано' : 'Копировать ссылку' }}
+              </button>
+              <button
+                class="h-11 border border-white/12 rounded-2xl bg-white/8 px-5 text-sm font-900 transition hover:bg-white/12"
+                type="button"
+                @click="isQrOpen = false"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
         </div>
       </Transition>
     </Teleport>
@@ -221,14 +400,63 @@ async function copyToken(token: string) {
             <p v-if="parkStore.park.description" class="mt-1 text-sm text-white/62 leading-5">
               {{ parkStore.park.description }}
             </p>
-            <p class="mt-2 text-sm text-white/50">
-              {{ parkStore.park.bin || parkStore.park.phone || parkStore.park.owner_id }}
-            </p>
           </div>
 
           <span class="rounded-xl px-3 py-2 text-xs font-900" :class="parkStatusClasses[parkStatus]">
             {{ parkStatusLabels[parkStatus] }}
           </span>
+        </div>
+
+        <!-- Реквизиты: БИН / телефон / комиссия -->
+        <div class="grid mt-4 gap-3 sm:grid-cols-3">
+          <div class="rounded-2xl bg-black/14 px-4 py-3">
+            <p class="text-xs text-white/42 font-900 uppercase">
+              БИН
+            </p>
+            <p class="mt-0.5 text-sm font-900">
+              {{ parkStore.park.bin || '—' }}
+            </p>
+          </div>
+          <div class="rounded-2xl bg-black/14 px-4 py-3">
+            <p class="text-xs text-white/42 font-900 uppercase">
+              Телефон
+            </p>
+            <p class="mt-0.5 text-sm font-900">
+              {{ parkStore.park.phone || '—' }}
+            </p>
+          </div>
+          <div class="rounded-2xl bg-black/14 px-4 py-3">
+            <p class="text-xs text-white/42 font-900 uppercase">
+              Комиссия парка
+            </p>
+            <p class="mt-0.5 text-sm font-900">
+              {{ commissionPct }}%
+            </p>
+          </div>
+        </div>
+
+        <!-- Заявка на изменение БИН/комиссии -->
+        <div v-if="!isPeeking" class="mt-4">
+          <div v-if="pendingChange" class="flex flex-wrap items-center justify-between gap-3 border border-amber-300/18 rounded-2xl bg-amber-300/8 p-4">
+            <div>
+              <p class="text-xs text-amber-300/80 font-900 uppercase">
+                Заявка на рассмотрении
+              </p>
+              <p class="mt-1 text-sm text-white/70 leading-5">
+                {{ pendingChangeSummary }}
+              </p>
+            </div>
+            <span class="i-mdi-clock-outline text-6 text-amber-300" />
+          </div>
+          <button
+            v-else
+            class="h-10 inline-flex items-center gap-2 border border-white/12 rounded-xl bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12"
+            type="button"
+            @click="openChange()"
+          >
+            <span class="i-mdi-file-document-edit-outline text-4.5 text-cyan-200" />
+            Изменить БИН и комиссию
+          </button>
         </div>
 
         <div v-if="parkStatus === 'rejected'" class="mt-4 border border-red-400/18 rounded-2xl bg-red-500/8 p-4">
@@ -270,9 +498,14 @@ async function copyToken(token: string) {
 
       <section class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-xl font-950">
-            Приглашения
-          </h2>
+          <div>
+            <h2 class="text-xl font-950">
+              Приглашения
+            </h2>
+            <p class="mt-1 text-sm text-white/55">
+              Создайте ссылку-приглашение и покажите водителю QR — он вступит в парк в один тап.
+            </p>
+          </div>
           <button
             v-if="!isPeeking"
             :disabled="parkStore.isMutating"
@@ -288,22 +521,33 @@ async function copyToken(token: string) {
           <p v-if="!parkStore.invites.length" class="text-sm text-white/50">
             Приглашений нет.
           </p>
-          <div v-for="invite in parkStore.invites" :key="invite.id ?? invite.token" class="flex items-center gap-3 rounded-xl bg-black/14 p-3">
+          <div v-for="invite in parkStore.invites" :key="invite.id ?? invite.token" class="flex flex-wrap items-center gap-3 rounded-xl bg-black/14 p-3">
             <p class="min-w-0 flex-1 break-all text-sm font-900 font-mono">
               {{ invite.token }}
             </p>
-            <div class="flex shrink-0 flex-col items-end gap-1.5">
+            <span class="text-xs text-white/38">
+              {{ invite.used_by ? 'Использовано' : 'Активно' }}
+            </span>
+            <div class="flex shrink-0 gap-1.5">
               <button
-                class="h-8 rounded-lg bg-white/8 px-3 text-xs font-900 transition hover:bg-white/14"
+                class="h-8 inline-flex items-center gap-1 rounded-lg bg-white/8 px-3 text-xs font-900 transition hover:bg-white/14"
                 type="button"
-                @click="copyToken(invite.token)"
+                @click="copyInviteLink(invite.token)"
               >
                 <span v-if="copied && copiedToken === invite.token" class="text-emerald-300">Скопировано</span>
-                <span v-else>Копировать</span>
+                <template v-else>
+                  <span class="i-mdi-link-variant text-3.5" />
+                  Ссылка
+                </template>
               </button>
-              <p class="text-right text-xs text-white/38">
-                {{ invite.used_by ? 'Использовано' : 'Активно' }}
-              </p>
+              <button
+                class="h-8 inline-flex items-center gap-1 rounded-lg bg-cyan-300/14 px-3 text-xs text-cyan-200 font-900 transition hover:bg-cyan-300/22"
+                type="button"
+                @click="openQr(invite.token)"
+              >
+                <span class="i-mdi-qrcode text-3.5" />
+                QR
+              </button>
             </div>
           </div>
         </div>

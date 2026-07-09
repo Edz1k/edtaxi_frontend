@@ -1,8 +1,12 @@
 import type {
+  AdminParkChangeRequestsResponse,
   AdminParkChatsResponse,
   AdminParksResponse,
   CreatePlatformGaragePayload,
   ParkAnalytics,
+  ParkChangeRequest,
+  ParkChangeRequestPayload,
+  ParkChangeRequestResponse,
   ParkChatMessage,
   ParkChatMessagesResponse,
   ParkChatRoom,
@@ -46,6 +50,19 @@ export function createParkInvite() {
 
 export function listParkInvites(parkId?: string) {
   return apiRequest<ParkInvitesResponse>('/park/invites', { params: { park_id: parkId } })
+}
+
+// Заявка парка на изменение БИН/комиссии — применяется после одобрения админом.
+export function submitParkChangeRequest(payload: ParkChangeRequestPayload) {
+  return apiRequest<ParkChangeRequest>('/park/change-request', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+// Активная (ожидающая) заявка парка — для баннера в кабинете.
+export function getMyParkChangeRequest() {
+  return apiRequest<ParkChangeRequestResponse>('/park/change-request')
 }
 
 export function listParkDrivers(parkId?: string) {
@@ -140,6 +157,23 @@ export function setAdminParkPlatform(id: string, isPlatform: boolean) {
 export function listAdminParkChats(params: { limit?: number, offset?: number, status?: string } = {}) {
   return apiRequest<AdminParkChatsResponse>('/admin/park-chats', {
     params,
+  })
+}
+
+// Заявки парков на изменение БИН/комиссии — админ одобряет/отклоняет.
+export function listAdminParkChangeRequests() {
+  return apiRequest<AdminParkChangeRequestsResponse>('/admin/park-change-requests')
+}
+
+export function approveParkChangeRequest(id: string) {
+  return apiRequest<ParkChangeRequest>(`/admin/park-change-requests/${id}/approve`, {
+    method: 'POST',
+  })
+}
+
+export function rejectParkChangeRequest(id: string) {
+  return apiRequest<ParkChangeRequest>(`/admin/park-change-requests/${id}/reject`, {
+    method: 'POST',
   })
 }
 
