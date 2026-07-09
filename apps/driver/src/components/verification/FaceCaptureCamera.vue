@@ -34,31 +34,16 @@ let stableTicks = 0
 // Telegram-вебвью (и Android, и iOS) object-fit на <video> с CSS transform
 // местами игнорируется, и превью рисовалось узкой полосой.
 //
-// Ориентация: часть вебвью игнорирует запрошенный портрет 9:16 и отдаёт кадр
-// в «сенсорной» ориентации — длинной стороной ГОРИЗОНТАЛЬНО (1280×720), хотя
-// телефон вертикальный. Тогда доворачиваем кадр на 90° (и превью, и снимок —
-// см. snap), а масштаб считаем по ДОВЁРНУТЫМ габаритам: длинная сторона кадра
-// ложится на длинную сторону экрана, никаких полос.
+// Кадр НЕ доворачиваем: вебвью отдаёт картинку уже правильно ориентированной
+// (лицо ровное), просто иногда в ландшафтном кадре 1280×720 — это ландшафтная
+// РАМКА, а не повёрнутый кадр, и rotate(90deg) клал лицо набок. Портрет
+// добываем у самой камеры (см. openPortraitStream), а на экран кладём cover.
 //
-// Масштаб — «cover с ограничителем»: обычный cover на весь экран (никаких
-// чёрных рамок), но не больше чем contain×MAX_CROP_SCALE — чтобы квадратный
-// 3:4-кадр не выглядел «приближенным в 2 раза» (останутся узкие поля).
-const MAX_CROP_SCALE = 1.4
+// crop — видимая часть кадра в координатах источника. Один и тот же кроп
+// используют превью, детектор и снимок, поэтому в поддержку уезжает ровно то,
+// что водитель видел в овале.
 const videoStyle = ref<Record<string, string>>({})
-const isRotated = ref(false)
-
-function computeRotation() {
-  const video = videoRef.value
-  const sw = video?.videoWidth ?? 0
-  const sh = video?.videoHeight ?? 0
-  if (!sw || !sh) {
-    isRotated.value = false
-    return
-  }
-  const screenPortrait = window.innerHeight >= window.innerWidth
-  const streamPortrait = sh >= sw
-  isRotated.value = screenPortrait !== streamPortrait
-}
+const crop = ref({ h: 0, w: 0, x: 0, y: 0 })
 
 function fitVideo() {
   const video = videoRef.value
@@ -71,39 +56,90 @@ function fitVideo() {
   const sh = video?.videoHeight ?? 0
   if (!sw || !sh) {
     // Метаданных ещё нет — пока просто на весь экран; уточним по loadedmetadata.
+    crop.value = { h: 0, w: 0, x: 0, y: 0 }
     videoStyle.value = { height: `${vh}px`, left: '0px', top: '0px', transform: 'scaleX(-1)', width: `${vw}px` }
     return
   }
 
-  computeRotation()
-
-  // Эффективные габариты — какими кадр ЛЯЖЕТ на экран (с учётом доворота).
-  const effW = isRotated.value ? sh : sw
-  const effH = isRotated.value ? sw : sh
-
-  const coverScale = Math.max(vw / effW, vh / effH)
-  const containScale = Math.min(vw / effW, vh / effH)
-  const scale = Math.min(coverScale, containScale * MAX_CROP_SCALE)
-
-  // Бокс элемента — в «сырых» габаритах кадра; rotate вокруг центра сам
-  // меняет визуальные стороны местами, центр при этом не сдвигается.
+  // Cover: кадр заполняет экран целиком, лишнее уходит за края — как в
+  // системной камере. Полос не остаётся ни при 9:16, ни при 3:4, ни при 16:9.
+  const scale = Math.max(vw / sw, vh / sh)
   const width = Math.ceil(sw * scale)
   const height = Math.ceil(sh * scale)
   videoStyle.value = {
     height: `${height}px`,
     left: `${Math.round((vw - width) / 2)}px`,
     top: `${Math.round((vh - height) / 2)}px`,
-    // Зеркалим, как привычное селфи; при несовпадении ориентаций — доворот.
-    transform: isRotated.value ? 'scaleX(-1) rotate(90deg)' : 'scaleX(-1)',
+    // Зеркалим, как привычное селфи.
+    transform: 'scaleX(-1)',
     width: `${width}px`,
   }
+
+  const cropW = Math.min(sw, vw / scale)
+  const cropH = Math.min(sh, vh / scale)
+  crop.value = { h: cropH, w: cropW, x: (sw - cropW) / 2, y: (sh - cropH) / 2 }
 }
 
 // Овал в центре экрана: доля от меньшей стороны вьюпорта.
 const OVAL_WIDTH_VMIN = 68
 const OVAL_HEIGHT_VMIN = 88
+const OVAL_CENTER_Y = 0.46
 // Сколько подряд удачных детекций нужно до снимка (~0.3с на тик).
 const REQUIRED_STABLE_TICKS = 4
+
+// Наборы constraints от самого желанного к самому терпимому. Раньше в одном
+// наборе шли и width/height, и aspectRatio — вебвью выбирал ближайший режим
+// сенсора и отдавал 1280×720, то есть портрета мы не получали никогда.
+// Здесь каждый набор непротиворечив, и мы просто берём первый, давший портрет.
+const STREAM_CONSTRAINTS: MediaTrackConstraints[] = [
+  { facingMode: 'user', height: { exact: 1920 }, width: { exact: 1080 } },
+  { facingMode: 'user', height: { exact: 1280 }, width: { exact: 720 } },
+  { aspectRatio: { exact: 9 / 16 }, facingMode: 'user' },
+  { facingMode: 'user', height: { ideal: 1280 }, width: { ideal: 720 } },
+  { facingMode: 'user' },
+]
+
+function isPortrait(track: MediaStreamTrack) {
+  const { height = 0, width = 0 } = track.getSettings()
+  // Габаритов нет (часть вебвью их не отдаёт) — считаем, что режим подошёл:
+  // отбраковывать по незнанию хуже, чем сверстать по фактическим videoWidth.
+  return !width || !height || height >= width
+}
+
+// Портретный поток берём у камеры, а не «доворотом» кадра. Ландшафтные режимы
+// пропускаем, но если портрета нет вовсе — открываем что дают: с cover-кропом
+// камера всё равно заполнит экран, просто поле зрения по бокам будет уже.
+async function openPortraitStream(): Promise<MediaStream | null> {
+  let sawLandscape = false
+
+  for (const video of STREAM_CONSTRAINTS) {
+    let candidate: MediaStream
+    try {
+      candidate = await navigator.mediaDevices.getUserMedia({ audio: false, video })
+    }
+    catch {
+      // Режим не поддержан (OverconstrainedError) — пробуем следующий.
+      continue
+    }
+
+    const track = candidate.getVideoTracks()[0]
+    if (track && isPortrait(track))
+      return candidate
+
+    // Две камеры одновременно iOS не отдаёт — освобождаем перед новой попыткой.
+    sawLandscape = true
+    candidate.getTracks().forEach(t => t.stop())
+  }
+
+  if (!sawLandscape)
+    return null
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user' } })
+  }
+  catch {
+    return null
+  }
+}
 
 watch(() => props.open, (open) => {
   if (open)
@@ -126,21 +162,8 @@ async function start() {
     return
   }
 
-  try {
-    // 9:16 вместо дефолтных 3:4 сенсора: портретный стрим почти совпадает с
-    // экраном, и object-cover почти не режет кадр по бокам — без этого камера
-    // выглядела «приближенной в 2 раза» и лицо не влезало в овал.
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        facingMode: 'user',
-        width: { ideal: 720 },
-        height: { ideal: 1280 },
-        aspectRatio: { ideal: 9 / 16 },
-      },
-    })
-  }
-  catch {
+  stream = await openPortraitStream()
+  if (!stream) {
     // Нет разрешения/камеры — не блокируем водителя, отдаём системный фолбэк.
     bailToFallback()
     return
@@ -153,12 +176,15 @@ async function start() {
   }
   video.srcObject = stream
   fitVideo()
+  // videoWidth/videoHeight появляются на loadedmetadata и МЕНЯЮТСЯ на resize
+  // (например, после applyConstraints ниже) — пересчитываем кроп на обоих.
   video.onloadedmetadata = fitVideo
+  video.onresize = fitVideo
   window.addEventListener('resize', fitVideo)
   window.addEventListener('orientationchange', fitVideo)
 
-  // Третий слой против «приближенной» камеры: если трек умеет аппаратный
-  // zoom (iOS 17+, часть Android) — принудительно ставим минимальный.
+  // Если трек умеет аппаратный zoom (iOS 17+, часть Android) — принудительно
+  // ставим минимальный: иначе камера открывается «приближенной в 2 раза».
   try {
     const track = stream.getVideoTracks()[0]
     const caps = (track?.getCapabilities?.() ?? {}) as { zoom?: { min?: number } }
@@ -166,7 +192,7 @@ async function start() {
       await track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] } as unknown as MediaTrackConstraints)
   }
   catch {
-    // zoom не поддерживается — не критично, contain уже сохраняет полный кадр.
+    // zoom не поддерживается — не критично, кадр просто останется как есть.
   }
 
   try {
@@ -208,7 +234,7 @@ function startDetection() {
       return
     try {
       const faces = await detector.detect(video)
-      if (faceInsideOval(faces, video)) {
+      if (faceInsideOval(faces)) {
         stableTicks++
         status.value = 'hold'
         hint.value = 'Отлично! Не двигайтесь...'
@@ -237,53 +263,54 @@ function startDetection() {
   }, 300)
 }
 
-// Лицо считается «в овале», когда его центр внутри центральной зоны кадра и
-// оно достаточно крупное (не силуэт в углу и не человек в трёх метрах).
-// Пороги подобраны под 9:16-стрим (более широкое поле зрения): лицо на
-// комфортной дистанции занимает меньшую долю кадра, чем при 3:4.
-function faceInsideOval(faces: Array<{ boundingBox: DOMRectReadOnly }>, video: HTMLVideoElement) {
+// Лицо считается «в овале», когда его центр попал внутрь овала (с запасом) и
+// само лицо сопоставимо с овалом по ширине — не силуэт в углу и не человек в
+// трёх метрах. Пороги считаем от ВИДИМОГО кропа, а не от всего кадра: иначе
+// на широком 16:9-стриме лицо, заполняющее овал, — это доли процента кадра, и
+// детектор не срабатывает никогда.
+function faceInsideOval(faces: Array<{ boundingBox: DOMRectReadOnly }>) {
   if (!faces.length)
     return false
-  const box = faces[0].boundingBox
-  const vw = video.videoWidth
-  const vh = video.videoHeight
-  if (!vw || !vh)
+  const c = crop.value
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  if (!c.w || !c.h || !vw || !vh)
     return false
-  const cx = (box.x + box.width / 2) / vw
-  const cy = (box.y + box.height / 2) / vh
-  const sizeOK = box.width >= vw * 0.16 && box.width <= vw * 0.9
-  return sizeOK && cx > 0.25 && cx < 0.75 && cy > 0.18 && cy < 0.75
+
+  const box = faces[0].boundingBox
+  // Нормируем на видимую область: 0..1 по её ширине/высоте.
+  const cx = (box.x + box.width / 2 - c.x) / c.w
+  const cy = (box.y + box.height / 2 - c.y) / c.h
+
+  const vmin = Math.min(vw, vh)
+  const ovalRx = (OVAL_WIDTH_VMIN / 100) * vmin / 2 / vw
+  const ovalRy = (OVAL_HEIGHT_VMIN / 100) * vmin / 2 / vh
+
+  // Центр лица — в средних 60% овала: так лицо стоит по центру, а не у края.
+  const dx = (cx - 0.5) / (ovalRx * 0.6)
+  const dy = (cy - OVAL_CENTER_Y) / (ovalRy * 0.6)
+  if (dx * dx + dy * dy > 1)
+    return false
+
+  // Ширина лица относительно ширины овала — обе в долях видимой ширины.
+  const faceRatio = box.width / c.w / (ovalRx * 2)
+  return faceRatio >= 0.42 && faceRatio <= 1.2
 }
 
 async function snap(auto: boolean) {
   const video = videoRef.value
-  if (!video || !video.videoWidth)
+  const c = crop.value
+  if (!video || !video.videoWidth || !c.w || !c.h)
     return
+  // Режем ровно видимую область: снимок совпадает с превью, и поддержка
+  // получает вертикальное фото, даже если сама камера отдала ландшафтный кадр.
   const canvas = document.createElement('canvas')
-  const ctx = (() => {
-    if (isRotated.value) {
-      // Кадр пришёл боком (сенсорная ориентация) — снимок доворачиваем на те
-      // же 90°, что и превью: поддержка получает вертикальное фото, а не лежачее.
-      canvas.width = video.videoHeight
-      canvas.height = video.videoWidth
-      const context = canvas.getContext('2d')
-      if (!context)
-        return null
-      context.translate(canvas.width / 2, canvas.height / 2)
-      context.rotate(Math.PI / 2)
-      context.drawImage(video, -video.videoWidth / 2, -video.videoHeight / 2)
-      return context
-    }
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    const context = canvas.getContext('2d')
-    if (!context)
-      return null
-    context.drawImage(video, 0, 0)
-    return context
-  })()
+  canvas.width = Math.round(c.w)
+  canvas.height = Math.round(c.h)
+  const ctx = canvas.getContext('2d')
   if (!ctx)
     return
+  ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, canvas.width, canvas.height)
 
   const blob = await new Promise<Blob | null>(resolve =>
     canvas.toBlob(resolve, 'image/jpeg', 0.92))
@@ -337,6 +364,7 @@ function stop() {
   stopDetection()
   stableTicks = 0
   holdProgress.value = 0
+  crop.value = { h: 0, w: 0, x: 0, y: 0 }
   clearManualPreview()
   window.removeEventListener('resize', fitVideo)
   window.removeEventListener('orientationchange', fitVideo)
@@ -347,6 +375,7 @@ function stop() {
   const video = videoRef.value
   if (video) {
     video.onloadedmetadata = null
+    video.onresize = null
     video.srcObject = null
   }
 }
@@ -355,7 +384,7 @@ function stop() {
 <template>
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 z-90 bg-black">
-      <!-- Живое видео: габариты «contain» считаются в px (см. fitVideo) —
+      <!-- Живое видео: габариты «cover» считаются в px (см. fitVideo) —
            object-fit на <video> с transform Telegram-вебвью игнорирует
            (превью рисовалось узкой полосой), поэтому размер задаём явно.
            max-w-none отключает глобальный max-width:100% для video. -->
