@@ -11,6 +11,7 @@ import type {
   ParkChatMessagesResponse,
   ParkChatRoom,
   ParkChatRoomsResponse,
+  ParkDailyAnalyticsResponse,
   ParkDriversResponse,
   ParkInvite,
   ParkInvitesResponse,
@@ -77,6 +78,11 @@ export function removeParkDriver(id: string) {
 
 export function getParkAnalytics(parkId?: string) {
   return apiRequest<ParkAnalytics>('/park/analytics', { params: { park_id: parkId } })
+}
+
+// Дневная серия завершённых поездок парка (по умолчанию 30 дней, максимум 90).
+export function getParkDailyAnalytics(parkId?: string, days = 30) {
+  return apiRequest<ParkDailyAnalyticsResponse>('/park/analytics/daily', { params: { days, park_id: parkId } })
 }
 
 // Park wallet (park owner side)

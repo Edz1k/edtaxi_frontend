@@ -1,4 +1,4 @@
-import type { ParkAnalytics, ParkChangeRequest, ParkChangeRequestPayload, ParkDriver, ParkInvite, TaxiPark, TaxiParkRegisterPayload, TaxiParkUpdatePayload } from '~/types/park'
+import type { ParkAnalytics, ParkChangeRequest, ParkChangeRequestPayload, ParkDailyPoint, ParkDriver, ParkInvite, TaxiPark, TaxiParkRegisterPayload, TaxiParkUpdatePayload } from '~/types/park'
 import type { ParkWallet, PayoutCreatePayload, PayoutRequest } from '~/types/payout'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
@@ -8,6 +8,7 @@ import {
   getMyPark,
   getMyParkChangeRequest,
   getParkAnalytics,
+  getParkDailyAnalytics,
   getParkWallet,
   listParkDrivers,
   listParkInvites,
@@ -23,6 +24,9 @@ import { useStoreAction } from '~/composables/useStoreAction'
 export const useParkStore = defineStore('park', () => {
   const park = ref<TaxiPark | null>(null)
   const analytics = ref<ParkAnalytics | null>(null)
+  // Дневная серия для барчарта динамики; null — эндпоинт недоступен
+  // (старый бэкенд), тогда секция динамики скрывается.
+  const dailyAnalytics = ref<null | ParkDailyPoint[]>(null)
   const drivers = ref<ParkDriver[]>([])
   const invites = ref<ParkInvite[]>([])
   // Активная (ожидающая) заявка на изменение БИН/комиссии — для баннера.
@@ -77,14 +81,18 @@ export const useParkStore = defineStore('park', () => {
 
   async function loadDashboard() {
     return withLoading(isLoading, async () => {
-      const [analyticsResponse, driversResponse, invitesResponse, changeResponse] = await Promise.all([
+      const [analyticsResponse, dailyResponse, driversResponse, invitesResponse, changeResponse] = await Promise.all([
         getParkAnalytics(viewParkId.value),
+        // Дневная серия не критична: на бэкенде без /park/analytics/daily
+        // кабинет продолжает работать, просто без чарта динамики.
+        getParkDailyAnalytics(viewParkId.value).catch(() => null),
         listParkDrivers(viewParkId.value),
         listParkInvites(viewParkId.value),
         // Заявка на изменение — только для своего парка (не для чужого просмотра).
         viewParkId.value ? Promise.resolve({ request: null }) : getMyParkChangeRequest().catch(() => ({ request: null })),
       ])
       analytics.value = analyticsResponse
+      dailyAnalytics.value = dailyResponse?.days ?? null
       drivers.value = driversResponse.drivers
       invites.value = invitesResponse.invites
       changeRequest.value = changeResponse.request
@@ -149,6 +157,7 @@ export const useParkStore = defineStore('park', () => {
   function clearParkState() {
     park.value = null
     analytics.value = null
+    dailyAnalytics.value = null
     drivers.value = []
     invites.value = []
     changeRequest.value = null
@@ -163,6 +172,7 @@ export const useParkStore = defineStore('park', () => {
 
   return {
     analytics,
+    dailyAnalytics,
     changeRequest,
     clearParkState,
     createInvite,

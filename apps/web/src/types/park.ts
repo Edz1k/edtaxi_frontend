@@ -127,6 +127,20 @@ export interface ParkAnalytics {
   trip_count: number
 }
 
+// Дневная точка GET /park/analytics/daily: завершённые поездки, выручка и
+// число водителей парка, возивших в этот день. Серия непрерывная (пустые
+// дни — нулями).
+export interface ParkDailyPoint {
+  date: string // YYYY-MM-DD
+  trips: number
+  revenue: number
+  active_drivers: number
+}
+
+export interface ParkDailyAnalyticsResponse {
+  days: ParkDailyPoint[]
+}
+
 export interface AdminParksResponse {
   parks: TaxiPark[]
 }

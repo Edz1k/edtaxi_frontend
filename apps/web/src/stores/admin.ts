@@ -1,10 +1,10 @@
-import type { AdminAssignableRole, AdminListTripsParams, AdminListUsersParams, AdminSupportStats, AdminTechSupportNumber, AdminUser, CreateParkOwnerPayload, DemandOverview, PlatformSettings, PlatformSettingsUpdatePayload, Tariff, TariffPayload } from '~/types/admin'
+import type { AdminAssignableRole, AdminCityStat, AdminListTripsParams, AdminListUsersParams, AdminOverview, AdminSupportStats, AdminTechSupportNumber, AdminUser, CreateParkOwnerPayload, DemandOverview, PlatformSettings, PlatformSettingsUpdatePayload, Tariff, TariffPayload } from '~/types/admin'
 import type { ParkChangeRequest, ParkChatRoom, ParkStatus, TaxiPark } from '~/types/park'
 import type { AdminListPayoutsParams, PayoutRequest } from '~/types/payout'
 import type { AdminSupportRoomsParams, SupportRoom } from '~/types/support'
 import type { Trip } from '~/types/trips'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, assignAdminSupportRoom, blockAdminUser, closeAdminSupportRoom, createAdminTariff, createParkOwner as createParkOwnerApi, getAdminTrip, getDemandOverview, getPlatformSettings, getSupportStats, listAdminPayouts, listAdminSupportRooms, listAdminTariffs, listAdminTrips, listAdminUsers, listTechSupportNumbers, markAdminPayoutPaid, rejectAdminPayout, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi, updateAdminTariff, updatePlatformSettings } from '~/api/admin'
+import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, assignAdminSupportRoom, blockAdminUser, closeAdminSupportRoom, createAdminTariff, createParkOwner as createParkOwnerApi, getAdminCityStats, getAdminOverview, getAdminTrip, getDemandOverview, getPlatformSettings, getSupportStats, listAdminPayouts, listAdminSupportRooms, listAdminTariffs, listAdminTrips, listAdminUsers, listTechSupportNumbers, markAdminPayoutPaid, rejectAdminPayout, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi, updateAdminTariff, updatePlatformSettings } from '~/api/admin'
 import { ApiError } from '~/api/client'
 import { approveParkChangeRequest, listAdminParkChangeRequests, listAdminParkChats, listAdminParks, rejectAdminPark, rejectParkChangeRequest, setAdminParkPlatform, verifyAdminPark } from '~/api/park'
 import { useStoreAction } from '~/composables/useStoreAction'
@@ -25,6 +25,10 @@ export const useAdminStore = defineStore('admin', () => {
   const platformSettings = ref<PlatformSettings | null>(null)
   const tariffs = ref<Tariff[]>([])
   const demandOverview = ref<DemandOverview | null>(null)
+  // Обзорный дашборд: тоталы + серии для чартов и сводка по городам.
+  const overview = ref<AdminOverview | null>(null)
+  const cityStats = ref<AdminCityStat[]>([])
+  const isLoadingOverview = ref(false)
   const isLoadingTariffs = ref(false)
   const isLoadingDemand = ref(false)
   const isLoadingSupportStats = ref(false)
@@ -281,6 +285,19 @@ export const useAdminStore = defineStore('admin', () => {
     }, 'Не удалось сохранить тариф.')
   }
 
+  async function loadOverview() {
+    return withLoading(isLoadingOverview, async () => {
+      // Сводка по городам не критична для дашборда — её отказ не роняет обзор.
+      const [overviewResponse, cityStatsResponse] = await Promise.all([
+        getAdminOverview(),
+        getAdminCityStats().catch(() => ({ stats: [] })),
+      ])
+      overview.value = overviewResponse
+      cityStats.value = cityStatsResponse.stats
+      return overviewResponse
+    }, 'Не удалось загрузить обзор платформы.')
+  }
+
   async function loadDemandOverview() {
     return withLoading(isLoadingDemand, async () => {
       demandOverview.value = await getDemandOverview()
@@ -308,6 +325,9 @@ export const useAdminStore = defineStore('admin', () => {
     platformSettings.value = null
     tariffs.value = []
     demandOverview.value = null
+    overview.value = null
+    cityStats.value = []
+    isLoadingOverview.value = false
     selectedTrip.value = null
     usersTotal.value = 0
     tripsTotal.value = 0
@@ -382,6 +402,10 @@ export const useAdminStore = defineStore('admin', () => {
     verifyPark,
     tariffs,
     demandOverview,
+    overview,
+    cityStats,
+    isLoadingOverview,
+    loadOverview,
     isLoadingTariffs,
     isLoadingDemand,
     loadTariffs,

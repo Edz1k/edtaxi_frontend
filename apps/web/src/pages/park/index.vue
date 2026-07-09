@@ -4,10 +4,10 @@ import { buildParkInviteDeepLink } from '@edtaxi/shared/composables/telegram/par
 import QRCode from 'qrcode'
 import { useRoute as useVueRoute } from 'vue-router'
 import WebPageShell from '~/components/app/WebPageShell.vue'
+import ParkAnalyticsSection from '~/components/park/ParkAnalyticsSection.vue'
 import { useToast } from '~/composables/useToast'
 import { TG_DRIVER_BOT_USERNAME } from '~/constants/telegram'
 import { useParkStore } from '~/stores/park'
-import { formatRevenue } from '~/utils/format'
 
 const route = useVueRoute()
 const parkStore = useParkStore()
@@ -469,32 +469,12 @@ async function copyInviteLink(token: string) {
         </div>
       </section>
 
-      <section class="grid gap-4 md:grid-cols-3">
-        <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
-          <p class="text-xs text-white/42 font-900 uppercase">
-            Водители
-          </p>
-          <p class="mt-2 text-3xl font-950">
-            {{ parkStore.analytics?.driver_count ?? 0 }}
-          </p>
-        </div>
-        <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
-          <p class="text-xs text-white/42 font-900 uppercase">
-            Поездки
-          </p>
-          <p class="mt-2 text-3xl font-950">
-            {{ parkStore.analytics?.trip_count ?? 0 }}
-          </p>
-        </div>
-        <div class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
-          <p class="text-xs text-white/42 font-900 uppercase">
-            Выручка
-          </p>
-          <p class="mt-2 text-3xl font-950">
-            {{ formatRevenue(parkStore.analytics?.total_revenue ?? 0) }}
-          </p>
-        </div>
-      </section>
+      <ParkAnalyticsSection
+        :analytics="parkStore.analytics"
+        :daily="parkStore.dailyAnalytics"
+        :drivers="parkStore.drivers"
+        :loading="parkStore.isLoading"
+      />
 
       <section class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
         <div class="flex flex-wrap items-center justify-between gap-3">

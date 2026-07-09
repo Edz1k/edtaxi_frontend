@@ -8,6 +8,7 @@ import type {
   AdminListTripsResponse,
   AdminListUsersParams,
   AdminListUsersResponse,
+  AdminOverview,
   AdminSupportStats,
   AdminTechSupportNumber,
   AdminTechSupportNumberPayload,
@@ -166,6 +167,11 @@ export function rejectAdminPayout(id: string, reason = '') {
 
 export function getDemandOverview() {
   return apiRequest<DemandOverview>('/admin/demand')
+}
+
+// Обзорный дашборд: тоталы платформы + серии по дням (30) и месяцам (12).
+export function getAdminOverview() {
+  return apiRequest<AdminOverview>('/admin/overview')
 }
 
 export function listAdminTariffs() {
