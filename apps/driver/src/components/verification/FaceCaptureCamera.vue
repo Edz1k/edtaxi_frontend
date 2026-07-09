@@ -30,12 +30,17 @@ let stream: MediaStream | null = null
 let detectTimer: ReturnType<typeof setInterval> | null = null
 let stableTicks = 0
 
-// Видео вписываем «contain» вручную — размер в px по метаданным потока.
-// Почему вручную: на Telegram-вебвью (и Android, и iOS) object-fit на <video>
-// с CSS transform местами игнорируется, и превью рисовалось узкой полосой.
-// Почему contain, а не cover: cover обрезал бока стрима под узкий экран, и
-// камера выглядела «приближенной в 2 раза» — с contain поле зрения полное,
-// а поля по краям прячутся под чёрным фоном и маской (стрим и так ~9:16).
+// Видео растягиваем вручную — размер в px по метаданным потока: на
+// Telegram-вебвью (и Android, и iOS) object-fit на <video> с CSS transform
+// местами игнорируется, и превью рисовалось узкой полосой.
+//
+// Масштаб — «cover с ограничителем»: обычный cover на весь экран (никаких
+// чёрных рамок), но не больше чем contain×MAX_CROP_SCALE. Запрошенный стрим
+// 9:16 близок к пропорциям экрана — cover срезает лишь ~15-20% по бокам и
+// в лимит укладывается (полный экран без полей). Если же сенсор дал
+// квадратный 3:4, чистый cover выглядел «приближенным в 2 раза» — лимит
+// оставит узкие поля, зато сохранит нормальное поле зрения.
+const MAX_CROP_SCALE = 1.4
 const videoStyle = ref<Record<string, string>>({})
 
 function fitVideo() {
@@ -53,7 +58,9 @@ function fitVideo() {
     return
   }
 
-  const scale = Math.min(vw / sw, vh / sh)
+  const coverScale = Math.max(vw / sw, vh / sh)
+  const containScale = Math.min(vw / sw, vh / sh)
+  const scale = Math.min(coverScale, containScale * MAX_CROP_SCALE)
   const width = Math.ceil(sw * scale)
   const height = Math.ceil(sh * scale)
   videoStyle.value = {
