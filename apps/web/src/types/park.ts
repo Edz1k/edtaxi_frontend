@@ -48,20 +48,51 @@ export interface AdminParkChatsResponse {
   rooms: ParkChatRoom[]
 }
 
+// Регистрация: комиссию НЕ задаём — парк ставит её позже через заявку,
+// которую одобряет админ (см. ParkChangeRequestPayload).
 export interface TaxiParkRegisterPayload {
   name: string
   description?: string
   bin?: string
   phone?: string
-  commission_rate?: number
 }
 
+// Быстрая правка парком: только имя/описание/телефон. БИН и комиссия — через
+// заявку с одобрением админа. (Для админского PUT /admin/parks/:id — все поля.)
 export interface TaxiParkUpdatePayload {
   bin?: string
   commission_rate?: number
   description?: string
   name?: string
   phone?: string
+}
+
+// Заявка парка на изменение БИН и/или комиссии (одобряет админ).
+export interface ParkChangeRequestPayload {
+  bin?: string
+  // доля: 0.03 = 3%
+  commission_rate?: number
+}
+
+export interface ParkChangeRequest {
+  id: string
+  park_id: string
+  requested_bin: null | string
+  requested_commission_rate: null | number
+  status: 'approved' | 'pending' | 'rejected'
+  created_at: string
+  // Заполняется только в админском списке — контекст для решения.
+  park_name?: string
+  current_bin?: null | string
+  current_commission_rate?: number
+}
+
+export interface ParkChangeRequestResponse {
+  request: null | ParkChangeRequest
+}
+
+export interface AdminParkChangeRequestsResponse {
+  requests: ParkChangeRequest[]
 }
 
 export interface ParkInvite {

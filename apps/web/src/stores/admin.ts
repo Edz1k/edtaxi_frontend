@@ -1,12 +1,12 @@
 import type { AdminAssignableRole, AdminListTripsParams, AdminListUsersParams, AdminSupportStats, AdminTechSupportNumber, AdminUser, CreateParkOwnerPayload, DemandOverview, PlatformSettings, PlatformSettingsUpdatePayload, Tariff, TariffPayload } from '~/types/admin'
-import type { ParkChatRoom, ParkStatus, TaxiPark } from '~/types/park'
+import type { ParkChangeRequest, ParkChatRoom, ParkStatus, TaxiPark } from '~/types/park'
 import type { AdminListPayoutsParams, PayoutRequest } from '~/types/payout'
 import type { AdminSupportRoomsParams, SupportRoom } from '~/types/support'
 import type { Trip } from '~/types/trips'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, assignAdminSupportRoom, blockAdminUser, closeAdminSupportRoom, createAdminTariff, createParkOwner as createParkOwnerApi, getAdminTrip, getDemandOverview, getPlatformSettings, getSupportStats, listAdminPayouts, listAdminSupportRooms, listAdminTariffs, listAdminTrips, listAdminUsers, listTechSupportNumbers, markAdminPayoutPaid, rejectAdminPayout, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi, updateAdminTariff, updatePlatformSettings } from '~/api/admin'
 import { ApiError } from '~/api/client'
-import { listAdminParkChats, listAdminParks, rejectAdminPark, setAdminParkPlatform, verifyAdminPark } from '~/api/park'
+import { approveParkChangeRequest, listAdminParkChangeRequests, listAdminParkChats, listAdminParks, rejectAdminPark, rejectParkChangeRequest, setAdminParkPlatform, verifyAdminPark } from '~/api/park'
 import { useStoreAction } from '~/composables/useStoreAction'
 import { useAuthStore } from '~/stores/auth'
 
@@ -15,6 +15,9 @@ export const useAdminStore = defineStore('admin', () => {
   const trips = ref<Trip[]>([])
   const parks = ref<TaxiPark[]>([])
   const parkChats = ref<ParkChatRoom[]>([])
+  // Заявки парков на изменение БИН/комиссии (ожидающие одобрения).
+  const parkChangeRequests = ref<ParkChangeRequest[]>([])
+  const isLoadingParkChangeRequests = ref(false)
   const techSupportNumbers = ref<AdminTechSupportNumber[]>([])
   const supportStats = ref<AdminSupportStats | null>(null)
   const supportRooms = ref<SupportRoom[]>([])
@@ -120,6 +123,25 @@ export const useAdminStore = defineStore('admin', () => {
       await setAdminParkPlatform(park.id, isPlatform)
       park.is_platform = isPlatform
     }, 'Не удалось изменить статус партнёра платформы.')
+  }
+
+  async function loadParkChangeRequests() {
+    return withLoading(isLoadingParkChangeRequests, async () => {
+      const response = await listAdminParkChangeRequests()
+      parkChangeRequests.value = response.requests
+      return response
+    }, 'Не удалось загрузить заявки на изменение парков.')
+  }
+
+  // Одобряет/отклоняет заявку на изменение БИН/комиссии и убирает её из списка.
+  async function decideParkChangeRequest(id: string, approve: boolean) {
+    return withLoading(isMutating, async () => {
+      if (approve)
+        await approveParkChangeRequest(id)
+      else
+        await rejectParkChangeRequest(id)
+      parkChangeRequests.value = parkChangeRequests.value.filter(item => item.id !== id)
+    }, approve ? 'Не удалось одобрить заявку.' : 'Не удалось отклонить заявку.')
   }
 
   async function createParkOwner(payload: CreateParkOwnerPayload) {
@@ -278,6 +300,7 @@ export const useAdminStore = defineStore('admin', () => {
     trips.value = []
     parks.value = []
     parkChats.value = []
+    parkChangeRequests.value = []
     techSupportNumbers.value = []
     supportStats.value = null
     supportRooms.value = []
@@ -292,6 +315,7 @@ export const useAdminStore = defineStore('admin', () => {
     isLoadingTrips.value = false
     isLoadingParks.value = false
     isLoadingParkChats.value = false
+    isLoadingParkChangeRequests.value = false
     isLoadingTechSupportNumbers.value = false
     isLoadingSupportStats.value = false
     isLoadingSupportRooms.value = false
@@ -316,6 +340,7 @@ export const useAdminStore = defineStore('admin', () => {
     isLoadingTrips,
     isLoadingParks,
     isLoadingParkChats,
+    isLoadingParkChangeRequests,
     isLoadingTechSupportNumbers,
     isLoadingSupportRooms,
     isLoadingPayouts,
@@ -325,8 +350,11 @@ export const useAdminStore = defineStore('admin', () => {
     createParkOwner,
     grantUserRole,
     loadParkChats,
+    loadParkChangeRequests,
     loadParks,
     loadPayouts,
+    parkChangeRequests,
+    decideParkChangeRequest,
     loadSettings,
     loadSupportRooms,
     loadTechSupportNumbers,
