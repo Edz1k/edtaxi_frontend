@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import PhotoEditorModal from '@edtaxi/shared/components/photo/PhotoEditorModal.vue'
-import PhotoSourceSheet from '@edtaxi/shared/components/photo/PhotoSourceSheet.vue'
 import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import AuthButton from '~/components/auth/AuthButton.vue'
 import FaceCaptureCamera from '~/components/verification/FaceCaptureCamera.vue'
@@ -78,15 +77,15 @@ function onSelfieCaptured(file: File) {
   selfiePreview.value = URL.createObjectURL(file)
 }
 
-// Камера недоступна (нет разрешения/устройства) — системная камера как фолбэк.
-// Селфи дэйлика намеренно НЕ ходит через галерею (антифрод): только живая
-// камера, а фолбэк — системная камера с capture. Инпут обязан быть в DOM и
-// НЕ display:none: Android-вебвью Telegram иначе игнорирует .click().
-function onCameraFallback() {
+// Системная камера через скрытый input[capture]: обе фотографии дэйлика
+// (селфи и машина) намеренно НЕ ходят через галерею — антифрод, снимок должен
+// быть живым. Инпут обязан быть в DOM и НЕ display:none: Android-вебвью
+// Telegram иначе игнорирует .click().
+function openSystemCamera(facing: 'environment' | 'user', onFile: (file: File) => void) {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  input.capture = 'user'
+  input.capture = facing
   input.style.position = 'fixed'
   input.style.top = '-100px'
   input.style.width = '1px'
@@ -96,28 +95,27 @@ function onCameraFallback() {
   input.onchange = (e) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     input.remove()
-    if (!file)
-      return
-    if (selfiePreview.value)
-      URL.revokeObjectURL(selfiePreview.value)
-    selfieFile.value = file
-    selfiePreview.value = URL.createObjectURL(file)
+    if (file)
+      onFile(file)
   }
   window.addEventListener('focus', () => setTimeout(() => input.remove(), 3000), { once: true })
   input.click()
 }
 
-// Фото машины: шторка «галерея или камера» → редактор (зум/поворот) → превью.
-const isVehicleSourceOpen = ref(false)
+// Камера недоступна (нет разрешения/устройства) — системная камера как фолбэк
+// для живого селфи с овалом.
+function onCameraFallback() {
+  openSystemCamera('user', onSelfieCaptured)
+}
+
+// Фото машины: сразу системная задняя камера (галереи нет) → редактор
+// (зум/поворот) → превью.
 const vehicleEditorFile = ref<File | null>(null)
 
 function pickVehiclePhoto() {
-  isVehicleSourceOpen.value = true
-}
-
-function onVehicleSourceSelected(file: File) {
-  isVehicleSourceOpen.value = false
-  vehicleEditorFile.value = file
+  openSystemCamera('environment', (file) => {
+    vehicleEditorFile.value = file
+  })
 }
 
 function onVehicleEditorDone(file: File) {
@@ -295,8 +293,8 @@ async function submit() {
               v-if="vehiclePhotoPreview"
               class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/50 py-2 text-sm text-white font-700 backdrop-blur-sm"
             >
-              <span class="i-mdi-pencil text-4" />
-              Изменить
+              <span class="i-mdi-camera-retake text-4" />
+              Переснять
             </div>
           </button>
         </div>
@@ -325,13 +323,6 @@ async function submit() {
       @fallback="onCameraFallback"
     />
 
-    <PhotoSourceSheet
-      camera-facing="environment"
-      :open="isVehicleSourceOpen"
-      title="Фото машины"
-      @close="isVehicleSourceOpen = false"
-      @selected="onVehicleSourceSelected"
-    />
     <PhotoEditorModal
       :aspect="4 / 3"
       :file="vehicleEditorFile"
