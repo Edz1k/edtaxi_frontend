@@ -30,6 +30,42 @@ let stream: MediaStream | null = null
 let detectTimer: ReturnType<typeof setInterval> | null = null
 let stableTicks = 0
 
+// Видео вписываем «contain» вручную — размер в px по метаданным потока.
+// Почему вручную: на Telegram-вебвью (и Android, и iOS) object-fit на <video>
+// с CSS transform местами игнорируется, и превью рисовалось узкой полосой.
+// Почему contain, а не cover: cover обрезал бока стрима под узкий экран, и
+// камера выглядела «приближенной в 2 раза» — с contain поле зрения полное,
+// а поля по краям прячутся под чёрным фоном и маской (стрим и так ~9:16).
+const videoStyle = ref<Record<string, string>>({})
+
+function fitVideo() {
+  const video = videoRef.value
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  if (!vw || !vh)
+    return
+
+  const sw = video?.videoWidth ?? 0
+  const sh = video?.videoHeight ?? 0
+  if (!sw || !sh) {
+    // Метаданных ещё нет — пока просто на весь экран; уточним по loadedmetadata.
+    videoStyle.value = { height: `${vh}px`, left: '0px', top: '0px', transform: 'scaleX(-1)', width: `${vw}px` }
+    return
+  }
+
+  const scale = Math.min(vw / sw, vh / sh)
+  const width = Math.ceil(sw * scale)
+  const height = Math.ceil(sh * scale)
+  videoStyle.value = {
+    height: `${height}px`,
+    left: `${Math.round((vw - width) / 2)}px`,
+    top: `${Math.round((vh - height) / 2)}px`,
+    // Зеркалим, как привычное селфи.
+    transform: 'scaleX(-1)',
+    width: `${width}px`,
+  }
+}
+
 // Овал в центре экрана: доля от меньшей стороны вьюпорта.
 const OVAL_WIDTH_VMIN = 68
 const OVAL_HEIGHT_VMIN = 88
@@ -83,6 +119,10 @@ async function start() {
     return
   }
   video.srcObject = stream
+  fitVideo()
+  video.onloadedmetadata = fitVideo
+  window.addEventListener('resize', fitVideo)
+  window.addEventListener('orientationchange', fitVideo)
 
   // Третий слой против «приближенной» камеры: если трек умеет аппаратный
   // zoom (iOS 17+, часть Android) — принудительно ставим минимальный.
@@ -102,6 +142,7 @@ async function start() {
   catch {
     // play() падает только при закрытии — камера уже останавливается.
   }
+  fitVideo()
 
   startDetection()
 }
@@ -246,29 +287,34 @@ function stop() {
   stableTicks = 0
   holdProgress.value = 0
   clearManualPreview()
+  window.removeEventListener('resize', fitVideo)
+  window.removeEventListener('orientationchange', fitVideo)
   if (stream) {
     stream.getTracks().forEach(track => track.stop())
     stream = null
   }
   const video = videoRef.value
-  if (video)
+  if (video) {
+    video.onloadedmetadata = null
     video.srcObject = null
+  }
 }
 </script>
 
 <template>
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 z-90 bg-black">
-      <!-- Живое видео (зеркалим как привычное селфи). object-contain, а не
-           cover: cover обрезал бока 3:4-стрима под узкий экран, и камера
-           выглядела «приближенной в 2 раза» — с contain поле зрения полное,
-           а поля по краям прячутся под чёрным фоном и маской. -->
+      <!-- Живое видео: габариты «contain» считаются в px (см. fitVideo) —
+           object-fit на <video> с transform Telegram-вебвью игнорирует
+           (превью рисовалось узкой полосой), поэтому размер задаём явно.
+           max-w-none отключает глобальный max-width:100% для video. -->
       <video
         ref="videoRef"
         autoplay
-        class="absolute inset-0 h-full w-full scale-x--100 transform object-contain"
+        class="absolute max-w-none"
         muted
         playsinline
+        :style="videoStyle"
       />
 
       <!-- Затемнение всего, кроме овала -->
