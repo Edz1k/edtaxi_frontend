@@ -1,8 +1,25 @@
-import type { AvailableParksResponse, DriverAcceptInvitePayload, ParkInfo, ParkJoinRequest, ParkJoinRequestResponse } from '~/types/park'
+import type { AvailableParksResponse, DriverAcceptInvitePayload, ParkInfo, ParkInvitePreview, ParkJoinRequest, ParkJoinRequestResponse } from '~/types/park'
 import { apiRequest } from '~/api/client'
 
 export function acceptParkInvite(payload: DriverAcceptInvitePayload) {
   return apiRequest<{ message: string }>('/driver/invite/accept', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+// previewParkInvite — резолвит токен QR-приглашения в название парка и подсказку
+// «вступление / смена», не совершая действия.
+export function previewParkInvite(token: string) {
+  return apiRequest<ParkInvitePreview>('/driver/invite/preview', {
+    params: { token },
+  })
+}
+
+// switchViaParkInvite — подтверждённое вступление или смена парка по токену
+// (в отличие от acceptParkInvite не падает, если водитель уже в другом парке).
+export function switchViaParkInvite(payload: DriverAcceptInvitePayload) {
+  return apiRequest<{ message: string }>('/driver/invite/switch', {
     method: 'POST',
     body: payload,
   })

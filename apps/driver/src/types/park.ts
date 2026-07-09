@@ -2,6 +2,17 @@ export interface DriverAcceptInvitePayload {
   token: string
 }
 
+// Превью приглашения по QR-диплинку: название парка и вступление/смена — чтобы
+// показать подтверждение до фактического действия.
+export interface ParkInvitePreview {
+  park_id: string
+  park_name: string
+  // Пусто, если водитель ещё не в парке.
+  current_park_name: string
+  is_switch: boolean
+  already_member: boolean
+}
+
 // Парк из списка GET /driver/parks (parkToMap на бэке).
 export interface AvailablePark {
   id: string

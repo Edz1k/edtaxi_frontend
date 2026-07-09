@@ -6,11 +6,13 @@ import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import MapStyleSwitcher from '@edtaxi/shared/components/map/MapStyleSwitcher.vue'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
+import { captureParkInviteStartParam, takePendingParkInviteToken } from '@edtaxi/shared/composables/telegram/parkInvite'
 import { captureReferralStartParam, takePendingReferralCode } from '@edtaxi/shared/composables/telegram/referral'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
 import { ApiError } from '~/api/client'
-import { getVerificationReminder } from '~/api/driver'
+import { getDriverOverview, getVerificationReminder } from '~/api/driver'
 import { getUserErrorMessage } from '~/api/errors'
+import { previewParkInvite, switchViaParkInvite } from '~/api/park'
 import DriverStatusPanel from '~/components/driver/DriverStatusPanel.vue'
 import RatePassengerModal from '~/components/driver/RatePassengerModal.vue'
 import VerificationReminderBanner from '~/components/driver/VerificationReminderBanner.vue'
@@ -18,11 +20,13 @@ import { useDriverTrackingSocket } from '~/composables/driver/useDriverTrackingS
 import { useOfferRoute } from '~/composables/driver/useOfferRoute'
 import { useOrderSound } from '~/composables/driver/useOrderSound'
 import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
+import { useToast } from '~/composables/useToast'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { offerToPlace } from '~/utils/geoPlace'
 
 const driver = useDriverStore()
+const toast = useToast()
 
 // Панель-шторка: касание карты приопускает её (collapseToMap).
 const statusPanelRef = ref<null | { collapseToMap: () => void }>(null)
@@ -107,6 +111,64 @@ async function goShareReferral() {
   await router.push('/bonus')
 }
 
+// Приглашение в парк по QR-диплинку (t.me/bot?startapp=park_<токен>): токен
+// перехватывается на старте; сразу подтягиваем превью (название парка,
+// вступление это или смена) и показываем подтверждение перед вступлением.
+const parkInvitePrompt = ref<null | {
+  token: string
+  parkName: string
+  currentParkName: string
+  isSwitch: boolean
+}>(null)
+const isAcceptingInvite = ref(false)
+
+async function autoHandleParkInvite() {
+  captureParkInviteStartParam()
+  const token = takePendingParkInviteToken()
+  if (!token)
+    return
+
+  try {
+    const preview = await previewParkInvite(token)
+    if (preview.already_member) {
+      // Тот же парк — вступать некуда, просто молча выходим.
+      return
+    }
+    parkInvitePrompt.value = {
+      token,
+      parkName: preview.park_name,
+      currentParkName: preview.current_park_name,
+      isSwitch: preview.is_switch,
+    }
+  }
+  catch {
+    // Токен просрочен/недействителен — молча пропускаем.
+  }
+}
+
+async function confirmParkInvite() {
+  const prompt = parkInvitePrompt.value
+  if (!prompt)
+    return
+  isAcceptingInvite.value = true
+  try {
+    await switchViaParkInvite({ token: prompt.token })
+    toast.success('Готово', prompt.isSwitch
+      ? `Вы перешли в таксопарк «${prompt.parkName}».`
+      : `Вы присоединились к таксопарку «${prompt.parkName}».`)
+    parkInvitePrompt.value = null
+    // Обновляем профиль/членство, чтобы статус линии подтянулся сразу.
+    driver.ensureProfile().catch(() => {})
+    getDriverOverview().catch(() => {})
+  }
+  catch (error) {
+    toast.error('Не удалось', getUserErrorMessage(error, 'Попробуйте ещё раз позже.'))
+  }
+  finally {
+    isAcceptingInvite.value = false
+  }
+}
+
 const trackingLabel = computed(() => {
   if (tracking.status.value === 'open')
     return 'Подключен'
@@ -153,6 +215,7 @@ onMounted(async () => {
     })
     .catch(() => {})
   autoRedeemReferral().catch(() => {})
+  autoHandleParkInvite().catch(() => {})
   await driver.restoreActiveTrip().catch(() => {})
   // ensureProfile сам подтягивает доступные/активные тарифы (available/active
   // categories) — нужны панели статуса, даже если водитель зашёл сразу на карту.
@@ -303,5 +366,50 @@ async function toggleOnline() {
       @close="referralWelcome = null"
       @share="goShareReferral"
     />
+
+    <!-- Подтверждение приглашения в парк по QR: вступить или сменить парк -->
+    <Teleport to="body">
+      <div
+        v-if="parkInvitePrompt"
+        class="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+        @click.self="parkInvitePrompt = null"
+      >
+        <div class="max-w-sm w-full border border-white/10 rounded-3xl bg-secondary-900 p-5 shadow-2xl">
+          <span class="h-12 w-12 flex items-center justify-center rounded-2xl bg-main-500/14 text-main-300">
+            <span class="text-7" :class="parkInvitePrompt.isSwitch ? 'i-mdi-swap-horizontal' : 'i-mdi-account-plus'" />
+          </span>
+          <h3 class="mt-4 text-lg font-950">
+            {{ parkInvitePrompt.isSwitch ? 'Сменить таксопарк?' : 'Присоединиться к таксопарку?' }}
+          </h3>
+          <p class="mt-2 text-sm text-slate-400 leading-5">
+            <template v-if="parkInvitePrompt.isSwitch">
+              Перейти из парка «{{ parkInvitePrompt.currentParkName || 'текущего' }}» в
+              «{{ parkInvitePrompt.parkName }}»? Вы сразу станете водителем нового парка.
+            </template>
+            <template v-else>
+              Вступить в таксопарк «{{ parkInvitePrompt.parkName }}»? После этого можно выходить на линию.
+            </template>
+          </p>
+
+          <div class="mt-5 flex gap-2">
+            <button
+              class="h-12 flex-1 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+              type="button"
+              @click="parkInvitePrompt = null"
+            >
+              Нет
+            </button>
+            <button
+              :disabled="isAcceptingInvite"
+              class="h-12 flex-1 rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
+              type="button"
+              @click="confirmParkInvite"
+            >
+              {{ isAcceptingInvite ? 'Секунду...' : (parkInvitePrompt.isSwitch ? 'Да, сменить' : 'Да, вступить') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </main>
 </template>

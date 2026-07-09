@@ -1,4 +1,4 @@
-import type { ParkAnalytics, ParkDriver, ParkInvite, TaxiPark, TaxiParkRegisterPayload, TaxiParkUpdatePayload } from '~/types/park'
+import type { ParkAnalytics, ParkChangeRequest, ParkChangeRequestPayload, ParkDriver, ParkInvite, TaxiPark, TaxiParkRegisterPayload, TaxiParkUpdatePayload } from '~/types/park'
 import type { ParkWallet, PayoutCreatePayload, PayoutRequest } from '~/types/payout'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
@@ -6,6 +6,7 @@ import { showErrorToast } from '~/api/errors'
 import {
   createParkInvite,
   getMyPark,
+  getMyParkChangeRequest,
   getParkAnalytics,
   getParkWallet,
   listParkDrivers,
@@ -14,6 +15,7 @@ import {
   registerPark,
   removeParkDriver,
   requestParkPayout,
+  submitParkChangeRequest,
   updateMyPark,
 } from '~/api/park'
 import { useStoreAction } from '~/composables/useStoreAction'
@@ -23,6 +25,8 @@ export const useParkStore = defineStore('park', () => {
   const analytics = ref<ParkAnalytics | null>(null)
   const drivers = ref<ParkDriver[]>([])
   const invites = ref<ParkInvite[]>([])
+  // Активная (ожидающая) заявка на изменение БИН/комиссии — для баннера.
+  const changeRequest = ref<ParkChangeRequest | null>(null)
   const wallet = ref<ParkWallet | null>(null)
   const payouts = ref<PayoutRequest[]>([])
   const isLoading = ref(false)
@@ -73,15 +77,26 @@ export const useParkStore = defineStore('park', () => {
 
   async function loadDashboard() {
     return withLoading(isLoading, async () => {
-      const [analyticsResponse, driversResponse, invitesResponse] = await Promise.all([
+      const [analyticsResponse, driversResponse, invitesResponse, changeResponse] = await Promise.all([
         getParkAnalytics(viewParkId.value),
         listParkDrivers(viewParkId.value),
         listParkInvites(viewParkId.value),
+        // Заявка на изменение — только для своего парка (не для чужого просмотра).
+        viewParkId.value ? Promise.resolve({ request: null }) : getMyParkChangeRequest().catch(() => ({ request: null })),
       ])
       analytics.value = analyticsResponse
       drivers.value = driversResponse.drivers
       invites.value = invitesResponse.invites
+      changeRequest.value = changeResponse.request
     }, 'Не удалось загрузить данные таксопарка.')
+  }
+
+  // Отправка заявки на изменение БИН/комиссии (одобряет админ).
+  async function submitChangeRequest(payload: ParkChangeRequestPayload) {
+    return withLoading(isMutating, async () => {
+      changeRequest.value = await submitParkChangeRequest(payload)
+      return changeRequest.value
+    }, 'Не удалось отправить заявку на изменение.')
   }
 
   async function createInvite() {
@@ -136,6 +151,7 @@ export const useParkStore = defineStore('park', () => {
     analytics.value = null
     drivers.value = []
     invites.value = []
+    changeRequest.value = null
     wallet.value = null
     payouts.value = []
     viewParkId.value = undefined
@@ -147,6 +163,7 @@ export const useParkStore = defineStore('park', () => {
 
   return {
     analytics,
+    changeRequest,
     clearParkState,
     createInvite,
     drivers,
@@ -163,6 +180,7 @@ export const useParkStore = defineStore('park', () => {
     register,
     removeDriver,
     requestPayout,
+    submitChangeRequest,
     update,
     viewParkId,
     wallet,
