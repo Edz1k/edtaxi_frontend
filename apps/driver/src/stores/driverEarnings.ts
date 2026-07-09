@@ -1,15 +1,25 @@
 import type { DriverEarnings, DriverWallet, PayoutRequest } from '~/types/driver'
+import type { Trip } from '~/types/trips'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { getDriverEarnings, getDriverPayouts, getDriverWallet, requestDriverPayout, topUpDriverWallet } from '~/api/driver'
+import { getDriverEarnings, getDriverPayouts, getDriverTripHistory, getDriverWallet, requestDriverPayout, topUpDriverWallet } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
+
+// Для графика заработка историю тянем страницами (потолок бэка — 100 за запрос)
+// и останавливаемся на 500 поездках: этого хватает на окна день/месяц/год,
+// а у очень активных водителей график честно помечается как усечённый.
+const CHART_TRIPS_PAGE = 100
+const CHART_TRIPS_MAX = 500
 
 export const useDriverEarningsStore = defineStore('driverEarnings', () => {
   const earnings = ref<DriverEarnings | null>(null)
   const wallet = ref<DriverWallet | null>(null)
   const payouts = ref<PayoutRequest[]>([])
+  const chartTrips = ref<Trip[]>([])
+  const isChartTripsTruncated = ref(false)
   const isLoadingEarnings = ref(false)
   const isLoadingWallet = ref(false)
   const isLoadingPayouts = ref(false)
+  const isLoadingChartTrips = ref(false)
   const isMutatingWallet = ref(false)
   const isRequestingPayout = ref(false)
   const errorMessage = ref('')
@@ -45,6 +55,33 @@ export const useDriverEarningsStore = defineStore('driverEarnings', () => {
     }
     finally {
       isLoadingWallet.value = false
+    }
+  }
+
+  // loadChartTrips грузит завершённые поездки для диаграммы заработка.
+  // История отдаётся от новых к старым, поэтому страницы читаются подряд,
+  // пока не кончатся данные или не будет достигнут CHART_TRIPS_MAX.
+  async function loadChartTrips() {
+    isLoadingChartTrips.value = true
+
+    try {
+      const collected: Trip[] = []
+      while (collected.length < CHART_TRIPS_MAX) {
+        const response = await getDriverTripHistory({ limit: CHART_TRIPS_PAGE, offset: collected.length })
+        collected.push(...response.trips)
+        if (response.trips.length < CHART_TRIPS_PAGE)
+          break
+      }
+      isChartTripsTruncated.value = collected.length >= CHART_TRIPS_MAX
+      chartTrips.value = collected.filter(trip => trip.status === 'completed' && trip.completed_at)
+      return chartTrips.value
+    }
+    catch (error) {
+      showErrorToast(error, 'Не удалось загрузить статистику заработка.')
+      throw error
+    }
+    finally {
+      isLoadingChartTrips.value = false
     }
   }
 
@@ -110,23 +147,30 @@ export const useDriverEarningsStore = defineStore('driverEarnings', () => {
     earnings.value = null
     wallet.value = null
     payouts.value = []
+    chartTrips.value = []
+    isChartTripsTruncated.value = false
     isLoadingEarnings.value = false
     isLoadingWallet.value = false
     isLoadingPayouts.value = false
+    isLoadingChartTrips.value = false
     isMutatingWallet.value = false
     isRequestingPayout.value = false
     errorMessage.value = ''
   }
 
   return {
+    chartTrips,
     clearEarningsState,
     earnings,
     errorMessage,
+    isChartTripsTruncated,
+    isLoadingChartTrips,
     isLoadingEarnings,
     isLoadingPayouts,
     isLoadingWallet,
     isMutatingWallet,
     isRequestingPayout,
+    loadChartTrips,
     loadEarnings,
     loadPayouts,
     loadWallet,

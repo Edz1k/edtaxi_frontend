@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PayoutStatus } from '~/types/driver'
+import EarningsChart from '~/components/driver/EarningsChart.vue'
 import PaymentFrameModal from '~/components/PaymentFrameModal.vue'
 import { useToast } from '~/composables/useToast'
 import { useDriverEarningsStore } from '~/stores/driverEarnings'
@@ -33,6 +34,7 @@ async function refresh() {
     earnings.loadEarnings().catch(() => {}),
     earnings.loadWallet().catch(() => {}),
     earnings.loadPayouts().catch(() => {}),
+    earnings.loadChartTrips().catch(() => {}),
   ])
 }
 
@@ -185,6 +187,13 @@ function formatDate(value: string) {
           </p>
         </article>
       </div>
+
+      <EarningsChart
+        class="mt-6"
+        :loading="earnings.isLoadingChartTrips"
+        :trips="earnings.chartTrips"
+        :truncated="earnings.isChartTripsTruncated"
+      />
 
       <button
         :disabled="earnings.isLoadingEarnings"
