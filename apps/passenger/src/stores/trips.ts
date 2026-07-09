@@ -17,6 +17,9 @@ export const useTripsStore = defineStore('trips', () => {
   const selectedCategories = ref<VehicleCategory[]>(['economy'])
   // Способ оплаты — пользовательская настройка, живёт между заказами (не сбрасываем).
   const paymentMethod = ref<PaymentMethod>('cash')
+  // Оплатить часть поездки бонусами (до 50%): фактическая скидка фиксируется
+  // на завершении по балансу бонусов — тоже живёт между заказами.
+  const useBonuses = ref(false)
   const history = ref<Trip[]>([])
   const historyHasMore = ref(true)
   const historyOffset = ref(0)
@@ -407,6 +410,7 @@ export const useTripsStore = defineStore('trips', () => {
         categories: [...selectedCategories.value],
         // card — списание с привязанной карты при завершении поездки.
         payment_method: paymentMethod.value,
+        use_bonuses: useBonuses.value,
       }))
       startSearchTimer()
       startActiveTripPolling()
@@ -613,6 +617,7 @@ export const useTripsStore = defineStore('trips', () => {
     searchElapsedSeconds,
     searchStartedAt,
     paymentMethod,
+    useBonuses,
     selectCategory,
     selectedCategories,
     selectedCategory,

@@ -30,10 +30,12 @@ let stream: MediaStream | null = null
 let detectTimer: ReturnType<typeof setInterval> | null = null
 let stableTicks = 0
 
-// Видео растягиваем «cover» вручную — размер в px по метаданным потока.
-// На Telegram-вебвью (и Android, и iOS) object-fit:cover на <video> с
-// transform местами игнорируется, и превью рисовалось узкой полосой по центру
-// экрана. Явные px-габариты с центрированием работают везде.
+// Видео вписываем «contain» вручную — размер в px по метаданным потока.
+// Почему вручную: на Telegram-вебвью (и Android, и iOS) object-fit на <video>
+// с CSS transform местами игнорируется, и превью рисовалось узкой полосой.
+// Почему contain, а не cover: cover обрезал бока стрима под узкий экран, и
+// камера выглядела «приближенной в 2 раза» — с contain поле зрения полное,
+// а поля по краям прячутся под чёрным фоном и маской (стрим и так ~9:16).
 const videoStyle = ref<Record<string, string>>({})
 
 function fitVideo() {
@@ -51,7 +53,7 @@ function fitVideo() {
     return
   }
 
-  const scale = Math.max(vw / sw, vh / sh)
+  const scale = Math.min(vw / sw, vh / sh)
   const width = Math.ceil(sw * scale)
   const height = Math.ceil(sh * scale)
   videoStyle.value = {
@@ -92,12 +94,16 @@ async function start() {
   }
 
   try {
+    // 9:16 вместо дефолтных 3:4 сенсора: портретный стрим почти совпадает с
+    // экраном, и object-cover почти не режет кадр по бокам — без этого камера
+    // выглядела «приближенной в 2 раза» и лицо не влезало в овал.
     stream = await navigator.mediaDevices.getUserMedia({
       audio: false,
       video: {
         facingMode: 'user',
-        width: { ideal: 1080 },
-        height: { ideal: 1440 },
+        width: { ideal: 720 },
+        height: { ideal: 1280 },
+        aspectRatio: { ideal: 9 / 16 },
       },
     })
   }
@@ -117,6 +123,19 @@ async function start() {
   video.onloadedmetadata = fitVideo
   window.addEventListener('resize', fitVideo)
   window.addEventListener('orientationchange', fitVideo)
+
+  // Третий слой против «приближенной» камеры: если трек умеет аппаратный
+  // zoom (iOS 17+, часть Android) — принудительно ставим минимальный.
+  try {
+    const track = stream.getVideoTracks()[0]
+    const caps = (track?.getCapabilities?.() ?? {}) as { zoom?: { min?: number } }
+    if (track && caps.zoom?.min !== undefined)
+      await track.applyConstraints({ advanced: [{ zoom: caps.zoom.min }] } as unknown as MediaTrackConstraints)
+  }
+  catch {
+    // zoom не поддерживается — не критично, contain уже сохраняет полный кадр.
+  }
+
   try {
     await video.play()
   }
@@ -187,6 +206,8 @@ function startDetection() {
 
 // Лицо считается «в овале», когда его центр внутри центральной зоны кадра и
 // оно достаточно крупное (не силуэт в углу и не человек в трёх метрах).
+// Пороги подобраны под 9:16-стрим (более широкое поле зрения): лицо на
+// комфортной дистанции занимает меньшую долю кадра, чем при 3:4.
 function faceInsideOval(faces: Array<{ boundingBox: DOMRectReadOnly }>, video: HTMLVideoElement) {
   if (!faces.length)
     return false
@@ -197,8 +218,8 @@ function faceInsideOval(faces: Array<{ boundingBox: DOMRectReadOnly }>, video: H
     return false
   const cx = (box.x + box.width / 2) / vw
   const cy = (box.y + box.height / 2) / vh
-  const sizeOK = box.width >= vw * 0.22 && box.width <= vw * 0.85
-  return sizeOK && cx > 0.28 && cx < 0.72 && cy > 0.2 && cy < 0.72
+  const sizeOK = box.width >= vw * 0.16 && box.width <= vw * 0.9
+  return sizeOK && cx > 0.25 && cx < 0.75 && cy > 0.18 && cy < 0.75
 }
 
 async function snap(auto: boolean) {
@@ -283,8 +304,10 @@ function stop() {
 <template>
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 z-90 bg-black">
-      <!-- Живое видео: габариты «cover» считаются в px (см. fitVideo),
-           max-w-none отключает глобальный max-width:100% для video -->
+      <!-- Живое видео: габариты «contain» считаются в px (см. fitVideo) —
+           object-fit на <video> с transform Telegram-вебвью игнорирует
+           (превью рисовалось узкой полосой), поэтому размер задаём явно.
+           max-w-none отключает глобальный max-width:100% для video. -->
       <video
         ref="videoRef"
         autoplay

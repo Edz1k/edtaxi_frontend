@@ -28,6 +28,8 @@ export interface CreateTripPayload extends EstimateTripPayload {
   dropoff_lat: number
   dropoff_lng: number
   payment_method?: PaymentMethod
+  // Оплатить часть поездки бонусами (до 50%, по балансу на завершении).
+  use_bonuses?: boolean
   pickup_address: string
   pickup_lat: number
   pickup_lng: number

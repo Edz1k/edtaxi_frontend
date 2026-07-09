@@ -18,6 +18,10 @@ const auth = useAuthStore()
 const passenger = usePassengerStore()
 const trips = useTripsStore()
 const places = usePlacesStore()
+
+// Шторка заказа: касание карты приопускает её (collapseToMap), чтобы карту
+// можно было рассмотреть и подвигать, не борясь со шторкой.
+const downbarRef = ref<null | { collapseToMap: () => void }>(null)
 const activeTripId = computed(() => trips.hasActiveTrip ? trips.activeTrip?.id ?? '' : '')
 usePassengerTripSocket(activeTripId)
 
@@ -168,6 +172,7 @@ async function setPickupFromCurrentLocation() {
       </div>
     </div>
 
+    <!-- Касание карты (палец/два) приопускает шторку — карту видно целиком -->
     <PassengerMap
       :destination-place="trips.destinationPlace"
       :driver-location="trips.driverLocation"
@@ -178,10 +183,12 @@ async function setPickupFromCurrentLocation() {
       :user-coordinates="liveCoordinates"
       @cancel-picker="trips.cancelMapPicker"
       @confirm-picker="trips.confirmMapPicker"
+      @pointerdown="downbarRef?.collapseToMap()"
       @select-favorite="selectFavoritePlace"
     />
     <Downbar
       v-if="!trips.isMapPickerActive"
+      ref="downbarRef"
       v-model:destination="trips.destination"
       v-model:destination-place="trips.destinationPlace"
       v-model:locating-user="isLocating"

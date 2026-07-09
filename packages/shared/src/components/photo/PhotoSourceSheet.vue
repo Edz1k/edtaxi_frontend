@@ -92,11 +92,15 @@ function onFilePicked(event: Event) {
             </button>
           </div>
 
+          <!-- Инпуты скрыты БЕЗ display:none: Android-вебвью Telegram молча
+               игнорирует .click() по нерендерящимся input[type=file] (на iOS
+               работало и так). Поэтому — за экраном, 1×1px, прозрачные. -->
           <!-- Галерея: БЕЗ capture — обе платформы показывают выбор файла. -->
           <input
             ref="galleryInput"
             accept="image/*"
-            class="hidden"
+            style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0"
+            tabindex="-1"
             type="file"
             @change="onFilePicked"
           >
@@ -105,7 +109,8 @@ function onFilePicked(event: Event) {
             ref="cameraInput"
             accept="image/*"
             :capture="cameraFacing"
-            class="hidden"
+            style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0"
+            tabindex="-1"
             type="file"
             @change="onFilePicked"
           >
