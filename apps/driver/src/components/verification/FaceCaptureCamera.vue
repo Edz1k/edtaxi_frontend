@@ -30,20 +30,44 @@ let stream: MediaStream | null = null
 let detectTimer: ReturnType<typeof setInterval> | null = null
 let stableTicks = 0
 
-// Видео растягиваем вручную — размер в px по метаданным потока: на
-// Telegram-вебвью (и Android, и iOS) object-fit на <video> с CSS transform
-// местами игнорируется, и превью рисовалось узкой полосой.
+// Что бы мы ни просили в constraints, вебвью (и Telegram, и Safari) отдаёт
+// ЛАНДШАФТНЫЙ кадр родного режима сенсора — 1280x720 или 640x480. Картинка при
+// этом ориентирована правильно, лицо ровное: это ландшафтная РАМКА, а не
+// повёрнутый кадр, поэтому доворачивать его на 90° нельзя.
 //
-// Кадр НЕ доворачиваем: вебвью отдаёт картинку уже правильно ориентированной
-// (лицо ровное), просто иногда в ландшафтном кадре 1280×720 — это ландшафтная
-// РАМКА, а не повёрнутый кадр, и rotate(90deg) клал лицо набок. Портрет
-// добываем у самой камеры (см. openPortraitStream), а на экран кладём cover.
-//
-// crop — видимая часть кадра в координатах источника. Один и тот же кроп
-// используют превью, детектор и снимок, поэтому в поддержку уезжает ровно то,
-// что водитель видел в овале.
+// Растянуть такой кадр «cover» на весь экран 9:19.5 нельзя тоже: от него
+// останется четверть ширины, и камера выглядит приближенной в четыре раза.
+// Поэтому ведём себя как системная камера: кадр обрезаем максимум до
+// вертикального 3:4, целиком вписываем в экран, а сверху/снизу остаются чёрные
+// поля под памятку и затвор. Никакого зума — только обрезка боков.
+const TARGET_AR = 3 / 4
+
+// Овал — доля от области превью, а не от вьюпорта: иначе на разных
+// соотношениях сторон он то вылезал за кадр, то болтался в его центре.
+const OVAL_WIDTH_FRAC = 0.72
+const OVAL_ASPECT = 1.3
+const OVAL_CENTER_Y = 0.47
+// Сколько подряд удачных детекций нужно до снимка (~0.3с на тик).
+const REQUIRED_STABLE_TICKS = 4
+
+// Область превью на экране (px) и видимая часть кадра в координатах источника.
+// Один и тот же crop используют превью, детектор и снимок, поэтому в поддержку
+// уезжает ровно то, что водитель видел в овале.
+const boxStyle = ref<Record<string, string>>({})
 const videoStyle = ref<Record<string, string>>({})
+const box = ref({ h: 0, w: 0 })
 const crop = ref({ h: 0, w: 0, x: 0, y: 0 })
+
+const oval = computed(() => {
+  const w = box.value.w * OVAL_WIDTH_FRAC
+  const h = Math.min(box.value.h * 0.9, w * OVAL_ASPECT)
+  return { h, w }
+})
+
+function resetFrame() {
+  box.value = { h: 0, w: 0 }
+  crop.value = { h: 0, w: 0, x: 0, y: 0 }
+}
 
 function fitVideo() {
   const video = videoRef.value
@@ -55,89 +79,45 @@ function fitVideo() {
   const sw = video?.videoWidth ?? 0
   const sh = video?.videoHeight ?? 0
   if (!sw || !sh) {
-    // Метаданных ещё нет — пока просто на весь экран; уточним по loadedmetadata.
-    crop.value = { h: 0, w: 0, x: 0, y: 0 }
+    // Метаданных ещё нет — уточним по loadedmetadata/resize.
+    resetFrame()
+    boxStyle.value = { height: `${vh}px`, left: '0px', top: '0px', width: `${vw}px` }
     videoStyle.value = { height: `${vh}px`, left: '0px', top: '0px', transform: 'scaleX(-1)', width: `${vw}px` }
     return
   }
 
-  // Cover: кадр заполняет экран целиком, лишнее уходит за края — как в
-  // системной камере. Полос не остаётся ни при 9:16, ни при 3:4, ни при 16:9.
-  const scale = Math.max(vw / sw, vh / sh)
-  const width = Math.ceil(sw * scale)
-  const height = Math.ceil(sh * scale)
+  // Кадр уже вертикальнее, чем 3:4? Тогда не режем вовсе — показываем как есть.
+  const previewAR = Math.min(sw / sh, TARGET_AR)
+  const cropW = Math.min(sw, sh * previewAR)
+  const cropH = sh
+  crop.value = { h: cropH, w: cropW, x: (sw - cropW) / 2, y: 0 }
+
+  // Превью целиком вписываем в экран — «contain», без обрезки по высоте.
+  let boxW = vw
+  let boxH = boxW / previewAR
+  if (boxH > vh) {
+    boxH = vh
+    boxW = boxH * previewAR
+  }
+  box.value = { h: boxH, w: boxW }
+  boxStyle.value = {
+    height: `${Math.round(boxH)}px`,
+    left: `${Math.round((vw - boxW) / 2)}px`,
+    top: `${Math.round((vh - boxH) / 2)}px`,
+    width: `${Math.round(boxW)}px`,
+  }
+
+  // Габариты <video> задаём в px, а кроп делаем отрицательным сдвигом внутри
+  // box с overflow-hidden: object-fit на <video> с CSS transform Telegram-вебвью
+  // местами игнорирует, и превью рисовалось узкой полосой.
+  const scale = boxW / cropW
   videoStyle.value = {
-    height: `${height}px`,
-    left: `${Math.round((vw - width) / 2)}px`,
-    top: `${Math.round((vh - height) / 2)}px`,
-    // Зеркалим, как привычное селфи.
+    height: `${Math.ceil(sh * scale)}px`,
+    left: `${Math.round(-crop.value.x * scale)}px`,
+    top: '0px',
+    // Зеркалим, как привычное селфи. Кроп симметричен, поэтому сдвиг не ломает.
     transform: 'scaleX(-1)',
-    width: `${width}px`,
-  }
-
-  const cropW = Math.min(sw, vw / scale)
-  const cropH = Math.min(sh, vh / scale)
-  crop.value = { h: cropH, w: cropW, x: (sw - cropW) / 2, y: (sh - cropH) / 2 }
-}
-
-// Овал в центре экрана: доля от меньшей стороны вьюпорта.
-const OVAL_WIDTH_VMIN = 68
-const OVAL_HEIGHT_VMIN = 88
-const OVAL_CENTER_Y = 0.46
-// Сколько подряд удачных детекций нужно до снимка (~0.3с на тик).
-const REQUIRED_STABLE_TICKS = 4
-
-// Наборы constraints от самого желанного к самому терпимому. Раньше в одном
-// наборе шли и width/height, и aspectRatio — вебвью выбирал ближайший режим
-// сенсора и отдавал 1280×720, то есть портрета мы не получали никогда.
-// Здесь каждый набор непротиворечив, и мы просто берём первый, давший портрет.
-const STREAM_CONSTRAINTS: MediaTrackConstraints[] = [
-  { facingMode: 'user', height: { exact: 1920 }, width: { exact: 1080 } },
-  { facingMode: 'user', height: { exact: 1280 }, width: { exact: 720 } },
-  { aspectRatio: { exact: 9 / 16 }, facingMode: 'user' },
-  { facingMode: 'user', height: { ideal: 1280 }, width: { ideal: 720 } },
-  { facingMode: 'user' },
-]
-
-function isPortrait(track: MediaStreamTrack) {
-  const { height = 0, width = 0 } = track.getSettings()
-  // Габаритов нет (часть вебвью их не отдаёт) — считаем, что режим подошёл:
-  // отбраковывать по незнанию хуже, чем сверстать по фактическим videoWidth.
-  return !width || !height || height >= width
-}
-
-// Портретный поток берём у камеры, а не «доворотом» кадра. Ландшафтные режимы
-// пропускаем, но если портрета нет вовсе — открываем что дают: с cover-кропом
-// камера всё равно заполнит экран, просто поле зрения по бокам будет уже.
-async function openPortraitStream(): Promise<MediaStream | null> {
-  let sawLandscape = false
-
-  for (const video of STREAM_CONSTRAINTS) {
-    let candidate: MediaStream
-    try {
-      candidate = await navigator.mediaDevices.getUserMedia({ audio: false, video })
-    }
-    catch {
-      // Режим не поддержан (OverconstrainedError) — пробуем следующий.
-      continue
-    }
-
-    const track = candidate.getVideoTracks()[0]
-    if (track && isPortrait(track))
-      return candidate
-
-    // Две камеры одновременно iOS не отдаёт — освобождаем перед новой попыткой.
-    sawLandscape = true
-    candidate.getTracks().forEach(t => t.stop())
-  }
-
-  if (!sawLandscape)
-    return null
-  try {
-    return await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user' } })
-  }
-  catch {
-    return null
+    width: `${Math.ceil(sw * scale)}px`,
   }
 }
 
@@ -162,11 +142,24 @@ async function start() {
     return
   }
 
-  stream = await openPortraitStream()
-  if (!stream) {
-    // Нет разрешения/камеры — не блокируем водителя, отдаём системный фолбэк.
-    bailToFallback()
-    return
+  try {
+    // Просим самый широкий родной режим 4:3 и НЕ навязываем портрет: узкий
+    // aspectRatio вебвью отрабатывает обрезкой сенсора, то есть сам по себе
+    // добавляет зум. Ориентацию кадра разбирает вёрстка (см. fitVideo).
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: 'user', height: { ideal: 960 }, width: { ideal: 1280 } },
+    })
+  }
+  catch {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user' } })
+    }
+    catch {
+      // Нет разрешения/камеры — не блокируем водителя, отдаём системный фолбэк.
+      bailToFallback()
+      return
+    }
   }
 
   const video = videoRef.value
@@ -176,7 +169,7 @@ async function start() {
   }
   video.srcObject = stream
   fitVideo()
-  // videoWidth/videoHeight появляются на loadedmetadata и МЕНЯЮТСЯ на resize
+  // videoWidth/videoHeight появляются на loadedmetadata и меняются на resize
   // (например, после applyConstraints ниже) — пересчитываем кроп на обоих.
   video.onloadedmetadata = fitVideo
   video.onresize = fitVideo
@@ -184,7 +177,7 @@ async function start() {
   window.addEventListener('orientationchange', fitVideo)
 
   // Если трек умеет аппаратный zoom (iOS 17+, часть Android) — принудительно
-  // ставим минимальный: иначе камера открывается «приближенной в 2 раза».
+  // ставим минимальный: иначе камера открывается уже приближенной.
   try {
     const track = stream.getVideoTracks()[0]
     const caps = (track?.getCapabilities?.() ?? {}) as { zoom?: { min?: number } }
@@ -272,28 +265,25 @@ function faceInsideOval(faces: Array<{ boundingBox: DOMRectReadOnly }>) {
   if (!faces.length)
     return false
   const c = crop.value
-  const vw = window.innerWidth
-  const vh = window.innerHeight
-  if (!c.w || !c.h || !vw || !vh)
+  if (!c.w || !c.h || !box.value.h)
     return false
 
-  const box = faces[0].boundingBox
+  const face = faces[0].boundingBox
   // Нормируем на видимую область: 0..1 по её ширине/высоте.
-  const cx = (box.x + box.width / 2 - c.x) / c.w
-  const cy = (box.y + box.height / 2 - c.y) / c.h
+  const cx = (face.x + face.width / 2 - c.x) / c.w
+  const cy = (face.y + face.height / 2 - c.y) / c.h
 
-  const vmin = Math.min(vw, vh)
-  const ovalRx = (OVAL_WIDTH_VMIN / 100) * vmin / 2 / vw
-  const ovalRy = (OVAL_HEIGHT_VMIN / 100) * vmin / 2 / vh
+  const rx = oval.value.w / box.value.w / 2
+  const ry = oval.value.h / box.value.h / 2
 
   // Центр лица — в средних 60% овала: так лицо стоит по центру, а не у края.
-  const dx = (cx - 0.5) / (ovalRx * 0.6)
-  const dy = (cy - OVAL_CENTER_Y) / (ovalRy * 0.6)
+  const dx = (cx - 0.5) / (rx * 0.6)
+  const dy = (cy - OVAL_CENTER_Y) / (ry * 0.6)
   if (dx * dx + dy * dy > 1)
     return false
 
   // Ширина лица относительно ширины овала — обе в долях видимой ширины.
-  const faceRatio = box.width / c.w / (ovalRx * 2)
+  const faceRatio = face.width / c.w / (rx * 2)
   return faceRatio >= 0.42 && faceRatio <= 1.2
 }
 
@@ -303,7 +293,7 @@ async function snap(auto: boolean) {
   if (!video || !video.videoWidth || !c.w || !c.h)
     return
   // Режем ровно видимую область: снимок совпадает с превью, и поддержка
-  // получает вертикальное фото, даже если сама камера отдала ландшафтный кадр.
+  // получает вертикальное фото, даже если камера отдала ландшафтный кадр.
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(c.w)
   canvas.height = Math.round(c.h)
@@ -364,7 +354,7 @@ function stop() {
   stopDetection()
   stableTicks = 0
   holdProgress.value = 0
-  crop.value = { h: 0, w: 0, x: 0, y: 0 }
+  resetFrame()
   clearManualPreview()
   window.removeEventListener('resize', fitVideo)
   window.removeEventListener('orientationchange', fitVideo)
@@ -384,45 +374,47 @@ function stop() {
 <template>
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 z-90 bg-black">
-      <!-- Живое видео: габариты «cover» считаются в px (см. fitVideo) —
-           object-fit на <video> с transform Telegram-вебвью игнорирует
-           (превью рисовалось узкой полосой), поэтому размер задаём явно.
-           max-w-none отключает глобальный max-width:100% для video. -->
-      <video
-        ref="videoRef"
-        autoplay
-        class="absolute max-w-none"
-        muted
-        playsinline
-        :style="videoStyle"
-      />
-
-      <!-- Затемнение всего, кроме овала -->
-      <div
-        class="pointer-events-none absolute inset-0"
-        :style="{
-          background: 'rgba(0,0,0,0.62)',
-          maskImage: `radial-gradient(ellipse ${OVAL_WIDTH_VMIN / 2}vmin ${OVAL_HEIGHT_VMIN / 2}vmin at 50% 46%, transparent 98%, black 100%)`,
-          WebkitMaskImage: `radial-gradient(ellipse ${OVAL_WIDTH_VMIN / 2}vmin ${OVAL_HEIGHT_VMIN / 2}vmin at 50% 46%, transparent 98%, black 100%)`,
-        }"
-      />
-
-      <!-- Пунктирный овал + прогресс удержания -->
-      <div
-        class="pointer-events-none absolute left-1/2 top-[46%] border-3 rounded-[50%] border-dashed transition-colors duration-300 -translate-x-1/2 -translate-y-1/2"
-        :class="status === 'hold' || status === 'captured' ? 'border-emerald-400' : 'border-white/85 animate-pulse'"
-        :style="{ width: `${OVAL_WIDTH_VMIN}vmin`, height: `${OVAL_HEIGHT_VMIN}vmin` }"
-      />
-      <!-- Заливка прогресса снизу овала -->
-      <div
-        v-if="holdProgress > 0 && manualPreview === ''"
-        class="pointer-events-none absolute left-1/2 top-[46%] overflow-hidden rounded-[50%] -translate-x-1/2 -translate-y-1/2"
-        :style="{ width: `${OVAL_WIDTH_VMIN}vmin`, height: `${OVAL_HEIGHT_VMIN}vmin` }"
-      >
-        <div
-          class="absolute inset-x-0 bottom-0 bg-emerald-400/25 transition-all duration-200"
-          :style="{ height: `${holdProgress}%` }"
+      <!-- Область превью: кадр вписан целиком, обрезаны только бока до 3:4.
+           Габариты в px (см. fitVideo) — object-fit на <video> с transform
+           Telegram-вебвью игнорирует. max-w-none отключает глобальный
+           max-width:100% для video. -->
+      <div class="absolute overflow-hidden" :style="boxStyle">
+        <video
+          ref="videoRef"
+          autoplay
+          class="absolute max-w-none"
+          muted
+          playsinline
+          :style="videoStyle"
         />
+
+        <!-- Затемнение всего, кроме овала -->
+        <div
+          class="pointer-events-none absolute inset-0"
+          :style="{
+            background: 'rgba(0,0,0,0.62)',
+            maskImage: `radial-gradient(ellipse ${oval.w / 2}px ${oval.h / 2}px at 50% ${OVAL_CENTER_Y * 100}%, transparent 98%, black 100%)`,
+            WebkitMaskImage: `radial-gradient(ellipse ${oval.w / 2}px ${oval.h / 2}px at 50% ${OVAL_CENTER_Y * 100}%, transparent 98%, black 100%)`,
+          }"
+        />
+
+        <!-- Пунктирный овал + прогресс удержания -->
+        <div
+          class="pointer-events-none absolute left-1/2 border-3 rounded-[50%] border-dashed transition-colors duration-300 -translate-x-1/2 -translate-y-1/2"
+          :class="status === 'hold' || status === 'captured' ? 'border-emerald-400' : 'border-white/85 animate-pulse'"
+          :style="{ width: `${oval.w}px`, height: `${oval.h}px`, top: `${OVAL_CENTER_Y * 100}%` }"
+        />
+        <!-- Заливка прогресса снизу овала -->
+        <div
+          v-if="holdProgress > 0 && manualPreview === ''"
+          class="pointer-events-none absolute left-1/2 overflow-hidden rounded-[50%] -translate-x-1/2 -translate-y-1/2"
+          :style="{ width: `${oval.w}px`, height: `${oval.h}px`, top: `${OVAL_CENTER_Y * 100}%` }"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 bg-emerald-400/25 transition-all duration-200"
+            :style="{ height: `${holdProgress}%` }"
+          />
+        </div>
       </div>
 
       <!-- Памятка (как в Я.Про) -->
