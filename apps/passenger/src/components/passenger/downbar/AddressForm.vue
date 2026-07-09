@@ -40,8 +40,10 @@ const showQuickDestinations = computed(() =>
 </script>
 
 <template>
-  <div class="space-y-3">
-    <header class="flex items-center justify-between gap-3 px-1">
+  <!-- Шапка и поля ввода зафиксированы; скроллится только область списков
+       (подсказки гео-саджеста / частые адреса) — блок с адресами внизу. -->
+  <div class="flex flex-col gap-3">
+    <header class="flex shrink-0 items-center justify-between gap-3 px-1">
       <div class="min-w-0">
         <p class="text-[11px] text-main-300 font-900 uppercase">
           Маршрут
@@ -62,7 +64,7 @@ const showQuickDestinations = computed(() =>
       </button>
     </header>
 
-    <div class="space-y-1.5">
+    <div class="shrink-0 space-y-1.5">
       <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-white/6 px-3.5 transition focus-within:bg-white/10">
         <span class="i-mdi-near-me shrink-0 text-5 text-main-300" aria-hidden="true" />
 
@@ -128,43 +130,45 @@ const showQuickDestinations = computed(() =>
       </div>
     </div>
 
-    <AddressSuggestions
-      color="emerald"
-      :is-loading="isSearchingPickup"
-      :places="pickupSuggestions"
-      @select="emit('selectPickup', $event)"
-    />
+    <div class="[scrollbar-width:none] min-h-0 flex-1 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:hidden space-y-3">
+      <AddressSuggestions
+        color="emerald"
+        :is-loading="isSearchingPickup"
+        :places="pickupSuggestions"
+        @select="emit('selectPickup', $event)"
+      />
 
-    <AddressSuggestions
-      color="red"
-      :is-loading="isSearchingDestination"
-      :places="destinationSuggestions"
-      @select="emit('selectDestination', $event)"
-    />
+      <AddressSuggestions
+        color="red"
+        :is-loading="isSearchingDestination"
+        :places="destinationSuggestions"
+        @select="emit('selectDestination', $event)"
+      />
 
-    <!-- Частые и недавние адреса из истории поездок — быстрый выбор «Куда» -->
-    <div v-if="showQuickDestinations" class="rounded-[1.65rem] bg-white/5 p-2">
-      <p class="px-2 pb-1 pt-1.5 text-[11px] text-slate-500 font-800 uppercase">
-        Недавние и частые
-      </p>
-      <button
-        v-for="item in quickDestinations"
-        :key="item.place.id"
-        class="w-full flex items-center gap-3 rounded-[1.25rem] px-3 py-2.5 text-left transition active:scale-[0.99] hover:bg-white/6"
-        type="button"
-        @click="emit('selectDestination', item.place)"
-      >
-        <span class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-main-200">
-          <span :class="item.times > 2 ? 'i-mdi-star' : 'i-mdi-history'" class="text-4.5" />
-        </span>
-        <span class="min-w-0 flex-1">
-          <span class="block truncate text-sm font-800">{{ item.place.name }}</span>
-          <span class="block truncate text-xs text-slate-500 font-700">{{ item.place.address }}</span>
-        </span>
-        <span v-if="item.times > 1" class="shrink-0 text-[11px] text-slate-500 font-800">
-          ×{{ item.times }}
-        </span>
-      </button>
+      <!-- Частые и недавние адреса из истории поездок — быстрый выбор «Куда» -->
+      <div v-if="showQuickDestinations" class="rounded-[1.65rem] bg-white/5 p-2">
+        <p class="px-2 pb-1 pt-1.5 text-[11px] text-slate-500 font-800 uppercase">
+          Недавние и частые
+        </p>
+        <button
+          v-for="item in quickDestinations"
+          :key="item.place.id"
+          class="w-full flex items-center gap-3 rounded-[1.25rem] px-3 py-2.5 text-left transition active:scale-[0.99] hover:bg-white/6"
+          type="button"
+          @click="emit('selectDestination', item.place)"
+        >
+          <span class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-main-200">
+            <span :class="item.times > 2 ? 'i-mdi-star' : 'i-mdi-history'" class="text-4.5" />
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-800">{{ item.place.name }}</span>
+            <span class="block truncate text-xs text-slate-500 font-700">{{ item.place.address }}</span>
+          </span>
+          <span v-if="item.times > 1" class="shrink-0 text-[11px] text-slate-500 font-800">
+            ×{{ item.times }}
+          </span>
+        </button>
+      </div>
     </div>
   </div>
 </template>

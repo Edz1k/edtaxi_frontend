@@ -34,6 +34,7 @@ export default defineConfig({
     'i-mdi-loading',
     'i-mdi-map-marker-check',
     'i-mdi-map-marker-outline',
+    'i-mdi-motorbike',
     'i-mdi-map-marker-path',
     'i-mdi-navigation-variant',
     'i-mdi-play-circle',

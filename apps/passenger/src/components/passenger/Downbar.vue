@@ -11,6 +11,7 @@ import TariffStage from '~/components/passenger/downbar/TariffStage.vue'
 import { useAddressSearch } from '~/composables/passenger/useAddressSearch'
 import { useBottomSheet } from '~/composables/passenger/useBottomSheet'
 import { useTripOrderFlow } from '~/composables/passenger/useTripOrderFlow'
+import { TARIFF_META } from '~/constants/tariffs'
 
 const emit = defineEmits<{
   locateUser: []
@@ -215,9 +216,10 @@ onMounted(() => {
 // рисует только шторка, поэтому цветового шва между слоями нет.
 const isAddressSearchOpen = computed(() => active.value === 'full' && sheetState.value === 'address')
 
-// Свёрнутая шторка во время активной поездки: вместо торчащего верха контента
-// показываем компактную пилюлю-статус (в стиле кнопки «Куда едем?»).
-const isSearchPillVisible = computed(() => active.value === 'peek' && sheetState.value === 'searching')
+// Свёрнутая шторка (peek) в любом состоянии: вместо торчащего обрезанного
+// верха контента — компактная пилюля-сводка. Контент при этом скрыт, скроллить
+// в свёрнутом виде нечего; тап по пилюле возвращает рабочую высоту.
+const isPeekPillVisible = computed(() => active.value === 'peek')
 
 function formatElapsed(total: number) {
   const mm = Math.floor(total / 60)
@@ -240,6 +242,24 @@ const searchPillSubtitle = computed(() => {
   if (!trips.activeTrip || trips.activeTrip.status === 'searching')
     return `Поиск идёт ${formatElapsed(trips.searchElapsedSeconds)}`
   return destination.value ? `До: ${destination.value}` : ''
+})
+
+// Содержимое пилюли по состоянию: активная поездка — статус с пульсом и
+// таймером; тарифы — цена заказа и куда едем; адрес — приглашение к поиску.
+const peekPill = computed(() => {
+  switch (sheetState.value) {
+    case 'searching':
+      return { pulse: true, subtitle: searchPillSubtitle.value, title: searchPillTitle.value }
+    case 'tariffs':
+      return {
+        icon: TARIFF_META[trips.selectedCategory].icon,
+        pulse: false,
+        subtitle: destination.value ? `До: ${destination.value}` : '',
+        title: primaryText.value,
+      }
+    default:
+      return { icon: 'i-mdi-magnify', pulse: false, subtitle: '', title: 'Куда едем?' }
+  }
 })
 
 // Смена состояния возвращает шторку на рабочую высоту нового вида.
@@ -293,7 +313,7 @@ function onHandleKeydown(event: KeyboardEvent) {
              поэтому скролла нет; auto — страховка для маленьких экранов, когда
              шторка упирается в максимум. Скроллбар скрыт всегда. -->
         <div class="[scrollbar-width:none] h-full overflow-y-auto px-3 pb-3 [&::-webkit-scrollbar]:hidden">
-          <div ref="contentEl" :class="{ invisible: isAddressSearchOpen || isSearchPillVisible }">
+          <div ref="contentEl" :class="{ invisible: isAddressSearchOpen || isPeekPillVisible }">
             <!-- Тарифы: самодостаточный этап (карусель + оплата + заказ). -->
             <TariffStage
               v-if="isTariffsVisible"
@@ -347,13 +367,15 @@ function onHandleKeydown(event: KeyboardEvent) {
         </div>
 
         <!-- Полный поиск адреса — прозрачный оверлей (фон даёт шторка); первый
-             экран остаётся в потоке ради замера half, но невидим. Скролл есть,
-             скроллбар скрыт. -->
+             экран остаётся в потоке ради замера half, но невидим. Сам оверлей
+             не скроллится: шапка и поля зафиксированы, скроллится только
+             список адресов внутри AddressForm, кнопка прижата к низу. -->
         <div
           v-show="isAddressSearchOpen"
-          class="[scrollbar-width:none] absolute inset-0 overflow-y-auto px-3 pb-3 pt-2 [&::-webkit-scrollbar]:hidden"
+          class="absolute inset-0 flex flex-col px-3 pb-3 pt-2"
         >
           <AddressForm
+            class="min-h-0 flex-1"
             :destination="destination"
             :destination-suggestions="destinationSuggestions"
             :is-locating-user="isLocatingUser"
@@ -375,7 +397,7 @@ function onHandleKeydown(event: KeyboardEvent) {
           <button
             v-if="canSubmit"
             :disabled="isBusy"
-            class="mt-3 h-13 w-full rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-600 disabled:shadow-none"
+            class="mt-3 h-13 w-full shrink-0 rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-600 disabled:shadow-none"
             type="button"
             @click="submitTrip"
           >
@@ -383,23 +405,25 @@ function onHandleKeydown(event: KeyboardEvent) {
           </button>
         </div>
 
-        <!-- Свёрнутый статус поездки: компактная пилюля (пульс + статус + таймер),
-             тап раскрывает шторку. Фон прозрачный — рисует шторка. -->
+        <!-- Свёрнутая шторка: компактная пилюля-сводка текущего состояния
+             (статус поездки / тариф с ценой / «Куда едем?»), тап раскрывает
+             шторку. Фон прозрачный — рисует шторка. -->
         <button
-          v-show="isSearchPillVisible"
+          v-show="isPeekPillVisible"
           class="absolute inset-0 flex items-center justify-between gap-3 px-5 text-left transition active:scale-[0.99]"
           type="button"
           @click="snapTo('half')"
         >
           <span class="min-w-0 flex items-center gap-3">
-            <span class="relative h-2.5 w-2.5 shrink-0" aria-hidden="true">
+            <span v-if="peekPill.pulse" class="relative h-2.5 w-2.5 shrink-0" aria-hidden="true">
               <span class="absolute inset-0 animate-ping rounded-full bg-main-400/60" />
               <span class="absolute inset-0 rounded-full bg-main-400" />
             </span>
+            <span v-else :class="peekPill.icon" class="shrink-0 text-5.5 text-main-300" aria-hidden="true" />
             <span class="min-w-0">
-              <span class="block truncate text-base font-950 leading-tight">{{ searchPillTitle }}</span>
-              <span v-if="searchPillSubtitle" class="block truncate text-xs text-white/45 font-800 tabular-nums">
-                {{ searchPillSubtitle }}
+              <span class="block truncate text-base font-950 leading-tight">{{ peekPill.title }}</span>
+              <span v-if="peekPill.subtitle" class="block truncate text-xs text-white/45 font-800 tabular-nums">
+                {{ peekPill.subtitle }}
               </span>
             </span>
           </span>

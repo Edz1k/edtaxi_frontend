@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AdminOverviewSection from '~/components/admin/overview/AdminOverviewSection.vue'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { useAuthStore } from '~/stores/auth'
 
@@ -89,7 +90,12 @@ const adminCards = computed(() => [
     description="Управление web-ролями, заявками таксопарков и операционными данными."
     title="Админка"
   >
-    <div class="grid mt-7 gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <AdminOverviewSection class="mt-7" />
+
+    <h2 class="mt-10 text-xl font-950">
+      Разделы
+    </h2>
+    <div class="grid mt-4 gap-4 md:grid-cols-2 xl:grid-cols-4">
       <RouterLink
         v-for="card in adminCards"
         :key="card.to"

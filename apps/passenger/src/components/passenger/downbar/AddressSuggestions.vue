@@ -29,9 +29,11 @@ function formatDistance(m?: null | number) {
 </script>
 
 <template>
+  <!-- Список сам не скроллится: прокрутку даёт родительский контейнер
+       (скролл-область AddressForm или страницы избранного). -->
   <div
     v-if="places.length || isLoading"
-    class="[scrollbar-width:thin] mt-3 max-h-64 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl bg-white/5 p-2 pr-1 space-y-1"
+    class="min-w-0 overflow-x-hidden rounded-2xl bg-white/5 p-2 space-y-1"
   >
     <button
       v-for="place in places"

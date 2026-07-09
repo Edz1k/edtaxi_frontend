@@ -169,15 +169,6 @@ async function confirmParkInvite() {
   }
 }
 
-const trackingLabel = computed(() => {
-  if (tracking.status.value === 'open')
-    return 'Подключен'
-
-  if (tracking.status.value === 'connecting')
-    return 'Подключаемся'
-
-  return 'Отключен'
-})
 // When approaching pickup: hide destination so fitBounds doesn't zoom too far out
 const pickupPlace = computed(() =>
   driver.activeTripStep === 'to_pickup' ? null : offerToPlace(mapOffer.value, 'pickup'),
@@ -338,7 +329,7 @@ async function toggleOnline() {
       :is-location-granted="isLocationGranted"
       :online-block-message="onlineBlockMessage"
       :show-route-loading="Boolean(mapOffer && isRouteLoading)"
-      :tracking-label="trackingLabel"
+      :tracking-status="tracking.status.value"
       @primary-action="handlePrimaryTripAction"
       @toggle-online="toggleOnline"
     />

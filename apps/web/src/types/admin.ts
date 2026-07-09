@@ -180,6 +180,49 @@ export interface AdminListTariffsResponse {
   tariffs: Tariff[]
 }
 
+// --- Обзорный дашборд GET /admin/overview: тоталы и непрерывные серии
+// (пустые дни/месяцы приходят нулями — ось времени без дыр). ---
+
+export interface AdminOverviewTotals {
+  users: number
+  drivers: number
+  passengers: number
+  online_drivers: number
+  approved_parks: number
+  trips: number
+  completed_trips: number
+  total_revenue: number
+}
+
+// «Активные» — уникальные участники поездок за период (DAU/MAU по поездкам).
+// Пассажиры и водители считаются раздельно: разные пространства id.
+export interface AdminOverviewDailyPoint {
+  date: string // YYYY-MM-DD
+  new_users: number
+  new_drivers: number
+  active_passengers: number
+  active_drivers: number
+  trips_completed: number
+  trips_cancelled: number
+  revenue: number
+}
+
+export interface AdminOverviewMonthlyPoint {
+  month: string // YYYY-MM
+  new_users: number
+  new_drivers: number
+  active_passengers: number
+  active_drivers: number
+  trips_completed: number
+  revenue: number
+}
+
+export interface AdminOverview {
+  totals: AdminOverviewTotals
+  daily: AdminOverviewDailyPoint[]
+  monthly: AdminOverviewMonthlyPoint[]
+}
+
 // Текущий срез спроса на категорию — те же счётчики и коэффициент, что
 // использует живой расчёт цены поездки, но платформенные (без гео-радиуса).
 export interface CategoryDemand {

@@ -26,7 +26,7 @@ const navItems = computed(() => [
     <div class="mx-auto max-w-1280px flex items-center justify-between border border-white/15 rounded-full bg-#06142f/75 px-3 py-3 shadow-xl backdrop-blur-xl md:px-5 sm:px-4">
       <a href="#hero" class="min-w-0 flex shrink items-center gap-2 sm:w-46 sm:shrink-0 sm:gap-3">
         <div class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-cyan-300 text-#06142f">
-          <div class="i-carbon-taxi text-xl" />
+          <div class="i-mdi:taxi text-xl" />
         </div>
 
         <div class="min-w-0 text-left">
