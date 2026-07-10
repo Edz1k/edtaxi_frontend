@@ -83,12 +83,14 @@ async function submit() {
         :key="number.phone"
         class="grid gap-3 border-b border-white/6 px-4 py-4 md:grid-cols-[minmax(180px,1fr)_180px_120px] md:items-center last:border-b-0"
       >
+        <!-- Второй строкой всегда номер: раньше без имени сюда падал added_by,
+             и админ видел UUID того, кто добавил запись. -->
         <div class="min-w-0">
           <p class="truncate text-sm font-900">
-            {{ number.name || number.phone }}
+            {{ number.name || 'Без имени' }}
           </p>
           <p class="mt-0.5 truncate text-xs text-white/42">
-            {{ number.name ? number.phone : (number.added_by || '—') }}
+            {{ number.phone }}
           </p>
         </div>
 

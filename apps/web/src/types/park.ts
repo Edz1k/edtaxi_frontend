@@ -26,6 +26,13 @@ export interface ParkChatRoom {
   status: 'closed' | 'open'
   created_at: string
   updated_at: string
+  // Приходят только в админском списке /admin/park-chats. driver_user_id —
+  // это users.id, по нему открывается карточка водителя /drivers/:id
+  // (driver_id — это drivers.id, для ссылки он не годится).
+  park_name?: string
+  driver_user_id?: string
+  driver_name?: null | string
+  driver_phone?: string
 }
 
 export interface ParkChatMessage {
@@ -95,11 +102,12 @@ export interface AdminParkChangeRequestsResponse {
   requests: ParkChangeRequest[]
 }
 
+// Пригласительная ссылка парка: одна, многоразовая, по умолчанию бессрочная
+// (expires_at = null). Отзывается перевыпуском, а не пометкой «использована».
 export interface ParkInvite {
-  expires_at: string
+  expires_at: null | string
   id?: string
   token: string
-  used_by?: null | string
 }
 
 export interface ParkInvitesResponse {

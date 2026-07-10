@@ -43,8 +43,16 @@ export function updateMyPark(payload: TaxiParkUpdatePayload) {
   })
 }
 
+// Идемпотентно: у парка одна постоянная ссылка, повторный вызов вернёт её же.
 export function createParkInvite() {
   return apiRequest<ParkInvite>('/park/invites', {
+    method: 'POST',
+  })
+}
+
+// Перевыпуск: прежний токен и розданный по нему QR сразу перестают работать.
+export function rotateParkInvite() {
+  return apiRequest<ParkInvite>('/park/invites/rotate', {
     method: 'POST',
   })
 }
