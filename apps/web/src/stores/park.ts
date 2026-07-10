@@ -16,6 +16,7 @@ import {
   registerPark,
   removeParkDriver,
   requestParkPayout,
+  rotateParkInvite,
   submitParkChangeRequest,
   updateMyPark,
 } from '~/api/park'
@@ -28,7 +29,9 @@ export const useParkStore = defineStore('park', () => {
   // (старый бэкенд), тогда секция динамики скрывается.
   const dailyAnalytics = ref<null | ParkDailyPoint[]>(null)
   const drivers = ref<ParkDriver[]>([])
-  const invites = ref<ParkInvite[]>([])
+  // Ссылка у парка одна. Список с бэка приходит массивом (историческая форма
+  // эндпоинта), но элементов в нём максимум один — уникальный индекс по park_id.
+  const invite = ref<null | ParkInvite>(null)
   // Активная (ожидающая) заявка на изменение БИН/комиссии — для баннера.
   const changeRequest = ref<ParkChangeRequest | null>(null)
   const wallet = ref<ParkWallet | null>(null)
@@ -94,7 +97,7 @@ export const useParkStore = defineStore('park', () => {
       analytics.value = analyticsResponse
       dailyAnalytics.value = dailyResponse?.days ?? null
       drivers.value = driversResponse.drivers
-      invites.value = invitesResponse.invites
+      invite.value = invitesResponse.invites[0] ?? null
       changeRequest.value = changeResponse.request
     }, 'Не удалось загрузить данные таксопарка.')
   }
@@ -107,12 +110,20 @@ export const useParkStore = defineStore('park', () => {
     }, 'Не удалось отправить заявку на изменение.')
   }
 
+  // Идемпотентно: бэкенд вернёт существующую ссылку, если она уже есть.
   async function createInvite() {
     return withLoading(isMutating, async () => {
-      const invite = await createParkInvite()
-      invites.value = [invite, ...invites.value]
-      return invite
+      invite.value = await createParkInvite()
+      return invite.value
     }, 'Не удалось создать приглашение.')
+  }
+
+  // Перевыпуск: старый QR немедленно перестаёт пускать водителей.
+  async function rotateInvite() {
+    return withLoading(isMutating, async () => {
+      invite.value = await rotateParkInvite()
+      return invite.value
+    }, 'Не удалось обновить ссылку.')
   }
 
   async function removeDriver(id: string) {
@@ -159,7 +170,7 @@ export const useParkStore = defineStore('park', () => {
     analytics.value = null
     dailyAnalytics.value = null
     drivers.value = []
-    invites.value = []
+    invite.value = null
     changeRequest.value = null
     wallet.value = null
     payouts.value = []
@@ -178,11 +189,12 @@ export const useParkStore = defineStore('park', () => {
     createInvite,
     drivers,
     errorMessage,
-    invites,
+    invite,
     isLoading,
     isLoadingWallet,
     isMutating,
     loadDashboard,
+    rotateInvite,
     loadPark,
     loadWallet,
     park,

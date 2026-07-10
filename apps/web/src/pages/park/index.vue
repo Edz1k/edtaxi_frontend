@@ -169,6 +169,17 @@ async function copyInviteLink(token: string) {
   await copy(buildParkInviteDeepLink(TG_DRIVER_BOT_USERNAME, token))
   copiedToken.value = token
 }
+
+// Перевыпуск необратим: розданные QR перестают работать сразу, поэтому
+// спрашиваем подтверждение.
+async function rotateInvite() {
+  // eslint-disable-next-line no-alert
+  if (!window.confirm('Старая ссылка и QR перестанут работать. Выпустить новую?'))
+    return
+  const invite = await parkStore.rotateInvite()
+  if (invite)
+    toast.success('Ссылка обновлена', 'Раздайте водителям новый QR.')
+}
 </script>
 
 <template>
@@ -476,18 +487,21 @@ async function copyInviteLink(token: string) {
         :loading="parkStore.isLoading"
       />
 
+      <!-- Ссылка у парка одна и постоянная: её печатают на QR и раздают всем
+           водителям. Кнопка не создаёт новую, а перевыпускает — это же
+           единственный способ отозвать утёкшую ссылку. -->
       <section class="border border-white/10 rounded-3xl bg-white/8 p-5 backdrop-blur">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-xl font-950">
-              Приглашения
+              Приглашение
             </h2>
             <p class="mt-1 text-sm text-white/55">
-              Создайте ссылку-приглашение и покажите водителю QR — он вступит в парк в один тап.
+              Одна ссылка на весь парк: покажите водителю QR — он вступит в один тап.
             </p>
           </div>
           <button
-            v-if="!isPeeking"
+            v-if="!isPeeking && !parkStore.invite"
             :disabled="parkStore.isMutating"
             class="h-10 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 disabled:opacity-60"
             type="button"
@@ -495,26 +509,32 @@ async function copyInviteLink(token: string) {
           >
             Создать
           </button>
+          <button
+            v-else-if="!isPeeking"
+            :disabled="parkStore.isMutating"
+            class="h-10 rounded-xl bg-white/10 px-4 text-sm font-900 transition hover:bg-white/16 disabled:opacity-60"
+            type="button"
+            @click="rotateInvite()"
+          >
+            Обновить ссылку
+          </button>
         </div>
 
         <div class="grid mt-4 gap-2">
-          <p v-if="!parkStore.invites.length" class="text-sm text-white/50">
-            Приглашений нет.
+          <p v-if="!parkStore.invite" class="text-sm text-white/50">
+            Ссылка ещё не создана.
           </p>
-          <div v-for="invite in parkStore.invites" :key="invite.id ?? invite.token" class="flex flex-wrap items-center gap-3 rounded-xl bg-black/14 p-3">
+          <div v-else class="flex flex-wrap items-center gap-3 rounded-xl bg-black/14 p-3">
             <p class="min-w-0 flex-1 break-all text-sm font-900 font-mono">
-              {{ invite.token }}
+              {{ parkStore.invite.token }}
             </p>
-            <span class="text-xs text-white/38">
-              {{ invite.used_by ? 'Использовано' : 'Активно' }}
-            </span>
             <div class="flex shrink-0 gap-1.5">
               <button
                 class="h-8 inline-flex items-center gap-1 rounded-lg bg-white/8 px-3 text-xs font-900 transition hover:bg-white/14"
                 type="button"
-                @click="copyInviteLink(invite.token)"
+                @click="copyInviteLink(parkStore.invite.token)"
               >
-                <span v-if="copied && copiedToken === invite.token" class="text-emerald-300">Скопировано</span>
+                <span v-if="copied && copiedToken === parkStore.invite.token" class="text-emerald-300">Скопировано</span>
                 <template v-else>
                   <span class="i-mdi-link-variant text-3.5" />
                   Ссылка
@@ -523,7 +543,7 @@ async function copyInviteLink(token: string) {
               <button
                 class="h-8 inline-flex items-center gap-1 rounded-lg bg-cyan-300/14 px-3 text-xs text-cyan-200 font-900 transition hover:bg-cyan-300/22"
                 type="button"
-                @click="openQr(invite.token)"
+                @click="openQr(parkStore.invite.token)"
               >
                 <span class="i-mdi-qrcode text-3.5" />
                 QR
