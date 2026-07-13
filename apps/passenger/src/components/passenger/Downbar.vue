@@ -3,6 +3,7 @@ import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { QuickDestination } from '~/components/passenger/downbar/AddressForm.vue'
 import type { SheetSnap } from '~/composables/passenger/useBottomSheet'
+import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
 import { getDestinationSuggestions } from '~/api/trips'
 import AddressForm from '~/components/passenger/downbar/AddressForm.vue'
 import DestinationFirstScreen from '~/components/passenger/downbar/DestinationFirstScreen.vue'
@@ -102,8 +103,22 @@ const isAwaitingPayment = computed(() => trips.activeTrip?.status === 'awaiting_
 const isPrepayFrameOpen = ref(false)
 const isRequestingPrepay = ref(false)
 
+// Apple Pay в Telegram-вебвью недоступен (нет ApplePaySession) — страницу
+// оплаты открываем во внешнем браузере/Safari View Controller, где кнопка
+// Apple Pay работает; Google Pay и карта остаются во фрейме.
+function launchPrepay(url: string) {
+  if (trips.prepaySource === 'apple') {
+    openExternalLink(url)
+    return
+  }
+  isPrepayFrameOpen.value = true
+}
+
 watch(() => trips.prepayUrl, (url) => {
-  isPrepayFrameOpen.value = Boolean(url)
+  if (url)
+    launchPrepay(url)
+  else
+    isPrepayFrameOpen.value = false
 })
 
 function closePrepayFrame() {
@@ -115,11 +130,13 @@ async function openPrepay() {
   if (isRequestingPrepay.value)
     return
   if (trips.prepayUrl) {
-    isPrepayFrameOpen.value = true
+    launchPrepay(trips.prepayUrl)
     return
   }
   isRequestingPrepay.value = true
   try {
+    // retryPrepay кладёт новую ссылку в prepayUrl — watch выше сам откроет
+    // фрейм или внешний браузер в зависимости от prepaySource.
     await trips.retryPrepay()
   }
   catch {}

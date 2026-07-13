@@ -65,17 +65,15 @@ const showCardChip = computed(() =>
 )
 
 // Предоплата (Apple Pay / Google Pay): отдельные кнопки под тоглом оплаты.
-// Оба ведут на одну hosted-страницу FreedomPay — какая кнопка нажата, важен
-// только для подсветки выбора.
-const prepaySource = ref<'apple' | 'google' | null>(null)
-
+// Выбор хранится в сторе: Apple Pay даунбар открывает во внешнем браузере
+// (в Telegram-вебвью ApplePaySession недоступен), Google Pay — во фрейме.
 function selectMethod(method: PaymentMethod) {
-  prepaySource.value = null
+  trips.setPrepaySource(null)
   trips.setPaymentMethod(method)
 }
 
 function selectPrepay(source: 'apple' | 'google') {
-  prepaySource.value = source
+  trips.setPrepaySource(source)
   trips.setPaymentMethod('prepaid')
 }
 
@@ -202,9 +200,9 @@ function isSelected(category: VehicleCategory) {
     <div class="grid grid-cols-2 gap-2">
       <button
         aria-label="Оплатить через Apple Pay"
-        :aria-pressed="trips.paymentMethod === 'prepaid' && prepaySource === 'apple'"
+        :aria-pressed="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'apple'"
         class="h-11 flex items-center justify-center gap-1 border rounded-[1.3rem] bg-black text-sm text-white font-900 transition active:scale-[0.98]"
-        :class="trips.paymentMethod === 'prepaid' && prepaySource === 'apple'
+        :class="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'apple'
           ? 'border-main-400 shadow-[0_0_0_2px_rgba(230,173,46,0.35)]'
           : 'border-white/15'"
         type="button"
@@ -215,9 +213,9 @@ function isSelected(category: VehicleCategory) {
       </button>
       <button
         aria-label="Оплатить через Google Pay"
-        :aria-pressed="trips.paymentMethod === 'prepaid' && prepaySource === 'google'"
+        :aria-pressed="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'google'"
         class="h-11 flex items-center justify-center gap-1.5 border rounded-[1.3rem] bg-white text-sm text-slate-800 font-900 transition active:scale-[0.98]"
-        :class="trips.paymentMethod === 'prepaid' && prepaySource === 'google'
+        :class="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'google'
           ? 'border-main-400 shadow-[0_0_0_2px_rgba(230,173,46,0.35)]'
           : 'border-white/15'"
         type="button"
