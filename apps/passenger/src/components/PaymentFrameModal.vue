@@ -7,6 +7,9 @@ defineProps<{
 
 const emit = defineEmits<{
   close: []
+  // Итог оплаты со страницы возврата — родитель может отреагировать
+  // (например, объяснить, почему карта не привязалась при успешной оплате).
+  result: [status: 'failure' | 'success']
 }>()
 
 // После оплаты FreedomPay редиректит фрейм на нашу страницу возврата
@@ -19,8 +22,11 @@ const apiOrigin = new URL(mediaUrl('/') || '/', window.location.href).origin
 function onMessage(event: MessageEvent) {
   if (event.origin !== apiOrigin)
     return
-  if ((event.data as { type?: string } | null)?.type === 'edtaxi:payment')
-    emit('close')
+  const data = event.data as { status?: string, type?: string } | null
+  if (data?.type !== 'edtaxi:payment')
+    return
+  emit('result', data.status === 'success' ? 'success' : 'failure')
+  emit('close')
 }
 
 onMounted(() => window.addEventListener('message', onMessage))
