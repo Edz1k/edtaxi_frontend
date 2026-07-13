@@ -8,6 +8,7 @@ import AddressForm from '~/components/passenger/downbar/AddressForm.vue'
 import DestinationFirstScreen from '~/components/passenger/downbar/DestinationFirstScreen.vue'
 import SearchingTrip from '~/components/passenger/downbar/SearchingTrip.vue'
 import TariffStage from '~/components/passenger/downbar/TariffStage.vue'
+import PaymentFrameModal from '~/components/PaymentFrameModal.vue'
 import { useAddressSearch } from '~/composables/passenger/useAddressSearch'
 import { useBottomSheet } from '~/composables/passenger/useBottomSheet'
 import { useTripOrderFlow } from '~/composables/passenger/useTripOrderFlow'
@@ -93,6 +94,40 @@ const isActiveTripFinished = computed(() => {
   return trips.activeTrip?.status === 'cancelled' || trips.activeTrip?.status === 'completed'
 })
 
+// Предоплата (payment_method=prepaid): поездка ждёт оплату в awaiting_payment.
+// Фрейм оплаты открывается сам, как только стор получил ссылку (после заказа
+// или «Оплатить заказ»), и закрывается, когда оплата подтвердилась — стор
+// очищает prepayUrl при переходе поездки в searching.
+const isAwaitingPayment = computed(() => trips.activeTrip?.status === 'awaiting_payment')
+const isPrepayFrameOpen = ref(false)
+const isRequestingPrepay = ref(false)
+
+watch(() => trips.prepayUrl, (url) => {
+  isPrepayFrameOpen.value = Boolean(url)
+})
+
+function closePrepayFrame() {
+  isPrepayFrameOpen.value = false
+  trips.refreshActiveTrip().catch(() => {})
+}
+
+async function openPrepay() {
+  if (isRequestingPrepay.value)
+    return
+  if (trips.prepayUrl) {
+    isPrepayFrameOpen.value = true
+    return
+  }
+  isRequestingPrepay.value = true
+  try {
+    await trips.retryPrepay()
+  }
+  catch {}
+  finally {
+    isRequestingPrepay.value = false
+  }
+}
+
 // После завершения предлагаем заказать ещё одну машину (маршрут уже заполнен),
 // после отмены — просто новую поездку.
 const finishedButtonLabel = computed(() =>
@@ -125,8 +160,9 @@ function requestCancel() {
   if (trips.isCancelling)
     return
 
+  // Поиск и неоплаченная предоплата отменяются в один тап — водителя ещё нет.
   const status = trips.activeTrip?.status
-  if (status && status !== 'searching' && !isCancelArmed.value) {
+  if (status && status !== 'searching' && status !== 'awaiting_payment' && !isCancelArmed.value) {
     isCancelArmed.value = true
     cancelArmTimer = window.setTimeout(disarmCancel, 4000)
     return
@@ -229,6 +265,7 @@ function formatElapsed(total: number) {
 
 const searchPillTitle = computed(() => {
   switch (trips.activeTrip?.status) {
+    case 'awaiting_payment': return 'Ожидание оплаты'
     case 'driver_assigned': return 'Водитель едет к вам'
     case 'driver_arriving': return 'Водитель на месте'
     case 'in_progress': return 'Вы в пути'
@@ -239,6 +276,8 @@ const searchPillTitle = computed(() => {
 })
 
 const searchPillSubtitle = computed(() => {
+  if (trips.activeTrip?.status === 'awaiting_payment')
+    return 'Оплатите заказ, чтобы начать поиск'
   if (!trips.activeTrip || trips.activeTrip.status === 'searching')
     return `Поиск идёт ${formatElapsed(trips.searchElapsedSeconds)}`
   return destination.value ? `До: ${destination.value}` : ''
@@ -343,8 +382,20 @@ function onHandleKeydown(event: KeyboardEvent) {
                 {{ finishedButtonLabel }}
               </button>
 
+              <!-- Предоплата не подтверждена: открыть оплату повторно -->
               <button
-                v-else
+                v-if="isAwaitingPayment"
+                :disabled="isRequestingPrepay"
+                class="mt-3 h-13 w-full flex items-center justify-center gap-2 rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99] disabled:opacity-60"
+                type="button"
+                @click="openPrepay"
+              >
+                <span class="i-mdi-credit-card-fast-outline text-5" aria-hidden="true" />
+                {{ isRequestingPrepay ? 'Готовим оплату...' : 'Оплатить заказ' }}
+              </button>
+
+              <button
+                v-if="!isActiveTripFinished"
                 :disabled="trips.isCancelling"
                 class="mt-3 h-13 w-full rounded-[1.35rem] text-sm font-950 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 :class="isCancelArmed ? 'bg-red-500 text-white shadow-[0_12px_30px_rgba(239,68,68,0.3)]' : 'bg-red-500/12 text-red-300'"
@@ -432,4 +483,12 @@ function onHandleKeydown(event: KeyboardEvent) {
       </div>
     </div>
   </section>
+
+  <!-- Оплата предоплаченной поездки (Apple Pay / Google Pay / карта на
+       странице FreedomPay). Закрывается сам после подтверждения оплаты. -->
+  <PaymentFrameModal
+    v-if="isPrepayFrameOpen && trips.prepayUrl"
+    :url="trips.prepayUrl"
+    @close="closePrepayFrame"
+  />
 </template>

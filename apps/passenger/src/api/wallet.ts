@@ -39,3 +39,17 @@ export function unbindCard() {
     method: 'DELETE',
   })
 }
+
+// unbindCardById — отвязать конкретную карту (мультикарты).
+export function unbindCardById(cardId: string) {
+  return apiRequest<{ message: string }>(`/wallet/cards/${cardId}`, {
+    method: 'DELETE',
+  })
+}
+
+// setDefaultCard — сделать карту основной: с неё списываются поездки.
+export function setDefaultCard(cardId: string) {
+  return apiRequest<{ message: string }>(`/wallet/cards/${cardId}/default`, {
+    method: 'PUT',
+  })
+}

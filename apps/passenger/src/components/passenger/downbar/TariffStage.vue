@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import type { EstimateTripResponse, VehicleCategory } from '~/types/trips'
+import type { EstimateTripResponse, PaymentMethod, VehicleCategory } from '~/types/trips'
 import { getBonusOverview } from '@edtaxi/shared/api/bonus'
+import CardBrandMark from '~/components/CardBrandMark.vue'
+import CardPickerSheet from '~/components/passenger/downbar/CardPickerSheet.vue'
 import { formatFare, PAYMENT_META, PAYMENT_ORDER, TARIFF_META, TARIFF_ORDER } from '~/constants/tariffs'
 import { useTripsStore } from '~/stores/trips'
 import { useWalletStore } from '~/stores/wallet'
@@ -45,11 +47,37 @@ function discountedFare(estimate: EstimateTripResponse) {
   return `${Math.max(0, Math.round(estimate.estimated_fare - bonusDiscountFor(estimate))).toLocaleString('ru-RU')} ₸`
 }
 
-const showBonusPrices = computed(() => trips.useBonuses && bonusBalance.value > 0)
+const showBonusPrices = computed(() => trips.useBonuses && bonusBalance.value > 0 && trips.paymentMethod !== 'prepaid')
 
 const showBindCardHint = computed(() =>
   trips.paymentMethod === 'card' && wallet.isCardLoaded && !wallet.card,
 )
+
+// Чип выбранной карты (способ «Карта», карты есть): бренд + последние 4 цифры,
+// тап открывает шит выбора.
+const isCardPickerOpen = ref(false)
+const defaultCardTail = computed(() => {
+  const digits = (wallet.card?.card_pan ?? '').replace(/\D/g, '')
+  return digits.slice(-4) || '····'
+})
+const showCardChip = computed(() =>
+  trips.paymentMethod === 'card' && wallet.cards.length > 0,
+)
+
+// Предоплата (Apple Pay / Google Pay): отдельные кнопки под тоглом оплаты.
+// Оба ведут на одну hosted-страницу FreedomPay — какая кнопка нажата, важен
+// только для подсветки выбора.
+const prepaySource = ref<'apple' | 'google' | null>(null)
+
+function selectMethod(method: PaymentMethod) {
+  prepaySource.value = null
+  trips.setPaymentMethod(method)
+}
+
+function selectPrepay(source: 'apple' | 'google') {
+  prepaySource.value = source
+  trips.setPaymentMethod('prepaid')
+}
 
 // Тарифы в каноничном порядке (стор наполняет по мере оценки).
 const tariffs = computed(() =>
@@ -163,16 +191,72 @@ function isSelected(category: VehicleCategory) {
         :class="trips.paymentMethod === method ? 'bg-white/12 text-white' : 'text-slate-400 hover:text-white'"
         :aria-pressed="trips.paymentMethod === method"
         type="button"
-        @click="trips.setPaymentMethod(method)"
+        @click="selectMethod(method)"
       >
         <span :class="PAYMENT_META[method].icon" class="text-4.5" aria-hidden="true" />
         {{ PAYMENT_META[method].label }}
       </button>
     </div>
 
-    <!-- Оплатить часть поездки бонусами (до 50%) -->
+    <!-- Предоплата через Apple Pay / Google Pay: оплата вперёд на странице FreedomPay -->
+    <div class="grid grid-cols-2 gap-2">
+      <button
+        aria-label="Оплатить через Apple Pay"
+        :aria-pressed="trips.paymentMethod === 'prepaid' && prepaySource === 'apple'"
+        class="h-11 flex items-center justify-center gap-1 border rounded-[1.3rem] bg-black text-sm text-white font-900 transition active:scale-[0.98]"
+        :class="trips.paymentMethod === 'prepaid' && prepaySource === 'apple'
+          ? 'border-main-400 shadow-[0_0_0_2px_rgba(230,173,46,0.35)]'
+          : 'border-white/15'"
+        type="button"
+        @click="selectPrepay('apple')"
+      >
+        <span class="i-mdi-apple text-5" aria-hidden="true" />
+        Pay
+      </button>
+      <button
+        aria-label="Оплатить через Google Pay"
+        :aria-pressed="trips.paymentMethod === 'prepaid' && prepaySource === 'google'"
+        class="h-11 flex items-center justify-center gap-1.5 border rounded-[1.3rem] bg-white text-sm text-slate-800 font-900 transition active:scale-[0.98]"
+        :class="trips.paymentMethod === 'prepaid' && prepaySource === 'google'
+          ? 'border-main-400 shadow-[0_0_0_2px_rgba(230,173,46,0.35)]'
+          : 'border-white/15'"
+        type="button"
+        @click="selectPrepay('google')"
+      >
+        <span class="i-mdi-google text-4.5" aria-hidden="true" />
+        Pay
+      </button>
+    </div>
+
+    <!-- Предоплата выбрана: пояснение (бонусы недоступны — сумма фиксируется вперёд) -->
+    <p
+      v-if="trips.paymentMethod === 'prepaid'"
+      class="flex items-start gap-2 rounded-2xl bg-white/5 px-3 py-2.5 text-[12px] text-slate-300 leading-4"
+    >
+      <span class="i-mdi-shield-lock-outline mt-0.5 shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+      Вся поездка оплачивается вперёд на защищённой странице Freedom Pay — там доступны Apple Pay, Google Pay и карта. Поиск водителя начнётся после оплаты.
+    </p>
+
+    <!-- Выбранная карта (способ «Карта»): бренд + последние цифры, тап — выбор карты -->
     <button
-      v-if="bonusBalance > 0"
+      v-if="showCardChip"
+      class="w-full flex items-center gap-3 rounded-2xl bg-white/5 px-3 py-2.5 text-left transition active:scale-[0.99]"
+      type="button"
+      @click="isCardPickerOpen = true"
+    >
+      <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg bg-white/8">
+        <CardBrandMark :brand="wallet.card?.card_brand" />
+      </span>
+      <span class="min-w-0 flex-1">
+        <span class="block text-sm text-white font-900 tracking-wider">•••• {{ defaultCardTail }}</span>
+        <span class="block text-[11px] text-slate-400 leading-4">Спишется после завершения поездки</span>
+      </span>
+      <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-400" aria-hidden="true" />
+    </button>
+
+    <!-- Оплатить часть поездки бонусами (до 50%; с предоплатой недоступно) -->
+    <button
+      v-if="bonusBalance > 0 && trips.paymentMethod !== 'prepaid'"
       class="w-full flex items-center gap-3 rounded-[1.65rem] p-3 text-left transition active:scale-[0.99]"
       :class="trips.useBonuses ? 'bg-main-500/16 border border-main-400/40' : 'bg-white/5 border border-transparent'"
       type="button"
@@ -225,5 +309,7 @@ function isSelected(category: VehicleCategory) {
     >
       {{ primaryText }}
     </button>
+
+    <CardPickerSheet v-if="isCardPickerOpen" @close="isCardPickerOpen = false" />
   </div>
 </template>

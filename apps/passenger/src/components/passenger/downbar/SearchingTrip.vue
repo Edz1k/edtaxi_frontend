@@ -258,6 +258,13 @@ async function submitTripRating() {
 
 const statusMeta = computed(() => {
   switch (props.activeTrip?.status) {
+    case 'awaiting_payment':
+      return {
+        description: 'Оплатите заказ — и мы сразу начнём поиск водителя.',
+        icon: 'i-mdi-credit-card-clock-outline',
+        tone: 'text-main-300',
+        title: 'Ожидание оплаты',
+      }
     case 'driver_assigned':
       return {
         description: 'Водитель принял заказ и едет к вам.',
