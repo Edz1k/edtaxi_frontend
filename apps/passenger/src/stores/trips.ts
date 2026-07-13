@@ -6,7 +6,7 @@ import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocati
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
 import { getUserErrorMessage, showErrorToast } from '~/api/errors'
-import { cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getTrip, getTripHistory, rateTrip } from '~/api/trips'
+import { cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getTrip, getTripHistory, rateTrip, retryTripPrepay } from '~/api/trips'
 import { TARIFF_ORDER } from '~/constants/tariffs'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
 import { isTerminalTripStatus } from '~/utils/trip'
@@ -37,6 +37,9 @@ export const useTripsStore = defineStore('trips', () => {
   const searchStartedAt = ref<number | null>(null)
   const searchElapsedSeconds = ref(0)
   const errorMessage = ref('')
+  // Ссылка на оплату предоплаченной поездки (payment_method=prepaid): даунбар
+  // открывает её во фрейме, пока поездка в awaiting_payment.
+  const prepayUrl = ref('')
 
   const pickup = ref('')
   const destination = ref('')
@@ -133,6 +136,7 @@ export const useTripsStore = defineStore('trips', () => {
 
   function syncActiveTrip(trip: Trip) {
     if (isTerminalTripStatus(trip.status)) {
+      prepayUrl.value = ''
       finishActiveTrip(trip)
       return
     }
@@ -141,8 +145,16 @@ export const useTripsStore = defineStore('trips', () => {
     history.value = [trip, ...history.value.filter(item => item.id !== trip.id)]
     syncRouteDraftFromTrip(trip)
 
-    if (trip.status !== 'searching')
+    if (trip.status !== 'searching') {
       stopSearchTimer()
+    }
+    else {
+      // Предоплата подтвердилась (awaiting_payment → searching): ссылка на
+      // оплату больше не нужна, а таймер поиска стартует только сейчас.
+      prepayUrl.value = ''
+      if (!searchStartedAt.value)
+        startSearchTimer()
+    }
   }
 
   function applyTripStatus(tripId: string, status: Trip['status']) {
@@ -403,16 +415,27 @@ export const useTripsStore = defineStore('trips', () => {
     errorMessage.value = ''
 
     try {
-      syncActiveTrip(await createTrip({
+      const isPrepaid = paymentMethod.value === 'prepaid'
+      const trip = await createTrip({
         ...payload,
         // Legacy-поле для старого сервера: самый дешёвый из выбранных тарифов.
         category: selectedCategory.value,
-        categories: [...selectedCategories.value],
+        // Предоплата фиксирует сумму до завершения: одна категория, без бонусов.
+        categories: isPrepaid ? [selectedCategory.value] : [...selectedCategories.value],
         // card — списание с привязанной карты при завершении поездки.
         payment_method: paymentMethod.value,
-        use_bonuses: useBonuses.value,
-      }))
-      startSearchTimer()
+        use_bonuses: isPrepaid ? false : useBonuses.value,
+      })
+      syncActiveTrip(trip)
+
+      if (isPrepaid && trip.payment_url) {
+        // Поездка ждёт оплату (awaiting_payment): таймер поиска не стартует,
+        // даунбар откроет платёжный фрейм по этой ссылке.
+        prepayUrl.value = trip.payment_url
+      }
+      else {
+        startSearchTimer()
+      }
       startActiveTripPolling()
       return activeTrip.value
     }
@@ -428,6 +451,24 @@ export const useTripsStore = defineStore('trips', () => {
     }
     finally {
       isCreating.value = false
+    }
+  }
+
+  // Повторная ссылка на оплату предоплаченной поездки (пассажир закрыл
+  // платёжную страницу или оплата не прошла).
+  async function retryPrepay() {
+    const trip = activeTrip.value
+    if (!trip || trip.status !== 'awaiting_payment')
+      return null
+
+    try {
+      const response = await retryTripPrepay(trip.id)
+      prepayUrl.value = response.payment_url
+      return response.payment_url
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось получить ссылку на оплату.')
+      throw error
     }
   }
 
@@ -554,6 +595,7 @@ export const useTripsStore = defineStore('trips', () => {
     driverLocation.value = null
     searchStartedAt.value = null
     searchElapsedSeconds.value = 0
+    prepayUrl.value = ''
     stopSearchTimer()
     stopActiveTripPolling()
   }
@@ -608,8 +650,10 @@ export const useTripsStore = defineStore('trips', () => {
     loadMoreHistory,
     mapPickerMode,
     orderTrip,
+    prepayUrl,
     refreshActiveTrip,
     restoreActiveTrip,
+    retryPrepay,
     resetActiveTrip,
     resetHistory,
     resetTripState,

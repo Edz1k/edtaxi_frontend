@@ -9,6 +9,10 @@ const emit = defineEmits<{ rate: [trip: Trip], complain: [trip: Trip], contactSu
 const trips = useTripsStore()
 
 const statusMeta: Record<TripStatus, { className: string, label: string }> = {
+  awaiting_payment: {
+    className: 'bg-main-500/12 text-main-300',
+    label: 'Ожидание оплаты',
+  },
   cancelled: {
     className: 'bg-red-500/12 text-red-300',
     label: 'Отменена',

@@ -42,6 +42,14 @@ export function cancelTrip(id: string) {
   })
 }
 
+// Повторная ссылка на оплату предоплаченной поездки в awaiting_payment
+// (пассажир закрыл платёжную страницу или оплата не прошла).
+export function retryTripPrepay(id: string) {
+  return apiRequest<{ payment_url: string }>(`/trips/${id}/prepay`, {
+    method: 'POST',
+  })
+}
+
 export function rateTrip(id: string, payload: RateTripPayload) {
   return apiRequest<{ message: string }>(`/trips/${id}/rate`, {
     method: 'POST',

@@ -19,6 +19,8 @@ declare module 'vue' {
     AuthScreen: typeof import('./components/auth/AuthScreen.vue')['default']
     Avatar: typeof import('./components/passenger/Avatar.vue')['default']
     BottomNav: typeof import('./components/app/BottomNav.vue')['default']
+    CardBrandMark: typeof import('./components/CardBrandMark.vue')['default']
+    CardPickerSheet: typeof import('./components/passenger/downbar/CardPickerSheet.vue')['default']
     DestinationFirstScreen: typeof import('./components/passenger/downbar/DestinationFirstScreen.vue')['default']
     Downbar: typeof import('./components/passenger/Downbar.vue')['default']
     MapView: typeof import('./components/map/MapView.vue')['default']

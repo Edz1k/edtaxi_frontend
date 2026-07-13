@@ -30,14 +30,22 @@ export interface WalletHistoryResponse {
 }
 
 // Привязанная карта (маскированный номер приходит с бэка как 4400-43XX-XXXX-1234).
+// Карт может быть несколько; поездки списываются с основной (is_default).
 export interface PaymentCard {
+  // Платёжная система из pg_card_brand шлюза (VISA/MASTERCARD…); пустая строка
+  // у карт, привязанных до появления поля.
+  card_brand: string
   card_pan: string
   created_at: string
   id: string
+  is_default: boolean
 }
 
 export interface WalletCardResponse {
+  // card — основная карта (легаси-поле времён одной карты; null, если карт нет).
   card: null | PaymentCard
+  // cards — все активные карты, основная первой.
+  cards: PaymentCard[]
 }
 
 export interface BindCardResponse {

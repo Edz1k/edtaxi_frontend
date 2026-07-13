@@ -1,11 +1,13 @@
-export type TripStatus = 'cancelled' | 'completed' | 'driver_arriving' | 'driver_assigned' | 'in_progress' | 'searching'
+export type TripStatus = 'awaiting_payment' | 'cancelled' | 'completed' | 'driver_arriving' | 'driver_assigned' | 'in_progress' | 'searching'
 export const TERMINAL_TRIP_STATUSES = ['cancelled', 'completed'] as const
-export type TripFlowState = 'driver_arriving' | 'driver_assigned' | 'finished' | 'idle' | 'in_progress' | 'route_ready' | 'searching' | 'tariffs'
+export type TripFlowState = 'awaiting_payment' | 'driver_arriving' | 'driver_assigned' | 'finished' | 'idle' | 'in_progress' | 'route_ready' | 'searching' | 'tariffs'
 export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
 // Способ оплаты: cash — наличные водителю, card — списание с привязанной
 // карты при завершении поездки (если карты нет или списание не прошло, бэкенд
-// сам откатывается на баланс кошелька, затем на наличные).
-export type PaymentMethod = 'card' | 'cash'
+// сам откатывается на баланс кошелька, затем на наличные), prepaid —
+// предоплата на странице FreedomPay (Apple Pay / Google Pay / карта): поездка
+// создаётся в awaiting_payment и уходит в поиск после подтверждения оплаты.
+export type PaymentMethod = 'card' | 'cash' | 'prepaid'
 
 export interface EstimateTripPayload {
   category: VehicleCategory
@@ -96,6 +98,8 @@ export interface Trip {
   pickup_address: string
   pickup_lat: number
   pickup_lng: number
+  // Ссылка на оплату предоплаты (только в ответе создания prepaid-поездки).
+  payment_url?: string
   started_at?: null | string
   status: TripStatus
   surge_multiplier: number

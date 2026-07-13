@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { WalletTransaction, WalletTransactionType } from '@edtaxi/shared/types/wallet'
+import type { PaymentCard, WalletTransaction, WalletTransactionType } from '@edtaxi/shared/types/wallet'
+import CardBrandMark from '~/components/CardBrandMark.vue'
 import PaymentFrameModal from '~/components/PaymentFrameModal.vue'
 import { useToast } from '~/composables/useToast'
 import { useWalletStore } from '~/stores/wallet'
@@ -12,7 +13,8 @@ const paymentUrl = ref('')
 // карты) или обычное пополнение.
 const paymentKind = ref<'bind' | 'topup'>('topup')
 const isTopUpOpen = ref(false)
-const isUnbindConfirmOpen = ref(false)
+// Карта, которую пользователь собирается отвязать (модалка подтверждения).
+const unbindTarget = ref<null | PaymentCard>(null)
 let paymentPollTimer: ReturnType<typeof setInterval> | undefined
 
 definePage({
@@ -48,11 +50,16 @@ const transactionMeta: Record<WalletTransactionType, { className: string, icon: 
 
 const balance = computed(() => formatMoney(wallet.wallet?.balance ?? 0))
 
-// Хвост карты для виджета: 4400-43XX-XXXX-1234 -> 1234.
-const cardTail = computed(() => {
-  const digits = (wallet.card?.card_pan ?? '').replace(/\D/g, '')
+// Хвост карты: 4400-43XX-XXXX-1234 -> 1234.
+function tailOf(pan?: null | string) {
+  const digits = (pan ?? '').replace(/\D/g, '')
   return digits.slice(-4) || '····'
-})
+}
+
+const cardTail = computed(() => tailOf(wallet.card?.card_pan))
+
+// Прочие карты (кроме основной) — списком под виджетом.
+const otherCards = computed(() => wallet.cards.filter(item => item.id !== wallet.card?.id))
 
 async function refresh() {
   await Promise.all([
@@ -80,10 +87,11 @@ onUnmounted(() => {
 function startPaymentPolling() {
   stopPaymentPolling()
   paymentPollTimer = setInterval(async () => {
-    const hadCard = Boolean(wallet.card)
+    const hadCards = wallet.cards.length
     await refresh()
-    // Привязка завершена — закрываем фрейм сами, не дожидаясь пользователя.
-    if (paymentKind.value === 'bind' && !hadCard && wallet.card) {
+    // Привязка завершена (карт стало больше) — закрываем фрейм сами, не
+    // дожидаясь пользователя. Новая карта становится основной на бэке.
+    if (paymentKind.value === 'bind' && wallet.cards.length > hadCards) {
       closePaymentFrame()
       toast.success('Карта привязана', `Поездки теперь оплачиваются с карты ••${cardTail.value}.`)
     }
@@ -137,8 +145,14 @@ async function submitTopUp() {
 }
 
 async function confirmUnbind() {
-  isUnbindConfirmOpen.value = false
-  await wallet.unbindCard().catch(() => {})
+  const target = unbindTarget.value
+  unbindTarget.value = null
+  if (target)
+    await wallet.unbindCard(target.id).catch(() => {})
+}
+
+async function makeDefault(item: PaymentCard) {
+  await wallet.setDefaultCard(item.id).catch(() => {})
 }
 
 function getTransactionTitle(transaction: WalletTransaction) {
@@ -164,7 +178,7 @@ function getTransactionTitle(transaction: WalletTransaction) {
           Способ оплаты
         </h2>
 
-        <!-- Карта привязана: виджет банковской карты -->
+        <!-- Карта привязана: виджет основной карты + список остальных -->
         <div v-if="wallet.card" class="mt-3">
           <div class="relative overflow-hidden rounded-3xl from-main-500/85 via-main-600/80 to-secondary-950 bg-gradient-to-br p-5 shadow-[0_18px_50px_rgba(230,173,46,0.22)]">
             <div class="pointer-events-none absolute h-40 w-40 rounded-full bg-white/10 blur-2xl -right-8 -top-10" />
@@ -180,7 +194,7 @@ function getTransactionTitle(transaction: WalletTransaction) {
                 <span class="i-mdi-shield-check text-4" />
                 Основная карта
               </span>
-              <span class="i-mdi-integrated-circuit-chip text-6" />
+              <CardBrandMark :brand="wallet.card.card_brand" />
             </div>
           </div>
 
@@ -189,14 +203,58 @@ function getTransactionTitle(transaction: WalletTransaction) {
             Поездки со способом «Карта» списываются с этой карты автоматически после завершения.
           </p>
 
-          <button
-            :disabled="wallet.isMutating"
-            class="mt-3 h-11 w-full rounded-2xl bg-white/6 text-xs text-slate-400 font-800 transition active:scale-[0.98] hover:text-red-300 disabled:opacity-60"
-            type="button"
-            @click="isUnbindConfirmOpen = true"
-          >
-            Отвязать карту
-          </button>
+          <!-- Остальные карты: сделать основной или отвязать -->
+          <div v-if="otherCards.length" class="mt-3 space-y-2">
+            <div
+              v-for="item in otherCards"
+              :key="item.id"
+              class="flex items-center gap-3 rounded-2xl bg-white/5 px-3 py-2.5"
+            >
+              <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg bg-white/8">
+                <CardBrandMark :brand="item.card_brand" />
+              </span>
+              <span class="min-w-0 flex-1 text-sm font-900 tracking-wider">
+                •••• {{ tailOf(item.card_pan) }}
+              </span>
+              <button
+                :disabled="wallet.isMutating"
+                class="h-9 shrink-0 rounded-xl bg-white/8 px-3 text-[11px] text-slate-300 font-800 transition active:scale-[0.97] disabled:opacity-60"
+                type="button"
+                @click="makeDefault(item)"
+              >
+                Сделать основной
+              </button>
+              <button
+                :aria-label="`Отвязать карту ••${tailOf(item.card_pan)}`"
+                :disabled="wallet.isMutating"
+                class="h-9 w-9 flex shrink-0 items-center justify-center rounded-xl bg-white/8 text-slate-400 transition active:scale-[0.95] hover:text-red-300 disabled:opacity-60"
+                type="button"
+                @click="unbindTarget = item"
+              >
+                <span class="i-mdi-trash-can-outline text-4.5" />
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-3 flex gap-2">
+            <button
+              :disabled="wallet.isMutating"
+              class="h-11 flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-white/6 text-xs text-slate-300 font-800 transition active:scale-[0.98] disabled:opacity-60"
+              type="button"
+              @click="startBindCard"
+            >
+              <span class="i-mdi-credit-card-plus-outline text-4.5" />
+              Привязать ещё карту
+            </button>
+            <button
+              :disabled="wallet.isMutating"
+              class="h-11 flex flex-1 items-center justify-center rounded-2xl bg-white/6 text-xs text-slate-400 font-800 transition active:scale-[0.98] hover:text-red-300 disabled:opacity-60"
+              type="button"
+              @click="unbindTarget = wallet.card"
+            >
+              Отвязать основную
+            </button>
+          </div>
         </div>
 
         <!-- Карты нет: приглашение привязать -->
@@ -335,25 +393,25 @@ function getTransactionTitle(transaction: WalletTransaction) {
     <!-- Подтверждение отвязки карты -->
     <Teleport to="body">
       <div
-        v-if="isUnbindConfirmOpen"
+        v-if="unbindTarget"
         class="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-        @click.self="isUnbindConfirmOpen = false"
+        @click.self="unbindTarget = null"
       >
         <div class="max-w-sm w-full border border-white/10 rounded-3xl bg-secondary-900 p-5 shadow-2xl">
           <span class="h-12 w-12 flex items-center justify-center rounded-2xl bg-red-500/14 text-red-300">
             <span class="i-mdi-credit-card-remove-outline text-7" />
           </span>
           <h3 class="mt-4 text-lg font-950">
-            Отвязать карту ••{{ cardTail }}?
+            Отвязать карту ••{{ tailOf(unbindTarget.card_pan) }}?
           </h3>
           <p class="mt-2 text-sm text-slate-400 leading-5">
-            Поездки перестанут оплачиваться с карты — останутся баланс кошелька и наличные. Привязать карту снова можно в любой момент.
+            Поездки перестанут оплачиваться с этой карты. Привязать её снова можно в любой момент.
           </p>
           <div class="mt-5 flex gap-2">
             <button
               class="h-12 flex-1 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
               type="button"
-              @click="isUnbindConfirmOpen = false"
+              @click="unbindTarget = null"
             >
               Оставить
             </button>

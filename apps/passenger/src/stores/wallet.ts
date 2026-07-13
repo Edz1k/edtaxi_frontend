@@ -1,7 +1,7 @@
 import type { PaymentCard, Wallet, WalletTransaction } from '@edtaxi/shared/types/wallet'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { showErrorToast } from '~/api/errors'
-import { bindCard as bindCardApi, getMyCard, getWallet, getWalletHistory, topUpWallet, unbindCard as unbindCardApi } from '~/api/wallet'
+import { bindCard as bindCardApi, getMyCard, getWallet, getWalletHistory, setDefaultCard as setDefaultCardApi, topUpWallet, unbindCardById as unbindCardByIdApi } from '~/api/wallet'
 
 export const useWalletStore = defineStore('wallet', () => {
   const wallet = ref<Wallet | null>(null)
@@ -13,9 +13,12 @@ export const useWalletStore = defineStore('wallet', () => {
   const isMutating = ref(false)
   const errorMessage = ref('')
 
-  // Привязанная карта. isCardLoaded отличает «ещё не загружали» от «карты нет»
-  // — чтобы подсказки про привязку не мигали до первого ответа бэка.
+  // Привязанные карты: cards — все активные (основная первой), card — основная
+  // (легаси-имя времён одной карты, много кода завязано на него). isCardLoaded
+  // отличает «ещё не загружали» от «карт нет» — чтобы подсказки про привязку
+  // не мигали до первого ответа бэка.
   const card = ref<null | PaymentCard>(null)
+  const cards = ref<PaymentCard[]>([])
   const isCardLoaded = ref(false)
 
   async function loadWallet() {
@@ -93,12 +96,31 @@ export const useWalletStore = defineStore('wallet', () => {
   // и из селектора способа оплаты.
   async function loadCard() {
     try {
-      card.value = (await getMyCard()).card
+      const response = await getMyCard()
+      card.value = response.card
+      // cards может отсутствовать в ответе старого бэка — тогда производим из card.
+      cards.value = response.cards ?? (response.card ? [response.card] : [])
       isCardLoaded.value = true
       return card.value
     }
     catch {
       return card.value
+    }
+  }
+
+  // setDefaultCard — сделать карту основной (поездки списываются с неё).
+  async function setDefaultCard(cardId: string) {
+    isMutating.value = true
+    try {
+      await setDefaultCardApi(cardId)
+      await loadCard()
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось сменить основную карту.')
+      throw error
+    }
+    finally {
+      isMutating.value = false
     }
   }
 
@@ -120,13 +142,14 @@ export const useWalletStore = defineStore('wallet', () => {
     }
   }
 
-  async function unbindCard() {
+  // unbindCard — отвязать конкретную карту (по id).
+  async function unbindCard(cardId: string) {
     isMutating.value = true
     errorMessage.value = ''
 
     try {
-      await unbindCardApi()
-      card.value = null
+      await unbindCardByIdApi(cardId)
+      await loadCard()
     }
     catch (error) {
       errorMessage.value = showErrorToast(error, 'Не удалось отвязать карту.')
@@ -146,6 +169,7 @@ export const useWalletStore = defineStore('wallet', () => {
   function clearWalletState() {
     wallet.value = null
     card.value = null
+    cards.value = []
     isCardLoaded.value = false
     resetHistory()
     isLoading.value = false
@@ -157,6 +181,7 @@ export const useWalletStore = defineStore('wallet', () => {
   return {
     bindCard,
     card,
+    cards,
     clearWalletState,
     errorMessage,
     hasMore,
@@ -170,6 +195,7 @@ export const useWalletStore = defineStore('wallet', () => {
     loadWallet,
     offset,
     resetHistory,
+    setDefaultCard,
     topUp,
     transactions,
     unbindCard,
