@@ -93,9 +93,63 @@ function startPaymentPolling() {
     // дожидаясь пользователя. Новая карта становится основной на бэке.
     if (paymentKind.value === 'bind' && wallet.cards.length > hadCards) {
       closePaymentFrame()
-      toast.success('Карта привязана', `Поездки теперь оплачиваются с карты ••${cardTail.value}.`)
+      notifyBindSuccess()
     }
   }, 3000)
+}
+
+// --- Итог привязки: успех/провал говорим явно, а не молчим ---
+
+// Сколько карт было ДО начала привязки и показали ли уже итоговый тост —
+// защита от дублей (итог могут заметить и поллинг, и postMessage со страницы
+// возврата).
+let bindStartCount = 0
+let bindOutcomeShown = false
+let bindVerifyToken = 0
+
+function notifyBindSuccess() {
+  if (bindOutcomeShown)
+    return
+  bindOutcomeShown = true
+  toast.success('Карта привязана', `Поездки теперь оплачиваются с карты ••${cardTail.value}.`)
+}
+
+// Оплата привязки прошла (сигнал со страницы возврата), но карту приносит
+// асинхронный вебхук — ждём её до ~10 секунд. Если карта так и не появилась,
+// дело не в оплате: шлюз не прислал recurring-профиль (сохранение карт не
+// включено мерчанту / тестовый режим) — говорим об этом прямо.
+async function verifyBindCompleted() {
+  const token = ++bindVerifyToken
+  for (let attempt = 0; attempt < 5; attempt++) {
+    await wallet.loadCard()
+    if (token !== bindVerifyToken || bindOutcomeShown)
+      return
+    if (wallet.cards.length > bindStartCount) {
+      notifyBindSuccess()
+      return
+    }
+    await new Promise(resolve => setTimeout(resolve, 2000))
+  }
+  if (token !== bindVerifyToken || bindOutcomeShown)
+    return
+  bindOutcomeShown = true
+  toast.error(
+    'Карта не привязалась',
+    'Оплата прошла (сумма вернётся), но платёжный сервис не прислал данные карты — сохранение карт ещё не включено для магазина. Мы запросили включение у FreedomPay.',
+  )
+}
+
+function handlePaymentResult(status: 'failure' | 'success') {
+  if (paymentKind.value !== 'bind')
+    return
+  if (status === 'failure') {
+    if (!bindOutcomeShown) {
+      bindOutcomeShown = true
+      toast.error('Оплата не прошла', 'Карта не привязана — попробуйте ещё раз.')
+    }
+    return
+  }
+  verifyBindCompleted()
 }
 
 function stopPaymentPolling() {
@@ -133,6 +187,9 @@ async function startBindCard() {
   if (!response)
     return
   paymentKind.value = 'bind'
+  bindStartCount = wallet.cards.length
+  bindOutcomeShown = false
+  bindVerifyToken++
   paymentUrl.value = response.redirect_url
   startPaymentPolling()
 }
@@ -428,6 +485,6 @@ function getTransactionTitle(transaction: WalletTransaction) {
       </div>
     </Teleport>
 
-    <PaymentFrameModal v-if="paymentUrl" :url="paymentUrl" @close="closePaymentFrame" />
+    <PaymentFrameModal v-if="paymentUrl" :url="paymentUrl" @close="closePaymentFrame" @result="handlePaymentResult" />
   </main>
 </template>
