@@ -40,6 +40,10 @@ export const useTripsStore = defineStore('trips', () => {
   // Ссылка на оплату предоплаченной поездки (payment_method=prepaid): даунбар
   // открывает её во фрейме, пока поездка в awaiting_payment.
   const prepayUrl = ref('')
+  // Какой кнопкой выбрана предоплата: Apple Pay открывается во внешнем
+  // браузере (в Telegram-вебвью ApplePaySession недоступен), Google Pay — во
+  // фрейме. Как и paymentMethod, выбор живёт между заказами.
+  const prepaySource = ref<'apple' | 'google' | null>(null)
 
   const pickup = ref('')
   const destination = ref('')
@@ -324,6 +328,10 @@ export const useTripsStore = defineStore('trips', () => {
 
   function setPaymentMethod(method: PaymentMethod) {
     paymentMethod.value = method
+  }
+
+  function setPrepaySource(source: 'apple' | 'google' | null) {
+    prepaySource.value = source
   }
 
   function toggleCategory(category: VehicleCategory) {
@@ -650,10 +658,12 @@ export const useTripsStore = defineStore('trips', () => {
     loadMoreHistory,
     mapPickerMode,
     orderTrip,
+    prepaySource,
     prepayUrl,
     refreshActiveTrip,
     restoreActiveTrip,
     retryPrepay,
+    setPrepaySource,
     resetActiveTrip,
     resetHistory,
     resetTripState,

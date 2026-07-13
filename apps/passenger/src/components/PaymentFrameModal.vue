@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { mediaUrl } from '~/api/client'
+
 defineProps<{
   url: string
 }>()
@@ -6,6 +8,23 @@ defineProps<{
 const emit = defineEmits<{
   close: []
 }>()
+
+// После оплаты FreedomPay редиректит фрейм на нашу страницу возврата
+// (GET /payments/return на API) — она postMessage'ом просит закрыть фрейм,
+// чтобы пользователя не уводило на сторонний сайт из Success URL ЛК.
+// mediaUrl('/') даёт базу API; при относительной базе (dev-прокси) origin
+// совпадает с origin приложения.
+const apiOrigin = new URL(mediaUrl('/') || '/', window.location.href).origin
+
+function onMessage(event: MessageEvent) {
+  if (event.origin !== apiOrigin)
+    return
+  if ((event.data as { type?: string } | null)?.type === 'edtaxi:payment')
+    emit('close')
+}
+
+onMounted(() => window.addEventListener('message', onMessage))
+onUnmounted(() => window.removeEventListener('message', onMessage))
 </script>
 
 <template>
@@ -24,7 +43,8 @@ const emit = defineEmits<{
           <span class="i-mdi-close text-5" />
         </button>
       </header>
-      <iframe :src="url" class="w-full flex-1 border-0 bg-white" title="Оплата картой" />
+      <!-- allow="payment" — разрешает Payment Request API (Google Pay) внутри фрейма -->
+      <iframe allow="payment *" :src="url" class="w-full flex-1 border-0 bg-white" title="Оплата картой" />
     </div>
   </Teleport>
 </template>
