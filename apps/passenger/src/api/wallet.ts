@@ -26,8 +26,8 @@ export function getMyCard() {
 }
 
 // bindCard — платёж привязки: пользователь оплачивает небольшую сумму на
-// странице FreedomPay (redirect_url), она зачисляется на баланс, а карта
-// сохраняется для оплаты поездок.
+// странице FreedomPay (redirect_url), она возвращается на карту (при сбое
+// возврата — на баланс), а карта сохраняется для оплаты поездок.
 export function bindCard() {
   return apiRequest<BindCardResponse>('/wallet/cards/bind', {
     method: 'POST',

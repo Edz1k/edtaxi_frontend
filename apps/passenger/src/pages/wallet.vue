@@ -218,7 +218,7 @@ function getTransactionTitle(transaction: WalletTransaction) {
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-cash-refund mt-0.5 shrink-0 text-4 text-main-300" />
-              Для проверки карты спишем 100 ₸ — они сразу зачислятся на ваш баланс
+              Для проверки карты спишем 10 ₸ и сразу вернём их на карту
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-lock-outline mt-0.5 shrink-0 text-4 text-main-300" />
