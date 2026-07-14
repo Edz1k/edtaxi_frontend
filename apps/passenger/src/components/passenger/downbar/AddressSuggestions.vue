@@ -12,6 +12,8 @@ const emit = defineEmits<{
 }>()
 
 function getSuggestionIcon(place: GeoPlace) {
+  if (place.isFavorite)
+    return 'i-mdi-star'
   return place.name.toLowerCase().includes('аэропорт') ? 'i-mdi-airplane' : 'i-mdi-map-marker-outline'
 }
 
@@ -44,7 +46,9 @@ function formatDistance(m?: null | number) {
     >
       <span
         class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full"
-        :class="color === 'emerald' ? 'bg-emerald-400/14 text-emerald-300' : 'bg-red-500/14 text-red-300'"
+        :class="place.isFavorite
+          ? 'bg-main-500/16 text-main-300'
+          : (color === 'emerald' ? 'bg-emerald-400/14 text-emerald-300' : 'bg-red-500/14 text-red-300')"
       >
         <span :class="getSuggestionIcon(place)" class="text-5" />
       </span>

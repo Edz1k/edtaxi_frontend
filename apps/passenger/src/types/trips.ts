@@ -143,6 +143,14 @@ export interface DestinationSuggestionsResponse {
 export interface RateTripPayload {
   comment?: string
   score: number
+  // Чипы-теги отзыва (слаги из constants/ratingTags.ts).
+  tags?: string[]
+}
+
+// Ответ отправки чаевых: каким способом списали (кошелёк / привязанная карта).
+export interface TipResponse {
+  message: string
+  method: 'card' | 'wallet'
 }
 
 export interface FileTripComplaintPayload {

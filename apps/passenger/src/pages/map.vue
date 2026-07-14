@@ -4,9 +4,11 @@ import { getBonusOverview, redeemReferralCode } from '@edtaxi/shared/api/bonus'
 import ReferralWelcomeModal from '@edtaxi/shared/components/bonus/ReferralWelcomeModal.vue'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import MapStyleSwitcher from '@edtaxi/shared/components/map/MapStyleSwitcher.vue'
+import WeatherBadge from '@edtaxi/shared/components/weather/WeatherBadge.vue'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { captureReferralStartParam, takePendingReferralCode } from '@edtaxi/shared/composables/telegram/referral'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
+import { useWeather } from '@edtaxi/shared/composables/useWeather'
 import { usePassengerTripSocket } from '~/composables/passenger/usePassengerTripSocket'
 import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
 import { useAuthStore } from '~/stores/auth'
@@ -49,6 +51,10 @@ const {
 // Плашка «г.Город · адрес» над картой: город резолвится по координатам на
 // бэке (оффлайн-справочник, без 2ГИС), адрес — текущая точка подачи.
 const { city } = useUserCity(liveCoordinates, auth.currentUser?.city ?? '')
+
+// Погода в шапке (TODO п.5): бэк кэширует на город, виджет тихо прячется
+// при недоступном провайдере.
+const { weather } = useWeather(liveCoordinates)
 const locationLine = computed(() => {
   const parts: string[] = []
   if (city.value)
@@ -149,10 +155,11 @@ async function setPickupFromCurrentLocation() {
       <div class="relative flex justify-center">
         <div
           v-if="locationLine"
-          class="max-w-[68%] truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+          class="max-w-[68%] flex items-center gap-1.5 truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
         >
-          <span class="i-mdi-map-marker mr-1 inline-block align-middle text-3.5 text-main-300" />
-          {{ locationLine }}
+          <span class="i-mdi-map-marker inline-block shrink-0 align-middle text-3.5 text-main-300" />
+          <span class="truncate">{{ locationLine }}</span>
+          <WeatherBadge :weather="weather" />
         </div>
 
         <RouterLink

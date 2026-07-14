@@ -545,12 +545,12 @@ export const useTripsStore = defineStore('trips', () => {
     })
   }
 
-  async function submitRating(tripId: string, score: number, comment = '') {
+  async function submitRating(tripId: string, score: number, comment = '', tags: string[] = []) {
     isRating.value = true
     errorMessage.value = ''
 
     try {
-      const response = await rateTrip(tripId, { comment, score })
+      const response = await rateTrip(tripId, { comment, score, tags: tags.length ? tags : undefined })
       // Локально помечаем поездку оценённой: экран завершения и история сразу
       // показывают звёзды вместо формы, не дожидаясь перезагрузки с бэка.
       const rated = { comment: comment || null, score }

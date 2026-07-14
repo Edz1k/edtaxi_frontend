@@ -1,4 +1,4 @@
-import type { ActiveTripResponse, CreateTripPayload, DestinationSuggestionsResponse, EstimateTripPayload, EstimateTripResponse, FileTripComplaintPayload, FileTripComplaintResponse, RateTripPayload, Trip, TripHistoryResponse } from '~/types/trips'
+import type { ActiveTripResponse, CreateTripPayload, DestinationSuggestionsResponse, EstimateTripPayload, EstimateTripResponse, FileTripComplaintPayload, FileTripComplaintResponse, RateTripPayload, TipResponse, Trip, TripHistoryResponse } from '~/types/trips'
 import { apiRequest } from '~/api/client'
 
 export function estimateTrip(payload: EstimateTripPayload) {
@@ -54,6 +54,15 @@ export function rateTrip(id: string, payload: RateTripPayload) {
   return apiRequest<{ message: string }>(`/trips/${id}/rate`, {
     method: 'POST',
     body: payload,
+  })
+}
+
+// Чаевые водителю (100-5000 ₸): кошелёк → фолбэк привязанная карта; один раз
+// на поездку (повтор — 409; не хватает средств и нет карты — 402).
+export function sendTripTip(id: string, amount: number) {
+  return apiRequest<TipResponse>(`/trips/${id}/tip`, {
+    method: 'POST',
+    body: { amount },
   })
 }
 

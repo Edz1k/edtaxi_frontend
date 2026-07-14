@@ -135,13 +135,17 @@ async function saveEdit() {
   const park = garage.value?.park
   if (!park || !editForm.name.trim() || isMutating.value)
     return
+  // NaN-guard (TODO п.38): очищенный числовой инпут даёт NaN — комиссию тогда
+  // не шлём вовсе (бэк с указателем оставит текущую), вместо NaN/100 на бэк.
+  const percent = editForm.commissionPercent
+  const hasCommission = typeof percent === 'number' && Number.isFinite(percent) && percent >= 0
   isMutating.value = true
   try {
     const updated = await updateAdminPark(park.id, {
       name: editForm.name.trim(),
       description: editForm.description.trim() || undefined,
       phone: editForm.phone.trim() || undefined,
-      commission_rate: editForm.commissionPercent / 100,
+      commission_rate: hasCommission ? percent / 100 : undefined,
     })
     if (garage.value)
       garage.value.park = updated

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { EstimateTripResponse, Trip, VehicleCategory } from '~/types/trips'
-import { mediaUrl } from '~/api/client'
+import { ApiError, mediaUrl } from '~/api/client'
+import { showErrorToast } from '~/api/errors'
 import { shareTripLink } from '~/api/share'
+import { sendTripTip } from '~/api/trips'
 import { useToast } from '~/composables/useToast'
+import { tagsForScore } from '~/constants/ratingTags'
 import { formatFare, TARIFF_META } from '~/constants/tariffs'
 import { usePlacesStore } from '~/stores/places'
 import { useTripChatStore } from '~/stores/tripChat'
@@ -236,12 +239,37 @@ const finalFareText = computed(() => {
 // показываем звёзды в режиме «спасибо»; иначе — форму с 5 звёздами и комментарием.
 const ratingScore = ref(5)
 const ratingComment = ref('')
+const ratingTags = ref<string[]>([])
 const ratedScore = computed(() => props.activeTrip?.my_rating?.score ?? null)
+
+// Чипы под звёздами: 4-5 — хорошие, 1-3 — плохие; смена оценки сбрасывает выбор.
+const visibleRatingTags = computed(() => tagsForScore(ratingScore.value))
+watch(ratingScore, () => {
+  ratingTags.value = []
+})
+
+function toggleRatingTag(value: string) {
+  ratingTags.value = ratingTags.value.includes(value)
+    ? ratingTags.value.filter(tag => tag !== value)
+    : [...ratingTags.value, value]
+}
+
+// Чаевые водителю (100/200 ₸ или своя сумма). После сетевой ошибки кнопки НЕ
+// блокируем: если карта списалась с опозданием (late-success вебхука), деньги
+// упадут на кошелёк, и повторный тап пройдёт уже wallet-путём.
+const tipSent = ref(false)
+const tipPending = ref(false)
+const customTipVisible = ref(false)
+const customTipAmount = ref<null | number>(null)
 
 // Новая поездка на экране — чистая форма оценки.
 watch(() => props.activeTrip?.id, () => {
   ratingScore.value = 5
   ratingComment.value = ''
+  ratingTags.value = []
+  tipSent.value = false
+  customTipVisible.value = false
+  customTipAmount.value = null
 })
 
 async function submitTripRating() {
@@ -250,10 +278,41 @@ async function submitTripRating() {
     return
 
   try {
-    await trips.submitRating(trip.id, ratingScore.value, ratingComment.value)
+    await trips.submitRating(trip.id, ratingScore.value, ratingComment.value, ratingTags.value)
     toast.success('Спасибо', 'Оценка отправлена.')
   }
   catch {}
+}
+
+async function sendTip(amount: number) {
+  const trip = props.activeTrip
+  if (!trip || tipPending.value || tipSent.value)
+    return
+  if (!Number.isFinite(amount) || amount < 100 || amount > 5000) {
+    toast.error('Чаевые', 'Сумма — от 100 до 5000 ₸.')
+    return
+  }
+
+  tipPending.value = true
+  try {
+    await sendTripTip(trip.id, amount)
+    tipSent.value = true
+    toast.success('Спасибо', 'Чаевые отправлены водителю 🙌')
+  }
+  catch (error) {
+    if (error instanceof ApiError && error.status === 409) {
+      tipSent.value = true
+      return
+    }
+    if (error instanceof ApiError && error.status === 402) {
+      toast.error('Чаевые', 'Не хватает средств: пополните кошелёк или привяжите карту в «Кошельке».')
+      return
+    }
+    showErrorToast(error, 'Не удалось отправить чаевые, попробуйте ещё раз.')
+  }
+  finally {
+    tipPending.value = false
+  }
 }
 
 const statusMeta = computed(() => {
@@ -582,6 +641,21 @@ async function shareTrip() {
             <span class="i-mdi-star text-8" aria-hidden="true" />
           </button>
         </div>
+        <!-- Чипы-теги: 4-5 звёзд — что понравилось, 1-3 — что не так -->
+        <div class="mt-3 flex flex-wrap justify-center gap-1.5">
+          <button
+            v-for="tag in visibleRatingTags"
+            :key="tag.value"
+            class="h-8 rounded-full px-3 text-xs font-800 transition active:scale-[0.96]"
+            :class="ratingTags.includes(tag.value)
+              ? 'bg-main-500/22 text-main-200 border border-main-400/50'
+              : 'bg-white/6 text-slate-300 border border-transparent'"
+            type="button"
+            @click="toggleRatingTag(tag.value)"
+          >
+            {{ tag.label }}
+          </button>
+        </div>
         <textarea
           v-model="ratingComment"
           aria-label="Комментарий к поездке"
@@ -598,6 +672,70 @@ async function shareTrip() {
         >
           {{ trips.isRating ? 'Отправляем...' : 'Отправить оценку' }}
         </button>
+      </template>
+    </div>
+
+    <!-- Чаевые водителю: 100/200 ₸ или своя сумма (100-5000) -->
+    <div v-if="isCompleted && driver" class="mt-3 rounded-2xl bg-white/5 px-4 py-4 text-left">
+      <template v-if="tipSent">
+        <p class="text-center text-sm text-emerald-300 font-900">
+          Чаевые отправлены 🙌
+        </p>
+      </template>
+      <template v-else>
+        <p class="text-center text-sm font-900">
+          Оставить чаевые водителю
+        </p>
+        <div class="grid grid-cols-3 mt-3 gap-2">
+          <button
+            :disabled="tipPending"
+            class="h-11 rounded-2xl bg-white/8 text-sm font-950 transition active:scale-[0.97] disabled:opacity-60"
+            type="button"
+            @click="sendTip(100)"
+          >
+            100 ₸
+          </button>
+          <button
+            :disabled="tipPending"
+            class="h-11 rounded-2xl bg-white/8 text-sm font-950 transition active:scale-[0.97] disabled:opacity-60"
+            type="button"
+            @click="sendTip(200)"
+          >
+            200 ₸
+          </button>
+          <button
+            :disabled="tipPending"
+            class="h-11 rounded-2xl text-sm font-950 transition active:scale-[0.97] disabled:opacity-60"
+            :class="customTipVisible ? 'bg-main-500/22 text-main-200' : 'bg-white/8'"
+            type="button"
+            @click="customTipVisible = !customTipVisible"
+          >
+            Своя
+          </button>
+        </div>
+        <div v-if="customTipVisible" class="mt-2 flex gap-2">
+          <input
+            v-model.number="customTipAmount"
+            aria-label="Своя сумма чаевых"
+            class="h-11 min-w-0 flex-1 border border-white/10 rounded-2xl bg-white/6 px-3 text-sm outline-none focus:border-main-400"
+            inputmode="numeric"
+            max="5000"
+            min="100"
+            placeholder="От 100 до 5000 ₸"
+            type="number"
+          >
+          <button
+            :disabled="tipPending || !customTipAmount"
+            class="h-11 shrink-0 rounded-2xl bg-main-500 px-4 text-sm text-white font-950 transition active:scale-[0.97] disabled:opacity-60"
+            type="button"
+            @click="sendTip(Number(customTipAmount))"
+          >
+            {{ tipPending ? '...' : 'Отправить' }}
+          </button>
+        </div>
+        <p class="mt-2 text-center text-[11px] text-slate-500 leading-4">
+          Спишутся с кошелька или привязанной карты и уйдут водителю полностью — без комиссии.
+        </p>
       </template>
     </div>
 
