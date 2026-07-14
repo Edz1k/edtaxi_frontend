@@ -32,6 +32,8 @@ describe('searchPlaces', () => {
         address: 'Аэропорт, Алматы',
         distanceM: null,
         id: '43.35:77.04:0',
+        // Флаг избранного присутствует всегда (false, если бэк его не прислал).
+        isFavorite: false,
         lat: 43.35,
         lng: 77.04,
         name: 'Аэропорт',
