@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CreatePromotionPayload, Promotion } from '~/types/promotions'
 import { showErrorToast } from '~/api/errors'
-import { createParkPromotion, deactivateParkPromotion, listParkPromotions, uploadParkPromotionImage } from '~/api/promotions'
+import { createParkPromotion, deactivateParkPromotion, listParkPromotionParticipants, listParkPromotions, sendParkPromotionRewards, uploadParkPromotionImage } from '~/api/promotions'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import PromotionForm from '~/components/promotions/PromotionForm.vue'
 import PromotionsList from '~/components/promotions/PromotionsList.vue'
@@ -79,7 +79,7 @@ async function stop(promotion: Promotion) {
   >
     <PromotionForm
       ref="formRef"
-      hint="Акция для водителей вашего парка. Все водители получат уведомление в Telegram-боте."
+      hint="Акция для водителей вашего парка. Все водители получат уведомление в Telegram-боте. Награды вы отправите вручную после завершения акции — сумма спишется с баланса парка."
       :pending="isMutating"
       :upload-image="uploadParkPromotionImage"
       @create="create"
@@ -87,8 +87,10 @@ async function stop(promotion: Promotion) {
 
     <PromotionsList
       :is-loading="isLoading"
+      :load-participants="listParkPromotionParticipants"
       :pending="isMutating"
       :promotions="promotions"
+      :send-rewards="sendParkPromotionRewards"
       @stop="stop"
     />
   </WebPageShell>

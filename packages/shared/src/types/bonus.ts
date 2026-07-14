@@ -15,6 +15,9 @@ export interface BonusOverview {
 
 // Акция «N заказов до даты — X бонусов» с прогрессом вызывающего.
 export interface BonusPromotion {
+  // auto — бонусы придут сразу при выполнении условия; manual — награду
+  // отправит парк/платформа вручную после завершения акции (водительские).
+  award_mode?: 'auto' | 'manual'
   description: string
   ends_at: string
   id: string

@@ -261,6 +261,11 @@ function promoProgress(promo: BonusPromotion) {
               <p v-if="promo.description" class="mt-1 text-xs text-slate-400 leading-4">
                 {{ promo.description }}
               </p>
+              <!-- Кастомный текст рассылки — как у водителя, чтобы условия
+                   акции были видны и внутри приложения. -->
+              <p v-if="promo.message" class="mt-1 text-xs text-slate-400 leading-4">
+                {{ promo.message }}
+              </p>
 
               <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">
                 <div class="h-full rounded-full bg-main-400" :style="{ width: `${promoProgress(promo)}%` }" />
@@ -269,6 +274,9 @@ function promoProgress(promo: BonusPromotion) {
                 <span class="text-slate-400">{{ promo.my_trips }} / {{ promo.target_trips }} заказов</span>
                 <span class="text-slate-500">до {{ formatDeadline(promo.ends_at) }}</span>
               </div>
+              <p class="mt-1.5 text-[11px] text-slate-500 leading-4">
+                Бонусы начислятся автоматически, как только выполните условие.
+              </p>
             </article>
           </div>
         </section>

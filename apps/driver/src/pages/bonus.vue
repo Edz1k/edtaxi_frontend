@@ -3,6 +3,7 @@ import type { BonusOverview, BonusPromotion } from '@edtaxi/shared/types/bonus'
 import { getBonusOverview, getMyPromotions, joinPromotion, redeemReferralCode } from '@edtaxi/shared/api/bonus'
 import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
 import { buildReferralShareUrl } from '@edtaxi/shared/composables/telegram/referral'
+import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import { mediaUrl } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
 import { TG_BOT_USERNAME } from '~/constants/telegram'
@@ -30,6 +31,14 @@ useHead({
 })
 
 onMounted(load)
+
+// Баланс и прогресс акций обновляются сами при возврате на экран — как у
+// пассажира: начисления за заказы видны без ручной перезагрузки.
+useAutoRefresh(async () => {
+  const [me, promos] = await Promise.all([getBonusOverview(), getMyPromotions()])
+  overview.value = me
+  promotions.value = promos.promotions
+})
 
 async function load() {
   try {
@@ -292,6 +301,11 @@ async function joinPromo(promo: BonusPromotion) {
                   <span class="text-slate-400">{{ promo.my_trips }} / {{ promo.target_trips }} заказов</span>
                   <span class="text-slate-500">до {{ formatDeadline(promo.ends_at) }}</span>
                 </div>
+                <p class="mt-1.5 text-[11px] text-slate-500 leading-4">
+                  {{ promo.award_mode === 'manual'
+                    ? 'Награду получите после завершения акции — её отправит организатор.'
+                    : 'Бонусы начислятся автоматически при выполнении условия.' }}
+                </p>
               </template>
             </article>
           </div>
