@@ -20,6 +20,7 @@ function suggestionToPlace(suggestion: GeocodingSuggestion, index: number): GeoP
     address: [suggestion.title, suggestion.subtitle].filter(Boolean).join(', '),
     distanceM: suggestion.distance_m ?? null,
     id: `${suggestion.lat}:${suggestion.lng}:${index}`,
+    isFavorite: suggestion.is_favorite ?? false,
     lat: suggestion.lat,
     lng: suggestion.lng,
     name: suggestion.title,

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Trip } from '~/types/trips'
 import { useToast } from '~/composables/useToast'
+import { tagsForScore } from '~/constants/ratingTags'
 import { useTripsStore } from '~/stores/trips'
 
 const props = defineProps<{ trip: Trip | null }>()
@@ -11,12 +12,26 @@ const toast = useToast()
 
 const score = ref(5)
 const comment = ref('')
+const tags = ref<string[]>([])
+
+// Чипы под звёздами: 4-5 — хорошие, 1-3 — плохие; смена оценки сбрасывает выбор.
+const visibleTags = computed(() => tagsForScore(score.value))
+watch(score, () => {
+  tags.value = []
+})
+
+function toggleTag(value: string) {
+  tags.value = tags.value.includes(value)
+    ? tags.value.filter(tag => tag !== value)
+    : [...tags.value, value]
+}
 
 // Сбрасываем форму каждый раз, когда открывается оценка новой поездки.
 watch(() => props.trip, (trip) => {
   if (trip) {
     score.value = 5
     comment.value = ''
+    tags.value = []
   }
 })
 
@@ -24,7 +39,7 @@ async function submit() {
   if (!props.trip)
     return
 
-  await trips.submitRating(props.trip.id, score.value, comment.value)
+  await trips.submitRating(props.trip.id, score.value, comment.value, tags.value)
   toast.success('Спасибо', 'Оценка отправлена.')
   emit('close')
 }
@@ -71,6 +86,21 @@ async function submit() {
               @click="score = star"
             >
               <span class="i-mdi-star text-8" />
+            </button>
+          </div>
+
+          <div class="mt-4 flex flex-wrap justify-center gap-1.5">
+            <button
+              v-for="tag in visibleTags"
+              :key="tag.value"
+              class="h-8 rounded-full px-3 text-xs font-800 transition active:scale-[0.96]"
+              :class="tags.includes(tag.value)
+                ? 'bg-main-500/22 text-main-200 border border-main-400/50'
+                : 'bg-white/6 text-slate-300 border border-transparent'"
+              type="button"
+              @click="toggleTag(tag.value)"
+            >
+              {{ tag.label }}
             </button>
           </div>
 

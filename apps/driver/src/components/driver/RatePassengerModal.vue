@@ -2,6 +2,7 @@
 import { ratePassenger } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
 import { useToast } from '~/composables/useToast'
+import { tagsForScore } from '~/constants/ratingTags'
 
 const props = defineProps<{
   tripId: string
@@ -14,7 +15,20 @@ const emit = defineEmits<{
 const toast = useToast()
 const score = ref(5)
 const comment = ref('')
+const tags = ref<string[]>([])
 const isSubmitting = ref(false)
+
+// Чипы под звёздами: 4-5 — хорошие, 1-3 — плохие; смена оценки сбрасывает выбор.
+const visibleTags = computed(() => tagsForScore(score.value))
+watch(score, () => {
+  tags.value = []
+})
+
+function toggleTag(value: string) {
+  tags.value = tags.value.includes(value)
+    ? tags.value.filter(tag => tag !== value)
+    : [...tags.value, value]
+}
 
 async function submit() {
   if (isSubmitting.value)
@@ -22,7 +36,7 @@ async function submit() {
 
   isSubmitting.value = true
   try {
-    await ratePassenger(props.tripId, { score: score.value, comment: comment.value.trim() })
+    await ratePassenger(props.tripId, { score: score.value, comment: comment.value.trim(), tags: tags.value.length ? tags.value : undefined })
     toast.success('Спасибо!', 'Оценка пассажира отправлена.')
     emit('close')
   }
@@ -67,6 +81,21 @@ async function submit() {
             @click="score = star"
           >
             <span class="i-mdi-star text-8" />
+          </button>
+        </div>
+
+        <div class="mt-4 flex flex-wrap justify-center gap-1.5">
+          <button
+            v-for="tag in visibleTags"
+            :key="tag.value"
+            class="h-8 rounded-full px-3 text-xs font-800 transition active:scale-[0.96]"
+            :class="tags.includes(tag.value)
+              ? 'bg-main-500/22 text-main-200 border border-main-400/50'
+              : 'bg-white/6 text-slate-300 border border-transparent'"
+            type="button"
+            @click="toggleTag(tag.value)"
+          >
+            {{ tag.label }}
           </button>
         </div>
 

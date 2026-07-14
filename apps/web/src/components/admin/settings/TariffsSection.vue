@@ -67,8 +67,24 @@ function closeModal() {
   editingTariff.value = null
 }
 
+// Валидация формы (TODO п.16): v-model.number при очистке инпута даёт
+// NaN/пустую строку — без guard'а это улетало на бэк. surge_max = 0 валиден
+// («без потолка»), поэтому к нему правило «> 0» не применяется.
+const validationError = computed(() => {
+  const prices = [form.base_fare, form.per_km, form.per_min, form.min_fare]
+  if (prices.some(v => typeof v !== 'number' || !Number.isFinite(v) || v <= 0))
+    return 'Все цены должны быть числами больше нуля'
+  if (form.min_fare < form.base_fare)
+    return 'Минимальная цена не может быть меньше стартовой'
+  if (typeof form.surge_max !== 'number' || !Number.isFinite(form.surge_max) || form.surge_max < 0)
+    return 'Потолок спроса — число (0 = без потолка)'
+  return ''
+})
+
 async function submitTariff() {
   if (!editingTariff.value && !form.category)
+    return
+  if (validationError.value)
     return
   const values = {
     name: form.name.trim() || undefined,
@@ -280,9 +296,13 @@ onMounted(() => {
               </button>
             </div>
 
+            <p v-if="validationError" class="mt-3 text-xs text-red-300 font-800">
+              {{ validationError }}
+            </p>
+
             <div class="mt-5 flex gap-3">
               <button
-                :disabled="admin.isMutating || (!editingTariff && !form.category)"
+                :disabled="admin.isMutating || (!editingTariff && !form.category) || !!validationError"
                 class="h-11 flex-1 rounded-2xl bg-cyan-300 text-sm text-#06142f font-900 transition hover:bg-cyan-200 disabled:opacity-60"
                 type="submit"
               >

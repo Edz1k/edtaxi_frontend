@@ -6,6 +6,9 @@ export interface GeoPlace {
   // его для гео-саджеста; null, когда координаты пользователя неизвестны.
   distanceM?: null | number
   id: string
+  // Место из «Избранных адресов» пассажира — бэк подмешивает их в начало
+  // саджеста, фронт рисует звёздочку.
+  isFavorite?: boolean
   lat: number
   lng: number
   name: string
@@ -20,6 +23,7 @@ export interface GeocodingSuggestPayload {
 
 export interface GeocodingSuggestion {
   distance_m?: null | number
+  is_favorite?: boolean
   lat: number
   lng: number
   subtitle: string

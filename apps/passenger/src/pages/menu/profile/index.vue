@@ -42,6 +42,41 @@ function pickAvatar() {
     avatarCapture.open()
 }
 
+// Редактирование имени (TODO п.28): PUT /passenger/me давно готов на бэке —
+// это первый UI-потребитель passenger.saveProfile. Шлём только имя/фамилию
+// (avatar_url не трогаем); пустая фамилия не отправляется — бэк оставит старую.
+const isEditingName = ref(false)
+const editFirstName = ref('')
+const editLastName = ref('')
+const isSavingName = ref(false)
+
+function startEditName() {
+  editFirstName.value = data.value?.user.first_name ?? ''
+  editLastName.value = data.value?.user.last_name ?? ''
+  isEditingName.value = true
+}
+
+async function saveName() {
+  const first = editFirstName.value.trim()
+  const last = editLastName.value.trim()
+  if (!first || first.length > 60 || last.length > 60) {
+    toast.error('Имя', 'Имя обязательно, до 60 символов.')
+    return
+  }
+  isSavingName.value = true
+  try {
+    await passenger.saveProfile({ first_name: first, last_name: last || undefined })
+    if (data.value)
+      data.value = { ...data.value, user: { ...data.value.user, first_name: first, last_name: last || data.value.user.last_name } }
+    isEditingName.value = false
+    toast.success('Готово', 'Имя обновлено.')
+  }
+  catch {}
+  finally {
+    isSavingName.value = false
+  }
+}
+
 definePage({
   meta: {
     authRedirect: '/login',
@@ -168,9 +203,19 @@ function formatDate(value: string) {
               @done="avatarCapture.onDone"
             />
             <div class="min-w-0 flex-1">
-              <h1 class="truncate text-xl font-950">
-                {{ fullName }}
-              </h1>
+              <div class="flex items-center gap-2">
+                <h1 class="truncate text-xl font-950">
+                  {{ fullName }}
+                </h1>
+                <button
+                  aria-label="Изменить имя"
+                  class="h-7 w-7 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-400 transition active:scale-95 hover:text-white"
+                  type="button"
+                  @click="startEditName"
+                >
+                  <span class="i-mdi-pencil text-3.5" aria-hidden="true" />
+                </button>
+              </div>
               <p class="mt-0.5 truncate text-sm text-slate-500 font-600">
                 {{ data.user.phone }}
               </p>
@@ -181,6 +226,43 @@ function formatDate(value: string) {
                 <span class="i-mdi-calendar-heart text-3.5" />
                 С нами с {{ memberSince }}
               </span>
+            </div>
+          </div>
+
+          <!-- Форма имени (п.28) -->
+          <div v-if="isEditingName" class="mx-5 mt-4 rounded-2xl bg-white/6 p-3 space-y-2">
+            <input
+              v-model="editFirstName"
+              aria-label="Имя"
+              class="h-11 w-full border border-white/10 rounded-xl bg-white/6 px-3 text-sm outline-none focus:border-main-400"
+              maxlength="60"
+              placeholder="Имя"
+              type="text"
+            >
+            <input
+              v-model="editLastName"
+              aria-label="Фамилия"
+              class="h-11 w-full border border-white/10 rounded-xl bg-white/6 px-3 text-sm outline-none focus:border-main-400"
+              maxlength="60"
+              placeholder="Фамилия (необязательно)"
+              type="text"
+            >
+            <div class="flex gap-2">
+              <button
+                :disabled="isSavingName"
+                class="h-11 flex-1 rounded-xl bg-main-500 text-sm text-white font-950 transition active:scale-[0.98] disabled:opacity-60"
+                type="button"
+                @click="saveName"
+              >
+                {{ isSavingName ? 'Сохраняем...' : 'Сохранить' }}
+              </button>
+              <button
+                class="h-11 rounded-xl bg-white/8 px-4 text-sm font-900 transition active:scale-[0.98]"
+                type="button"
+                @click="isEditingName = false"
+              >
+                Отмена
+              </button>
             </div>
           </div>
 

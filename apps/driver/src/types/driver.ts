@@ -213,6 +213,8 @@ export interface DriverPayoutsResponse {
 export interface RatePassengerPayload {
   score: number
   comment?: string
+  // Чипы-теги отзыва (слаги из constants/ratingTags.ts).
+  tags?: string[]
 }
 
 export interface DriverPhoneOtpResponse {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
 import { useBottomSheet } from '@edtaxi/shared/composables/useBottomSheet'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
@@ -54,6 +55,37 @@ const onlineBlockLink = computed(() =>
 )
 
 const driver = useDriverStore()
+
+// Навигатор (TODO п.1а): только https-ссылки — кастомные схемы (dgis://,
+// yandexnavi://) из TG-вебвью открываются ненадёжно, а https перехватит
+// установленное приложение само. Цель: едем к пассажиру → точка А, в поездке
+// → точка Б. НЕ копировать map.vue fitBounds-логику — она про другое.
+const isNavSheetOpen = ref(false)
+
+const navTarget = computed(() => {
+  const trip = driver.activeTrip
+  if (!trip)
+    return null
+  return driver.activeTripStep === 'to_pickup'
+    ? { lat: trip.pickup_lat, lng: trip.pickup_lng }
+    : { lat: trip.dropoff_lat, lng: trip.dropoff_lng }
+})
+
+const navApps = computed(() => {
+  const target = navTarget.value
+  if (!target)
+    return []
+  return [
+    { icon: 'i-mdi-map-search', label: '2ГИС', url: `https://2gis.kz/routeSearch/to/${target.lng},${target.lat}` },
+    { icon: 'i-mdi-navigation-variant', label: 'Яндекс Карты', url: `https://yandex.kz/maps/?rtext=~${target.lat},${target.lng}&rtt=auto` },
+    { icon: 'i-mdi-google-maps', label: 'Google Maps', url: `https://www.google.com/maps/dir/?api=1&destination=${target.lat},${target.lng}` },
+  ]
+})
+
+function openNavigator(url: string) {
+  isNavSheetOpen.value = false
+  openExternalLink(url)
+}
 const onboarding = useDriverOnboardingStore()
 const tripChat = useTripChatStore()
 
@@ -314,6 +346,29 @@ const peekPill = computed(() => {
                 <span :class="tripStep.icon" class="text-6" />
                 {{ tripStep.action }}
               </button>
+
+              <!-- Навигатор: к пассажиру / к точке Б во внешнем приложении -->
+              <button
+                v-if="navTarget"
+                class="h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.99]"
+                type="button"
+                @click="isNavSheetOpen = !isNavSheetOpen"
+              >
+                <span class="i-mdi-navigation text-5" />
+                {{ driver.activeTripStep === 'to_pickup' ? 'Навигатор к пассажиру' : 'Навигатор к точке Б' }}
+              </button>
+              <div v-if="isNavSheetOpen && navApps.length" class="grid grid-cols-3 gap-2">
+                <button
+                  v-for="app in navApps"
+                  :key="app.label"
+                  class="h-14 flex flex-col items-center justify-center gap-1 rounded-2xl bg-white/6 text-[11px] text-slate-300 font-800 transition active:scale-[0.97]"
+                  type="button"
+                  @click="openNavigator(app.url)"
+                >
+                  <span :class="app.icon" class="text-5 text-main-300" aria-hidden="true" />
+                  {{ app.label }}
+                </button>
+              </div>
 
               <RouterLink
                 class="relative h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.99]"

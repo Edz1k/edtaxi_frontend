@@ -4,11 +4,13 @@ import { getBonusOverview, redeemReferralCode } from '@edtaxi/shared/api/bonus'
 import ReferralWelcomeModal from '@edtaxi/shared/components/bonus/ReferralWelcomeModal.vue'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import MapStyleSwitcher from '@edtaxi/shared/components/map/MapStyleSwitcher.vue'
+import WeatherBadge from '@edtaxi/shared/components/weather/WeatherBadge.vue'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { captureParkInviteStartParam, takePendingParkInviteToken } from '@edtaxi/shared/composables/telegram/parkInvite'
 import { captureReferralStartParam, takePendingReferralCode } from '@edtaxi/shared/composables/telegram/referral'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
+import { useWeather } from '@edtaxi/shared/composables/useWeather'
 import { ApiError } from '~/api/client'
 import { getDriverOverview, getVerificationReminder } from '~/api/driver'
 import { getUserErrorMessage } from '~/api/errors'
@@ -53,6 +55,10 @@ const {
 // Город водителя — плашкой сверху карты; резолвится по координатам на бэке
 // (оффлайн-справочник, без 2ГИС) и сохраняется в профиле для статистики.
 const { city } = useUserCity(liveCoordinates)
+
+// Погода в шапке (TODO п.5): бэк кэширует на город, виджет тихо прячется
+// при недоступном провайдере.
+const { weather } = useWeather(liveCoordinates)
 const { isRouteLoading, mapOffer, routeCoordinates } = useOfferRoute(liveCoordinates)
 
 // Ненавязчивое напоминание пройти верификацию — бэкенд сам решает, показывать
@@ -285,10 +291,11 @@ async function toggleOnline() {
       <div class="relative flex justify-center">
         <div
           v-if="city"
-          class="max-w-[68%] truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+          class="max-w-[68%] flex items-center gap-1.5 truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
         >
-          <span class="i-mdi-map-marker mr-1 inline-block align-middle text-3.5 text-main-300" />
-          г. {{ city }}
+          <span class="i-mdi-map-marker inline-block shrink-0 align-middle text-3.5 text-main-300" />
+          <span class="truncate">г. {{ city }}</span>
+          <WeatherBadge :weather="weather" />
         </div>
 
         <RouterLink
