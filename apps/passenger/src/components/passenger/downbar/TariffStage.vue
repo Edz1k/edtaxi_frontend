@@ -87,6 +87,12 @@ const tariffs = computed(() =>
 function isSelected(category: VehicleCategory) {
   return trips.selectedCategory === category
 }
+
+// Мото — повышенный риск: договора со страховой пока нет, поездка НЕ
+// застрахована. Заказ мото доступен только после явного согласия
+// «еду на свой страх и риск» (чекбокс гейтит кнопку заказа).
+const motoConsent = ref(false)
+const needsMotoConsent = computed(() => trips.selectedCategory === 'moto' && !motoConsent.value)
 </script>
 
 <template>
@@ -165,15 +171,33 @@ function isSelected(category: VehicleCategory) {
         {{ TARIFF_META[trips.selectedCategory].caption }}
       </p>
 
-      <!-- Мототакси: напоминание о безопасности (виден пока выбран мото) -->
+      <!-- Мототакси: предупреждение о рисках + обязательное согласие.
+           «Поездка застрахована» убрано осознанно — договора со страховой нет,
+           без согласия кнопка заказа неактивна (TODO п.20). -->
       <div
         v-if="trips.selectedCategory === 'moto'"
-        class="mt-2 flex items-start gap-2 rounded-2xl bg-amber-500/12 px-3 py-2.5"
+        class="mt-2 rounded-2xl bg-amber-500/12 px-3 py-2.5 space-y-2"
       >
-        <span class="i-mdi-shield-check mt-0.5 shrink-0 text-4.5 text-amber-300" aria-hidden="true" />
-        <p class="text-[12px] text-amber-200 leading-4">
-          Мототакси: только 1 пассажир. Водитель обязан выдать вам шлем. Поездка застрахована.
+        <p class="flex items-start gap-2 text-[12px] text-amber-200 leading-4">
+          <span class="i-mdi-alert-outline mt-0.5 shrink-0 text-4.5 text-amber-300" aria-hidden="true" />
+          Мототакси: только 1 пассажир, водитель обязан выдать вам шлем. Поездка не застрахована — вы едете на свой страх и риск.
         </p>
+        <button
+          class="w-full flex items-center gap-2 rounded-xl bg-white/6 px-2.5 py-2 text-left transition active:scale-[0.99]"
+          type="button"
+          :aria-pressed="motoConsent"
+          @click="motoConsent = !motoConsent"
+        >
+          <span
+            class="h-5 w-5 flex shrink-0 items-center justify-center border rounded-md transition"
+            :class="motoConsent ? 'border-amber-300 bg-amber-400 text-slate-900' : 'border-amber-300/50 bg-transparent'"
+          >
+            <span v-if="motoConsent" class="i-mdi-check text-4" aria-hidden="true" />
+          </span>
+          <span class="text-[12px] text-amber-100 font-800 leading-4">
+            Понимаю риски и согласен ехать на мото
+          </span>
+        </button>
       </div>
     </div>
 
@@ -298,14 +322,14 @@ function isSelected(category: VehicleCategory) {
       <span class="i-mdi-chevron-right mt-0.5 shrink-0 text-4.5 text-main-300/70" aria-hidden="true" />
     </RouterLink>
 
-    <!-- Заказать -->
+    <!-- Заказать (мото — только после согласия с рисками) -->
     <button
-      :disabled="isOrdering"
+      :disabled="isOrdering || needsMotoConsent"
       class="h-13 w-full rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
       type="button"
       @click="emit('order')"
     >
-      {{ primaryText }}
+      {{ needsMotoConsent ? 'Подтвердите согласие с рисками' : primaryText }}
     </button>
 
     <CardPickerSheet v-if="isCardPickerOpen" @close="isCardPickerOpen = false" />

@@ -1,4 +1,4 @@
-import type { CreatePromotionPayload, ParkJoinRequestsResponse, Promotion, PromotionImageUpload, PromotionsResponse } from '~/types/promotions'
+import type { CreatePromotionPayload, ParkJoinRequestsResponse, Promotion, PromotionImageUpload, PromotionParticipantsResponse, PromotionsResponse } from '~/types/promotions'
 import { apiRequest } from '~/api/client'
 
 // Баннер акции (jpeg/png до 5MB): бэкенд возвращает path (кладём в payload
@@ -35,6 +35,17 @@ export function deactivateAdminPromotion(id: string) {
   })
 }
 
+export function listAdminPromotionParticipants(id: string) {
+  return apiRequest<PromotionParticipantsResponse>(`/admin/promotions/${id}/participants`)
+}
+
+// Идемпотентная выдача наград по завершённой manual-акции.
+export function sendAdminPromotionRewards(id: string) {
+  return apiRequest<{ awarded: number, message: string }>(`/admin/promotions/${id}/send-rewards`, {
+    method: 'POST',
+  })
+}
+
 // --- Акции парка (роль park): бэкенд берёт парк владельца, scope всегда 'park' ---
 
 export function listParkPromotions() {
@@ -54,6 +65,18 @@ export function uploadParkPromotionImage(file: Blob) {
 
 export function deactivateParkPromotion(id: string) {
   return apiRequest<{ message: string }>(`/park/promotions/${id}/deactivate`, {
+    method: 'POST',
+  })
+}
+
+export function listParkPromotionParticipants(id: string) {
+  return apiRequest<PromotionParticipantsResponse>(`/park/promotions/${id}/participants`)
+}
+
+// Выдача наград по завершённой акции парка: дебетует баланс парка на всю
+// сумму; если баланса не хватает на всех — бэкенд откажет целиком (402).
+export function sendParkPromotionRewards(id: string) {
+  return apiRequest<{ awarded: number, message: string }>(`/park/promotions/${id}/send-rewards`, {
     method: 'POST',
   })
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CreatePromotionPayload, PromotionImageUpload, PromotionScope } from '~/types/promotions'
+import type { CreatePromotionPayload, PromotionAudience, PromotionImageUpload, PromotionScope } from '~/types/promotions'
 import { showErrorToast } from '~/api/errors'
 
 const props = withDefaults(defineProps<{
@@ -25,6 +25,13 @@ const AUDIENCES: Array<{ label: string, value: PromotionScope }> = [
   { label: 'Водители', value: 'platform_driver' },
 ]
 
+// Для водительских платформенных акций: только водители платформенного парка
+// (по умолчанию) или «акция для всех» — отдельная кнопка (решение владельца).
+const DRIVER_AUDIENCES: Array<{ label: string, value: PromotionAudience }> = [
+  { label: 'Водители платформы', value: 'platform' },
+  { label: 'Все водители', value: 'all' },
+]
+
 const MESSAGE_MODES: Array<{ label: string, value: 'custom' | 'template' }> = [
   { label: 'Шаблонный', value: 'template' },
   { label: 'Свой', value: 'custom' },
@@ -35,6 +42,7 @@ const IMAGE_TYPES = ['image/jpeg', 'image/png']
 
 const form = reactive({
   scope: 'platform_passenger' as PromotionScope,
+  audience: 'platform' as PromotionAudience,
   title: '',
   description: '',
   target_trips: 5,
@@ -102,6 +110,7 @@ function submit() {
     return
   emit('create', {
     scope: props.withAudience ? form.scope : undefined,
+    audience: props.withAudience && form.scope === 'platform_driver' ? form.audience : undefined,
     title: form.title.trim(),
     description: form.description.trim() || undefined,
     target_trips: form.target_trips,
@@ -117,6 +126,7 @@ function submit() {
 // Родитель сбрасывает форму после успешного создания акции.
 function reset() {
   form.scope = 'platform_passenger'
+  form.audience = 'platform'
   form.title = ''
   form.description = ''
   form.target_trips = 5
@@ -153,6 +163,26 @@ defineExpose({ reset })
             {{ audience.label }}
           </button>
         </div>
+      </div>
+
+      <!-- Водительская платформенная акция: водители платформы или все -->
+      <div v-if="withAudience && form.scope === 'platform_driver'" class="grid gap-1.5">
+        <span class="text-xs text-white/42 font-900 uppercase">Кто участвует</span>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="driverAudience in DRIVER_AUDIENCES"
+            :key="driverAudience.value"
+            class="h-10 rounded-xl px-4 text-sm font-900 transition active:scale-[0.97]"
+            :class="form.audience === driverAudience.value ? 'bg-cyan-400 text-#06142f' : 'bg-white/8 text-white/70 hover:bg-white/12'"
+            type="button"
+            @click="form.audience = driverAudience.value"
+          >
+            {{ driverAudience.label }}
+          </button>
+        </div>
+        <p class="text-xs text-white/45">
+          Награды по водительским акциям отправляются вручную после завершения акции — кнопкой «Отправить награды» в списке ниже.
+        </p>
       </div>
 
       <label class="grid gap-1.5">

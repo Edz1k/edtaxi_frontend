@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CreatePromotionPayload, Promotion } from '~/types/promotions'
 import { showErrorToast } from '~/api/errors'
-import { createAdminPromotion, deactivateAdminPromotion, listAdminPromotions, uploadAdminPromotionImage } from '~/api/promotions'
+import { createAdminPromotion, deactivateAdminPromotion, listAdminPromotionParticipants, listAdminPromotions, sendAdminPromotionRewards, uploadAdminPromotionImage } from '~/api/promotions'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import PromotionForm from '~/components/promotions/PromotionForm.vue'
 import PromotionsList from '~/components/promotions/PromotionsList.vue'
@@ -88,8 +88,10 @@ async function stop(promotion: Promotion) {
 
     <PromotionsList
       :is-loading="isLoading"
+      :load-participants="listAdminPromotionParticipants"
       :pending="isMutating"
       :promotions="promotions"
+      :send-rewards="sendAdminPromotionRewards"
       show-audience
       @stop="stop"
     />

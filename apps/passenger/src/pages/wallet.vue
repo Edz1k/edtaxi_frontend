@@ -182,10 +182,17 @@ function formatDate(value: string) {
   }).format(new Date(value))
 }
 
+// Сумма проверочного платежа привязки: источник истины — бэкенд
+// (BindCardResponse.amount, entity.CardBindAmount); 10 ₸ — лишь дефолт до
+// первого ответа, чтобы текст не разъезжался с реальностью при смене суммы.
+const bindAmount = ref(10)
+
 async function startBindCard() {
   const response = await wallet.bindCard().catch(() => null)
   if (!response)
     return
+  if (response.amount)
+    bindAmount.value = response.amount
   paymentKind.value = 'bind'
   bindStartCount = wallet.cards.length
   bindOutcomeShown = false
@@ -333,7 +340,7 @@ function getTransactionTitle(transaction: WalletTransaction) {
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-cash-refund mt-0.5 shrink-0 text-4 text-main-300" />
-              Для проверки карты спишем 10 ₸ и сразу вернём их на карту
+              Для проверки карты спишем {{ bindAmount }} ₸ и сразу вернём их на карту
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-lock-outline mt-0.5 shrink-0 text-4 text-main-300" />
