@@ -287,7 +287,7 @@ declare global {
   const useTitle: typeof import('@vueuse/core').useTitle
   const useToNumber: typeof import('@vueuse/core').useToNumber
   const useToString: typeof import('@vueuse/core').useToString
-  const useToast: typeof import('../../../../edtaxi_frontend/packages/shared/src/composables/useToast').useToast
+  const useToast: typeof import('../../../packages/shared/src/composables/useToast').useToast
   const useToggle: typeof import('@vueuse/core').useToggle
   const useTransition: typeof import('@vueuse/core').useTransition
   const useUrlSearchParams: typeof import('@vueuse/core').useUrlSearchParams
@@ -328,8 +328,8 @@ declare global {
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, ShallowRef, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
   // @ts-ignore
-  export type { ToastKind, ToastAction, AppToast } from '../../../../edtaxi_frontend/packages/shared/src/composables/useToast'
-  import('../../../../edtaxi_frontend/packages/shared/src/composables/useToast')
+  export type { ToastKind, ToastAction, AppToast } from '../../../packages/shared/src/composables/useToast'
+  import('../../../packages/shared/src/composables/useToast')
 }
 
 // for vue template auto import
@@ -618,7 +618,7 @@ declare module 'vue' {
     readonly useTitle: UnwrapRef<typeof import('@vueuse/core')['useTitle']>
     readonly useToNumber: UnwrapRef<typeof import('@vueuse/core')['useToNumber']>
     readonly useToString: UnwrapRef<typeof import('@vueuse/core')['useToString']>
-    readonly useToast: UnwrapRef<typeof import('../../../../edtaxi_frontend/packages/shared/src/composables/useToast')['useToast']>
+    readonly useToast: UnwrapRef<typeof import('../../../packages/shared/src/composables/useToast')['useToast']>
     readonly useToggle: UnwrapRef<typeof import('@vueuse/core')['useToggle']>
     readonly useTransition: UnwrapRef<typeof import('@vueuse/core')['useTransition']>
     readonly useUrlSearchParams: UnwrapRef<typeof import('@vueuse/core')['useUrlSearchParams']>

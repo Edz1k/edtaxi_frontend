@@ -3,6 +3,7 @@ import type { Trip, VehicleCategory } from '~/types/trips'
 import type { DriverTripOffer } from '~/types/websocket'
 import { useToast } from '@edtaxi/shared/composables/useToast'
 import { acceptHMRUpdate, defineStore } from 'pinia'
+import { ApiError } from '~/api/client'
 import {
   acceptDriverParkInvite,
   acceptDriverTrip,
@@ -17,7 +18,7 @@ import {
   startDriverTrip,
   updateDriverStatus,
 } from '~/api/driver'
-import { showErrorToast } from '~/api/errors'
+import { getUserErrorMessage, showErrorToast } from '~/api/errors'
 import { isTerminalTripStatus, tripStatusToStep, tripToOffer } from '~/utils/trip'
 import { sortCategories } from '~/utils/vehicleCategories'
 
@@ -158,6 +159,13 @@ export const useDriverStore = defineStore('driver', () => {
       return status
     }
     catch (error) {
+      // 403 при выходе на линию (не пройдена верификация / нет таксопарка) —
+      // БЕЗ тоста: map.vue показывает жёлтый баннер с причиной и кнопкой
+      // «Пройти верификацию», красный тост поверх него только дублировал шум.
+      if (nextOnline && error instanceof ApiError && error.status === 403) {
+        errorMessage.value = getUserErrorMessage(error, 'Выход на линию сейчас недоступен.')
+        throw error
+      }
       errorMessage.value = showErrorToast(error, 'Не удалось изменить статус.')
       throw error
     }
