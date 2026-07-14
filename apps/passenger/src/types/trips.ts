@@ -13,6 +13,13 @@ export interface EstimateTripPayload {
   category: VehicleCategory
   distance_km: number
   duration_min: number
+  // Координаты опциональны для обратной совместимости, но с ними бэкенд
+  // считает коэффициент спроса (surge) и сверяет метрики маршрута с прямой
+  // между точками (анти-спуфинг цены) — передавать при любой возможности.
+  dropoff_lat?: number
+  dropoff_lng?: number
+  pickup_lat?: number
+  pickup_lng?: number
 }
 
 export interface EstimateTripResponse {
