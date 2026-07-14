@@ -90,9 +90,15 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
       const payload = await getTripPayload()
 
       if (!isTariffsVisible.value) {
+        // Координаты нужны бэкенду для коэффициента спроса и проверки метрик
+        // маршрута против прямой между точками (анти-спуфинг цены).
         await trips.estimateTariffs({
           distance_km: payload.distance_km,
+          dropoff_lat: payload.dropoff_lat,
+          dropoff_lng: payload.dropoff_lng,
           duration_min: payload.duration_min,
+          pickup_lat: payload.pickup_lat,
+          pickup_lng: payload.pickup_lng,
         })
         return
       }
