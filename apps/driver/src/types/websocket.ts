@@ -1,33 +1,39 @@
 import type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
-import type { TripStatus, VehicleCategory } from '~/types/trips'
+import type { TripOptions, TripStatus, TripStop, VehicleCategory } from '~/types/trips'
 
 export type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
 
 export interface DriverTripOffer {
   category?: VehicleCategory
+  comment?: string
   distance_km?: number
   dropoff_address: string
   dropoff_lat?: number
   dropoff_lng?: number
   estimated_fare: number
+  options?: null | TripOptions
   pickup_address: string
   pickup_lat?: number
   pickup_lng?: number
+  stops?: TripStop[]
   timeout_sec: number
   trip_id: string
 }
 
 export interface DriverTripOfferWireData {
   category?: VehicleCategory
+  comment?: string
   distance_km?: number
   dropoff_address: string
   dropoff_lat?: number
   dropoff_lng?: number
   estimated_fare?: number
   fare?: number
+  options?: null | TripOptions
   pickup_address: string
   pickup_lat?: number
   pickup_lng?: number
+  stops?: TripStop[]
   timeout_sec: number
   trip_id: string
 }
@@ -48,6 +54,9 @@ export interface TripOfferExpiredWireMessage {
 
 export interface TripStatusWireMessage {
   data: {
+    // Актор отмены (passenger/driver_.../system_...) — водитель отличает
+    // «пассажир отменил, ждём следующий заказ» от прочих отмен.
+    cancelled_by?: string
     status: TripStatus
     trip_id: string
   }

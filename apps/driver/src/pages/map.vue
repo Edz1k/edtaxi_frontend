@@ -182,6 +182,21 @@ const pickupPlace = computed(() =>
 const destinationPlace = computed(() =>
   driver.activeTripStep === 'to_pickup' ? null : offerToPlace(mapOffer.value, 'dropoff'),
 )
+
+// Остановки заказа: нумерованные маркеры на карте (кроме этапа подъезда к
+// пассажиру — там маршрут строится от машины до точки А).
+const stopPlaces = computed(() => {
+  if (driver.activeTripStep === 'to_pickup')
+    return []
+
+  return (mapOffer.value?.stops ?? []).map((stop, index) => ({
+    address: stop.address,
+    id: `offer-stop-${index}`,
+    lat: stop.lat,
+    lng: stop.lng,
+    name: stop.address,
+  }))
+})
 definePage({
   meta: {
     authRedirect: '/login',
@@ -320,6 +335,7 @@ async function toggleOnline() {
       :destination-place="destinationPlace"
       :pickup-place="pickupPlace"
       :route-coordinates="routeCoordinates"
+      :stop-places="stopPlaces"
       :user-coordinates="liveCoordinates"
       @pointerdown="statusPanelRef?.collapseToMap()"
     />

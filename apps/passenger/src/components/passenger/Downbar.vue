@@ -69,6 +69,77 @@ const {
   pickupPlace,
 })
 
+// Промежуточные остановки (до 3): фиксированные слоты со своими инстансами
+// поиска (композаблы нельзя создавать динамически), видимых строк — stopCount.
+// Выбранные места синкаются в стор (стопы едут в маршрут/оценку/заказ),
+// тексты строк живут здесь.
+const stopQueries = [ref(''), ref(''), ref('')]
+const stopPlaces = [ref<GeoPlace | null>(null), ref<GeoPlace | null>(null), ref<GeoPlace | null>(null)]
+const stopSearches = stopPlaces.map((selectedPlace, index) => useAddressSearch({
+  near: pickupPlace,
+  query: stopQueries[index]!,
+  selectedPlace,
+}))
+const stopCount = ref(0)
+
+function syncStopsToStore() {
+  trips.setStops(stopPlaces.slice(0, stopCount.value).map(place => place.value))
+}
+
+// Ввод текста сбрасывает выбранное место (useAddressSearch) — стор узнаёт об
+// этом отсюда, чтобы недовыбранный стоп не уехал в заказ.
+stopPlaces.forEach(place => watch(place, syncStopsToStore))
+
+// Restore черновика из стора (remount даунбара на peek, «заказать ещё одну
+// машину»): setStops в сторе игнорирует ресинк без изменений.
+onMounted(() => {
+  stopCount.value = Math.min(3, trips.stops.length)
+  trips.stops.slice(0, 3).forEach((place, index) => {
+    stopPlaces[index]!.value = place
+    stopQueries[index]!.value = place?.address ?? ''
+  })
+})
+
+const stopRows = computed(() => Array.from({ length: stopCount.value }, (_, index) => ({
+  isSearching: stopSearches[index]!.isSearching.value,
+  query: stopQueries[index]!.value,
+  suggestions: stopSearches[index]!.suggestions.value,
+})))
+
+function addStopRow() {
+  if (stopCount.value >= 3)
+    return
+  stopCount.value++
+  trips.addStopRow()
+}
+
+function updateStopQuery(index: number, value: string) {
+  stopQueries[index]!.value = value
+}
+
+function searchStop(index: number) {
+  stopSearches[index]!.search()
+}
+
+function selectStop(index: number, place: GeoPlace) {
+  stopSearches[index]!.selectPlace(place)
+  stopSearches[index]!.clearSuggestions()
+  syncStopsToStore()
+}
+
+function removeStopRow(index: number) {
+  // Сдвигаем слоты выше удалённого вверх, хвост очищаем.
+  for (let i = index; i < stopCount.value - 1; i++) {
+    stopQueries[i]!.value = stopQueries[i + 1]!.value
+    stopPlaces[i]!.value = stopPlaces[i + 1]!.value
+  }
+  const last = stopCount.value - 1
+  stopQueries[last]!.value = ''
+  stopPlaces[last]!.value = null
+  stopCount.value--
+  syncStopsToStore()
+}
+
 // «Умные подсказки» для поля «Куда»: частые и недавние адреса из истории
 // поездок пользователя (бэкенд ранжирует). Загружаем один раз; выбор
 // подсказки идёт тем же путём, что и выбор из гео-саджеста.
@@ -444,6 +515,7 @@ function onHandleKeydown(event: KeyboardEvent) {
         >
           <AddressForm
             class="min-h-0 flex-1"
+            :can-add-stop="stopCount < 3"
             :destination="destination"
             :destination-suggestions="destinationSuggestions"
             :is-locating-user="isLocatingUser"
@@ -452,14 +524,20 @@ function onHandleKeydown(event: KeyboardEvent) {
             :pickup="pickup"
             :pickup-suggestions="pickupSuggestions"
             :quick-destinations="quickDestinations"
+            :stops="stopRows"
+            @add-stop="addStopRow"
             @locate-user="emit('locateUser')"
             @pick-from-map="emit('pickFromMap', $event)"
+            @remove-stop="removeStopRow"
             @search-destination="searchDestination"
             @search-pickup="searchPickup"
+            @search-stop="searchStop"
             @select-destination="chooseDestination"
             @select-pickup="selectPickup"
+            @select-stop="selectStop"
             @update:destination="destination = $event"
             @update:pickup="pickup = $event"
+            @update:stop="updateStopQuery"
           />
 
           <button

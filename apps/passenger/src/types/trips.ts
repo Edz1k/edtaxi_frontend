@@ -9,6 +9,23 @@ export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan' | '
 // создаётся в awaiting_payment и уходит в поиск после подтверждения оплаты.
 export type PaymentMethod = 'card' | 'cash' | 'prepaid'
 
+// Промежуточная остановка маршрута (до 3 на поездку).
+export interface TripStop {
+  address: string
+  lat: number
+  lng: number
+}
+
+// Опции заказа: кресло/животное — платные (фикс-доплата из настроек админки),
+// особые потребности и «заказ другу» — бесплатные.
+export interface TripOptions {
+  accessible?: boolean
+  child_seat?: boolean
+  friend_name?: string
+  friend_phone?: string
+  pets?: boolean
+}
+
 export interface EstimateTripPayload {
   category: VehicleCategory
   distance_km: number
@@ -20,6 +37,10 @@ export interface EstimateTripPayload {
   dropoff_lng?: number
   pickup_lat?: number
   pickup_lng?: number
+  // Единый контракт с create: стопы участвуют в проверке метрик маршрута,
+  // опции — в цене (options_surcharge входит в estimated_fare).
+  options?: TripOptions
+  stops?: TripStop[]
 }
 
 export interface EstimateTripResponse {
@@ -28,11 +49,17 @@ export interface EstimateTripResponse {
   duration_min: number
   estimated_fare: number
   surge_multiplier: number
+  // Доплата за выбранные опции, уже вошедшая в estimated_fare.
+  options_surcharge?: number
+  // Прайс опций из настроек (0 = опция выключена) — для «+N ₸» на чекбоксах.
+  surcharge_child_seat?: number
+  surcharge_pets?: number
 }
 
 export interface CreateTripPayload extends EstimateTripPayload {
   // Мультивыбор тарифов: бэкенд принимает до 5 категорий.
   categories?: VehicleCategory[]
+  comment?: string
   dropoff_address: string
   dropoff_lat: number
   dropoff_lng: number
@@ -86,6 +113,12 @@ export interface Trip {
   cancelled_by?: null | string
   categories?: VehicleCategory[]
   category: VehicleCategory
+  comment?: string
+  // Промежуточные остановки и опции заказа (волна 2A).
+  options?: null | TripOptions
+  stops?: TripStop[]
+  // Фикс-доплата за опции, вошедшая в estimated_fare/final_fare.
+  surcharge?: number
   completed_at?: null | string
   created_at?: string
   distance_km: number

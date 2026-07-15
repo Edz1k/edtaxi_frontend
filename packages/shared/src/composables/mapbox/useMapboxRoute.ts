@@ -11,6 +11,8 @@ interface UseMapboxRouteOptions {
   mapboxglModule: ShallowRef<MapboxModule | undefined>
   pickupPlace: ComputedRef<GeoPlace | null>
   routeCoordinates: ComputedRef<RouteCoordinate[]>
+  // Промежуточные остановки маршрута — нумерованные маркеры 1..N между А и Б.
+  stopPlaces?: ComputedRef<GeoPlace[]>
 }
 
 function assignStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
@@ -144,6 +146,22 @@ export function useMapboxRoute(options: UseMapboxRouteOptions) {
         .setLngLat(destinationCoordinate.value)
         .addTo(options.map.value),
     )
+
+    // Остановки: нумерованные маркеры между А и Б.
+    const stopPlaces = options.stopPlaces?.value ?? []
+    stopPlaces.forEach((stop, index) => {
+      if (!options.map.value || !options.mapboxglModule.value)
+        return
+
+      routeMarkers.push(
+        new options.mapboxglModule.value.default.Marker({
+          anchor: 'bottom',
+          element: createPointElement(String(index + 1), '#f59e0b'),
+        })
+          .setLngLat([stop.lng, stop.lat])
+          .addTo(options.map.value),
+      )
+    })
   }
 
   function clearRoute() {
@@ -178,6 +196,9 @@ export function useMapboxRoute(options: UseMapboxRouteOptions) {
 
     if (destinationCoordinate.value)
       bounds.extend(destinationCoordinate.value)
+
+    for (const stop of options.stopPlaces?.value ?? [])
+      bounds.extend([stop.lng, stop.lat])
 
     options.map.value.fitBounds(
       bounds as LngLatBoundsLike,

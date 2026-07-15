@@ -1,5 +1,5 @@
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
-import { getDrivingRoute, searchPlaces } from '@edtaxi/shared/api/geocoding'
+import { getDrivingRoute, getDrivingRouteVia, searchPlaces } from '@edtaxi/shared/api/geocoding'
 
 interface UseRoutePlannerOptions {
   destination: Ref<string>
@@ -7,6 +7,9 @@ interface UseRoutePlannerOptions {
   onRouteGeometry: (coordinates: [number, number][]) => void
   pickup: Ref<string>
   pickupPlace: Ref<GeoPlace | null>
+  // Промежуточные остановки (уже выбранные из саджеста; null-слоты
+  // пропускаются) — маршрут строится через них: A → стопы → B.
+  stops?: Ref<(GeoPlace | null)[]>
 }
 
 async function resolvePlace(value: string, selectedPlace: GeoPlace | null, near?: GeoPlace | null) {
@@ -33,7 +36,13 @@ export function useRoutePlanner(options: UseRoutePlannerOptions) {
       // Куда — резолвим относительно точки А: адрес без города трактуем как
       // адрес в городе посадки, а не в одноимённой улице за сотни километров.
       const resolvedDestination = await resolvePlace(options.destination.value, options.destinationPlace.value, resolvedPickup)
-      const route = await getDrivingRoute(resolvedPickup, resolvedDestination)
+
+      // Остановки не резолвим по тексту — они всегда выбираются из саджеста;
+      // пустые слоты (адрес не выбран) в маршрут не попадают.
+      const resolvedStops = (options.stops?.value ?? []).filter((stop): stop is GeoPlace => Boolean(stop))
+      const route = resolvedStops.length
+        ? await getDrivingRouteVia([resolvedPickup, ...resolvedStops, resolvedDestination])
+        : await getDrivingRoute(resolvedPickup, resolvedDestination)
 
       options.pickupPlace.value = resolvedPickup
       options.destinationPlace.value = resolvedDestination
@@ -45,6 +54,7 @@ export function useRoutePlanner(options: UseRoutePlannerOptions) {
         destination: resolvedDestination,
         pickup: resolvedPickup,
         route,
+        stops: resolvedStops,
       }
     }
     finally {

@@ -6,6 +6,8 @@ import type {
   ReverseGeocodePayload,
   ReverseGeocodeResponse,
   RoutePayload,
+  RoutePoint,
+  RoutePointsPayload,
   RouteResponse,
   TripRoute,
 } from '../types/geocoding'
@@ -52,7 +54,7 @@ export function reverseGeocode(payload: ReverseGeocodePayload) {
   })
 }
 
-export function getRoute(payload: RoutePayload) {
+export function getRoute(payload: RoutePayload | RoutePointsPayload) {
   return apiRequest<RouteResponse>('/route', {
     method: 'POST',
     body: payload,
@@ -89,6 +91,20 @@ export async function getDrivingRoute(from: GeoPlace, to: GeoPlace): Promise<Tri
     from_lng: from.lng,
     to_lat: to.lat,
     to_lng: to.lng,
+  })
+
+  return {
+    distance_km: route.distance_km,
+    duration_min: route.duration_min,
+    geometry: route.coordinates,
+  }
+}
+
+// Маршрут через несколько точек (A → остановки → B, до 5 точек): суммарные
+// distance/duration и склеенная геометрия приходят одним вызовом.
+export async function getDrivingRouteVia(points: RoutePoint[]): Promise<TripRoute> {
+  const route = await getRoute({
+    points: points.map(point => ({ lat: point.lat, lng: point.lng })),
   })
 
   return {

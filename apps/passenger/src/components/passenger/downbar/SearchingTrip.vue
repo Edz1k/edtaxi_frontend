@@ -496,6 +496,20 @@ async function shareTrip() {
         <span class="i-mdi-near-me shrink-0 text-4.5 text-main-300" aria-hidden="true" />
         <span class="truncate">{{ pickup }}</span>
       </p>
+      <!-- Промежуточные остановки поездки -->
+      <p
+        v-for="(stop, index) in activeTrip?.stops ?? []"
+        :key="`trip-stop-${index}`"
+        class="mt-2 flex items-center gap-2 text-sm text-white/80 font-800"
+      >
+        <span
+          class="h-4.5 w-4.5 flex shrink-0 items-center justify-center rounded-full bg-main-500/22 text-[10px] text-main-200 font-950"
+          aria-hidden="true"
+        >
+          {{ index + 1 }}
+        </span>
+        <span class="truncate">{{ stop.address }}</span>
+      </p>
       <p class="mt-2 flex items-center gap-2 text-sm font-800">
         <span class="i-mdi-flag-checkered shrink-0 text-4.5 text-main-300" aria-hidden="true" />
         <span class="truncate">{{ destination }}</span>

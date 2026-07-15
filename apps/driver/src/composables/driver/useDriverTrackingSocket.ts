@@ -8,14 +8,17 @@ import { useDriverStore } from '~/stores/driver'
 function normalizeOffer(message: Extract<DriverWebSocketMessage, { type: 'trip_offer' }>): DriverTripOffer {
   return {
     category: message.data.category,
+    comment: message.data.comment,
     distance_km: message.data.distance_km,
     dropoff_address: message.data.dropoff_address,
     dropoff_lat: message.data.dropoff_lat,
     dropoff_lng: message.data.dropoff_lng,
     estimated_fare: message.data.estimated_fare ?? message.data.fare ?? 0,
+    options: message.data.options,
     pickup_address: message.data.pickup_address,
     pickup_lat: message.data.pickup_lat,
     pickup_lng: message.data.pickup_lng,
+    stops: message.data.stops,
     timeout_sec: message.data.timeout_sec,
     trip_id: message.data.trip_id,
   }
@@ -151,7 +154,7 @@ export function useDriverTrackingSocket() {
       }
 
       if (message.type === 'trip_status') {
-        driver.applyTripStatus(message.data.trip_id, message.data.status)
+        driver.applyTripStatus(message.data.trip_id, message.data.status, message.data.cancelled_by)
         driver.refreshActiveTrip().catch(() => {})
       }
     }

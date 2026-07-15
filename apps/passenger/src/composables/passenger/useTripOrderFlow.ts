@@ -26,6 +26,9 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
     onRouteGeometry: trips.setRouteCoordinates,
     pickup: options.pickup,
     pickupPlace: options.pickupPlace,
+    // Остановки живут в сторе: маршрут (и его distance/duration) строится
+    // через них одним вызовом /route.
+    stops: toRef(trips, 'stops'),
   })
 
   const canSubmit = computed(() => options.pickup.value.trim().length >= 3 && options.destination.value.trim().length >= 3)

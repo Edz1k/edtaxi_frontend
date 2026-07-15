@@ -27,6 +27,8 @@ const props = withDefaults(defineProps<{
   pickupPlace?: GeoPlace | null
   routeCoordinates?: RouteCoordinate[]
   showRoute?: boolean
+  // Промежуточные остановки маршрута — нумерованные маркеры между А и Б.
+  stopPlaces?: GeoPlace[]
   userCoordinates?: UserCoordinates | null
 }>(), {
   destinationPlace: null,
@@ -39,6 +41,7 @@ const props = withDefaults(defineProps<{
   pickupPlace: null,
   routeCoordinates: () => [],
   showRoute: false,
+  stopPlaces: () => [],
   userCoordinates: null,
 })
 
@@ -86,6 +89,7 @@ const {
   mapboxglModule,
   pickupPlace: computed(() => props.pickupPlace),
   routeCoordinates,
+  stopPlaces: computed(() => props.stopPlaces),
 })
 
 const {

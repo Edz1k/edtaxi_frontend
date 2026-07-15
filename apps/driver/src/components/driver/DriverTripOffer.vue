@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { DriverTripOffer } from '~/types/websocket'
+import { tripOptionBadges } from '~/utils/tripOptions'
 import { categoryLabel } from '~/utils/vehicleCategories'
 
-defineProps<{
+const props = defineProps<{
   isBusy: boolean
   offer: DriverTripOffer
 }>()
@@ -15,6 +16,9 @@ const emit = defineEmits<{
 function formatFare(value: number) {
   return `${Math.round(value).toLocaleString('ru-RU')} ₸`
 }
+
+const stops = computed(() => props.offer.stops ?? [])
+const optionBadges = computed(() => tripOptionBadges(props.offer.options))
 </script>
 
 <template>
@@ -42,6 +46,10 @@ function formatFare(value: number) {
         <div class="grid grid-cols-[20px_1fr] mt-5 gap-x-3">
           <div class="flex flex-col items-center pt-1">
             <span class="h-3 w-3 rounded-full bg-emerald-400" />
+            <template v-for="index in stops.length" :key="`dot-${index}`">
+              <span class="my-1 h-5 w-px bg-white/15" />
+              <span class="h-2.5 w-2.5 rounded-full bg-amber-400" />
+            </template>
             <span class="my-1 h-10 w-px bg-white/15" />
             <span class="h-3 w-3 rounded-full bg-red-400" />
           </div>
@@ -56,6 +64,16 @@ function formatFare(value: number) {
               </p>
             </div>
 
+            <!-- Промежуточные остановки: водитель видит их ДО принятия -->
+            <div v-for="(stop, index) in stops" :key="`stop-${index}`">
+              <p class="text-[11px] text-amber-300/80 font-800 uppercase">
+                Остановка {{ index + 1 }}
+              </p>
+              <p class="mt-1 text-sm font-800">
+                {{ stop.address }}
+              </p>
+            </div>
+
             <div>
               <p class="text-[11px] text-slate-500 font-800 uppercase">
                 Куда
@@ -66,6 +84,27 @@ function formatFare(value: number) {
             </div>
           </div>
         </div>
+
+        <!-- Опции заказа (доплата уже в цене выше) -->
+        <div v-if="optionBadges.length" class="mt-4 flex flex-wrap gap-1.5">
+          <span
+            v-for="badge in optionBadges"
+            :key="badge.label"
+            class="inline-flex items-center gap-1.5 rounded-full bg-main-500/14 px-2.5 py-1 text-[12px] text-main-200 font-800"
+          >
+            <span :class="badge.icon" class="text-4" aria-hidden="true" />
+            {{ badge.label }}
+          </span>
+        </div>
+
+        <!-- Комментарий пассажира -->
+        <p
+          v-if="offer.comment"
+          class="mt-3 flex items-start gap-2 rounded-2xl bg-white/6 px-3 py-2.5 text-[13px] text-slate-200 leading-4.5"
+        >
+          <span class="i-mdi-message-text-outline mt-0.5 shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+          {{ offer.comment }}
+        </p>
 
         <div class="grid grid-cols-2 mt-6 gap-3">
           <button

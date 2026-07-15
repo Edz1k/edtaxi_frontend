@@ -51,6 +51,23 @@ const liveDriverLocation = computed(() => {
   return { lat: location.lat, lng: location.lng }
 })
 
+// Остановки на карте: до заказа — подтверждённый черновик из стора, во время
+// активной поездки — стопы самой поездки (серверная правда).
+const stopPlaces = computed<GeoPlace[]>(() => {
+  const tripStops = trips.activeTrip?.stops
+  if (tripStops?.length) {
+    return tripStops.map(stop => ({
+      address: stop.address,
+      id: `trip-stop:${stop.lat}:${stop.lng}`,
+      lat: stop.lat,
+      lng: stop.lng,
+      name: stop.address,
+    }))
+  }
+
+  return trips.stops.filter((place): place is GeoPlace => Boolean(place))
+})
+
 function handleConfirmPicker(place: GeoPlace, mode: MapPickerMode) {
   emit('confirmPicker', place, mode)
 }
@@ -66,6 +83,7 @@ function handleConfirmPicker(place: GeoPlace, mode: MapPickerMode) {
     :pickup-place="pickupPlace"
     :route-coordinates="trips.routeCoordinates"
     :show-route="showRoute"
+    :stop-places="stopPlaces"
     :user-coordinates="userCoordinates"
     @cancel-picker="emit('cancelPicker')"
     @confirm-picker="handleConfirmPicker"

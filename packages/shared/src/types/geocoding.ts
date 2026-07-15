@@ -52,6 +52,17 @@ export interface RoutePayload {
   to_lng: number
 }
 
+// Маршрут через несколько точек (A → остановки → B): бэкенд принимает 2..5
+// точек и считает суммарные distance/duration одним вызовом.
+export interface RoutePoint {
+  lat: number
+  lng: number
+}
+
+export interface RoutePointsPayload {
+  points: RoutePoint[]
+}
+
 export interface RouteResponse {
   coordinates: RouteCoordinate[]
   distance_km: number
