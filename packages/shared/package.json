@@ -6,6 +6,7 @@
     "./api/bonus": "./src/api/bonus.ts",
     "./api/client": "./src/api/client.ts",
     "./api/errors": "./src/api/errors.ts",
+    "./api/feedback": "./src/api/feedback.ts",
     "./api/geocoding": "./src/api/geocoding.ts",
     "./api/support": "./src/api/support.ts",
     "./composables/auth/phone": "./src/composables/auth/phone.ts",

@@ -59,6 +59,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/admin/feedback': RouteRecordInfo<
+      '/admin/feedback',
+      '/admin/feedback',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/admin/garage': RouteRecordInfo<
       '/admin/garage',
       '/admin/garage',
@@ -295,6 +302,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/admin/districts.vue': {
       routes:
         | '/admin/districts'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/admin/feedback.vue': {
+      routes:
+        | '/admin/feedback'
       views:
         | never
       pathParamNames:

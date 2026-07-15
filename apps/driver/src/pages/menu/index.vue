@@ -47,6 +47,7 @@ const menuItems = computed(() => [
     ? [{ label: 'Чат с парком', description: 'Связь с вашим таксопарком', icon: 'i-mdi-message-text', to: '/menu/park-chat', badge: false }]
     : []),
   { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support', badge: false },
+  { label: 'Предложить улучшение', description: 'Идея по развитию сервиса', icon: 'i-mdi-lightbulb-outline', to: '/menu/feedback', badge: false },
 ])
 
 definePage({

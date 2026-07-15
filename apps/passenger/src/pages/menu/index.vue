@@ -17,6 +17,7 @@ const menuItems = [
   { label: 'Избранные адреса', description: 'Сохранённые места', icon: 'i-mdi-heart-outline', to: '/menu/places' },
   { label: 'Безопасность', description: 'Вызов 112 и отправка маршрута', icon: 'i-mdi-shield-check-outline', to: '/menu/safety' },
   { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support' },
+  { label: 'Предложить улучшение', description: 'Идея по развитию сервиса', icon: 'i-mdi-lightbulb-outline', to: '/menu/feedback' },
   { label: 'Настройки', description: 'Профиль и приложение', icon: 'i-mdi-cog-outline', to: '/menu/settings' },
   { label: 'О приложении', description: 'Тарифы и о сервисе EdTaxi', icon: 'i-mdi-information-outline', to: '/menu/about' },
 ]
