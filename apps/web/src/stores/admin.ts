@@ -1,10 +1,10 @@
-import type { AdminAssignableRole, AdminCityStat, AdminListTripsParams, AdminListUsersParams, AdminOverview, AdminSupportStats, AdminTechSupportNumber, AdminUser, CreateParkOwnerPayload, DemandOverview, PlatformSettings, PlatformSettingsUpdatePayload, Tariff, TariffPayload } from '~/types/admin'
+import type { AdminAssignableRole, AdminCityStat, AdminDistrict, AdminDistrictPayload, AdminListTripsParams, AdminListUsersParams, AdminOverview, AdminSupportStats, AdminTechSupportNumber, AdminUser, CreateParkOwnerPayload, DemandOverview, PlatformSettings, PlatformSettingsUpdatePayload, Tariff, TariffPayload } from '~/types/admin'
 import type { ParkChangeRequest, ParkChatRoom, ParkStatus, TaxiPark } from '~/types/park'
 import type { AdminListPayoutsParams, PayoutRequest } from '~/types/payout'
 import type { AdminSupportRoomsParams, SupportRoom } from '~/types/support'
 import type { Trip } from '~/types/trips'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, assignAdminSupportRoom, blockAdminUser, closeAdminSupportRoom, createAdminTariff, createParkOwner as createParkOwnerApi, getAdminCityStats, getAdminOverview, getAdminTrip, getDemandOverview, getPlatformSettings, getSupportStats, listAdminPayouts, listAdminSupportRooms, listAdminTariffs, listAdminTrips, listAdminUsers, listTechSupportNumbers, markAdminPayoutPaid, rejectAdminPayout, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi, updateAdminTariff, updatePlatformSettings } from '~/api/admin'
+import { addAdminUserRole, addTechSupportNumber as addTechSupportNumberApi, assignAdminSupportRoom, blockAdminUser, closeAdminSupportRoom, createAdminDistrict, createAdminTariff, createParkOwner as createParkOwnerApi, deleteAdminDistrict, getAdminCityStats, getAdminDistricts, getAdminOverview, getAdminTrip, getDemandOverview, getPlatformSettings, getSupportStats, listAdminPayouts, listAdminSupportRooms, listAdminTariffs, listAdminTrips, listAdminUsers, listTechSupportNumbers, markAdminPayoutPaid, rejectAdminPayout, removeAdminUserRole, removeTechSupportNumber as removeTechSupportNumberApi, updateAdminDistrict, updateAdminTariff, updatePlatformSettings } from '~/api/admin'
 import { ApiError } from '~/api/client'
 import { approveParkChangeRequest, listAdminParkChangeRequests, listAdminParkChats, listAdminParks, rejectAdminPark, rejectParkChangeRequest, setAdminParkPlatform, verifyAdminPark } from '~/api/park'
 import { useStoreAction } from '~/composables/useStoreAction'
@@ -24,6 +24,9 @@ export const useAdminStore = defineStore('admin', () => {
   const payouts = ref<PayoutRequest[]>([])
   const platformSettings = ref<PlatformSettings | null>(null)
   const tariffs = ref<Tariff[]>([])
+  // Районы городов (полигоны зон приёма заказов, TODO п.6).
+  const districts = ref<AdminDistrict[]>([])
+  const isLoadingDistricts = ref(false)
   const demandOverview = ref<DemandOverview | null>(null)
   // Обзорный дашборд: тоталы + серии для чартов и сводка по городам.
   const overview = ref<AdminOverview | null>(null)
@@ -285,6 +288,45 @@ export const useAdminStore = defineStore('admin', () => {
     }, 'Не удалось сохранить тариф.')
   }
 
+  async function loadDistricts(city?: string) {
+    return withLoading(isLoadingDistricts, async () => {
+      const response = await getAdminDistricts(city)
+      districts.value = response.districts
+      return response
+    }, 'Не удалось загрузить районы.')
+  }
+
+  // Создаёт район, если id не передан, иначе обновляет существующий
+  // (конвенция saveTariff).
+  async function saveDistrict(payload: AdminDistrictPayload, id?: string) {
+    return withLoading(isMutating, async () => {
+      let saved: AdminDistrict
+      try {
+        saved = id ? await updateAdminDistrict(id, payload) : await createAdminDistrict(payload)
+      }
+      catch (error) {
+        if (error instanceof ApiError && error.status === 409)
+          throw new Error('Район с таким именем уже есть в этом городе')
+        if (error instanceof ApiError && error.status === 400)
+          throw new Error('Полигон не принят: проверьте WKT (POLYGON((lng lat, ...)), контур замкнут)')
+        throw error
+      }
+      const index = districts.value.findIndex(item => item.id === saved.id)
+      if (index === -1)
+        districts.value = [...districts.value, saved]
+      else
+        districts.value = districts.value.map(item => item.id === saved.id ? saved : item)
+      return saved
+    }, 'Не удалось сохранить район.')
+  }
+
+  async function removeDistrict(id: string) {
+    return withLoading(isMutating, async () => {
+      await deleteAdminDistrict(id)
+      districts.value = districts.value.filter(item => item.id !== id)
+    }, 'Не удалось удалить район.')
+  }
+
   async function loadOverview() {
     return withLoading(isLoadingOverview, async () => {
       // Сводка по городам не критична для дашборда — её отказ не роняет обзор.
@@ -324,6 +366,8 @@ export const useAdminStore = defineStore('admin', () => {
     payouts.value = []
     platformSettings.value = null
     tariffs.value = []
+    districts.value = []
+    isLoadingDistricts.value = false
     demandOverview.value = null
     overview.value = null
     cityStats.value = []
@@ -351,6 +395,11 @@ export const useAdminStore = defineStore('admin', () => {
     addTechSupportNumber,
     assignSupportRoom,
     clearAdminState,
+    districts,
+    isLoadingDistricts,
+    loadDistricts,
+    saveDistrict,
+    removeDistrict,
     closeSupportRoom,
     errorMessage,
     isLoadingSupportStats,

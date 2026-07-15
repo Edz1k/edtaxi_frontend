@@ -1,4 +1,4 @@
-import type { DriverProfile, DriverStatusResponse, DriverTripStep } from '~/types/driver'
+import type { DriverDistrict, DriverProfile, DriverStatusResponse, DriverTripStep, HomeModeState } from '~/types/driver'
 import type { Trip, VehicleCategory } from '~/types/trips'
 import type { DriverTripOffer } from '~/types/websocket'
 import { useToast } from '@edtaxi/shared/composables/useToast'
@@ -7,14 +7,19 @@ import { ApiError } from '~/api/client'
 import {
   acceptDriverParkInvite,
   acceptDriverTrip,
+  activateHomeMode,
   cancelDriverTrip,
   completeDriverTrip,
   createDriverProfile,
+  deactivateHomeMode,
   getActiveDriverTrip,
   getDriverCategories,
+  getDriverDistricts,
+  getHomeMode,
   markDriverArrived,
   rejectDriverTrip,
   setDriverCategories,
+  setDriverDistricts,
   startDriverTrip,
   updateDriverStatus,
 } from '~/api/driver'
@@ -42,6 +47,30 @@ export const useDriverStore = defineStore('driver', () => {
   // статуса. Сбрасывается новым оффером или сам через 30 секунд.
   const passengerCancelledBanner = ref(false)
   let cancelledBannerTimer: number | undefined
+
+  // Районы приёма заказов (город — по текущей локации): available пуст, если
+  // город не определён или районов в нём нет; пустой activeDistrictIds =
+  // весь город (это валидный выбор, min-1 нет — в отличие от тарифов).
+  const availableDistricts = ref<DriverDistrict[]>([])
+  const activeDistrictIds = ref<string[]>([])
+  const districtsCity = ref('')
+  const isSavingDistricts = ref(false)
+
+  // Режим «Домой»: только заказы с концом в 5 км от дома (2/сутки, 3 часа).
+  const homeMode = ref<HomeModeState | null>(null)
+  const isMutatingHomeMode = ref(false)
+  // Тикер для клиентского самоистечения бейджа (режим гаснет сам по until,
+  // без пере-запроса к серверу).
+  const nowTick = ref(Date.now())
+  if (typeof window !== 'undefined') {
+    window.setInterval(() => {
+      nowTick.value = Date.now()
+    }, 15_000)
+  }
+  const isHomeModeActive = computed(() => {
+    const until = homeMode.value?.until
+    return Boolean(homeMode.value?.active && until && new Date(until).getTime() > nowTick.value)
+  })
 
   // Тарифы, по которым водитель может/хочет получать заказы.
   // available пуст, пока нет одобренной машины.
@@ -95,6 +124,8 @@ export const useDriverStore = defineStore('driver', () => {
       isOnline.value = profile.value.is_online
       isAvailable.value = profile.value.is_available
       loadCategories().catch(() => {})
+      loadDistricts().catch(() => {})
+      loadHomeMode().catch(() => {})
       return profile.value
     }
     catch (error) {
@@ -151,6 +182,101 @@ export const useDriverStore = defineStore('driver', () => {
     }
     finally {
       isSavingCategories.value = false
+    }
+  }
+
+  // loadDistricts подтягивает районы города водителя и его выбор.
+  // Ошибка тихая (как loadCategories): без данных блок районов просто скрыт.
+  async function loadDistricts() {
+    const res = await getDriverDistricts()
+    districtsCity.value = res.city
+    availableDistricts.value = res.available
+    activeDistrictIds.value = res.active
+    return res
+  }
+
+  // toggleDistrict — оптимистично с откатом; пустой набор валиден (весь город).
+  async function toggleDistrict(districtId: string) {
+    const previous = [...activeDistrictIds.value]
+    const next = previous.includes(districtId)
+      ? previous.filter(id => id !== districtId)
+      : [...previous, districtId]
+
+    activeDistrictIds.value = next
+    isSavingDistricts.value = true
+
+    try {
+      const res = await setDriverDistricts(next)
+      districtsCity.value = res.city
+      availableDistricts.value = res.available
+      activeDistrictIds.value = res.active
+    }
+    catch (error) {
+      activeDistrictIds.value = previous
+      showErrorToast(error, 'Не удалось обновить районы.')
+    }
+    finally {
+      isSavingDistricts.value = false
+    }
+  }
+
+  // clearDistricts — «Весь город»: сбрасывает выбор целиком.
+  async function clearDistricts() {
+    if (!activeDistrictIds.value.length)
+      return
+
+    const previous = [...activeDistrictIds.value]
+    activeDistrictIds.value = []
+    isSavingDistricts.value = true
+
+    try {
+      const res = await setDriverDistricts([])
+      districtsCity.value = res.city
+      availableDistricts.value = res.available
+      activeDistrictIds.value = res.active
+    }
+    catch (error) {
+      activeDistrictIds.value = previous
+      showErrorToast(error, 'Не удалось обновить районы.')
+    }
+    finally {
+      isSavingDistricts.value = false
+    }
+  }
+
+  // Ошибка тихая: без состояния кнопка «Домой» просто не показывает остаток.
+  async function loadHomeMode() {
+    homeMode.value = await getHomeMode()
+    return homeMode.value
+  }
+
+  async function activateHome(lat: number, lng: number, address: string) {
+    isMutatingHomeMode.value = true
+    try {
+      homeMode.value = await activateHomeMode({ address, lat, lng })
+      return homeMode.value
+    }
+    catch (error) {
+      showErrorToast(error, 'Не удалось включить режим «Домой».')
+      throw error
+    }
+    finally {
+      isMutatingHomeMode.value = false
+    }
+  }
+
+  async function deactivateHome() {
+    isMutatingHomeMode.value = true
+    try {
+      homeMode.value = await deactivateHomeMode()
+      return homeMode.value
+    }
+    catch (error) {
+      showErrorToast(error, 'Не удалось выключить режим «Домой».')
+      throw error
+    }
+    finally {
+      isMutatingHomeMode.value = false
     }
   }
 
@@ -297,6 +423,9 @@ export const useDriverStore = defineStore('driver', () => {
     try {
       await completeDriverTrip(currentTripId.value)
       clearActiveTripState()
+      // Поездка могла закончиться у дома — бэкенд гасит режим «Домой» сам,
+      // подтягиваем свежее состояние для бейджа.
+      loadHomeMode().catch(() => {})
     }
     catch (error) {
       errorMessage.value = showErrorToast(error, 'Не удалось завершить поездку.')
@@ -416,6 +545,12 @@ export const useDriverStore = defineStore('driver', () => {
     isLoadingParkInvite.value = false
     availableCategories.value = []
     activeCategories.value = []
+    availableDistricts.value = []
+    activeDistrictIds.value = []
+    districtsCity.value = ''
+    isSavingDistricts.value = false
+    homeMode.value = null
+    isMutatingHomeMode.value = false
     isLoadingCategories.value = false
     isSavingCategories.value = false
     hasLoadedCategories.value = false
@@ -452,6 +587,19 @@ export const useDriverStore = defineStore('driver', () => {
     isSavingCategories,
     loadCategories,
     markArrived,
+    availableDistricts,
+    activeDistrictIds,
+    districtsCity,
+    isSavingDistricts,
+    loadDistricts,
+    toggleDistrict,
+    clearDistricts,
+    homeMode,
+    isHomeModeActive,
+    isMutatingHomeMode,
+    loadHomeMode,
+    activateHome,
+    deactivateHome,
     passengerCancelledBanner,
     dismissCancelledBanner,
     pendingOffer,

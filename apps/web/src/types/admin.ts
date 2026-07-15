@@ -187,6 +187,25 @@ export interface AdminListTariffsResponse {
   tariffs: Tariff[]
 }
 
+// Район города (TODO п.6): полигон ходит строкой WKT (рисовалки карт нет),
+// city — строка из справочника /admin/cities.
+export interface AdminDistrict {
+  id: string
+  city: string
+  name: string
+  polygon_wkt: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminDistrictPayload {
+  city?: string
+  name?: string
+  polygon_wkt?: string
+  is_active?: boolean
+}
+
 // --- Обзорный дашборд GET /admin/overview: тоталы и непрерывные серии
 // (пустые дни/месяцы приходят нулями — ось времени без дыр). ---
 

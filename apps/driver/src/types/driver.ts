@@ -44,6 +44,31 @@ export interface DriverCategoriesResponse {
   active: VehicleCategory[]
 }
 
+// Районы приёма заказов (город определяется по текущей локации водителя;
+// пустой active = весь город).
+export interface DriverDistrict {
+  id: string
+  name: string
+}
+
+export interface DriverDistrictsResponse {
+  city: string
+  available: DriverDistrict[]
+  active: string[]
+}
+
+// Режим «Домой»: только заказы с конечной точкой в 5 км от дома, до 2
+// активаций в сутки, автоснятие через 3 часа или по завершении поездки у дома.
+export interface HomeModeState {
+  active: boolean
+  until: null | string
+  lat: null | number
+  lng: null | number
+  address: null | string
+  used_today: number
+  limit: number
+}
+
 export interface DriverVehicleVerification {
   id: string
   driver_id: string

@@ -1,6 +1,7 @@
 import type {
   DailyCheck,
   DriverCategoriesResponse,
+  DriverDistrictsResponse,
   DriverEarnings,
   DriverLocationPayload,
   DriverPayoutPayload,
@@ -18,6 +19,7 @@ import type {
   DriverWallet,
   DriverWalletTopUpPayload,
   DriverWalletTopUpResponse,
+  HomeModeState,
   PayoutRequest,
   RatePassengerPayload,
   SubmitVehiclePhotosResponse,
@@ -207,6 +209,34 @@ export function setDriverCategories(categories: VehicleCategory[]) {
   return apiRequest<DriverCategoriesResponse>('/driver/categories', {
     method: 'PUT',
     body: { categories },
+  })
+}
+
+export function getDriverDistricts() {
+  return apiRequest<DriverDistrictsResponse>('/driver/districts')
+}
+
+export function setDriverDistricts(districtIds: string[]) {
+  return apiRequest<DriverDistrictsResponse>('/driver/districts', {
+    method: 'PUT',
+    body: { district_ids: districtIds },
+  })
+}
+
+export function getHomeMode() {
+  return apiRequest<HomeModeState>('/driver/home-mode')
+}
+
+export function activateHomeMode(payload: { lat: number, lng: number, address: string }) {
+  return apiRequest<HomeModeState>('/driver/home-mode', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export function deactivateHomeMode() {
+  return apiRequest<HomeModeState>('/driver/home-mode', {
+    method: 'DELETE',
   })
 }
 
