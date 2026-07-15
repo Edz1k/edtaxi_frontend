@@ -51,6 +51,7 @@ const groups: Array<{ label: string, items: NavItem[] }> = [
     label: 'Платформа',
     items: [
       { icon: 'i-mdi-gift-outline', label: 'Акции', to: '/admin/promotions' },
+      { icon: 'i-mdi-map-search-outline', label: 'Районы', to: '/admin/districts' },
       { icon: 'i-mdi-tune', label: 'Настройки', to: '/admin/settings' },
     ],
   },

@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AddressSuggestions: typeof import('./components/driver/AddressSuggestions.vue')['default']
     AppToaster: typeof import('./components/app/AppToaster.vue')['default']
     AuthButton: typeof import('./components/auth/AuthButton.vue')['default']
     AuthError: typeof import('./components/auth/AuthError.vue')['default']
@@ -22,6 +23,7 @@ declare module 'vue' {
     EarningsBarChart: typeof import('./components/driver/EarningsBarChart.vue')['default']
     EarningsChart: typeof import('./components/driver/EarningsChart.vue')['default']
     FaceCaptureCamera: typeof import('./components/verification/FaceCaptureCamera.vue')['default']
+    HomeModeSheet: typeof import('./components/driver/HomeModeSheet.vue')['default']
     MapView: typeof import('./components/map/MapView.vue')['default']
     OtpInput: typeof import('./components/auth/OtpInput.vue')['default']
     OtpSelect: typeof import('./components/auth/OtpSelect.vue')['default']

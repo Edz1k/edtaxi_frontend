@@ -2,6 +2,8 @@ import type {
   AdminBlockUserPayload,
   AdminBlockUserResponse,
   AdminCityStat,
+  AdminDistrict,
+  AdminDistrictPayload,
   AdminListTariffsResponse,
   AdminListTechSupportNumbersResponse,
   AdminListTripsParams,
@@ -203,5 +205,33 @@ export function removeTechSupportNumber(payload: AdminTechSupportNumberPayload) 
   return apiRequest<{ message: string }>('/admin/tech-support-numbers', {
     method: 'DELETE',
     body: payload,
+  })
+}
+
+// --- Районы городов (TODO п.6) ---
+
+export function getAdminDistricts(city?: string) {
+  return apiRequest<{ districts: AdminDistrict[] }>('/admin/districts', {
+    params: city ? { city } : undefined,
+  })
+}
+
+export function createAdminDistrict(payload: AdminDistrictPayload) {
+  return apiRequest<AdminDistrict>('/admin/districts', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export function updateAdminDistrict(id: string, payload: AdminDistrictPayload) {
+  return apiRequest<AdminDistrict>(`/admin/districts/${id}`, {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export function deleteAdminDistrict(id: string) {
+  return apiRequest<void>(`/admin/districts/${id}`, {
+    method: 'DELETE',
   })
 }

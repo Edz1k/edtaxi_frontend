@@ -132,6 +132,11 @@ const waitingInfo = computed(() => {
   }
 })
 
+// Имена выбранных районов для read-only пилюль в онлайне.
+const activeDistricts = computed(() =>
+  driver.availableDistricts.filter(district => driver.activeDistrictIds.includes(district.id)),
+)
+
 // Нельзя выйти на линию без выбранного тарифа — если доступные тарифы уже
 // загружены, но ни один не активен.
 const blockedByNoCategory = computed(() =>
@@ -348,6 +353,59 @@ const peekPill = computed(() => {
 
               <p v-if="blockedByNoCategory" class="mt-2 text-xs text-amber-300 font-700">
                 Выберите хотя бы один тариф
+              </p>
+            </div>
+
+            <!-- Районы приёма заказов (TODO п.6): пустой выбор = весь город.
+                 Фильтр мягкий — при пустом районе заказ всё равно может прийти. -->
+            <div v-if="!driver.hasActiveTrip && driver.availableDistricts.length" class="mt-4">
+              <p class="mb-2 text-xs text-slate-400 font-800 uppercase">
+                Районы заказов
+              </p>
+
+              <div class="flex flex-wrap gap-2">
+                <template v-if="driver.isOnline">
+                  <span
+                    v-if="!driver.activeDistrictIds.length"
+                    class="rounded-full bg-main-500/18 px-3 py-1.5 text-xs text-main-200 font-800"
+                  >
+                    Весь город
+                  </span>
+                  <span
+                    v-for="district in activeDistricts"
+                    :key="district.id"
+                    class="rounded-full bg-main-500/18 px-3 py-1.5 text-xs text-main-200 font-800"
+                  >
+                    {{ district.name }}
+                  </span>
+                </template>
+
+                <template v-else>
+                  <button
+                    :disabled="driver.isSavingDistricts"
+                    class="rounded-full px-3 py-1.5 text-xs font-800 transition active:scale-[0.96] disabled:opacity-60"
+                    :class="!driver.activeDistrictIds.length ? 'bg-main-500 text-white' : 'bg-white/8 text-slate-400'"
+                    type="button"
+                    @click="driver.clearDistricts()"
+                  >
+                    Весь город
+                  </button>
+                  <button
+                    v-for="district in driver.availableDistricts"
+                    :key="district.id"
+                    :disabled="driver.isSavingDistricts"
+                    class="rounded-full px-3 py-1.5 text-xs font-800 transition active:scale-[0.96] disabled:opacity-60"
+                    :class="driver.activeDistrictIds.includes(district.id) ? 'bg-main-500 text-white' : 'bg-white/8 text-slate-400'"
+                    type="button"
+                    @click="driver.toggleDistrict(district.id)"
+                  >
+                    {{ district.name }}
+                  </button>
+                </template>
+              </div>
+
+              <p class="mt-2 text-xs text-slate-500 font-700 leading-4">
+                Сначала ищем заказы из выбранных районов. Если рядом никого нет — заказ может прийти из любого района.
               </p>
             </div>
 

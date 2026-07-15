@@ -16,6 +16,7 @@ import { getDriverOverview, getVerificationReminder } from '~/api/driver'
 import { getUserErrorMessage } from '~/api/errors'
 import { previewParkInvite, switchViaParkInvite } from '~/api/park'
 import DriverStatusPanel from '~/components/driver/DriverStatusPanel.vue'
+import HomeModeSheet from '~/components/driver/HomeModeSheet.vue'
 import RatePassengerModal from '~/components/driver/RatePassengerModal.vue'
 import VerificationReminderBanner from '~/components/driver/VerificationReminderBanner.vue'
 import { useDriverTrackingSocket } from '~/composables/driver/useDriverTrackingSocket'
@@ -29,6 +30,15 @@ import { offerToPlace } from '~/utils/geoPlace'
 
 const driver = useDriverStore()
 const toast = useToast()
+
+// Режим «Домой» (TODO п.7): шит выбора адреса/выключения + пилюля-статус.
+const isHomeSheetOpen = ref(false)
+const homeUntilLabel = computed(() => {
+  const until = driver.homeMode?.until
+  if (!driver.isHomeModeActive || !until)
+    return ''
+  return new Date(until).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+})
 
 // Панель-шторка: касание карты приопускает её (collapseToMap).
 const statusPanelRef = ref<null | { collapseToMap: () => void }>(null)
@@ -327,6 +337,21 @@ async function toggleOnline() {
         <div class="absolute right-0 top-12">
           <MapStyleSwitcher />
         </div>
+
+        <!-- Режим «Домой»: только заказы в сторону дома. Активен — янтарная
+             пилюля с дедлайном, тап открывает шит (включить/выключить). -->
+        <button
+          v-if="!driver.hasActiveTrip"
+          aria-label="Режим «Домой»"
+          class="pointer-events-auto absolute right-0 top-24 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
+          :class="driver.isHomeModeActive ? 'bg-amber-400 text-slate-900' : 'bg-secondary-950/82 text-white'"
+          type="button"
+          @click="isHomeSheetOpen = true"
+        >
+          <span class="i-mdi-home text-4" aria-hidden="true" />
+          <span v-if="driver.isHomeModeActive">до {{ homeUntilLabel }}</span>
+          <span v-else>Домой</span>
+        </button>
       </div>
     </div>
 
@@ -363,6 +388,12 @@ async function toggleOnline() {
       :offer="driver.pendingOffer"
       @accept="driver.acceptOffer()"
       @reject="driver.rejectOffer()"
+    />
+
+    <HomeModeSheet
+      v-if="isHomeSheetOpen"
+      :user-coordinates="liveCoordinates"
+      @close="isHomeSheetOpen = false"
     />
 
     <RatePassengerModal
