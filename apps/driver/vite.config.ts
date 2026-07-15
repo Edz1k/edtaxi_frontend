@@ -55,8 +55,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'safari-pinned-tab.svg'],
       manifest: {
-        name: 'EdTaxi Driver',
-        short_name: 'EdTaxi',
+        name: 'Telegram Taxi Driver',
+        short_name: 'Telegram Taxi',
         theme_color: '#07090d',
         icons: [
           { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },

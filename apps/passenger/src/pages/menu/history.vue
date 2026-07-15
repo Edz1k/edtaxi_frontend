@@ -46,7 +46,7 @@ definePage({
 })
 
 useHead({
-  title: 'История поездок | EdTaxi',
+  title: 'История поездок | Telegram Taxi',
 })
 
 const isInitialLoading = computed(() => trips.isLoadingHistory && !trips.history.length)

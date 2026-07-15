@@ -6,7 +6,7 @@ const router = useRouter()
 const auth = useAuthStore()
 
 useHead({
-  title: 'EdTaxi Driver',
+  title: 'Telegram Taxi Driver',
 })
 
 onMounted(async () => {

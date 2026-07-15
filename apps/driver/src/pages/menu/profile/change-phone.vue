@@ -34,7 +34,7 @@ definePage({
 })
 
 useHead({
-  title: 'Смена номера | EdTaxi Driver',
+  title: 'Смена номера | Telegram Taxi Driver',
 })
 
 async function sendCode() {

@@ -6,7 +6,7 @@ definePage({
 })
 
 useHead({
-  title: 'Вход | EdTaxi',
+  title: 'Вход | Telegram Taxi',
 })
 </script>
 
@@ -17,6 +17,6 @@ useHead({
     footer="Вход для администраторов и суперадминистраторов."
     icon="i-mdi-shield-account"
     success-redirect="/dashboard"
-    title="Вход в EdTaxi"
+    title="Вход в Telegram Taxi"
   />
 </template>

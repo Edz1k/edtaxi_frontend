@@ -13,7 +13,7 @@ definePage({
 })
 
 useHead({
-  title: 'Кабинет | EdTaxi',
+  title: 'Кабинет | Telegram Taxi',
 })
 
 onMounted(() => {
@@ -32,7 +32,7 @@ const roleLabels: Record<AuthRole, string> = {
 const userName = computed(() => {
   const fullName = [auth.currentUser?.first_name, auth.currentUser?.last_name].filter(Boolean).join(' ')
 
-  return fullName || auth.currentUser?.phone || 'Аккаунт EdTaxi'
+  return fullName || auth.currentUser?.phone || 'Аккаунт Telegram Taxi'
 })
 
 const accessCards = computed(() => {
@@ -107,7 +107,7 @@ async function logout() {
             <span class="i-mdi-taxi text-6" />
           </span>
           <span>
-            <span class="block text-sm font-950">EdTaxi</span>
+            <span class="block text-sm font-950">Telegram Taxi</span>
             <span class="block text-xs text-white/50">Web cabinet</span>
           </span>
         </RouterLink>

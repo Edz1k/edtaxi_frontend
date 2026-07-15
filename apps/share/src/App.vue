@@ -1,8 +1,8 @@
 <script setup lang="ts">
 useHead({
-  title: 'EdTaxi — Поездка',
+  title: 'Telegram Taxi — Поездка',
   meta: [
-    { name: 'description', content: 'Информация о поездке EdTaxi' },
+    { name: 'description', content: 'Информация о поездке Telegram Taxi' },
   ],
 })
 </script>

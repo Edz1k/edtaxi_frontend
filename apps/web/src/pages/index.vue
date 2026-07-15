@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const contactEmail = 'CityFlowMobility@mail.ru'
+const contactEmail = 'info@telegramtaxi.kz'
 const telegramLink = 'https://t.me/telegramtaxi'
 
 const { t } = useI18n()

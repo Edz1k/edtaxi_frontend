@@ -16,7 +16,7 @@ definePage({
 })
 
 useHead({
-  title: 'Безопасность | EdTaxi',
+  title: 'Безопасность | Telegram Taxi',
 })
 
 // Если меню открыли раньше карты, активная поездка могла ещё не подтянуться —
@@ -46,7 +46,7 @@ function call112() {
 
 function shareRoute() {
   const trip = trips.hasActiveTrip ? trips.activeTrip : null
-  const lines: string[] = ['Я еду на такси EdTaxi.']
+  const lines: string[] = ['Я еду на такси Telegram Taxi.']
 
   if (trip) {
     lines.push(`Маршрут: ${trip.pickup_address} → ${trip.dropoff_address}`)

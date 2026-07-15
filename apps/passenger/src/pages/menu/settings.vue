@@ -15,7 +15,7 @@ definePage({
 })
 
 useHead({
-  title: 'Настройки | EdTaxi',
+  title: 'Настройки | Telegram Taxi',
 })
 
 onMounted(() => {

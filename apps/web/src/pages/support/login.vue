@@ -12,7 +12,7 @@ definePage({
 })
 
 useHead({
-  title: 'Вход техподдержки | EdTaxi',
+  title: 'Вход техподдержки | Telegram Taxi',
 })
 
 const accounts = ref<SavedAccount[]>([])

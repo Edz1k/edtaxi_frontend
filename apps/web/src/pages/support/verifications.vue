@@ -258,7 +258,7 @@ definePage({
 })
 
 useHead({
-  title: 'Верификация водителей | EdTaxi',
+  title: 'Верификация водителей | Telegram Taxi',
 })
 
 onMounted(() => {

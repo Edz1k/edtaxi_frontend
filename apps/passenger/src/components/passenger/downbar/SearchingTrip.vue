@@ -435,7 +435,7 @@ async function shareTrip() {
     const shareUrl = buildShareUrl(share_token)
 
     if (isShareSupported.value) {
-      await share({ title: 'Моя поездка EdTaxi', url: shareUrl })
+      await share({ title: 'Моя поездка Telegram Taxi', url: shareUrl })
     }
     else {
       await copy(shareUrl)

@@ -21,7 +21,7 @@ definePage({
 })
 
 useHead({
-  title: 'Фото лица | EdTaxi Driver',
+  title: 'Фото лица | Telegram Taxi Driver',
 })
 
 // Статус проверки лица определяет вид экрана: если уже одобрено/на проверке —

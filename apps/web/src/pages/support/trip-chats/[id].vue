@@ -14,7 +14,7 @@ definePage({
 })
 
 useHead({
-  title: 'Чат поездки | EdTaxi',
+  title: 'Чат поездки | Telegram Taxi',
 })
 
 const route = useRoute()

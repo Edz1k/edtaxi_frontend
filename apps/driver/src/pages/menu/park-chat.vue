@@ -14,7 +14,7 @@ definePage({
 })
 
 useHead({
-  title: 'Чат с парком | EdTaxi',
+  title: 'Чат с парком | Telegram Taxi',
 })
 
 const parkChat = useParkChatStore()

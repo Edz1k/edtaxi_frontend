@@ -2,7 +2,7 @@
 const router = useRouter()
 
 useHead({
-  title: 'Страница не найдена | EdTaxi',
+  title: 'Страница не найдена | Telegram Taxi',
 })
 </script>
 

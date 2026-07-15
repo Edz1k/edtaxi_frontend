@@ -29,7 +29,7 @@ definePage({
 })
 
 useHead({
-  title: 'Вход водителя | EdTaxi',
+  title: 'Вход водителя | Telegram Taxi',
 })
 
 onMounted(() => {
@@ -60,7 +60,7 @@ async function submitPhone() {
   <AuthScreen
     description="Введите номер телефона, чтобы получить код подтверждения."
     icon="i-mdi-steering"
-    title="EdTaxi Driver"
+    title="Telegram Taxi Driver"
   >
     <template v-if="hasSavedAccounts" #before>
       <button

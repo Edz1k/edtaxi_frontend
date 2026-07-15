@@ -13,7 +13,7 @@ definePage({
 })
 
 useHead({
-  title: 'Чаты поездок | EdTaxi',
+  title: 'Чаты поездок | Telegram Taxi',
 })
 
 const LIMIT = 30

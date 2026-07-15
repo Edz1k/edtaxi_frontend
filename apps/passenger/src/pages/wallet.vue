@@ -27,7 +27,7 @@ definePage({
 })
 
 useHead({
-  title: 'Кошелек | EdTaxi',
+  title: 'Кошелек | Telegram Taxi',
 })
 
 const transactionMeta: Record<WalletTransactionType, { className: string, icon: string, label: string }> = {
@@ -248,7 +248,7 @@ function getTransactionTitle(transaction: WalletTransaction) {
             <div class="pointer-events-none absolute h-40 w-40 rounded-full bg-white/10 blur-2xl -right-8 -top-10" />
             <div class="flex items-start justify-between">
               <span class="i-mdi-contactless-payment text-7 text-white/80" />
-              <span class="text-sm text-white/90 font-950 tracking-wide">EdTaxi Pay</span>
+              <span class="text-sm text-white/90 font-950 tracking-wide">Telegram Taxi Pay</span>
             </div>
             <p class="mt-6 text-2xl font-950 tracking-[0.22em]">
               •••• •••• •••• {{ cardTail }}

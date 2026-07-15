@@ -19,7 +19,7 @@ const menuItems = [
   { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support' },
   { label: 'Предложить улучшение', description: 'Идея по развитию сервиса', icon: 'i-mdi-lightbulb-outline', to: '/menu/feedback' },
   { label: 'Настройки', description: 'Профиль и приложение', icon: 'i-mdi-cog-outline', to: '/menu/settings' },
-  { label: 'О приложении', description: 'Тарифы и о сервисе EdTaxi', icon: 'i-mdi-information-outline', to: '/menu/about' },
+  { label: 'О приложении', description: 'Тарифы и о сервисе Telegram Taxi', icon: 'i-mdi-information-outline', to: '/menu/about' },
 ]
 
 // Статистик-бар «Нас уже N, вы — №K»: пока не загрузился (или упал) — не рисуем.
@@ -35,7 +35,7 @@ definePage({
 })
 
 useHead({
-  title: 'Меню | EdTaxi',
+  title: 'Меню | Telegram Taxi',
 })
 
 async function logout() {
@@ -92,7 +92,7 @@ onMounted(async () => {
           Нас уже {{ userStats.total_users.toLocaleString('ru-RU') }}!
         </p>
         <p class="mt-1 text-xs text-slate-300 font-700 leading-5">
-          Вы — пользователь №{{ userStats.user_number.toLocaleString('ru-RU') }} сервиса EdTaxi. Спасибо, что с нами 🚕
+          Вы — пользователь №{{ userStats.user_number.toLocaleString('ru-RU') }} сервиса Telegram Taxi. Спасибо, что с нами 🚕
         </p>
       </div>
 

@@ -16,7 +16,7 @@ definePage({
 })
 
 useHead({
-  title: 'Заявки водителей | EdTaxi',
+  title: 'Заявки водителей | Telegram Taxi',
 })
 
 const requests = ref<ParkJoinRequest[]>([])

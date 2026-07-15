@@ -21,7 +21,7 @@ definePage({
 })
 
 useHead({
-  title: 'Ежедневная проверка | EdTaxi Driver',
+  title: 'Ежедневная проверка | Telegram Taxi Driver',
 })
 
 const selfieFile = ref<File | null>(null)

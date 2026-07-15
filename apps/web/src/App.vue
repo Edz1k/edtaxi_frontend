@@ -1,10 +1,10 @@
 <script setup lang="ts">
 useHead({
-  title: 'EdTaxi Web',
+  title: 'Telegram Taxi Web',
   meta: [
     {
       name: 'description',
-      content: 'EdTaxi web panel',
+      content: 'Telegram Taxi web panel',
     },
   ],
   link: [

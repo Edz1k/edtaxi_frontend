@@ -8,7 +8,7 @@ definePage({
 })
 
 useHead({
-  title: 'Вход таксопарка | EdTaxi',
+  title: 'Вход таксопарка | Telegram Taxi',
 })
 </script>
 

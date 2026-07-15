@@ -19,7 +19,7 @@ definePage({
 })
 
 useHead({
-  title: 'Кошелёк парка | EdTaxi',
+  title: 'Кошелёк парка | Telegram Taxi',
 })
 
 onMounted(() => {

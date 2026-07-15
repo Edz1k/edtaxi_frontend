@@ -103,7 +103,7 @@ definePage({
 })
 
 useHead({
-  title: 'Автомобиль | EdTaxi Driver',
+  title: 'Автомобиль | Telegram Taxi Driver',
 })
 
 onMounted(async () => {

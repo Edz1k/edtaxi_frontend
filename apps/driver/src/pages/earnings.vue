@@ -26,7 +26,7 @@ definePage({
 })
 
 useHead({
-  title: 'Заработок | EdTaxi',
+  title: 'Заработок | Telegram Taxi',
 })
 
 async function refresh() {

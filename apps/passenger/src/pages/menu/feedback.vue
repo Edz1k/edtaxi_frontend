@@ -26,7 +26,7 @@ definePage({
 })
 
 useHead({
-  title: 'Предложить улучшение | EdTaxi',
+  title: 'Предложить улучшение | Telegram Taxi',
 })
 
 async function send() {

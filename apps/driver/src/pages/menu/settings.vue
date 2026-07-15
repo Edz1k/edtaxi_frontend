@@ -23,7 +23,7 @@ definePage({
 })
 
 useHead({
-  title: 'Настройки | EdTaxi Driver',
+  title: 'Настройки | Telegram Taxi Driver',
 })
 </script>
 

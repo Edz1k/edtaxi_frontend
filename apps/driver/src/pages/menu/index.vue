@@ -60,7 +60,7 @@ definePage({
 })
 
 useHead({
-  title: 'Меню водителя | EdTaxi',
+  title: 'Меню водителя | Telegram Taxi',
 })
 
 async function logout() {

@@ -24,7 +24,7 @@ definePage({
 })
 
 useHead({
-  title: 'Чат с водителями | EdTaxi',
+  title: 'Чат с водителями | Telegram Taxi',
 })
 
 onMounted(() => loadRooms())

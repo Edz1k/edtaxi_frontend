@@ -217,7 +217,7 @@ definePage({
 })
 
 useHead({
-  title: 'Водитель | EdTaxi',
+  title: 'Водитель | Telegram Taxi',
 })
 
 watch(

@@ -31,7 +31,7 @@ definePage({
 })
 
 useHead({
-  title: 'Кабинет пассажира | EdTaxi',
+  title: 'Кабинет пассажира | Telegram Taxi',
 })
 
 onMounted(load)

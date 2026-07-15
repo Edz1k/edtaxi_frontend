@@ -89,7 +89,7 @@ definePage({
 })
 
 useHead({
-  title: 'Личный кабинет | EdTaxi',
+  title: 'Личный кабинет | Telegram Taxi',
 })
 
 onMounted(async () => {

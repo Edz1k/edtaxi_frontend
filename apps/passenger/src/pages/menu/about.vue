@@ -13,7 +13,7 @@ definePage({
 })
 
 useHead({
-  title: 'О приложении | EdTaxi',
+  title: 'О приложении | Telegram Taxi',
 })
 
 const advantages = [
@@ -40,7 +40,7 @@ const advantages = [
   {
     icon: 'i-mdi-map-marker-star',
     title: 'Казахстанский сервис',
-    text: 'EdTaxi создан в Казахстане для Казахстана: мы знаем свои города, работаем в тенге, и деньги остаются в стране.',
+    text: 'Telegram Taxi создан в Казахстане для Казахстана: мы знаем свои города, работаем в тенге, и деньги остаются в стране.',
   },
 ]
 </script>
@@ -54,7 +54,7 @@ const advantages = [
           <span class="i-mdi-taxi text-9" />
         </span>
         <h1 class="mt-3 text-3xl font-950">
-          EdTaxi
+          Telegram Taxi
         </h1>
         <p class="mt-1 text-sm text-slate-400 font-700">
           Казахстанское такси — быстро, честно, безопасно
@@ -64,7 +64,7 @@ const advantages = [
       <!-- Почему мы -->
       <section class="mt-6">
         <h2 class="text-xs text-slate-400 font-800 uppercase">
-          Почему EdTaxi
+          Почему Telegram Taxi
         </h2>
         <div class="mt-3 space-y-3">
           <article v-for="item in advantages" :key="item.icon" class="rounded-3xl bg-white/5 p-4">

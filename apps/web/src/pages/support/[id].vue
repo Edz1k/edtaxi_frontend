@@ -46,7 +46,7 @@ definePage({
 })
 
 useHead({
-  title: 'Чат поддержки | EdTaxi',
+  title: 'Чат поддержки | Telegram Taxi',
 })
 
 async function openRoom(id: string) {

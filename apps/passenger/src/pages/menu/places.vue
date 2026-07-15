@@ -38,7 +38,7 @@ definePage({
 })
 
 useHead({
-  title: 'Избранные адреса | EdTaxi',
+  title: 'Избранные адреса | Telegram Taxi',
 })
 
 onMounted(async () => {

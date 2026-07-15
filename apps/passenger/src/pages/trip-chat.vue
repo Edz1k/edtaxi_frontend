@@ -24,7 +24,7 @@ definePage({
 })
 
 useHead({
-  title: 'Чат с водителем | EdTaxi',
+  title: 'Чат с водителем | Telegram Taxi',
 })
 
 const activeTrip = computed(() => trips.activeTrip)

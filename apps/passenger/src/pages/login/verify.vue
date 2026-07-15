@@ -28,7 +28,7 @@ definePage({
 })
 
 useHead({
-  title: 'Код подтверждения | EdTaxi',
+  title: 'Код подтверждения | Telegram Taxi',
 })
 
 async function submitOtp() {

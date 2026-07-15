@@ -60,7 +60,7 @@ definePage({
 })
 
 useHead({
-  title: 'Таксопарк | EdTaxi',
+  title: 'Таксопарк | Telegram Taxi',
 })
 
 const hasPark = computed(() => Boolean(parkId.value))

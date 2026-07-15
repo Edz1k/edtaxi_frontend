@@ -4,11 +4,11 @@ import { useTelegramSafeArea } from '@edtaxi/shared/composables/useTelegramSafeA
 useTelegramSafeArea()
 
 useHead({
-  title: 'EdTaxi',
+  title: 'Telegram Taxi',
   meta: [
     {
       name: 'description',
-      content: 'Мини-приложение EdTaxi для пассажиров и водителей',
+      content: 'Мини-приложение Telegram Taxi для пассажиров и водителей',
     },
   ],
   link: [

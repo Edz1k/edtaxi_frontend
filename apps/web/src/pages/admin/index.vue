@@ -15,7 +15,7 @@ definePage({
 })
 
 useHead({
-  title: 'Админка | EdTaxi',
+  title: 'Админка | Telegram Taxi',
 })
 
 const adminCards = computed(() => [

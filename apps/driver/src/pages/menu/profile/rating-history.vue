@@ -18,7 +18,7 @@ definePage({
   },
 })
 
-useHead({ title: 'История рейтинга | EdTaxi Driver' })
+useHead({ title: 'История рейтинга | Telegram Taxi Driver' })
 
 onMounted(load)
 

@@ -33,7 +33,7 @@ definePage({
 })
 
 useHead({
-  title: 'Подтверждение номера | EdTaxi',
+  title: 'Подтверждение номера | Telegram Taxi',
 })
 
 onMounted(() => {

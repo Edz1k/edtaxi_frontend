@@ -54,7 +54,7 @@ definePage({
 })
 
 useHead({
-  title: 'Регистрация таксопарка | EdTaxi',
+  title: 'Регистрация таксопарка | Telegram Taxi',
 })
 
 function optionalField(value: string) {

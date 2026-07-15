@@ -27,7 +27,7 @@ definePage({
 })
 
 useHead({
-  title: 'История поездок | EdTaxi Driver',
+  title: 'История поездок | Telegram Taxi Driver',
 })
 
 onMounted(() => {

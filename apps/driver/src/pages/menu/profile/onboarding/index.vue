@@ -18,7 +18,7 @@ definePage({
 })
 
 useHead({
-  title: 'Фотоконтроль | EdTaxi Driver',
+  title: 'Фотоконтроль | Telegram Taxi Driver',
 })
 
 onMounted(async () => {

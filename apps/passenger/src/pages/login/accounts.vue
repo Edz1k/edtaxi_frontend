@@ -21,7 +21,7 @@ definePage({
 })
 
 useHead({
-  title: 'Выбор аккаунта | EdTaxi',
+  title: 'Выбор аккаунта | Telegram Taxi',
 })
 
 onMounted(() => {

@@ -27,7 +27,7 @@ definePage({
 })
 
 useHead({
-  title: 'Бонусы | EdTaxi',
+  title: 'Бонусы | Telegram Taxi',
 })
 
 onMounted(load)
@@ -77,7 +77,7 @@ function shareCode() {
   if (!overview.value)
     return
 
-  const text = `Зарабатывай с EdTaxi! Открой ссылку и войди — получишь +${formatBonus(overview.value.invitee_reward)} бонусов на счёт 🚕`
+  const text = `Зарабатывай с Telegram Taxi! Открой ссылку и войди — получишь +${formatBonus(overview.value.invitee_reward)} бонусов на счёт 🚕`
   openExternalLink(buildReferralShareUrl(TG_BOT_USERNAME, overview.value.referral_code, text))
 }
 
@@ -151,7 +151,7 @@ async function joinPromo(promo: BonusPromotion) {
             Бонусы
           </p>
           <p class="text-xs text-slate-400 font-700">
-            Программа лояльности EdTaxi
+            Программа лояльности Telegram Taxi
           </p>
         </div>
       </div>

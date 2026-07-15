@@ -23,7 +23,7 @@ definePage({
 })
 
 useHead({
-  title: 'Фото машины | EdTaxi Driver',
+  title: 'Фото машины | Telegram Taxi Driver',
 })
 
 interface SlotMeta {

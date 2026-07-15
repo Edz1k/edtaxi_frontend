@@ -16,7 +16,7 @@ definePage({
 })
 
 useHead({
-  title: 'Акции парка | EdTaxi',
+  title: 'Акции парка | Telegram Taxi',
 })
 
 const promotions = ref<Promotion[]>([])
