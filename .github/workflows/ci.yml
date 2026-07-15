@@ -65,6 +65,9 @@ jobs:
   # Аудит зависимостей: блокирует только на critical (must-fix). High/moderate
   # печатаются в логах, но не рушат PR — чтобы неисправимые транзитивные advisory
   # не стопорили работу; следить за ними лучше через Dependabot (dependabot.yml).
+  # `pnpm audit` больше не работает: npm отключил старые аудит-эндпоинты (410),
+  # поэтому advisories спрашивает наш скрипт напрямую через bulk-эндпоинт
+  # (scripts/audit.mjs, нужен только Node и pnpm-lock.yaml — без install).
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
@@ -73,17 +76,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
 
       - name: Audit (critical blocks; high+ shown in logs)
-        run: pnpm audit --audit-level=critical
+        run: node scripts/audit.mjs --audit-level=critical
