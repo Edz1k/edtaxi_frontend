@@ -38,6 +38,11 @@ export const useDriverStore = defineStore('driver', () => {
   const isChangingStatus = ref(false)
   const errorMessage = ref('')
 
+  // «Пассажир отменил заказ — ищем вам следующий»: янтарный баннер в панели
+  // статуса. Сбрасывается новым оффером или сам через 30 секунд.
+  const passengerCancelledBanner = ref(false)
+  let cancelledBannerTimer: number | undefined
+
   // Тарифы, по которым водитель может/хочет получать заказы.
   // available пуст, пока нет одобренной машины.
   const availableCategories = ref<VehicleCategory[]>([])
@@ -174,7 +179,23 @@ export const useDriverStore = defineStore('driver', () => {
     }
   }
 
+  function dismissCancelledBanner() {
+    passengerCancelledBanner.value = false
+    if (cancelledBannerTimer !== undefined) {
+      window.clearTimeout(cancelledBannerTimer)
+      cancelledBannerTimer = undefined
+    }
+  }
+
+  function showCancelledBanner() {
+    dismissCancelledBanner()
+    passengerCancelledBanner.value = true
+    cancelledBannerTimer = window.setTimeout(dismissCancelledBanner, 30_000)
+  }
+
   function receiveOffer(offer: DriverTripOffer) {
+    // Новый оффер (в т.ч. автоперекидка после отмены) заменяет баннер отмены.
+    dismissCancelledBanner()
     pendingOffer.value = offer
   }
 
@@ -297,11 +318,18 @@ export const useDriverStore = defineStore('driver', () => {
     }
   }
 
-  function applyTripStatus(tripId: string, status: Trip['status']) {
+  function applyTripStatus(tripId: string, status: Trip['status'], cancelledBy?: string) {
     if (currentTripId.value && currentTripId.value !== tripId)
       return
 
     if (isTerminalTripStatus(status)) {
+      // Пассажир отменил назначенный заказ: водитель не виноват — показываем
+      // «ищем вам следующий» (бэкенд уже запустил автоперекидку на ближайший
+      // searching-заказ, оффер придёт обычным путём).
+      if (status === 'cancelled' && cancelledBy === 'passenger' && currentTripId.value === tripId) {
+        showCancelledBanner()
+        useToast().warning('Пассажир отменил заказ', 'Ищем вам следующий заказ рядом...')
+      }
       clearActiveTripState()
       return
     }
@@ -379,6 +407,7 @@ export const useDriverStore = defineStore('driver', () => {
   function clearDriverState() {
     profile.value = null
     pendingOffer.value = null
+    dismissCancelledBanner()
     clearActiveTripState()
     isOnline.value = false
     isAvailable.value = false
@@ -423,6 +452,8 @@ export const useDriverStore = defineStore('driver', () => {
     isSavingCategories,
     loadCategories,
     markArrived,
+    passengerCancelledBanner,
+    dismissCancelledBanner,
     pendingOffer,
     profile,
     receiveOffer,

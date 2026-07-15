@@ -93,6 +93,31 @@ function isSelected(category: VehicleCategory) {
 // «еду на свой страх и риск» (чекбокс гейтит кнопку заказа).
 const motoConsent = ref(false)
 const needsMotoConsent = computed(() => trips.selectedCategory === 'moto' && !motoConsent.value)
+
+// --- Пожелания к заказу (волна 2A) ---
+
+// Кресло/животное на мото невозможны — чипы блокируются, стор при выборе
+// мото сам снимает платные опции.
+const isMotoSelected = computed(() => trips.selectedCategories.includes('moto'))
+
+// Прайс опций из оценки (одинаков для всех категорий; 0 = доплаты нет).
+const surchargeChildSeat = computed(() => trips.tariffEstimates[0]?.surcharge_child_seat ?? 0)
+const surchargePets = computed(() => trips.tariffEstimates[0]?.surcharge_pets ?? 0)
+
+function surchargeLabel(amount: number) {
+  return amount > 0 ? `+${amount.toLocaleString('ru-RU')} ₸` : 'бесплатно'
+}
+
+// «Заказ другу»: имя и телефон пассажира-получателя (водитель их увидит).
+const isFriendOrder = ref(Boolean(trips.tripOptions.friendName || trips.tripOptions.friendPhone))
+
+function toggleFriendOrder() {
+  isFriendOrder.value = !isFriendOrder.value
+  if (!isFriendOrder.value) {
+    trips.setTripOption('friendName', '')
+    trips.setTripOption('friendPhone', '')
+  }
+}
 </script>
 
 <template>
@@ -103,6 +128,19 @@ const needsMotoConsent = computed(() => trips.selectedCategory === 'moto' && !mo
         <p class="flex items-center gap-2 text-sm text-white font-900">
           <span class="i-mdi-near-me shrink-0 text-4.5 text-main-300" aria-hidden="true" />
           <span class="truncate">{{ trips.pickup }}</span>
+        </p>
+        <p
+          v-for="(stop, index) in trips.confirmedStops"
+          :key="`route-stop-${index}`"
+          class="flex items-center gap-2 text-sm text-white/80 font-800"
+        >
+          <span
+            class="h-4.5 w-4.5 flex shrink-0 items-center justify-center rounded-full bg-main-500/22 text-[10px] text-main-200 font-950"
+            aria-hidden="true"
+          >
+            {{ index + 1 }}
+          </span>
+          <span class="truncate">{{ stop.address }}</span>
         </p>
         <p class="flex items-center gap-2 text-sm text-white font-900">
           <span class="i-mdi-flag-checkered shrink-0 text-4.5 text-main-300" aria-hidden="true" />
@@ -198,6 +236,125 @@ const needsMotoConsent = computed(() => trips.selectedCategory === 'moto' && !mo
             Понимаю риски и согласен ехать на мото
           </span>
         </button>
+      </div>
+    </div>
+
+    <!-- Пожелания к заказу: платные опции меняют цену (пере-оценка в сторе) -->
+    <div>
+      <p class="mb-2 px-1 text-[11px] text-main-300 font-900 uppercase">
+        Пожелания
+      </p>
+
+      <div class="rounded-[1.65rem] bg-white/5 p-2 space-y-1">
+        <!-- Детское кресло -->
+        <button
+          class="w-full flex items-center gap-3 rounded-[1.25rem] px-2.5 py-2.5 text-left transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+          type="button"
+          :aria-pressed="trips.tripOptions.childSeat"
+          :disabled="isMotoSelected"
+          @click="trips.setTripOption('childSeat', !trips.tripOptions.childSeat)"
+        >
+          <span
+            class="h-5 w-5 flex shrink-0 items-center justify-center border rounded-md transition"
+            :class="trips.tripOptions.childSeat ? 'border-main-400 bg-main-500 text-white' : 'border-white/25 bg-transparent'"
+          >
+            <span v-if="trips.tripOptions.childSeat" class="i-mdi-check text-4" aria-hidden="true" />
+          </span>
+          <span class="min-w-0 flex-1 text-sm text-white font-800">Детское кресло</span>
+          <span class="shrink-0 text-[12px] text-main-300 font-900">{{ surchargeLabel(surchargeChildSeat) }}</span>
+        </button>
+
+        <!-- С животным -->
+        <button
+          class="w-full flex items-center gap-3 rounded-[1.25rem] px-2.5 py-2.5 text-left transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+          type="button"
+          :aria-pressed="trips.tripOptions.pets"
+          :disabled="isMotoSelected"
+          @click="trips.setTripOption('pets', !trips.tripOptions.pets)"
+        >
+          <span
+            class="h-5 w-5 flex shrink-0 items-center justify-center border rounded-md transition"
+            :class="trips.tripOptions.pets ? 'border-main-400 bg-main-500 text-white' : 'border-white/25 bg-transparent'"
+          >
+            <span v-if="trips.tripOptions.pets" class="i-mdi-check text-4" aria-hidden="true" />
+          </span>
+          <span class="min-w-0 flex-1 text-sm text-white font-800">Поездка с животным</span>
+          <span class="shrink-0 text-[12px] text-main-300 font-900">{{ surchargeLabel(surchargePets) }}</span>
+        </button>
+
+        <p v-if="isMotoSelected" class="px-2.5 pb-1 text-[11px] text-amber-300/90 leading-4">
+          Кресло и животные недоступны на мототакси.
+        </p>
+
+        <!-- Особые потребности (бесплатно) -->
+        <button
+          class="w-full flex items-center gap-3 rounded-[1.25rem] px-2.5 py-2.5 text-left transition active:scale-[0.99]"
+          type="button"
+          :aria-pressed="trips.tripOptions.accessible"
+          @click="trips.setTripOption('accessible', !trips.tripOptions.accessible)"
+        >
+          <span
+            class="h-5 w-5 flex shrink-0 items-center justify-center border rounded-md transition"
+            :class="trips.tripOptions.accessible ? 'border-main-400 bg-main-500 text-white' : 'border-white/25 bg-transparent'"
+          >
+            <span v-if="trips.tripOptions.accessible" class="i-mdi-check text-4" aria-hidden="true" />
+          </span>
+          <span class="min-w-0 flex-1 text-sm text-white font-800">Особые потребности</span>
+          <span class="shrink-0 text-[12px] text-slate-400 font-800">бесплатно</span>
+        </button>
+
+        <!-- Заказ другу: имя и телефон пассажира-получателя -->
+        <button
+          class="w-full flex items-center gap-3 rounded-[1.25rem] px-2.5 py-2.5 text-left transition active:scale-[0.99]"
+          type="button"
+          :aria-pressed="isFriendOrder"
+          @click="toggleFriendOrder"
+        >
+          <span
+            class="h-5 w-5 flex shrink-0 items-center justify-center border rounded-md transition"
+            :class="isFriendOrder ? 'border-main-400 bg-main-500 text-white' : 'border-white/25 bg-transparent'"
+          >
+            <span v-if="isFriendOrder" class="i-mdi-check text-4" aria-hidden="true" />
+          </span>
+          <span class="min-w-0 flex-1 text-sm text-white font-800">Заказ другу</span>
+          <span class="shrink-0 text-[12px] text-slate-400 font-800">бесплатно</span>
+        </button>
+
+        <div v-if="isFriendOrder" class="px-2.5 pb-1.5 space-y-1.5">
+          <input
+            :value="trips.tripOptions.friendName"
+            aria-label="Имя пассажира"
+            class="h-11 w-full rounded-[1.1rem] bg-white/6 px-3.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:text-slate-400"
+            maxlength="100"
+            placeholder="Имя пассажира"
+            type="text"
+            @input="trips.setTripOption('friendName', ($event.target as HTMLInputElement).value)"
+          >
+          <input
+            :value="trips.tripOptions.friendPhone"
+            aria-label="Телефон пассажира"
+            class="h-11 w-full rounded-[1.1rem] bg-white/6 px-3.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:text-slate-400"
+            inputmode="tel"
+            maxlength="32"
+            placeholder="Телефон пассажира"
+            type="tel"
+            @input="trips.setTripOption('friendPhone', ($event.target as HTMLInputElement).value)"
+          >
+          <p class="px-1 text-[11px] text-slate-400 leading-4">
+            Водитель увидит имя и телефон — он везёт вашего друга, звонки пойдут ему.
+          </p>
+        </div>
+
+        <!-- Комментарий водителю -->
+        <textarea
+          :value="trips.tripComment"
+          aria-label="Комментарий водителю"
+          class="min-h-16 w-full resize-none rounded-[1.25rem] bg-white/6 px-3.5 py-2.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:text-slate-400"
+          maxlength="500"
+          placeholder="Комментарий водителю: подъезд, домофон, ориентир..."
+          rows="2"
+          @input="trips.setTripComment(($event.target as HTMLTextAreaElement).value)"
+        />
       </div>
     </div>
 

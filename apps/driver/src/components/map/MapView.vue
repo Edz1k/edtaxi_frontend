@@ -27,6 +27,8 @@ const props = withDefaults(defineProps<{
   // Класс собственной машины водителя — выбирает иконку маркера (driverView).
   selfCategory?: null | string
   showRoute?: boolean
+  // Промежуточные остановки заказа — нумерованные маркеры между А и Б.
+  stopPlaces?: GeoPlace[]
   userCoordinates?: UserCoordinates | null
 }>(), {
   destinationPlace: null,
@@ -39,6 +41,7 @@ const props = withDefaults(defineProps<{
   routeCoordinates: () => [],
   selfCategory: null,
   showRoute: false,
+  stopPlaces: () => [],
   userCoordinates: null,
 })
 
@@ -86,6 +89,7 @@ const {
   mapboxglModule,
   pickupPlace: computed(() => props.pickupPlace),
   routeCoordinates,
+  stopPlaces: computed(() => props.stopPlaces),
 })
 
 const {

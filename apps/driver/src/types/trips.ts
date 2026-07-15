@@ -2,6 +2,23 @@ export type TripStatus = 'cancelled' | 'completed' | 'driver_arriving' | 'driver
 export const TERMINAL_TRIP_STATUSES = ['cancelled', 'completed'] as const
 export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
 
+// Промежуточная остановка маршрута (до 3 на поездку).
+export interface TripStop {
+  address: string
+  lat: number
+  lng: number
+}
+
+// Опции заказа: водитель видит их в оффере ДО принятия (кресло/животное —
+// с доплатой, она уже в цене) и в карточке активного заказа.
+export interface TripOptions {
+  accessible?: boolean
+  child_seat?: boolean
+  friend_name?: string
+  friend_phone?: string
+  pets?: boolean
+}
+
 export interface Trip {
   // Момент прибытия к пассажиру — точка отсчёта бесплатного ожидания.
   arrived_at?: null | string
@@ -11,6 +28,10 @@ export interface Trip {
   // пассажир мог заказать сразу несколько тарифов (categories).
   category: VehicleCategory
   categories?: VehicleCategory[]
+  comment?: string
+  // Промежуточные остановки и опции заказа (волна 2A).
+  options?: null | TripOptions
+  stops?: TripStop[]
   completed_at?: null | string
   created_at?: string
   distance_km: number

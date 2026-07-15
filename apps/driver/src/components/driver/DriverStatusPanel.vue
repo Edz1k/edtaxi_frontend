@@ -4,6 +4,7 @@ import { useBottomSheet } from '@edtaxi/shared/composables/useBottomSheet'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { useTripChatStore } from '~/stores/tripChat'
+import { tripOptionBadges } from '~/utils/tripOptions'
 import { categoryLabel } from '~/utils/vehicleCategories'
 
 const props = defineProps<{
@@ -199,6 +200,11 @@ const statusMeta = computed(() => {
   }
 })
 
+// Маршрут активного заказа: адреса А/остановки/Б, бейджи опций и комментарий
+// пассажира — раньше в панели их не было вовсе.
+const tripStops = computed(() => driver.activeTrip?.stops ?? [])
+const tripBadges = computed(() => tripOptionBadges(driver.activeTrip?.options))
+
 // Статус сокета наружу не показываем — только человеческое предупреждение,
 // когда связь на линии реально деградировала и заказы могут не доходить.
 const connectionHint = computed(() => {
@@ -288,6 +294,26 @@ const peekPill = computed(() => {
               </p>
             </div>
 
+            <!-- Пассажир отменил назначенный заказ: водитель не виноват, бэкенд
+                 уже ищет ему следующий заказ рядом (автоперекидка). -->
+            <div
+              v-if="driver.passengerCancelledBanner && driver.isOnline && !driver.hasActiveTrip"
+              class="mt-3 flex items-center gap-2.5 rounded-2xl bg-amber-500/12 px-3.5 py-2.5"
+            >
+              <span class="i-mdi-account-cancel shrink-0 text-4.5 text-amber-300" aria-hidden="true" />
+              <p class="flex-1 text-xs text-amber-200 font-800 leading-4">
+                Пассажир отменил заказ — ищем вам следующий…
+              </p>
+              <button
+                aria-label="Скрыть"
+                class="shrink-0 text-amber-300/70 transition active:scale-95"
+                type="button"
+                @click="driver.dismissCancelledBanner"
+              >
+                <span class="i-mdi-close text-4.5" aria-hidden="true" />
+              </button>
+            </div>
+
             <!-- Тарифы, по которым водитель принимает заказы -->
             <div v-if="!driver.hasActiveTrip && driver.availableCategories.length" class="mt-4">
               <p class="mb-2 text-xs text-slate-400 font-800 uppercase">
@@ -326,6 +352,50 @@ const peekPill = computed(() => {
             </div>
 
             <div v-if="driver.hasActiveTrip && tripStep" class="mt-4 space-y-2">
+              <!-- Маршрут заказа: А / остановки / Б + опции + комментарий -->
+              <div v-if="driver.activeTrip" class="rounded-2xl bg-white/6 px-4 py-3">
+                <p class="flex items-center gap-2 text-[13px] font-800">
+                  <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
+                  <span class="truncate">{{ driver.activeTrip.pickup_address }}</span>
+                </p>
+                <p
+                  v-for="(stop, index) in tripStops"
+                  :key="`panel-stop-${index}`"
+                  class="mt-1.5 flex items-center gap-2 text-[13px] text-white/80 font-800"
+                >
+                  <span
+                    class="h-4 w-4 flex shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-[9px] text-amber-300 font-950"
+                    aria-hidden="true"
+                  >
+                    {{ index + 1 }}
+                  </span>
+                  <span class="truncate">{{ stop.address }}</span>
+                </p>
+                <p class="mt-1.5 flex items-center gap-2 text-[13px] font-800">
+                  <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-red-400" aria-hidden="true" />
+                  <span class="truncate">{{ driver.activeTrip.dropoff_address }}</span>
+                </p>
+
+                <div v-if="tripBadges.length" class="mt-2.5 flex flex-wrap gap-1.5">
+                  <span
+                    v-for="badge in tripBadges"
+                    :key="badge.label"
+                    class="inline-flex items-center gap-1 rounded-full bg-main-500/14 px-2 py-0.5 text-[11px] text-main-200 font-800"
+                  >
+                    <span :class="badge.icon" class="text-3.5" aria-hidden="true" />
+                    {{ badge.label }}
+                  </span>
+                </div>
+
+                <p
+                  v-if="driver.activeTrip.comment"
+                  class="mt-2.5 flex items-start gap-1.5 border-t border-white/8 pt-2.5 text-xs text-slate-300 leading-4"
+                >
+                  <span class="i-mdi-message-text-outline mt-0.5 shrink-0 text-3.5 text-main-300" aria-hidden="true" />
+                  {{ driver.activeTrip.comment }}
+                </p>
+              </div>
+
               <!-- Платное ожидание: таймер после отметки «Я на месте» -->
               <div
                 v-if="waitingInfo"

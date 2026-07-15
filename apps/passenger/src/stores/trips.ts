@@ -1,6 +1,6 @@
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
-import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, PaymentMethod, Trip, TripFlowState, VehicleCategory } from '~/types/trips'
+import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, PaymentMethod, Trip, TripFlowState, TripOptions, TripStop, VehicleCategory } from '~/types/trips'
 import type { PassengerDriverLocation } from '~/types/websocket'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { acceptHMRUpdate, defineStore } from 'pinia'
@@ -10,6 +10,23 @@ import { cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip,
 import { TARIFF_ORDER } from '~/constants/tariffs'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
 import { isTerminalTripStatus } from '~/utils/trip'
+
+// Максимум промежуточных остановок на поездку (совпадает с бэкендом).
+export const MAX_TRIP_STOPS = 3
+
+// Пожелания к заказу в форме стора (camelCase); в API уходят snake_case
+// через wireTripOptions.
+export interface TripOptionsDraft {
+  accessible: boolean
+  childSeat: boolean
+  friendName: string
+  friendPhone: string
+  pets: boolean
+}
+
+function emptyTripOptions(): TripOptionsDraft {
+  return { accessible: false, childSeat: false, friendName: '', friendPhone: '', pets: false }
+}
 
 export const useTripsStore = defineStore('trips', () => {
   const estimate = ref<EstimateTripResponse | null>(null)
@@ -49,6 +66,15 @@ export const useTripsStore = defineStore('trips', () => {
   const destination = ref('')
   const pickupPlace = ref<GeoPlace | null>(null)
   const destinationPlace = ref<GeoPlace | null>(null)
+  // Промежуточные остановки (до MAX_TRIP_STOPS): null — строка добавлена,
+  // но адрес ещё не выбран из саджеста. Тексты строк живут в даунбаре.
+  const stops = ref<(GeoPlace | null)[]>([])
+  // Пожелания к заказу и комментарий водителю — сбрасываются после заказа.
+  const tripOptions = ref<TripOptionsDraft>(emptyTripOptions())
+  const tripComment = ref('')
+  // Последний payload оценки (без опций/стопов — те всегда берутся из стора):
+  // пере-оценка при переключении пожеланий, чтобы цены в карусели обновились.
+  const lastEstimatePayload = ref<Omit<EstimateTripPayload, 'category'> | null>(null)
   const mapPickerMode = ref<MapPickerMode | null>(null)
   // Сигнал даунбару «после выбора точки с карты/избранного — раскрыть поиск
   // адреса (2-й экран)», чтобы выбранная точка была на виду, а не терялась.
@@ -113,6 +139,49 @@ export const useTripsStore = defineStore('trips', () => {
     destinationPlace.value = tripDropoffPlace(trip)
     pickup.value = trip.pickup_address
     destination.value = trip.dropoff_address
+    // Остановки тоже возвращаем в черновик — «Заказать ещё одну машину»
+    // повторяет весь маршрут, а не только А и Б.
+    stops.value = (trip.stops ?? []).slice(0, MAX_TRIP_STOPS).map(stop => ({
+      address: stop.address,
+      id: `stop:${stop.lat}:${stop.lng}`,
+      lat: stop.lat,
+      lng: stop.lng,
+      name: stop.address.split(',')[0]?.trim() || stop.address,
+    }))
+  }
+
+  // Подтверждённые остановки (адрес выбран) в формате API.
+  const confirmedStops = computed<TripStop[]>(() =>
+    stops.value
+      .filter((stop): stop is GeoPlace => Boolean(stop))
+      .map(stop => ({ address: stop.address, lat: stop.lat, lng: stop.lng })),
+  )
+
+  function wireTripOptions(): TripOptions | undefined {
+    const draft = tripOptions.value
+    const friendName = draft.friendName.trim()
+    const friendPhone = draft.friendPhone.trim()
+    if (!draft.childSeat && !draft.pets && !draft.accessible && !friendName && !friendPhone)
+      return undefined
+
+    return {
+      accessible: draft.accessible || undefined,
+      child_seat: draft.childSeat || undefined,
+      friend_name: friendName || undefined,
+      friend_phone: friendPhone || undefined,
+      pets: draft.pets || undefined,
+    }
+  }
+
+  // Кресло/животное на мото невозможны — бэкенд отвечает 400 на весь запрос,
+  // поэтому для мото-котировки платные опции не отправляем вовсе.
+  function wireTripOptionsFor(category: VehicleCategory): TripOptions | undefined {
+    const options = wireTripOptions()
+    if (!options || category !== 'moto')
+      return options
+
+    const { child_seat: _childSeat, pets: _pets, ...rest } = options
+    return Object.keys(rest).length ? rest : undefined
   }
 
   // finishActiveTrip переводит поездку в терминальное состояние. По умолчанию
@@ -292,20 +361,25 @@ export const useTripsStore = defineStore('trips', () => {
     }
   }
 
-  async function estimateTariffs(payload: Omit<EstimateTripPayload, 'category'>) {
+  async function estimateTariffs(payload: Omit<EstimateTripPayload, 'category' | 'options' | 'stops'>) {
     isEstimating.value = true
     errorMessage.value = ''
 
     try {
+      // Стопы и опции всегда берём из стора: единый контракт с create —
+      // доплата и chain-проверка метрик входят уже в оценку.
       const estimates = await Promise.all(
         TARIFF_ORDER.map(category => estimateTrip({
           ...payload,
           category,
+          options: wireTripOptionsFor(category),
+          stops: confirmedStops.value.length ? confirmedStops.value : undefined,
         })),
       )
 
       tariffEstimates.value = estimates
       estimate.value = cheapestSelectedEstimate.value ?? estimates[0] ?? null
+      lastEstimatePayload.value = payload
 
       return estimates
     }
@@ -320,10 +394,85 @@ export const useTripsStore = defineStore('trips', () => {
     }
   }
 
+  // Пере-оценка с текущими пожеланиями (переключение чекбоксов на тарифном
+  // этапе): маршрут не менялся, поэтому payload берём последний.
+  async function reestimateWithOptions() {
+    if (!lastEstimatePayload.value || !tariffEstimates.value.length)
+      return
+
+    try {
+      await estimateTariffs(lastEstimatePayload.value)
+    }
+    catch {} // тост уже показан в estimateTariffs
+  }
+
   // Одиночный выбор тарифа (боковая карусель): заменяем весь набор одним.
   function selectCategory(category: VehicleCategory) {
     selectedCategories.value = [category]
     estimate.value = cheapestSelectedEstimate.value
+    dropPaidOptionsForMoto()
+  }
+
+  // Выбрано мото — платные опции снимаем (кресло/животное на мото невозможны,
+  // бэкенд ответил бы 400 на создание заказа).
+  function dropPaidOptionsForMoto() {
+    if (!selectedCategories.value.includes('moto'))
+      return
+    if (!tripOptions.value.childSeat && !tripOptions.value.pets)
+      return
+
+    tripOptions.value = { ...tripOptions.value, childSeat: false, pets: false }
+    reestimateWithOptions()
+  }
+
+  // Пожелания к заказу: платные опции меняют цену — пере-оцениваем тарифы.
+  function setTripOption<K extends keyof TripOptionsDraft>(key: K, value: TripOptionsDraft[K]) {
+    if (tripOptions.value[key] === value)
+      return
+
+    tripOptions.value = { ...tripOptions.value, [key]: value }
+
+    if (key === 'childSeat' || key === 'pets')
+      reestimateWithOptions()
+  }
+
+  function setTripComment(value: string) {
+    tripComment.value = value
+  }
+
+  // --- Промежуточные остановки (до MAX_TRIP_STOPS) ---
+
+  const canAddStop = computed(() => stops.value.length < MAX_TRIP_STOPS)
+
+  function addStopRow() {
+    if (canAddStop.value)
+      stops.value = [...stops.value, null]
+  }
+
+  function setStop(index: number, place: GeoPlace | null) {
+    if (index < 0 || index >= stops.value.length)
+      return
+
+    const next = [...stops.value]
+    next[index] = place
+    setStops(next)
+  }
+
+  function removeStop(index: number) {
+    setStops(stops.value.filter((_, i) => i !== index))
+  }
+
+  function setStops(next: (GeoPlace | null)[]) {
+    const trimmed = next.slice(0, MAX_TRIP_STOPS)
+    // Ничего не поменялось (например, ресинк из даунбара после remount) —
+    // не сбрасываем оценку зря.
+    const same = trimmed.length === stops.value.length
+      && trimmed.every((place, i) => (place?.id ?? null) === (stops.value[i]?.id ?? null))
+    if (same)
+      return
+
+    stops.value = trimmed
+    clearEstimate()
   }
 
   function setPaymentMethod(method: PaymentMethod) {
@@ -350,6 +499,7 @@ export const useTripsStore = defineStore('trips', () => {
     }
 
     estimate.value = cheapestSelectedEstimate.value
+    dropPaidOptionsForMoto()
   }
 
   function setRouteCoordinates(coordinates: RouteCoordinate[]) {
@@ -414,7 +564,7 @@ export const useTripsStore = defineStore('trips', () => {
     expandOnReturn.value = true
   }
 
-  async function orderTrip(payload: Omit<CreateTripPayload, 'categories' | 'category'>) {
+  async function orderTrip(payload: Omit<CreateTripPayload, 'categories' | 'category' | 'comment' | 'options' | 'stops'>) {
     // Заказ невозможен без геолокации — точка подачи привязана к местоположению.
     if (!useLocationAccess().isGranted.value)
       throw new Error('Включите геолокацию, чтобы заказать поездку.')
@@ -433,7 +583,15 @@ export const useTripsStore = defineStore('trips', () => {
         // card — списание с привязанной карты при завершении поездки.
         payment_method: paymentMethod.value,
         use_bonuses: isPrepaid ? false : useBonuses.value,
+        // Остановки, пожелания и комментарий — из черновика стора.
+        stops: confirmedStops.value.length ? confirmedStops.value : undefined,
+        options: wireTripOptions(),
+        comment: tripComment.value.trim() || undefined,
       })
+      // Пожелания и комментарий — на один заказ; черновик стопов пере-синкнется
+      // из созданной поездки (syncActiveTrip → syncRouteDraftFromTrip).
+      tripOptions.value = emptyTripOptions()
+      tripComment.value = ''
       syncActiveTrip(trip)
 
       if (isPrepaid && trip.payment_url) {
@@ -616,6 +774,10 @@ export const useTripsStore = defineStore('trips', () => {
     destination.value = ''
     pickupPlace.value = null
     destinationPlace.value = null
+    stops.value = []
+    tripOptions.value = emptyTripOptions()
+    tripComment.value = ''
+    lastEstimatePayload.value = null
     mapPickerMode.value = null
     errorMessage.value = ''
     isEstimating.value = false
@@ -685,6 +847,18 @@ export const useTripsStore = defineStore('trips', () => {
     driverLocation,
     pickupPlace,
     destinationPlace,
+    stops,
+    confirmedStops,
+    canAddStop,
+    addStopRow,
+    setStop,
+    setStops,
+    removeStop,
+    tripOptions,
+    setTripOption,
+    tripComment,
+    setTripComment,
+    reestimateWithOptions,
     setPickup,
     setDestination,
     setPickupPlace,

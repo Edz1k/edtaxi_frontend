@@ -2,7 +2,7 @@ import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserL
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { Ref } from 'vue'
 import type { DriverTripOffer } from '~/types/websocket'
-import { getDrivingRoute } from '@edtaxi/shared/api/geocoding'
+import { getDrivingRoute, getDrivingRouteVia } from '@edtaxi/shared/api/geocoding'
 import { useThrottleFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useDriverStore } from '~/stores/driver'
@@ -62,15 +62,19 @@ export function useOfferRoute(liveCoordinates: Ref<UserCoordinates | null>) {
       return
     }
 
-    // Active trip or pending offer: full pickup → dropoff route
+    // Active trip or pending offer: full pickup → stops → dropoff route
     const pickup = offerToPlace(offer, 'pickup')
     const destination = offerToPlace(offer, 'dropoff')
     if (!pickup || !destination)
       return
 
+    const stops = offer.stops ?? []
+
     isRouteLoading.value = true
     try {
-      const route = await getDrivingRoute(pickup, destination)
+      const route = stops.length
+        ? await getDrivingRouteVia([pickup, ...stops, destination])
+        : await getDrivingRoute(pickup, destination)
       if (version !== routeVersion)
         return
       routeCoordinates.value = route.geometry

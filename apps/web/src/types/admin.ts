@@ -123,15 +123,20 @@ export interface PlatformSettingsLimitRange {
   max: number
 }
 
-// Настройки платформы: комиссия (0 = акция «без комиссии») и коэффициент цены.
+// Настройки платформы: комиссия (0 = акция «без комиссии»), коэффициент цены
+// и фикс-доплаты за опции заказа (кресло/животное; 0 = доплата выключена).
 // limits — допустимые диапазоны, бэкенд отдаёт их вместе со значениями.
 export interface PlatformSettings {
   platform_commission_rate: number
   price_coefficient: number
   max_park_commission_rate: number
+  surcharge_child_seat: number
+  surcharge_pets: number
   limits: {
     platform_commission_rate: PlatformSettingsLimitRange
     price_coefficient: PlatformSettingsLimitRange
+    // Доплаты за опции: 0..5000 ₸, кратно 10 (step).
+    option_surcharge: PlatformSettingsLimitRange & { step: number }
   }
   updated_at: string
 }
@@ -139,6 +144,8 @@ export interface PlatformSettings {
 export interface PlatformSettingsUpdatePayload {
   platform_commission_rate?: number
   price_coefficient?: number
+  surcharge_child_seat?: number
+  surcharge_pets?: number
 }
 
 export interface AdminTechSupportNumberPayload {

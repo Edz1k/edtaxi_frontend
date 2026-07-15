@@ -4,7 +4,7 @@ import { formatDate } from '~/utils/format'
 
 const admin = useAdminStore()
 
-const form = reactive({ commission_pct: 0, coefficient: 1 })
+const form = reactive({ commission_pct: 0, coefficient: 1, surcharge_child_seat: 0, surcharge_pets: 0 })
 const savedAt = ref('')
 
 const limits = computed(() => admin.platformSettings?.limits ?? null)
@@ -24,11 +24,19 @@ const coefficientHint = computed(() => {
   return `Допустимо от ${min} до ${max}. Умножает базовую цену каждой поездки.`
 })
 
+// Фикс-доплаты за опции заказа: кратно 10 ₸, 0 = доплата выключена.
+const surchargeHint = computed(() => {
+  const max = limits.value?.option_surcharge?.max ?? 5000
+  return `От 0 до ${max} ₸, кратно 10 ₸. 0 — опция бесплатна. Доплата добавляется к цене поездки и не умножается на спрос.`
+})
+
 function fillForm() {
   if (!admin.platformSettings)
     return
   form.commission_pct = +(admin.platformSettings.platform_commission_rate * 100).toFixed(2)
   form.coefficient = admin.platformSettings.price_coefficient
+  form.surcharge_child_seat = admin.platformSettings.surcharge_child_seat ?? 0
+  form.surcharge_pets = admin.platformSettings.surcharge_pets ?? 0
 }
 
 async function loadSettings() {
@@ -40,6 +48,8 @@ async function save() {
   await admin.saveSettings({
     platform_commission_rate: +(form.commission_pct / 100).toFixed(4),
     price_coefficient: form.coefficient,
+    surcharge_child_seat: form.surcharge_child_seat,
+    surcharge_pets: form.surcharge_pets,
   })
   fillForm()
   savedAt.value = new Date().toISOString()
@@ -79,6 +89,32 @@ onMounted(loadSettings)
           type="number"
         >
         <span class="text-xs text-white/50 leading-5">{{ coefficientHint }}</span>
+      </label>
+
+      <label class="grid gap-1.5">
+        <span class="text-xs text-white/42 font-900 uppercase">Доплата за детское кресло (₸)</span>
+        <input
+          v-model.number="form.surcharge_child_seat"
+          class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40"
+          :max="limits?.option_surcharge?.max ?? 5000"
+          min="0"
+          step="10"
+          type="number"
+        >
+        <span class="text-xs text-white/50 leading-5">{{ surchargeHint }}</span>
+      </label>
+
+      <label class="grid gap-1.5">
+        <span class="text-xs text-white/42 font-900 uppercase">Доплата за поездку с животным (₸)</span>
+        <input
+          v-model.number="form.surcharge_pets"
+          class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40"
+          :max="limits?.option_surcharge?.max ?? 5000"
+          min="0"
+          step="10"
+          type="number"
+        >
+        <span class="text-xs text-white/50 leading-5">{{ surchargeHint }}</span>
       </label>
     </div>
 

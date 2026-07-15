@@ -2,7 +2,7 @@
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 
 defineProps<{
-  color: 'emerald' | 'red'
+  color: 'amber' | 'emerald' | 'red'
   isLoading: boolean
   places: GeoPlace[]
 }>()
@@ -10,6 +10,14 @@ defineProps<{
 const emit = defineEmits<{
   select: [place: GeoPlace]
 }>()
+
+// Цвет кружка-иконки подсказки: точка А — изумрудный, остановки — янтарный,
+// точка Б — красный.
+const iconColorClass = {
+  amber: 'bg-amber-400/14 text-amber-300',
+  emerald: 'bg-emerald-400/14 text-emerald-300',
+  red: 'bg-red-500/14 text-red-300',
+} as const
 
 function getSuggestionIcon(place: GeoPlace) {
   if (place.isFavorite)
@@ -46,9 +54,7 @@ function formatDistance(m?: null | number) {
     >
       <span
         class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full"
-        :class="place.isFavorite
-          ? 'bg-main-500/16 text-main-300'
-          : (color === 'emerald' ? 'bg-emerald-400/14 text-emerald-300' : 'bg-red-500/14 text-red-300')"
+        :class="place.isFavorite ? 'bg-main-500/16 text-main-300' : iconColorClass[color]"
       >
         <span :class="getSuggestionIcon(place)" class="text-5" />
       </span>
