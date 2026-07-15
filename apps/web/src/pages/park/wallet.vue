@@ -13,6 +13,7 @@ definePage({
   meta: {
     authRedirect: '/park/login',
     requiresAuth: true,
+    layout: 'park',
     requiredRole: ['park', 'admin', 'superadmin'],
   },
 })
@@ -65,8 +66,7 @@ function statusClass(status: PayoutStatus) {
 
 <template>
   <WebPageShell
-    back-label="Таксопарк"
-    back-to="/park"
+    embedded
     description="Баланс парка, заявки на вывод средств и их статусы. Выплаты выполняются вручную после проверки заявки."
     title="Кошелёк парка"
   >

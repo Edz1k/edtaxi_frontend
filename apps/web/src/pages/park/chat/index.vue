@@ -18,6 +18,7 @@ definePage({
   meta: {
     authRedirect: '/park/login',
     requiresAuth: true,
+    layout: 'park',
     requiredRole: ['park', 'admin', 'superadmin'],
   },
 })
@@ -36,8 +37,7 @@ function loadRooms() {
 
 <template>
   <WebPageShell
-    back-label="Кабинет"
-    back-to="/park"
+    embedded
     description="Диалоги водителей с таксопарком. Открывайте чат, чтобы ответить или закрыть обращение."
     title="Чат с водителями"
   >

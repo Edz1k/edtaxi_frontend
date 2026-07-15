@@ -72,13 +72,13 @@ async function closeChat() {
 </script>
 
 <template>
-  <main class="h-screen flex flex-col bg-secondary-900 text-white">
+  <main class="h-screen flex flex-col bg-#06142f text-white">
     <!-- Header -->
-    <header class="shrink-0 border-b border-white/8 bg-secondary-900/95 px-4 py-3 backdrop-blur">
+    <header class="shrink-0 border-b border-white/8 bg-#06142f/95 px-4 py-3 backdrop-blur">
       <div class="mx-auto max-w-2xl flex items-center gap-3">
         <RouterLink
           aria-label="Вернуться к списку чатов"
-          class="h-9 w-9 flex items-center justify-center rounded-xl bg-white/6 text-slate-300 transition hover:bg-white/10"
+          class="h-9 w-9 flex items-center justify-center rounded-xl bg-white/6 text-white/70 transition hover:bg-white/10"
           to="/park/chat"
         >
           <span class="i-mdi-arrow-left text-5" />
@@ -86,14 +86,14 @@ async function closeChat() {
 
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
-            <div class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full bg-main-500/20">
-              <span class="i-mdi-steering text-4 text-main-300" />
+            <div class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full bg-cyan-300/14">
+              <span class="i-mdi-steering text-4 text-cyan-300" />
             </div>
             <div class="min-w-0">
               <p class="truncate text-sm font-900">
                 Водитель
               </p>
-              <p class="truncate text-[11px] text-slate-500 font-700 font-mono">
+              <p class="truncate text-[11px] text-white/45 font-700 font-mono">
                 {{ parkChat.currentRoom?.driver_id ?? roomId }}
               </p>
             </div>
@@ -103,7 +103,7 @@ async function closeChat() {
         <div class="flex shrink-0 items-center gap-2">
           <span
             class="rounded-xl px-2.5 py-1 text-xs font-900"
-            :class="isClosed ? 'bg-white/8 text-slate-400' : 'bg-emerald-500/15 text-emerald-300'"
+            :class="isClosed ? 'bg-white/8 text-white/45' : 'bg-emerald-500/15 text-emerald-300'"
           >
             {{ isClosed ? 'Закрыт' : 'Открыт' }}
           </span>
@@ -138,7 +138,7 @@ async function closeChat() {
           class="min-h-60 flex flex-col items-center justify-center gap-2 text-center"
         >
           <span class="i-mdi-chat-outline text-12 text-white/15" />
-          <p class="text-sm text-slate-500">
+          <p class="text-sm text-white/45">
             Сообщений пока нет
           </p>
         </div>
@@ -153,7 +153,7 @@ async function closeChat() {
             <article
               class="max-w-[72%] rounded-3xl px-4 py-2.5"
               :class="isMyMessage(msg.sender_id)
-                ? 'rounded-br-lg bg-main-500 text-white'
+                ? 'rounded-br-lg bg-cyan-300 text-#06142f'
                 : 'rounded-bl-lg bg-white/10 text-white'"
             >
               <p class="text-sm leading-[1.55]">
@@ -161,7 +161,7 @@ async function closeChat() {
               </p>
               <p
                 class="mt-1 text-[11px] font-700"
-                :class="isMyMessage(msg.sender_id) ? 'text-right text-main-100/60' : 'text-slate-500'"
+                :class="isMyMessage(msg.sender_id) ? 'text-right text-#06142f/55' : 'text-white/40'"
               >
                 {{ formatTime(msg.sent_at) }}
               </p>
@@ -172,13 +172,13 @@ async function closeChat() {
     </div>
 
     <!-- Input -->
-    <div class="shrink-0 border-t border-white/8 bg-secondary-900/95 px-4 py-3 backdrop-blur">
+    <div class="shrink-0 border-t border-white/8 bg-#06142f/95 px-4 py-3 backdrop-blur">
       <form class="mx-auto max-w-2xl flex items-end gap-2" @submit.prevent="send()">
         <input
           v-model="draft"
           aria-label="Сообщение водителю"
           :disabled="isClosed"
-          class="h-12 min-w-0 flex-1 border border-white/10 rounded-2xl bg-white/6 px-4 text-sm outline-none transition focus:border-main-400/60 focus:bg-white/8 disabled:opacity-40"
+          class="h-12 min-w-0 flex-1 border border-white/10 rounded-2xl bg-white/6 px-4 text-sm outline-none transition focus:border-cyan-300/40 focus:bg-white/8 disabled:opacity-40"
           maxlength="2000"
           :placeholder="isClosed ? 'Чат закрыт' : 'Написать водителю...'"
           @keydown.enter.exact.prevent="send()"
@@ -186,7 +186,7 @@ async function closeChat() {
         <button
           aria-label="Отправить"
           :disabled="!draft.trim() || isClosed || parkChat.isSending"
-          class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-main-500 text-white transition active:scale-[0.97] hover:bg-main-400 disabled:opacity-40"
+          class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-cyan-300 text-#06142f transition active:scale-[0.97] hover:bg-cyan-200 disabled:opacity-40"
           type="submit"
         >
           <span class="i-mdi-send text-5" />

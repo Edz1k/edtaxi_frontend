@@ -10,6 +10,7 @@ definePage({
   meta: {
     authRedirect: '/park/login',
     requiresAuth: true,
+    layout: 'park',
     requiredRole: ['park', 'admin', 'superadmin'],
   },
 })
@@ -72,8 +73,7 @@ async function stop(promotion: Promotion) {
 
 <template>
   <WebPageShell
-    back-label="Таксопарк"
-    back-to="/park"
+    embedded
     description="Акции «N поездок → X бонусов» для водителей вашего парка."
     title="Акции парка"
   >

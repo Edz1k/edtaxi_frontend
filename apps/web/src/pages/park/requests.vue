@@ -10,6 +10,7 @@ definePage({
   meta: {
     authRedirect: '/park/login',
     requiresAuth: true,
+    layout: 'park',
     requiredRole: ['park', 'admin', 'superadmin'],
   },
 })
@@ -64,8 +65,7 @@ async function resolve(request: ParkJoinRequest, approved: boolean) {
 
 <template>
   <WebPageShell
-    back-label="Таксопарк"
-    back-to="/park"
+    embedded
     description="Водители, которые хотят вступить в ваш парк. Принятый водитель сразу появится в списке водителей."
     title="Заявки водителей"
   >
