@@ -55,10 +55,16 @@ const showQuickDestinations = computed(() =>
 </script>
 
 <template>
-  <!-- Шапка и поля ввода зафиксированы; скроллится только область списков
-       (подсказки гео-саджеста / частые адреса) — блок с адресами внизу. -->
-  <div class="flex flex-col gap-3">
-    <header class="flex shrink-0 items-center justify-between gap-3 px-1">
+  <!-- Форма скроллится целиком, одним контейнером. Раньше шапка и поля были
+       shrink-0, а скроллился только список саджестов: на низких экранах (и на
+       любых — с открытой клавиатурой, она съедает вьюпорт) шторка в `full`
+       упиралась в maxHeight, места на всё не хватало, и нескрываемые поля
+       вылезали за границы формы — кнопка заказа, идущая следом в DOM,
+       рисовалась поверх них. Один скролл-контейнер исключает переполнение:
+       контент влезает — скролла нет и вид прежний; не влезает — скроллится,
+       а кнопка снаружи остаётся прижатой к низу и всегда доступна. -->
+  <div class="[scrollbar-width:none] overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:hidden space-y-3">
+    <header class="flex items-center justify-between gap-3 px-1">
       <div class="min-w-0">
         <p class="text-[11px] text-main-300 font-900 uppercase">
           Маршрут
@@ -79,7 +85,7 @@ const showQuickDestinations = computed(() =>
       </button>
     </header>
 
-    <div class="shrink-0 space-y-1.5">
+    <div class="space-y-1.5">
       <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-white/6 px-3.5 transition focus-within:bg-white/10">
         <span class="i-mdi-near-me shrink-0 text-5 text-main-300" aria-hidden="true" />
 
@@ -191,7 +197,8 @@ const showQuickDestinations = computed(() =>
       </button>
     </div>
 
-    <div class="[scrollbar-width:none] min-h-0 flex-1 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:hidden space-y-3">
+    <!-- Списки в общем потоке: скроллит родитель, своего скролла тут нет -->
+    <div class="space-y-3">
       <AddressSuggestions
         color="emerald"
         :is-loading="isSearchingPickup"
