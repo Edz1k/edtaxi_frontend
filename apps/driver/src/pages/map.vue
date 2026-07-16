@@ -57,7 +57,7 @@ watch(() => driver.hasActiveTrip, (active) => {
   if (active)
     notifications.connect()
 }, { immediate: true })
-const { isGranted: isLocationGranted, status: locationStatus } = useLocationAccess()
+const { isGranted: isLocationGranted, isRequesting: isRequestingLocation, status: locationStatus } = useLocationAccess()
 const {
   liveCoordinates,
   startWatchingUserLocation,
@@ -226,17 +226,30 @@ const isBootDone = ref(false)
 // запускает startWatchingUserLocation, координаты приходят позже.
 const hasUserLocation = computed(() => Boolean(liveCoordinates.value))
 
-// Сплэш уходит, когда карта отрисована, отработал стартовый сценарий и пришли
-// координаты.
-watch([isMapReady, isBootDone, hasUserLocation], () => {
-  if (isMapReady.value && isBootDone.value && hasUserLocation.value)
-    hideAppSplash()
-})
+// Сплэш ждёт, пока приложение ГРУЗИТСЯ, но не пока оно ждёт решения человека.
+// Гейт геолокации (LocationGate) — блокирующий экран поверх карты; пока он
+// висит, координат не будет никогда, и держать сплэш бессмысленно: он просто
+// накрывает собой вопрос, на который надо ответить.
+//   isGranted        — доступ есть, ждём координаты;
+//   'unknown'        — проверка ещё не начиналась, ждём;
+//   isRequesting     — промпт открыт (он поверх вебвью), ждём ответа;
+//   иначе            — запрос завершился без доступа: гейт ждёт нажатия, уходим.
+const isWaitingForLocation = computed(() =>
+  locationStatus.value === 'unknown' || isRequestingLocation.value,
+)
+const isBlockedByLocationGate = computed(() =>
+  !isLocationGranted.value && !isWaitingForLocation.value,
+)
 
-// Доступ к гео не дали — координат не будет никогда, а водителю нужен
-// LocationGate: снимаем сплэш сразу, иначе он накроет экран запроса доступа.
-watch(locationStatus, (value) => {
-  if (value === 'denied')
+// Сплэш уходит, когда карта отрисована, отработал стартовый сценарий и пришли
+// координаты — либо когда ждать больше нечего и нужен ответ пользователя.
+watch([isMapReady, isBootDone, hasUserLocation, isBlockedByLocationGate], () => {
+  if (isBlockedByLocationGate.value) {
+    hideAppSplash()
+    return
+  }
+
+  if (isMapReady.value && isBootDone.value && hasUserLocation.value)
     hideAppSplash()
 }, { immediate: true })
 
