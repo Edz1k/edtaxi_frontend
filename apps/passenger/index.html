@@ -52,8 +52,17 @@
       }
 
       #app-splash .splash-logo {
-        width: 132px;
-        height: 132px;
+        /* Крупнее номинальных 132px: у логотипа чёрные поля вокруг кольца, и
+           после lighten они невидимы — само кольцо занимает ~3/4 картинки. */
+        width: 168px;
+        height: 168px;
+        /* У логотипа непрозрачный фон, причём неоднородный (от #050505 до
+           #272117 — отсвет кольца), поэтому ровным фоном его не подогнать и
+           квадрат картинки был бы виден. lighten берёт max(пиксель, фон): всё
+           темнее фона заменяется фоном и квадрат исчезает, а золото и его
+           отсвет остаются. Если появится версия с прозрачностью — режим можно
+           убрать. */
+        mix-blend-mode: lighten;
         animation: splash-breathe 2.4s ease-in-out infinite;
       }
 
@@ -110,41 +119,7 @@
     <div id="app"></div>
 
     <div id="app-splash" role="status" aria-label="Загрузка приложения">
-      <svg class="splash-logo" viewBox="0 0 120 120" fill="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="splash-gold" x1="20" y1="10" x2="100" y2="112" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#f7dc8a" />
-            <stop offset="0.5" stop-color="#e6ad2e" />
-            <stop offset="1" stop-color="#b8801a" />
-          </linearGradient>
-        </defs>
-
-        <circle cx="60" cy="60" r="56" stroke="url(#splash-gold)" stroke-width="3.2" />
-        <circle cx="60" cy="60" r="49" stroke="url(#splash-gold)" stroke-width="2" />
-
-        <g fill="url(#splash-gold)">
-          <rect x="35" y="41" width="10" height="10" />
-          <rect x="55" y="41" width="10" height="10" />
-          <rect x="75" y="41" width="10" height="10" />
-          <rect x="25" y="51" width="10" height="10" />
-          <rect x="45" y="51" width="10" height="10" />
-          <rect x="65" y="51" width="10" height="10" />
-          <rect x="85" y="51" width="10" height="10" />
-        </g>
-
-        <text
-          x="60"
-          y="86"
-          fill="url(#splash-gold)"
-          font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-          font-size="23"
-          font-weight="800"
-          letter-spacing="1.5"
-          text-anchor="middle"
-        >
-          TAXI
-        </text>
-      </svg>
+      <img class="splash-logo" src="/splash-logo.webp" width="168" height="168" alt="" aria-hidden="true" />
 
       <div class="splash-bar"></div>
     </div>
