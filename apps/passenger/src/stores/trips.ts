@@ -79,6 +79,11 @@ export const useTripsStore = defineStore('trips', () => {
   // Сигнал даунбару «после выбора точки с карты/избранного — раскрыть поиск
   // адреса (2-й экран)», чтобы выбранная точка была на виду, а не терялась.
   const expandOnReturn = ref(false)
+  // Открыт поиск адреса (пользователь печатает). Telegram при клавиатуре сжимает
+  // всю мини-аппу, места остаётся мало — на это время лейаут прячет таб-бар, а
+  // шторка забирает освободившуюся высоту. Флаг живёт в сторе, потому что читают
+  // его из разных мест (даунбар выставляет, лейаут снаружи RouterView читает).
+  const isAddressSearchOpen = ref(false)
 
   let searchTimer: number | undefined
   let activeTripPollingTimer: number | undefined
@@ -806,6 +811,7 @@ export const useTripsStore = defineStore('trips', () => {
     hasActiveTrip,
     history,
     historyHasMore,
+    isAddressSearchOpen,
     historyOffset,
     isCancelling,
     isCreating,
