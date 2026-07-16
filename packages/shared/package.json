@@ -65,6 +65,7 @@
     "vue": "catalog:frontend"
   },
   "devDependencies": {
+    "jsdom": "catalog:dev",
     "typescript": "catalog:dev",
     "vite": "catalog:build",
     "vitest": "catalog:dev",
