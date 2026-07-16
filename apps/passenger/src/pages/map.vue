@@ -201,6 +201,7 @@ async function setPickupFromCurrentLocation() {
       v-model:locating-user="isLocating"
       v-model:pickup="trips.pickup"
       v-model:pickup-place="trips.pickupPlace"
+      :user-coordinates="liveCoordinates"
       @locate-user="setPickupFromCurrentLocation"
       @pick-from-map="trips.startMapPicker"
     />

@@ -1,0 +1,101 @@
+button:
+  about: Шаблон туралы
+  back: Артқа
+  go: Өту
+  home: Басты бет
+  toggle_dark: Қараңғы режимді қосу
+  toggle_langs: Тілді ауыстыру
+  welcome: Қош келдіңіз
+intro:
+  desc: Vite бастапқы шаблоны
+  dynamic-route: Динамикалық маршрут демосы
+  hi: Сәлем, {name}!
+  whats-your-name: Атың кім?
+not-found: Табылмады
+nav:
+  home: Басты бет
+  platform: Платформа
+  apps: Mini Apps
+  token: Token
+  fleets: Таксопарктерге
+  investment: Инвестициялар
+  roadmap: Roadmap
+  contact: Байланыс
+  cta: Байланысу
+brand:
+  name: Telegram Taxi
+  subtitle: Mobility OS
+hero:
+  badge: Digital mobility ecosystem
+  title: Telegram Taxi
+  description: Жолаушыларға, жүргізушілерге және таксопарктерге арналған инновациялық экожүйе. Сапарларға тапсырыс беру, жүргізушілерді басқару және сервисті дамыту — тікелей Telegram Mini Apps ішінде.
+  primary: Толығырақ ->
+  secondary: Токенді көру
+  cardNetwork: Telegram Taxi network
+  cardTitle: Mobility OS
+  passengersLabel: Жолаушылар
+  passengersValue: Қосылған
+  driversLabel: Жүргізушілер
+  driversValue: Онлайн
+  marketLabel: Нарық
+  marketValue: Қазақстан
+  tokenLabel: Токен
+  tokenValue: TAXI
+platform:
+  eyebrow: Platform
+  title: Платформа
+  description: Telegram Taxi жолаушы қосымшасын, жүргізуші қосымшасын, тапсырыс жүйесін, рейтингтерді, төлемдерді, аналитиканы және болашақ токен-экономиканы біріктіреді.
+apps:
+  eyebrow: Mini Apps
+  title: Telegram ішіндегі екі қосымша
+  passengerTitle: Passenger Mini App
+  passengerText: Сапарға тапсырыс беру, мекенжайларды таңдау, тарифтер, сапарлар тарихы және жүргізушіні бақылау.
+  driverTitle: Driver Mini App
+  driverText: Онлайн-статус, тапсырыстарды қабылдау, профиль, автомобиль және сапарларды басқару.
+token:
+  eyebrow: Ecosystem Token
+  title: TAXI Token
+  description: Жүргізушілерге бонустар, жолаушыларға адалдық бағдарламалары, реферал сыйақылары, жеңілдіктер, промо-науқандар және экожүйенің болашақ функциялары үшін utility token.
+fleets:
+  eyebrow: Таксопарктерге
+  title: Таксопарктерге арналған шешім
+  description: 'Автопаркті орталықтандырып басқару: жүргізушілерді жаппай тіркеу, тапсырыстарды бөлу, мониторинг және аналитика.'
+  managementLabel: Басқару
+  managementValue: Автопарк
+  statsLabel: Статистика
+  statsValue: Есептілік
+  brandLabel: Бренд
+  brandValue: White label
+investment:
+  eyebrow: Investment Token
+  title: TAXI Token - инвесторларға қысқаша
+  description: 'TAXI - BNB Smart Chain (BEP-20) желісіндегі утилити-токен. Жалпы эмиссия: 7,000,000,000 TAXI. Токен жүргізушілерді ынталандыру, жолаушылардың адалдық бағдарламалары, реферал сыйақылары, жеңілдіктер және маркетингтік науқандар үшін қолданылады. Деплойдан кейін минтинг өшірілген; компания шешімі бойынша жағу саясаты енгізілуі мүмкін.'
+  issuerLabel: Issuer
+  issuerValue: City Flow Mobility Ltd.
+  jurisdictionLabel: Юрисдикция
+  jurisdictionValue: AIFC, Kazakhstan
+  docsTitle: Құжаттар
+  docIncorporation: Certificate of Incorporation (AIFC)
+  docWhitePaper: White Paper
+  docPresentation: Investor Presentation
+  note: 'Маңызды: токен жеке заңды ескертпесіз компаниядағы үлесті бермейді. Сату шарттарын жарияламас бұрын AIFC/AFSA талаптарын тексеруді ұсынамыз.'
+roadmap:
+  eyebrow: Roadmap
+  title: Даму жоспары
+  phase1: Phase 1
+  phase1Title: Development
+  phase2: Phase 2
+  phase2Title: Kazakhstan Launch
+  phase3: Phase 3
+  phase3Title: Central Asia
+  phase4: Phase 4
+  phase4Title: International
+contact:
+  title: Бізбен байланысу
+  description: 'Жылдам: email, сайт немесе Telegram. Серіктестік пен инвестициялар үшін бөлек жазыңыз.'
+  websiteLabel: Website
+  websiteValue: telegramtaxi.kz
+  emailLabel: Email
+  telegramLabel: Telegram
+  telegramValue: "{'@'}telegramtaxi"
+  note: 'Инвесторларға арналған құжаттар мен сұраныстар: хат тақырыбында "Инвестиция" деп көрсетіңіз.'
