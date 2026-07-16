@@ -2,6 +2,8 @@
 import { vMaska } from 'maska/vue'
 import { useId } from 'vue'
 
+withDefaults(defineProps<{ label?: string }>(), { label: 'Номер телефона' })
+
 const model = defineModel<string>({ required: true })
 const inputId = useId()
 </script>
@@ -9,7 +11,7 @@ const inputId = useId()
 <template>
   <div>
     <label :for="inputId" class="mb-2 block text-sm text-slate-300 font-600">
-      Номер телефона
+      {{ label }}
     </label>
 
     <div
