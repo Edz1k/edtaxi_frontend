@@ -149,6 +149,29 @@
       <div class="splash-bar"></div>
     </div>
 
+    <script>
+      ;(function () {
+        // Telegram держит СВОЙ плейсхолдер поверх вебвью, пока мини-апп не
+        // позовёт ready() (или пока не догрузится вся страница). Раньше ready()
+        // звался из Vue-страницы логина — то есть уже после бандла, после
+        // restoreSession и после mount. Всё это время сверху лежал экран
+        // Telegram, наш сплэш был под ним, и к моменту ready() он уже уходил.
+        // Зовём здесь, сразу после отрисовки сплэша: telegram-web-app.js
+        // подключён синхронно в <head>, поэтому API доступен ещё до бандла.
+        // Повторный ready() из приложения безвреден — метод идемпотентный.
+        // expand() тем же вызовом: приложение всё равно разворачивается позже
+        // (см. useTelegramSafeArea), но раньше сплэш успевал мигнуть в окне
+        // половинной высоты — теперь сразу открывается на весь экран.
+        try {
+          var webApp = window.Telegram && window.Telegram.WebApp
+          if (webApp) {
+            webApp.ready()
+            webApp.expand()
+          }
+        } catch (error) {}
+      })()
+    </script>
+
     <script type="module" src="/src/main.ts"></script>
     <noscript>Для работы приложения требуется JavaScript.</noscript>
   </body>
