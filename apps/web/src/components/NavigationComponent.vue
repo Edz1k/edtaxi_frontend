@@ -3,7 +3,7 @@ import type { Locale } from 'vue-i18n'
 import { loadLanguageAsync } from '~/modules/i18n'
 
 const { t, locale } = useI18n()
-const landingLocales = ['ru', 'en'] as const
+const landingLocales = ['kk', 'ru', 'en'] as const
 
 function switchLocale(nextLocale: Locale) {
   void loadLanguageAsync(nextLocale)
@@ -70,7 +70,7 @@ const navItems = computed(() => [
           :aria-label="t('nav.cta')"
           class="h-10 w-10 inline-flex shrink-0 items-center justify-center rounded-full bg-cyan-300 text-center text-sm text-#06142f font-900 shadow-cyan-400/20 shadow-lg transition sm:h-auto sm:min-w-30 sm:w-auto hover:bg-cyan-200 md:px-5 sm:px-4 sm:py-2"
         >
-          <span class="i-carbon-email sm:hidden" />
+          <span class="i-mdi-email-outline sm:hidden" />
           <span class="hidden sm:inline">{{ t('nav.cta') }}</span>
         </a>
       </div>

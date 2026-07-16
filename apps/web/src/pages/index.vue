@@ -35,7 +35,7 @@ const fleetItems = computed(() => [
       <div class="grid mx-auto max-w-1180px items-center gap-12 lg:grid-cols-2">
         <div>
           <div class="mb-6 inline-flex items-center gap-2 border border-cyan-300/30 rounded-full bg-cyan-300/10 px-4 py-2 text-xs text-cyan-100 md:text-sm">
-            <div class="i-carbon-network-4" />
+            <div class="i-mdi-lan-connect" />
             {{ t('hero.badge') }}
           </div>
 
@@ -81,7 +81,7 @@ const fleetItems = computed(() => [
                 </div>
 
                 <div class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-cyan-300 text-#06142f md:h-13 md:w-13">
-                  <div class="i-carbon-bus text-2xl" />
+                  <div class="i-mdi-bus text-2xl" />
                 </div>
               </div>
 
@@ -111,7 +111,7 @@ const fleetItems = computed(() => [
                 </div>
 
                 <div class="absolute left-1/2 top-1/2 h-18 w-18 flex items-center justify-center rounded-full bg-white text-cyan-500 shadow-xl md:h-20 md:w-20 -translate-x-1/2 -translate-y-1/2">
-                  <div class="i-carbon-send-alt-filled text-3xl" />
+                  <div class="i-mdi-send text-3xl" />
                 </div>
               </div>
 
@@ -174,7 +174,7 @@ const fleetItems = computed(() => [
         <div class="grid gap-5 md:grid-cols-2">
           <div class="rounded-4xl border border-white/10 bg-white/8 p-7 backdrop-blur transition hover:border-cyan-300/30 md:p-8">
             <div class="h-14 w-14 flex items-center justify-center rounded-2xl bg-cyan-300/10">
-              <div class="i-carbon-user-avatar text-4xl text-cyan-300" />
+              <div class="i-mdi-account-circle text-4xl text-cyan-300" />
             </div>
 
             <h3 class="mt-6 text-2xl font-900">
@@ -188,7 +188,7 @@ const fleetItems = computed(() => [
 
           <div class="rounded-4xl border border-white/10 bg-white/8 p-7 backdrop-blur transition hover:border-cyan-300/30 md:p-8">
             <div class="h-14 w-14 flex items-center justify-center rounded-2xl bg-cyan-300/10">
-              <div class="i-carbon-car text-4xl text-cyan-300" />
+              <div class="i-mdi-car text-4xl text-cyan-300" />
             </div>
 
             <h3 class="mt-6 text-2xl font-900">
@@ -341,7 +341,7 @@ const fleetItems = computed(() => [
 
           <div class="grid gap-3">
             <a href="https://telegramtaxi.kz" target="_blank" rel="noreferrer" class="inline-flex items-center gap-3 border border-white/10 rounded-lg bg-white/8 p-3 hover:bg-white/12">
-              <div class="i-carbon-world text-xl text-cyan-300" />
+              <div class="i-mdi-web text-xl text-cyan-300" />
               <div>
                 <div class="text-sm text-white/50">{{ t('contact.websiteLabel') }}</div>
                 <div class="font-800">{{ t('contact.websiteValue') }}</div>
@@ -349,7 +349,7 @@ const fleetItems = computed(() => [
             </a>
 
             <a :href="`mailto:${contactEmail}`" class="inline-flex items-center gap-3 border border-white/10 rounded-lg bg-white/8 p-3 hover:bg-white/12">
-              <div class="i-carbon-email text-xl text-cyan-300" />
+              <div class="i-mdi-email-outline text-xl text-cyan-300" />
               <div>
                 <div class="text-sm text-white/50">{{ t('contact.emailLabel') }}</div>
                 <div class="font-800">{{ contactEmail }}</div>
@@ -357,7 +357,7 @@ const fleetItems = computed(() => [
             </a>
 
             <a :href="telegramLink" target="_blank" rel="noreferrer" class="inline-flex items-center gap-3 border border-white/10 rounded-lg bg-white/8 p-3 hover:bg-white/12">
-              <div class="i-carbon-logo-telegram text-xl text-cyan-300" />
+              <div class="i-mdi-telegram text-xl text-cyan-300" />
               <div>
                 <div class="text-sm text-white/50">{{ t('contact.telegramLabel') }}</div>
                 <div class="font-800">{{ t('contact.telegramValue') }}</div>
