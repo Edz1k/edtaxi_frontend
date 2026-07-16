@@ -29,6 +29,23 @@ Object.values(import.meta.glob<{ install: UserModule }>('./modules/*.ts', { eage
 
 app.use(router)
 
-router.isReady().then(() => {
-  app.mount('#app')
-})
+// Стартовый экран из index.html (см. #app-splash): показывается всё время, пока
+// грузится бандл и authGuard ждёт restoreSession, и уходит, когда приложение
+// смонтировано. finally, а не then: если первая навигация упала, лучше показать
+// пустой экран (как было до сплэша), чем вечный спиннер.
+function hideSplash() {
+  const splash = document.getElementById('app-splash')
+  if (!splash)
+    return
+
+  splash.setAttribute('data-hidden', '')
+  splash.addEventListener('transitionend', () => splash.remove(), { once: true })
+  // Страховка: transitionend может не прийти (прерванный переход, вкладка в фоне).
+  setTimeout(() => splash.remove(), 600)
+}
+
+router.isReady()
+  .then(() => {
+    app.mount('#app')
+  })
+  .finally(hideSplash)

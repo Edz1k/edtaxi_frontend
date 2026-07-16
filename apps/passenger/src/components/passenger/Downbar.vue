@@ -355,6 +355,17 @@ onMounted(() => {
 // рисует только шторка, поэтому цветового шва между слоями нет.
 const isAddressSearchOpen = computed(() => active.value === 'full' && sheetState.value === 'address')
 
+// Пока печатают адрес, таб-бар снаружи прячется (см. layouts/passenger.vue), а
+// шторка забирает его высоту: Telegram при клавиатуре сжимает всю мини-аппу, и
+// на низких экранах каждый лишний ряд UI съедает форму.
+watch(isAddressSearchOpen, (open) => {
+  trips.isAddressSearchOpen = open
+}, { immediate: true })
+
+onBeforeUnmount(() => {
+  trips.isAddressSearchOpen = false
+})
+
 // Свёрнутая шторка (peek) в любом состоянии: вместо торчащего обрезанного
 // верха контента — компактная пилюля-сводка. Контент при этом скрыт, скроллить
 // в свёрнутом виде нечего; тап по пилюле возвращает рабочую высоту.
@@ -430,9 +441,15 @@ function onHandleKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
+  <!-- Рабочая рамка шторки. Обычно снизу резервируем место под таб-бар; во время
+       ввода адреса он скрыт — забираем его высоту себе (useBottomSheet сам
+       пересчитает maxHeight, он следит за размером этой рамки). -->
   <section
     ref="boundsEl"
-    class="tg-safe-x pointer-events-none absolute inset-x-0 bottom-[calc(var(--app-safe-area-bottom)+5.75rem)] top-[calc(var(--app-safe-area-top)+3.25rem)] z-20 flex items-end"
+    class="tg-safe-x pointer-events-none absolute inset-x-0 top-[calc(var(--app-safe-area-top)+3.25rem)] z-20 flex items-end"
+    :class="isAddressSearchOpen
+      ? 'bottom-[calc(var(--app-safe-area-bottom)+0.75rem)]'
+      : 'bottom-[calc(var(--app-safe-area-bottom)+5.75rem)]'"
   >
     <div
       ref="sheetEl"
