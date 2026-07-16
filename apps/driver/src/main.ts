@@ -1,5 +1,6 @@
 import type { UserModule } from './types'
 
+import { armAppSplashFallback, hideAppSplash } from '@edtaxi/shared/composables/useAppSplash'
 import { createHead } from '@unhead/vue/client'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { createApp as createVueApp } from 'vue'
@@ -29,6 +30,16 @@ Object.values(import.meta.glob<{ install: UserModule }>('./modules/*.ts', { eage
 
 app.use(router)
 
-router.isReady().then(() => {
-  app.mount('#app')
-})
+// Стартовый экран (#app-splash из index.html) снимает не main.ts, а тот экран,
+// которому есть чего ждать: карта — после отрисовки и получения геопозиции,
+// остальные — сразу после монтирования (см. App.vue и useAppSplash).
+// Здесь только предохранитель. Если первая навигация упала, приложение не
+// смонтируется вовсе — тогда снимаем сразу: пустой экран честнее вечного сплэша.
+router.isReady()
+  .then(() => {
+    app.mount('#app')
+    armAppSplashFallback()
+  })
+  .catch(() => {
+    hideAppSplash()
+  })

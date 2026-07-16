@@ -16,9 +16,162 @@
           document.documentElement.classList.toggle('dark', true)
       })()
     </script>
+
+    <!--
+      Стартовый экран. Живёт в index.html, а не во Vue, осознанно: mount()
+      вызывается только после router.isReady(), а authGuard в beforeEach ждёт
+      сетевой restoreSession — до этого момента #app пуст. Сплэш из бандла
+      появился бы уже ПОСЛЕ этой паузы, то есть закрывал бы не её.
+      Фон и логотип — инлайном (без запросов и без веб-шрифта), чтобы рисовалось
+      мгновенно и не мигало белым, пока едет main.css. Снимается в main.ts.
+    -->
+    <style>
+      html,
+      body {
+        background: #121212;
+      }
+
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        background: #121212;
+        opacity: 1;
+        transition: opacity 260ms ease;
+      }
+
+      /* Снимаем через класс, а не display:none — нужен плавный уход. */
+      #app-splash[data-hidden] {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #app-splash .splash-logo {
+        width: 132px;
+        height: 132px;
+        animation: splash-breathe 2.4s ease-in-out infinite;
+      }
+
+      #app-splash .splash-bar {
+        position: relative;
+        width: 132px;
+        height: 3px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(230, 173, 46, 0.16);
+      }
+
+      #app-splash .splash-bar::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 40%;
+        border-radius: 999px;
+        background: #e6ad2e;
+        animation: splash-slide 1.15s ease-in-out infinite;
+      }
+
+      @keyframes splash-breathe {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(0.97);
+          opacity: 0.86;
+        }
+      }
+
+      @keyframes splash-slide {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(350%);
+        }
+      }
+
+      /* Уважаем системную настройку «меньше движения». */
+      @media (prefers-reduced-motion: reduce) {
+        #app-splash .splash-logo,
+        #app-splash .splash-bar::after {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body class="font-sans">
     <div id="app"></div>
+
+    <div id="app-splash" role="status" aria-label="Загрузка приложения">
+      <svg class="splash-logo" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="splash-gold" x1="20" y1="10" x2="100" y2="112" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#f7dc8a" />
+            <stop offset="0.5" stop-color="#e6ad2e" />
+            <stop offset="1" stop-color="#b8801a" />
+          </linearGradient>
+        </defs>
+
+        <circle cx="60" cy="60" r="56" stroke="url(#splash-gold)" stroke-width="3.2" />
+        <circle cx="60" cy="60" r="49" stroke="url(#splash-gold)" stroke-width="2" />
+
+        <g fill="url(#splash-gold)">
+          <rect x="35" y="41" width="10" height="10" />
+          <rect x="55" y="41" width="10" height="10" />
+          <rect x="75" y="41" width="10" height="10" />
+          <rect x="25" y="51" width="10" height="10" />
+          <rect x="45" y="51" width="10" height="10" />
+          <rect x="65" y="51" width="10" height="10" />
+          <rect x="85" y="51" width="10" height="10" />
+        </g>
+
+        <text
+          x="60"
+          y="86"
+          fill="url(#splash-gold)"
+          font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+          font-size="23"
+          font-weight="800"
+          letter-spacing="1.5"
+          text-anchor="middle"
+        >
+          TAXI
+        </text>
+      </svg>
+
+      <div class="splash-bar"></div>
+    </div>
+
+    <script>
+      ;(function () {
+        // Telegram держит СВОЙ плейсхолдер поверх вебвью, пока мини-апп не
+        // позовёт ready() (или пока не догрузится вся страница). Раньше ready()
+        // звался из Vue-страницы логина — то есть уже после бандла, после
+        // restoreSession и после mount. Всё это время сверху лежал экран
+        // Telegram, наш сплэш был под ним, и к моменту ready() он уже уходил.
+        // Зовём здесь, сразу после отрисовки сплэша: telegram-web-app.js
+        // подключён синхронно в <head>, поэтому API доступен ещё до бандла.
+        // Повторный ready() из приложения безвреден — метод идемпотентный.
+        // expand() тем же вызовом: приложение всё равно разворачивается позже
+        // (см. useTelegramSafeArea), но раньше сплэш успевал мигнуть в окне
+        // половинной высоты — теперь сразу открывается на весь экран.
+        try {
+          var webApp = window.Telegram && window.Telegram.WebApp
+          if (webApp) {
+            webApp.ready()
+            webApp.expand()
+          }
+        } catch (error) {}
+      })()
+    </script>
+
     <script type="module" src="/src/main.ts"></script>
     <noscript>Для работы приложения требуется JavaScript.</noscript>
   </body>

@@ -15,6 +15,11 @@ withDefaults(defineProps<{
   userCoordinates: null,
 })
 
+const emit = defineEmits<{
+  // Карта отрисована — пробрасываем наверх, стартовый экран ждёт этого сигнала.
+  ready: []
+}>()
+
 // Иконка своей машины по классу активного ТС (эконом/бизнес/мото...).
 const onboarding = useDriverOnboardingStore()
 const selfCategory = computed(() => {
@@ -33,5 +38,6 @@ const selfCategory = computed(() => {
     :self-category="selfCategory"
     :show-route="routeCoordinates.length >= 2"
     :user-coordinates="userCoordinates"
+    @ready="emit('ready')"
   />
 </template>

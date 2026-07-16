@@ -1,5 +1,6 @@
 import type { UserModule } from './types'
 
+import { armAppSplashFallback, hideAppSplash } from '@edtaxi/shared/composables/useAppSplash'
 import { createHead } from '@unhead/vue/client'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { createApp as createVueApp } from 'vue'
@@ -29,23 +30,16 @@ Object.values(import.meta.glob<{ install: UserModule }>('./modules/*.ts', { eage
 
 app.use(router)
 
-// Стартовый экран из index.html (см. #app-splash): показывается всё время, пока
-// грузится бандл и authGuard ждёт restoreSession, и уходит, когда приложение
-// смонтировано. finally, а не then: если первая навигация упала, лучше показать
-// пустой экран (как было до сплэша), чем вечный спиннер.
-function hideSplash() {
-  const splash = document.getElementById('app-splash')
-  if (!splash)
-    return
-
-  splash.setAttribute('data-hidden', '')
-  splash.addEventListener('transitionend', () => splash.remove(), { once: true })
-  // Страховка: transitionend может не прийти (прерванный переход, вкладка в фоне).
-  setTimeout(() => splash.remove(), 600)
-}
-
+// Стартовый экран (#app-splash из index.html) снимает не main.ts, а тот экран,
+// которому есть чего ждать: карта — после отрисовки и получения геопозиции,
+// остальные — сразу после монтирования (см. App.vue и useAppSplash).
+// Здесь только предохранитель. Если первая навигация упала, приложение не
+// смонтируется вовсе — тогда снимаем сразу: пустой экран честнее вечного сплэша.
 router.isReady()
   .then(() => {
     app.mount('#app')
+    armAppSplashFallback()
   })
-  .finally(hideSplash)
+  .catch(() => {
+    hideAppSplash()
+  })

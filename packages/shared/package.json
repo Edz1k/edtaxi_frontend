@@ -31,6 +31,7 @@
     "./components/photo/*": "./src/components/photo/*.vue",
     "./composables/location/useLocationAccess": "./src/composables/location/useLocationAccess.ts",
     "./composables/photo/usePhotoCapture": "./src/composables/photo/usePhotoCapture.ts",
+    "./composables/useAppSplash": "./src/composables/useAppSplash.ts",
     "./composables/useAutoRefresh": "./src/composables/useAutoRefresh.ts",
     "./stores/create-auth-store": "./src/stores/create-auth-store.ts",
     "./stores/create-support-store": "./src/stores/create-support-store.ts",

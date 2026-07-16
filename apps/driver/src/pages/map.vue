@@ -9,6 +9,7 @@ import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocati
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { captureParkInviteStartParam, takePendingParkInviteToken } from '@edtaxi/shared/composables/telegram/parkInvite'
 import { captureReferralStartParam, takePendingReferralCode } from '@edtaxi/shared/composables/telegram/referral'
+import { hideAppSplash } from '@edtaxi/shared/composables/useAppSplash'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
 import { useWeather } from '@edtaxi/shared/composables/useWeather'
 import { ApiError } from '~/api/client'
@@ -56,7 +57,7 @@ watch(() => driver.hasActiveTrip, (active) => {
   if (active)
     notifications.connect()
 }, { immediate: true })
-const { isGranted: isLocationGranted } = useLocationAccess()
+const { isGranted: isLocationGranted, status: locationStatus } = useLocationAccess()
 const {
   liveCoordinates,
   startWatchingUserLocation,
@@ -210,11 +211,34 @@ const stopPlaces = computed(() => {
 definePage({
   meta: {
     authRedirect: '/login',
+    // Стартовый экран снимаем не по mount, а когда карте есть что показать:
+    // отрисовка + координаты (см. ниже).
+    holdSplash: true,
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
   },
 })
+
+const isMapReady = ref(false)
+const isBootDone = ref(false)
+// Гео считаем полученным по факту координат: onMounted их не ждёт — только
+// запускает startWatchingUserLocation, координаты приходят позже.
+const hasUserLocation = computed(() => Boolean(liveCoordinates.value))
+
+// Сплэш уходит, когда карта отрисована, отработал стартовый сценарий и пришли
+// координаты.
+watch([isMapReady, isBootDone, hasUserLocation], () => {
+  if (isMapReady.value && isBootDone.value && hasUserLocation.value)
+    hideAppSplash()
+})
+
+// Доступ к гео не дали — координат не будет никогда, а водителю нужен
+// LocationGate: снимаем сплэш сразу, иначе он накроет экран запроса доступа.
+watch(locationStatus, (value) => {
+  if (value === 'denied')
+    hideAppSplash()
+}, { immediate: true })
 
 useHead({
   title: 'Водитель | Telegram Taxi',
@@ -238,17 +262,25 @@ onMounted(async () => {
     .catch(() => {})
   autoRedeemReferral().catch(() => {})
   autoHandleParkInvite().catch(() => {})
-  await driver.restoreActiveTrip().catch(() => {})
-  // ensureProfile сам подтягивает доступные/активные тарифы (available/active
-  // categories) — нужны панели статуса, даже если водитель зашёл сразу на карту.
-  driver.ensureProfile().catch(() => {})
-  // Подтягиваем уже добавленную машину, чтобы водитель не добавлял её заново.
-  onboarding.loadVehicles().catch(() => {})
-  checkVerificationReminder()
-  startWatchingUserLocation()
 
-  if (driver.isOnline || driver.hasActiveTrip)
-    tracking.connect()
+  try {
+    await driver.restoreActiveTrip().catch(() => {})
+    // ensureProfile сам подтягивает доступные/активные тарифы (available/active
+    // categories) — нужны панели статуса, даже если водитель зашёл сразу на карту.
+    driver.ensureProfile().catch(() => {})
+    // Подтягиваем уже добавленную машину, чтобы водитель не добавлял её заново.
+    onboarding.loadVehicles().catch(() => {})
+    checkVerificationReminder()
+    startWatchingUserLocation()
+
+    if (driver.isOnline || driver.hasActiveTrip)
+      tracking.connect()
+  }
+  finally {
+    // finally: что бы ни упало по пути, стартовый сценарий считаем отработавшим —
+    // иначе сплэш висел бы до предохранителя.
+    isBootDone.value = true
+  }
 })
 
 async function checkVerificationReminder() {
@@ -363,6 +395,7 @@ async function toggleOnline() {
       :stop-places="stopPlaces"
       :user-coordinates="liveCoordinates"
       @pointerdown="statusPanelRef?.collapseToMap()"
+      @ready="isMapReady = true"
     />
 
     <!-- Напоминание о незавершённой верификации -->

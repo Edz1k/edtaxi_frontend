@@ -48,6 +48,9 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   cancelPicker: []
   confirmPicker: [place: GeoPlace, mode: MapPickerMode]
+  // ready — карта отрисована (событие 'load' mapbox). По нему стартовый экран
+  // понимает, что показывать уже есть что.
+  ready: []
   selectFavorite: [place: GeoPlace]
 }>()
 
@@ -265,6 +268,8 @@ onMounted(async () => {
   const cachedCenter = loadCachedLocation()
 
   await initializeMap(() => {
+    emit('ready')
+
     if (props.userCoordinates) {
       if (props.driverView)
         showSelfCarLocation(props.userCoordinates, { focus: props.focusUserOnFirstFix })
