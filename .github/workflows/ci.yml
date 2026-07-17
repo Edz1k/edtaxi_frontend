@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, staging]
 
 # Отменяем предыдущий прогон для той же PR-ветки при новом пуше — не жжём раннеры.
 concurrency:
@@ -54,6 +54,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Значения здесь — просто чтобы сборка прошла; артефакт никуда не едет.
+      # Настоящие значения на контур резолвит job `config` в deploy.yml.
+      # NB: именно расхождение этого блока с deploy.yml когда-то и замаскировало
+      # баг с VITE_MAPBOX_TOKEN у Share — тут токен передавался, там нет, CI был
+      # зелёный, а прод битый. Держите списки переменных в этих двух файлах
+      # согласованными.
       - name: Build ${{ matrix.label }}
         run: pnpm --filter @edtaxi/${{ matrix.app }} build
         env:
@@ -61,6 +67,8 @@ jobs:
           VITE_WS_URL: wss://ws.telegramtaxi.kz
           VITE_SHARE_URL: https://share.telegramtaxi.kz
           VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+          VITE_TG_BOT_USERNAME: ${{ matrix.app == 'driver' && 'drivertaximinibot' || 'telegtaxi_bot' }}
+          VITE_TG_DRIVER_BOT_USERNAME: drivertaximinibot
 
   # Аудит зависимостей: блокирует только на critical (must-fix). High/moderate
   # печатаются в логах, но не рушат PR — чтобы неисправимые транзитивные advisory

@@ -1,0 +1,60 @@
+name: Branch invariant
+
+# Проверяет инвариант main ⊆ staging: всё, что в проде, есть и в тесте.
+# Нарушение означает, что следующий промоушен staging → main откатит то, чего
+# в staging не хватает.
+#
+# ВАЖНО — почему тут НЕТ `push: [main]`, хотя напрашивается:
+# промоушен создаёт в main мерж-коммит M с родителями (main_old, staging_tip).
+# M — ПОТОМОК staging_tip, а не предок, поэтому --is-ancestor вернёт false и
+# проверка падала бы на КАЖДОМ штатном промоушене, до отработки back-merge.
+# Датчик, который орёт при нормальной готовке, отключают через две недели — и он
+# молчит в тот единственный раз, когда газ реально пошёл. Восстановлением
+# инварианта занимается back-merge.yml, а этот workflow — сеть безопасности
+# на случай, если back-merge упал или его обошли.
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  main-subset-of-staging:
+    name: main ⊆ staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Проверка инварианта
+        run: |
+          set -euo pipefail
+          # Отдельными вызовами и с `|| true`: пока ветки staging нет,
+          # `git fetch origin main staging` упал бы с "couldn't find remote ref
+          # staging" ещё ДО проверки ниже — и workflow краснел бы по расписанию
+          # на пустом месте. checkout с fetch-depth: 0 и так притащил все ветки,
+          # так что fetch тут — просто подстраховка.
+          git fetch origin main || true
+          git fetch origin staging || true
+
+          if ! git show-ref --verify --quiet refs/remotes/origin/staging; then
+            echo "ветки staging ещё нет — пропускаем"
+            exit 0
+          fi
+
+          if git merge-base --is-ancestor origin/main origin/staging; then
+            echo "OK: main ⊆ staging"
+            exit 0
+          fi
+
+          echo "::error::main НЕ является предком staging — ветки разошлись."
+          echo "Следующий промоушен staging → main ОТКАТИТ коммиты ниже."
+          echo "Почини: git checkout staging && git merge origin/main && git push"
+          echo "--- есть в main, но нет в staging:"
+          git log --oneline origin/staging..origin/main
+          exit 1

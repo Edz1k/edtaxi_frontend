@@ -1,16 +1,22 @@
 name: Deploy Frontend
 
+# main → прод, staging → тестовый контур (отдельный VPS).
+#
+# VITE_* вшиваются в бандл на этапе сборки, поэтому «собрать один раз и
+# промоутить артефакт» здесь не работает: тестовый и прод-бандл физически разные.
+# Собираем в каждом контуре свой.
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
 
 env:
   NODE_VERSION: '22'
   PNPM_VERSION: 10.30.2
 
-# Не допускаем параллельных прод-деплоев: второй пуш ждёт, а не перетирает rsync.
+# Очередь на контур: прод и staging не блокируют друг друга, но два пуша в одну
+# ветку не дерутся за rsync.
 concurrency:
-  group: deploy-production
+  group: deploy-${{ github.ref_name }}
   cancel-in-progress: false
 
 permissions:
@@ -18,15 +24,68 @@ permissions:
   actions: read # для download-artifact при явном permissions-блоке
 
 jobs:
-  # Гейт качества перед сборкой и деплоем — прод не уезжает без зелёных
-  # lint / typecheck / test (тот же quality.yml, что гейтит PR).
+  # Все различия между контурами резолвятся ЗДЕСЬ, в одном месте. Размазывать
+  # их по шагам нельзя: ветвление внутри шагов деплоя — это как раз то, из-за
+  # чего одна опечатка уводит staging-действие на прод.
+  #
+  # Каталогов на сервере тут нет намеренно: staging живёт на ОТДЕЛЬНОМ VPS, и
+  # пути там те же самые (/var/www/*), различается только хост — а он приезжает
+  # из environment-секретов.
+  config:
+    name: Resolve environment
+    runs-on: ubuntu-latest
+    outputs:
+      env_name: ${{ steps.s.outputs.env_name }}
+      ws_url: ${{ steps.s.outputs.ws_url }}
+      share_url: ${{ steps.s.outputs.share_url }}
+      tg_pass_bot: ${{ steps.s.outputs.tg_pass_bot }}
+      tg_driver_bot: ${{ steps.s.outputs.tg_driver_bot }}
+      smoke_hosts: ${{ steps.s.outputs.smoke_hosts }}
+    steps:
+      - id: s
+        run: |
+          set -euo pipefail
+          # github.ref_name = "main"; github.ref = "refs/heads/main". Не перепутать.
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            {
+              echo "env_name=production"
+              echo "ws_url=wss://ws.telegramtaxi.kz"
+              echo "share_url=https://share.telegramtaxi.kz"
+              echo "tg_pass_bot=telegtaxi_bot"
+              echo "tg_driver_bot=drivertaximinibot"
+              echo "smoke_hosts=telegramtaxi.kz passenger.telegramtaxi.kz driver.telegramtaxi.kz share.telegramtaxi.kz"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "env_name=staging"
+              echo "ws_url=wss://ws.test.telegramtaxi.kz"
+              echo "share_url=https://share.test.telegramtaxi.kz"
+              # TODO: заменить на реальные usernames после создания тестовых ботов
+              # в BotFather (этап 5 в docs/staging-plan.md бэкенда).
+              echo "tg_pass_bot=CHANGE_ME_test_passenger_bot"
+              echo "tg_driver_bot=CHANGE_ME_test_driver_bot"
+              echo "smoke_hosts=test.telegramtaxi.kz passenger.test.telegramtaxi.kz driver.test.telegramtaxi.kz share.test.telegramtaxi.kz"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
   quality:
     uses: ./.github/workflows/quality.yml
 
-  build-passenger:
-    name: Build Passenger
-    needs: quality
+  # Было четыре почти одинаковых job'а. label специально сохранён прежним
+  # ("Build Passenger" и т.п.), чтобы required-чеки в branch protection не порвались
+  # и матчились и на PR (ci.yml), и на push.
+  build:
+    name: Build ${{ matrix.label }}
+    needs: [config, quality]
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {app: passenger, label: Passenger}
+          - {app: driver, label: Driver}
+          - {app: web, label: Web}
+          - {app: share, label: Share}
     steps:
       - uses: actions/checkout@v7
 
@@ -42,137 +101,63 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm --filter @edtaxi/passenger build
+      - name: Build ${{ matrix.label }}
+        run: pnpm --filter @edtaxi/${{ matrix.app }} build
         env:
+          # Относительный путь: фронт бьёт в свой origin, Caddy проксирует /api/*
+          # на бэкенд. Поэтому один и тот же на обоих контурах.
           VITE_API_URL: /api/v1
-          VITE_WS_URL: wss://ws.telegramtaxi.kz
-          VITE_SHARE_URL: https://share.telegramtaxi.kz
+          # Обязателен: WS живёт на отдельном поддомене ws.*, а Caddy на vhost'ах
+          # мини-аппов хендлит только /api/* и /uploads/*. Без переменной
+          # toWsBaseUrl() вывел бы адрес из origin и упёрся бы в file_server.
+          VITE_WS_URL: ${{ needs.config.outputs.ws_url }}
+          # Обязателен на staging: иначе тестовый пассажир генерит ссылки на
+          # прод-share, где его токена нет → 404.
+          VITE_SHARE_URL: ${{ needs.config.outputs.share_url }}
+          # ФИКС: раньше Build Share не получал токен, хотя apps/share использует
+          # useMapboxMap (читает токен на уровне модуля) → карта на
+          # share.telegramtaxi.kz показывала «Добавь VITE_MAPBOX_TOKEN в .env»
+          # вместо карты. В ci.yml токен передавался всем — поэтому CI был зелёный,
+          # а прод битый. У @edtaxi/web зависимости mapbox-gl нет, лишний токен
+          # там безвреден.
           VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+          # ЛОВУШКА: apps/passenger и apps/driver читают ОДНО И ТО ЖЕ имя
+          # VITE_TG_BOT_USERNAME, но подразумевают РАЗНЫХ ботов — разводим по app.
+          # Задаём явно в обоих контурах: раньше переменные не задавались нигде и
+          # работали хардкод-фолбэки, причём водительский ('Tgrtazidricevkt_bot')
+          # протух — QR-приглашения в парк и рефералки водителя вели в
+          # несуществующего бота.
+          VITE_TG_BOT_USERNAME: ${{ matrix.app == 'driver' && needs.config.outputs.tg_driver_bot || needs.config.outputs.tg_pass_bot }}
+          VITE_TG_DRIVER_BOT_USERNAME: ${{ needs.config.outputs.tg_driver_bot }}
 
       - uses: actions/upload-artifact@v7
         with:
-          name: dist-passenger
-          path: apps/passenger/dist
-          retention-days: 1
-
-  build-driver:
-    name: Build Driver
-    needs: quality
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm --filter @edtaxi/driver build
-        env:
-          VITE_API_URL: /api/v1
-          VITE_WS_URL: wss://ws.telegramtaxi.kz
-          VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: dist-driver
-          path: apps/driver/dist
-          retention-days: 1
-
-  build-web:
-    name: Build Web
-    needs: quality
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm --filter @edtaxi/web build
-        env:
-          VITE_API_URL: /api/v1
-          VITE_WS_URL: wss://ws.telegramtaxi.kz
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: dist-web
-          path: apps/web/dist
-          retention-days: 1
-
-  build-share:
-    name: Build Share
-    needs: quality
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm --filter @edtaxi/share build
-        env:
-          VITE_API_URL: /api/v1
-          VITE_WS_URL: wss://ws.telegramtaxi.kz
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: dist-share
-          path: apps/share/dist
+          name: dist-${{ matrix.app }}
+          path: apps/${{ matrix.app }}/dist
           retention-days: 1
 
   deploy:
     name: Deploy to Server
     runs-on: ubuntu-latest
-    # Хук для защиты окружения: настрой required reviewers на environment
-    # "production" в настройках репо, чтобы прод-деплой требовал апрува.
-    environment: production
-    needs: [build-passenger, build-driver, build-web, build-share]
+    # SERVER_* берутся ИЗ ENVIRONMENT, а не из repo-секретов: одноимённые
+    # repo-секреты должны быть удалены, иначе job без environment: молча уехал бы
+    # на прод. Пустое лучше, чем неправильное — ssh упадёт с "missing server host".
+    # На production дополнительно вешаются required reviewers.
+    environment: ${{ needs.config.outputs.env_name }}
+    needs: [config, build]
     steps:
       - uses: actions/download-artifact@v8
         with:
           name: dist-passenger
           path: dist/passenger
-
       - uses: actions/download-artifact@v8
         with:
           name: dist-driver
           path: dist/driver
-
       - uses: actions/download-artifact@v8
         with:
           name: dist-web
           path: dist/web
-
       - uses: actions/download-artifact@v8
         with:
           name: dist-share
@@ -191,14 +176,25 @@ jobs:
             "sudo mkdir -p /var/www/{passenger,driver,web,share} && \
              sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} /var/www"
 
-      - name: Deploy passenger
-        run: rsync -avz --delete dist/passenger/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/passenger/
+      - name: Deploy apps
+        run: |
+          set -euo pipefail
+          for app in passenger driver web share; do
+            rsync -avz --delete "dist/$app/" \
+              "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/$app/"
+          done
 
-      - name: Deploy driver
-        run: rsync -avz --delete dist/driver/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/driver/
-
-      - name: Deploy web
-        run: rsync -avz --delete dist/web/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/web/
-
-      - name: Deploy share
-        run: rsync -avz --delete dist/share/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/share/
+      # Без этого «rsync прошёл» = зелёный деплой, даже если Caddy не отдаёт
+      # статику (нет сертификата, не тот root, лежит бэкенд).
+      - name: Smoke
+        env:
+          HOSTS: ${{ needs.config.outputs.smoke_hosts }}
+        run: |
+          set -euo pipefail
+          failed=0
+          for h in $HOSTS; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "https://$h/" || echo 000)
+            echo "$h → $code"
+            [ "$code" = "200" ] || failed=1
+          done
+          [ "$failed" = "0" ] || { echo "::error::не все хосты отдают 200 — см. вывод выше"; exit 1; }
