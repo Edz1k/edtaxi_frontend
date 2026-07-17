@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { EstimateTripResponse, PaymentMethod, VehicleCategory } from '~/types/trips'
+import type { CategoryGroup, EstimateTripResponse, PaymentMethod, VehicleCategory } from '~/types/trips'
 import { getBonusOverview } from '@edtaxi/shared/api/bonus'
 import CardBrandMark from '~/components/CardBrandMark.vue'
 import CardPickerSheet from '~/components/passenger/downbar/CardPickerSheet.vue'
-import { formatFare, PAYMENT_META, PAYMENT_ORDER, TARIFF_META, TARIFF_ORDER } from '~/constants/tariffs'
+import { CATEGORY_GROUPS, formatFare, GROUP_META, GROUP_ORDER, isMotoCategory, PAYMENT_META, PAYMENT_ORDER, TARIFF_META, TARIFF_ORDER } from '~/constants/tariffs'
 import { useTripsStore } from '~/stores/trips'
 import { useWalletStore } from '~/stores/wallet'
 
@@ -84,21 +84,60 @@ const tariffs = computed(() =>
     .filter(estimate => estimate !== undefined),
 )
 
+// Табы групп (п.30): Мото | Такси | Хантакси. Показываем только группы с
+// оценёнными тарифами; единственную группу табами не дублируем.
+const availableGroups = computed(() =>
+  GROUP_ORDER.filter(group => tariffs.value.some(tariff => CATEGORY_GROUPS[tariff.category] === group)),
+)
+const activeGroup = ref<CategoryGroup>('taxi')
+
+watch(availableGroups, (groups) => {
+  if (groups.length && !groups.includes(activeGroup.value)) {
+    const selectedGroup = CATEGORY_GROUPS[trips.selectedCategory]
+    activeGroup.value = groups.includes(selectedGroup) ? selectedGroup : groups[0]!
+  }
+}, { immediate: true })
+
+// Выбор категории пришёл извне карусели (восстановление стора) — таб следует
+// за ним, чтобы выбранная карточка не оказалась на скрытом табе.
+watch(() => trips.selectedCategory, (category) => {
+  const group = CATEGORY_GROUPS[category]
+  if (availableGroups.value.includes(group))
+    activeGroup.value = group
+})
+
+const visibleTariffs = computed(() =>
+  availableGroups.value.length > 1
+    ? tariffs.value.filter(tariff => CATEGORY_GROUPS[tariff.category] === activeGroup.value)
+    : tariffs.value,
+)
+
+// Переключение таба сразу выбирает первую категорию группы — иначе подпись и
+// кнопка заказа продолжали бы жить на категории со скрытого таба.
+function selectGroup(group: CategoryGroup) {
+  if (activeGroup.value === group)
+    return
+  activeGroup.value = group
+  const first = tariffs.value.find(tariff => CATEGORY_GROUPS[tariff.category] === group)
+  if (first && CATEGORY_GROUPS[trips.selectedCategory] !== group)
+    trips.selectCategory(first.category)
+}
+
 function isSelected(category: VehicleCategory) {
   return trips.selectedCategory === category
 }
 
-// Мото — повышенный риск: договора со страховой пока нет, поездка НЕ
-// застрахована. Заказ мото доступен только после явного согласия
+// Мото-группа (мотоцикл/мопед) — повышенный риск: договора со страховой пока
+// нет, поездка НЕ застрахована. Заказ доступен только после явного согласия
 // «еду на свой страх и риск» (чекбокс гейтит кнопку заказа).
 const motoConsent = ref(false)
-const needsMotoConsent = computed(() => trips.selectedCategory === 'moto' && !motoConsent.value)
+const needsMotoConsent = computed(() => isMotoCategory(trips.selectedCategory) && !motoConsent.value)
 
 // --- Пожелания к заказу (волна 2A) ---
 
-// Кресло/животное на мото невозможны — чипы блокируются, стор при выборе
-// мото сам снимает платные опции.
-const isMotoSelected = computed(() => trips.selectedCategories.includes('moto'))
+// Кресло/животное на мото-группе невозможны — чипы блокируются, стор при
+// выборе мото/мопеда сам снимает платные опции.
+const isMotoSelected = computed(() => trips.selectedCategories.some(isMotoCategory))
 
 // Прайс опций из оценки (одинаков для всех категорий; 0 = доплаты нет).
 const surchargeChildSeat = computed(() => trips.tariffEstimates[0]?.surcharge_child_seat ?? 0)
@@ -164,13 +203,35 @@ function toggleFriendOrder() {
         Тариф
       </p>
 
+      <!-- Табы групп (п.30): рисуем только когда групп больше одной -->
+      <div
+        v-if="availableGroups.length > 1"
+        class="mb-2 flex gap-1 rounded-2xl bg-white/5 p-1"
+        role="tablist"
+        aria-label="Группа тарифов"
+      >
+        <button
+          v-for="group in availableGroups"
+          :key="group"
+          class="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[12px] font-900 transition active:scale-[0.98]"
+          :class="activeGroup === group ? 'bg-main-500/20 text-main-200' : 'text-white/60'"
+          role="tab"
+          :aria-selected="activeGroup === group"
+          type="button"
+          @click="selectGroup(group)"
+        >
+          <span :class="GROUP_META[group].icon" class="text-4.5" aria-hidden="true" />
+          {{ GROUP_META[group].label }}
+        </button>
+      </div>
+
       <div
         class="[scrollbar-width:none] flex snap-x snap-mandatory gap-2 overflow-x-auto px-3 pb-1 -mx-3 [&::-webkit-scrollbar]:hidden"
         role="radiogroup"
         aria-label="Выбор тарифа"
       >
         <button
-          v-for="tariff in tariffs"
+          v-for="tariff in visibleTariffs"
           :key="tariff.category"
           class="w-27 flex shrink-0 flex-col snap-center items-center gap-1.5 border rounded-2xl px-3 py-3 transition active:scale-[0.97]"
           :class="isSelected(tariff.category)
@@ -213,12 +274,12 @@ function toggleFriendOrder() {
            «Поездка застрахована» убрано осознанно — договора со страховой нет,
            без согласия кнопка заказа неактивна (TODO п.20). -->
       <div
-        v-if="trips.selectedCategory === 'moto'"
+        v-if="isMotoCategory(trips.selectedCategory)"
         class="mt-2 rounded-2xl bg-amber-500/12 px-3 py-2.5 space-y-2"
       >
         <p class="flex items-start gap-2 text-[12px] text-amber-200 leading-4">
           <span class="i-mdi-alert-outline mt-0.5 shrink-0 text-4.5 text-amber-300" aria-hidden="true" />
-          Мототакси: только 1 пассажир, водитель обязан выдать вам шлем. Поездка не застрахована — вы едете на свой страх и риск.
+          Мото-поездка: только 1 пассажир, водитель обязан выдать вам шлем. Поездка не застрахована — вы едете на свой страх и риск.
         </p>
         <button
           class="w-full flex items-center gap-2 rounded-xl bg-white/6 px-2.5 py-2 text-left transition active:scale-[0.99]"

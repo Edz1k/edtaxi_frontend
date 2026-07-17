@@ -153,7 +153,12 @@ export interface AdminTechSupportNumberPayload {
   name?: string
 }
 
-export type TariffCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
+export type TariffCategory = 'business' | 'business_plus' | 'comfort' | 'comfort_plus' | 'economy' | 'minivan' | 'moped' | 'moto'
+
+// Группа категории (п.30): moto — мото-лестница, taxi — обычное такси,
+// khan — премиальное «Хантакси». Приходит с бэка в тарифах, локально
+// дублируется в CATEGORY_GROUPS для группировки без запроса.
+export type TariffCategoryGroup = 'khan' | 'moto' | 'taxi'
 
 // Тариф платформы (park_id IS NULL) — базовые параметры расчёта цены плюс
 // surge_max, потолок коэффициента спроса для категории.
@@ -161,6 +166,8 @@ export type TariffCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'm
 export interface Tariff {
   id: string
   category: TariffCategory
+  // Группа категории с бэка (опциональна для обратной совместимости).
+  group?: TariffCategoryGroup
   name: string
   base_fare: number
   per_km: number
