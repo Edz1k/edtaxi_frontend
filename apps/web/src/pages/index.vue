@@ -203,6 +203,9 @@ const fleetItems = computed(() => [
       </div>
     </section>
 
+    <!-- Services & payment -->
+    <ServicesSection />
+
     <!-- Token -->
     <section id="token" class="relative scroll-mt-28 px-5 py-20 md:py-28">
       <div class="rounded-4xl mx-auto max-w-1180px border border-cyan-300/20 bg-cyan-300/8 p-7 backdrop-blur md:p-10">
@@ -371,5 +374,8 @@ const fleetItems = computed(() => [
         </div>
       </div>
     </section>
+
+    <!-- Footer -->
+    <SiteFooter />
   </main>
 </template>

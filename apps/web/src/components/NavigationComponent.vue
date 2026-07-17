@@ -13,6 +13,7 @@ const navItems = computed(() => [
   { label: t('nav.home'), id: 'hero', widthClass: 'w-18' },
   { label: t('nav.platform'), id: 'platform', widthClass: 'w-22' },
   { label: t('nav.apps'), id: 'apps', widthClass: 'w-24' },
+  { label: t('nav.services'), id: 'services', widthClass: 'w-20' },
   { label: t('nav.token'), id: 'token', widthClass: 'w-16' },
   { label: t('nav.fleets'), id: 'fleets', widthClass: 'w-34' },
   { label: t('nav.investment'), id: 'investment', widthClass: 'w-25' },
