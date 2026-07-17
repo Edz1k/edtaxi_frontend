@@ -5,8 +5,10 @@ import ReferralWelcomeModal from '@edtaxi/shared/components/bonus/ReferralWelcom
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
 import MapStyleSwitcher from '@edtaxi/shared/components/map/MapStyleSwitcher.vue'
 import WeatherBadge from '@edtaxi/shared/components/weather/WeatherBadge.vue'
+import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { useUserLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { captureReferralStartParam, takePendingReferralCode } from '@edtaxi/shared/composables/telegram/referral'
+import { hideAppSplash } from '@edtaxi/shared/composables/useAppSplash'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
 import { useWeather } from '@edtaxi/shared/composables/useWeather'
 import { usePassengerTripSocket } from '~/composables/passenger/usePassengerTripSocket'
@@ -67,11 +69,52 @@ const locationLine = computed(() => {
 definePage({
   meta: {
     authRedirect: '/login',
+    // Стартовый экран снимаем не по mount, а когда карте есть что показать:
+    // отрисовка + отработавший стартовый сценарий (см. ниже).
+    holdSplash: true,
     layout: 'passenger',
     requiresAuth: true,
     requiredRole: 'passenger',
   },
 })
+
+const isMapReady = ref(false)
+const isBootDone = ref(false)
+// Гео считаем полученным по факту координат, а не по завершению onMounted: при
+// восстановленной поездке locateUser не вызывается вовсе, координаты приходят
+// из startWatchingUserLocation.
+const hasUserLocation = computed(() => Boolean(liveCoordinates.value))
+
+const { isGranted: isLocationGranted, isRequesting: isRequestingLocation, status: locationStatus } = useLocationAccess()
+
+// Сплэш ждёт, пока приложение ГРУЗИТСЯ, но не пока оно ждёт решения человека.
+// Гейт геолокации (LocationGate) — блокирующий экран поверх карты; пока он
+// висит, координат не будет никогда, и держать сплэш бессмысленно: он просто
+// накрывает собой вопрос, на который надо ответить.
+//   isGranted        — доступ есть, ждём координаты;
+//   'unknown'        — проверка ещё не начиналась, ждём;
+//   isRequesting     — промпт открыт (он поверх вебвью), ждём ответа;
+//   иначе            — запрос завершился без доступа: гейт ждёт нажатия, уходим.
+const isWaitingForLocation = computed(() =>
+  locationStatus.value === 'unknown' || isRequestingLocation.value,
+)
+const isBlockedByLocationGate = computed(() =>
+  !isLocationGranted.value && !isWaitingForLocation.value,
+)
+
+// Сплэш уходит, когда карта отрисована, отработал стартовый сценарий и пришли
+// координаты — либо когда ждать больше нечего и нужен ответ пользователя.
+// Раньше он снимался сразу после mount — отсюда и «мелькнул на миллисекунду»:
+// mount происходит задолго до готовности карты.
+watch([isMapReady, isBootDone, hasUserLocation, isBlockedByLocationGate], () => {
+  if (isBlockedByLocationGate.value) {
+    hideAppSplash()
+    return
+  }
+
+  if (isMapReady.value && isBootDone.value && hasUserLocation.value)
+    hideAppSplash()
+}, { immediate: true })
 
 // Бейдж бонусов в углу карты: пока баланс не загрузился (или упал) — не
 // показываем, чтобы не рисовать пустышку поверх карты.
@@ -121,19 +164,26 @@ onMounted(async () => {
   autoRedeemReferral().catch(() => {})
 
   try {
-    await passenger.loadProfile()
+    try {
+      await passenger.loadProfile()
+    }
+    catch {}
+
+    if (!places.places.length)
+      places.load().catch(() => {})
+
+    const restoredTrip = await trips.restoreActiveTrip().catch(() => null)
+
+    if (!restoredTrip)
+      await setPickupFromCurrentLocation()
+
+    startWatchingUserLocation()
   }
-  catch {}
-
-  if (!places.places.length)
-    places.load().catch(() => {})
-
-  const restoredTrip = await trips.restoreActiveTrip().catch(() => null)
-
-  if (!restoredTrip)
-    await setPickupFromCurrentLocation()
-
-  startWatchingUserLocation()
+  finally {
+    // finally: что бы ни упало по пути, стартовый сценарий считаем отработавшим —
+    // иначе сплэш висел бы до предохранителя.
+    isBootDone.value = true
+  }
 })
 
 async function setPickupFromCurrentLocation() {
@@ -191,6 +241,7 @@ async function setPickupFromCurrentLocation() {
       @cancel-picker="trips.cancelMapPicker"
       @confirm-picker="trips.confirmMapPicker"
       @pointerdown="downbarRef?.collapseToMap()"
+      @ready="isMapReady = true"
       @select-favorite="selectFavoritePlace"
     />
     <Downbar
@@ -201,6 +252,7 @@ async function setPickupFromCurrentLocation() {
       v-model:locating-user="isLocating"
       v-model:pickup="trips.pickup"
       v-model:pickup-place="trips.pickupPlace"
+      :user-coordinates="liveCoordinates"
       @locate-user="setPickupFromCurrentLocation"
       @pick-from-map="trips.startMapPicker"
     />

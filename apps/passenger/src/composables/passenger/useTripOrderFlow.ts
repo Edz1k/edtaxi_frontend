@@ -1,8 +1,12 @@
+import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
+import type { RecentRider } from '~/composables/passenger/useRecentRiders'
 import { showErrorToast } from '~/api/errors'
+import { useRecentRiders } from '~/composables/passenger/useRecentRiders'
 import { useRoutePlanner } from '~/composables/passenger/useRoutePlanner'
 import { formatFare } from '~/constants/tariffs'
 import { useTripsStore } from '~/stores/trips'
+import { distanceMeters } from '~/utils/eta'
 
 interface UseTripOrderFlowOptions {
   clearDestinationSuggestions: () => void
@@ -11,11 +15,41 @@ interface UseTripOrderFlowOptions {
   destinationPlace: Ref<GeoPlace | null>
   pickup: Ref<string>
   pickupPlace: Ref<GeoPlace | null>
+  userCoordinates: Ref<null | UserCoordinates>
 }
+
+// Дальше этого расстояния между реальной геопозицией и точкой А считаем, что
+// машину заказывают не себе, и спрашиваем «Кто поедет?». Ближе — обычный дрейф
+// GPS, соседний подъезд и погрешность геокодера: дёргать пользователя незачем.
+const PICKUP_MISMATCH_METERS = 500
 
 export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
   const trips = useTripsStore()
+  const { remember: rememberRider } = useRecentRiders()
   const isSubmittingRoute = ref(false)
+
+  // «Кто поедет?»: спрашиваем один раз на выбранную точку А, ответ держим до
+  // её смены — иначе вопрос всплывал бы на каждый тап «Заказать».
+  const isRiderSheetOpen = ref(false)
+  const isRiderConfirmed = ref(false)
+
+  const pickupDistanceMeters = computed(() => {
+    const coords = options.userCoordinates.value
+    const place = options.pickupPlace.value
+    if (!coords || !place)
+      return null
+
+    return distanceMeters(coords.lat, coords.lng, place.lat, place.lng)
+  })
+
+  const isPickupFarFromUser = computed(() => {
+    const distance = pickupDistanceMeters.value
+    return distance !== null && distance > PICKUP_MISMATCH_METERS
+  })
+
+  watch(options.pickupPlace, () => {
+    isRiderConfirmed.value = false
+  })
 
   const {
     isResolvingRoute,
@@ -87,6 +121,13 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
     if (!canSubmit.value || isBusy.value)
       return
 
+    // Точка подачи далеко от реальной позиции — уточняем, кто поедет, ДО
+    // создания заказа. Проверка на уже загруженных данных, маршрут не трогаем.
+    if (isTariffsVisible.value && isPickupFarFromUser.value && !isRiderConfirmed.value) {
+      isRiderSheetOpen.value = true
+      return
+    }
+
     isSubmittingRoute.value = true
 
     try {
@@ -118,6 +159,29 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
     }
   }
 
+  // Ответы на «Кто поедет?» пишутся в те же friend_*-опции, что и ручной «заказ
+  // другу» в «Пожеланиях» — один источник правды, — после чего заказ уходит.
+  function confirmRiderIsMe() {
+    trips.setTripOption('friendName', '')
+    trips.setTripOption('friendPhone', '')
+    isRiderConfirmed.value = true
+    isRiderSheetOpen.value = false
+    return submitTrip()
+  }
+
+  function confirmRiderIsOther(rider: RecentRider) {
+    trips.setTripOption('friendName', rider.name)
+    trips.setTripOption('friendPhone', rider.phone)
+    rememberRider(rider)
+    isRiderConfirmed.value = true
+    isRiderSheetOpen.value = false
+    return submitTrip()
+  }
+
+  function closeRiderSheet() {
+    isRiderSheetOpen.value = false
+  }
+
   async function cancelSearch() {
     try {
       await trips.cancelActiveTrip()
@@ -130,9 +194,14 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
   return {
     canSubmit,
     cancelSearch,
+    closeRiderSheet,
+    confirmRiderIsMe,
+    confirmRiderIsOther,
     isBusy,
+    isRiderSheetOpen,
     isSearching,
     isTariffsVisible,
+    pickupDistanceMeters,
     primaryText,
     selectedEstimate,
     submitTrip,

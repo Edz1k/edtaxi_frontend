@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import BottomNav from '~/components/app/BottomNav.vue'
 import RouteHeader from '~/components/app/RouteHeader.vue'
+import { useTripsStore } from '~/stores/trips'
 
 const route = useRoute()
 const router = useRouter()
+const trips = useTripsStore()
 
 const navItems = [
   {
@@ -49,8 +51,10 @@ function goToPassengerMenu() {
       @back="goToPassengerMenu"
     />
 
+    <!-- Пока печатают адрес — таб-бар убираем: клавиатура и так съела пол-экрана,
+         а переключаться по вкладкам посреди ввода всё равно некуда. -->
     <BottomNav
-      v-if="isPassengerTabRoute"
+      v-if="isPassengerTabRoute && !trips.isAddressSearchOpen"
       aria-label="Навигация пассажира"
       data-selector="data-passenger-tabbar"
       :items="navItems"
