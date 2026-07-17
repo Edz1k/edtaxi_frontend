@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const contactEmail = 'info@telegramtaxi.kz'
-const telegramLink = 'https://t.me/telegramtaxi'
+const passengerBotLink = 'https://t.me/cityflowtaxi_bot'
+const driverBotLink = 'https://t.me/cityflowdriver_bot'
 
 const { t } = useI18n()
 
@@ -359,11 +360,19 @@ const fleetItems = computed(() => [
               </div>
             </a>
 
-            <a :href="telegramLink" target="_blank" rel="noreferrer" class="inline-flex items-center gap-3 border border-white/10 rounded-lg bg-white/8 p-3 hover:bg-white/12">
+            <a :href="passengerBotLink" target="_blank" rel="noreferrer" class="inline-flex items-center gap-3 border border-white/10 rounded-lg bg-white/8 p-3 hover:bg-white/12">
               <div class="i-mdi-telegram text-xl text-cyan-300" />
               <div>
-                <div class="text-sm text-white/50">{{ t('contact.telegramLabel') }}</div>
-                <div class="font-800">{{ t('contact.telegramValue') }}</div>
+                <div class="text-sm text-white/50">{{ t('contact.passengerBotLabel') }}</div>
+                <div class="font-800">{{ '@cityflowtaxi_bot' }}</div>
+              </div>
+            </a>
+
+            <a :href="driverBotLink" target="_blank" rel="noreferrer" class="inline-flex items-center gap-3 border border-white/10 rounded-lg bg-white/8 p-3 hover:bg-white/12">
+              <div class="i-mdi-steering text-xl text-cyan-300" />
+              <div>
+                <div class="text-sm text-white/50">{{ t('contact.driverBotLabel') }}</div>
+                <div class="font-800">{{ '@cityflowdriver_bot' }}</div>
               </div>
             </a>
           </div>

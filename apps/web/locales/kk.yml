@@ -140,6 +140,6 @@ contact:
   websiteLabel: Website
   websiteValue: telegramtaxi.kz
   emailLabel: Email
-  telegramLabel: Telegram
-  telegramValue: "{'@'}telegramtaxi"
+  passengerBotLabel: Жолаушыларға Telegram
+  driverBotLabel: Жүргізушілерге Telegram
   note: 'Инвесторларға арналған құжаттар мен сұраныстар: хат тақырыбында "Инвестиция" деп көрсетіңіз.'
