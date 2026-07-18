@@ -43,6 +43,14 @@ export function getDriverOverview() {
   return apiRequest<DriverOverview>('/driver/overview')
 }
 
+// Удаление аккаунта (водительской роли). Мягкое: рейтинг и штрафы сохраняются
+// при повторной регистрации на тот же номер, но для водителя это незаметно.
+// 204 при успехе; 403/409 (блокировка, активная поездка, смена, долг, деньги,
+// лимит) apiRequest бросит с сообщением сервера.
+export function deleteDriverAccount() {
+  return apiRequest<void>('/driver/account', { method: 'DELETE' })
+}
+
 export function createDriverProfile() {
   return apiRequest<DriverProfile>('/driver/profile', {
     method: 'POST',

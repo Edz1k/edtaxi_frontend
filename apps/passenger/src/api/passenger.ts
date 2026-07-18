@@ -45,3 +45,11 @@ export function verifyPassengerPhone(phone: string, code: string) {
     body: { code, phone },
   })
 }
+
+// Удаление аккаунта (пассажирской роли). Мягкое: рейтинг сохраняется при
+// повторной регистрации на тот же номер, но для пользователя это незаметно.
+// Бэкенд отвечает 204; при 403/409 (блокировка, активная поездка, деньги,
+// лимит) apiRequest бросит ошибку с сообщением сервера.
+export function deletePassengerAccount() {
+  return apiRequest<void>('/passenger/account', { method: 'DELETE' })
+}

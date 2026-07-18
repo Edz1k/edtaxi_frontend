@@ -66,6 +66,14 @@ export function logoutAll(_payload: LogoutAllPayload = {}) {
   })
 }
 
+// Пересоздание ранее удалённой водительской роли (экран «Аккаунт удалён»).
+export function recreateDriverAccount() {
+  return apiRequest<AuthLoginResponse>('/account/driver', {
+    method: 'POST',
+    body: {},
+  })
+}
+
 export function sendDriverAuthOtp(payload: SendOtpPayload) {
   return apiRequest<SendOtpResponse>('/driver/auth/otp/send', {
     method: 'POST',

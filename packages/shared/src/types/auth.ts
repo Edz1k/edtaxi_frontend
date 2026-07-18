@@ -12,6 +12,10 @@ export type OtpDeliveryMethod = 'sms' | 'whatsapp'
 export interface AuthLoginResponse {
   phone_verified?: boolean
   role: AuthRole
+  // true, если роль для этого мини-аппа была удалена и ещё не восстановлена.
+  // Сессия выдана (для других ролей), но приложение обязано показать экран
+  // «Аккаунт удалён. Создать новый?» → POST /account/{passenger,driver}.
+  account_deleted?: boolean
 }
 
 export interface AuthSession {

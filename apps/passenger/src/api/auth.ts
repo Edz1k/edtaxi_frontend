@@ -66,6 +66,15 @@ export function logoutAll(_payload: LogoutAllPayload = {}) {
   })
 }
 
+// Пересоздание ранее удалённой пассажирской роли (экран «Аккаунт удалён»).
+// Бэк восстанавливает роль и перевыпускает токен-cookie.
+export function recreatePassengerAccount() {
+  return apiRequest<AuthLoginResponse>('/account/passenger', {
+    method: 'POST',
+    body: {},
+  })
+}
+
 export function sendDriverAuthOtp(payload: SendOtpPayload) {
   return apiRequest<SendOtpResponse>('/driver/auth/otp/send', {
     method: 'POST',

@@ -5,9 +5,13 @@ import PhotoSourceSheet from '@edtaxi/shared/components/photo/PhotoSourceSheet.v
 import { usePhotoCapture } from '@edtaxi/shared/composables/photo/usePhotoCapture'
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui'
 import { mediaUrl } from '~/api/client'
-import { getPassengerOverview, uploadPassengerAvatar } from '~/api/passenger'
+import { deletePassengerAccount, getPassengerOverview, uploadPassengerAvatar } from '~/api/passenger'
 import { useToast } from '~/composables/useToast'
+import { useAuthStore } from '~/stores/auth'
 import { usePassengerStore } from '~/stores/passenger'
+
+const router = useRouter()
+const auth = useAuthStore()
 
 const data = ref<PassengerOverview | null>(null)
 const isLoading = ref(true)
@@ -141,6 +145,33 @@ const memberSince = computed(() => {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+}
+
+// Удаление аккаунта: подтверждение в модалке, затем DELETE /passenger/account.
+// Успех → выходим из сессии и уводим на экран входа (при следующем заходе
+// приложение снова попросит номер). Про архив/сохранение рейтинга пользователю
+// не сообщаем — для него удаление выглядит окончательным.
+const showDeleteConfirm = ref(false)
+const isDeleting = ref(false)
+
+async function confirmDeleteAccount() {
+  if (isDeleting.value)
+    return
+  isDeleting.value = true
+  try {
+    await deletePassengerAccount()
+    showDeleteConfirm.value = false
+    await auth.logout().catch(() => {})
+    await router.replace('/login')
+  }
+  catch (e: any) {
+    // Сервер объясняет отказ (блокировка, активная поездка, деньги на счету,
+    // лимит аккаунтов) — показываем его сообщение.
+    toast.error('Не удалось удалить', e?.message || 'Попробуйте позже или обратитесь в поддержку.')
+  }
+  finally {
+    isDeleting.value = false
+  }
 }
 </script>
 
@@ -378,7 +409,55 @@ function formatDate(value: string) {
             </p>
           </div>
         </div>
+
+        <!-- Удаление аккаунта — внизу, красным. Мягкое удаление на бэке. -->
+        <button
+          class="mt-8 h-14 w-full flex items-center justify-center rounded-2xl bg-red-500/12 text-sm text-red-300 font-900 transition active:scale-[0.98] disabled:opacity-60"
+          type="button"
+          @click="showDeleteConfirm = true"
+        >
+          <span class="i-mdi-trash-can-outline mr-2 text-5" />
+          Удалить аккаунт
+        </button>
       </template>
     </section>
+
+    <!-- Подтверждение удаления аккаунта -->
+    <Teleport to="body">
+      <div
+        v-if="showDeleteConfirm"
+        class="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+        @click.self="showDeleteConfirm = false"
+      >
+        <div class="max-w-sm w-full border border-white/10 rounded-3xl bg-secondary-900 p-5 shadow-2xl">
+          <span class="h-12 w-12 flex items-center justify-center rounded-2xl bg-red-500/14 text-red-300">
+            <span class="i-mdi-trash-can-outline text-7" />
+          </span>
+          <h3 class="mt-4 text-lg font-950">
+            Удалить аккаунт?
+          </h3>
+          <p class="mt-2 text-sm text-slate-400 leading-5">
+            Бонусы сгорят, восстановить аккаунт нельзя. При следующем входе нужно будет заново указать номер телефона.
+          </p>
+          <div class="mt-5 flex gap-2">
+            <button
+              class="h-12 flex-1 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+              type="button"
+              @click="showDeleteConfirm = false"
+            >
+              Отмена
+            </button>
+            <button
+              :disabled="isDeleting"
+              class="h-12 flex-1 rounded-2xl bg-red-500/80 text-sm text-white font-950 transition active:scale-[0.98] disabled:opacity-60"
+              type="button"
+              @click="confirmDeleteAccount"
+            >
+              {{ isDeleting ? 'Удаляем...' : 'Удалить' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </main>
 </template>

@@ -46,6 +46,8 @@ function buildListParams(params: AdminListTripsParams | AdminListUsersParams) {
     city: 'city' in params ? params.city || undefined : undefined,
     status: 'status' in params ? params.status || undefined : undefined,
     search: 'search' in params ? params.search || undefined : undefined,
+    // Показать «на пенсии» (удалённые) аккаунты — родословная номера.
+    include_deleted: 'includeDeleted' in params && params.includeDeleted ? true : undefined,
   }
 }
 

@@ -59,6 +59,11 @@ export const install: UserModule = ({ router }) => {
       await auth.restoreSession({ preferredRole })
     }
 
+    // Роль этого приложения была удалена (двухролевой удалил её): сессия жива,
+    // но роли нет — уводим на экран «Аккаунт удалён. Создать новый?».
+    if (auth.isAuthenticated && auth.accountDeleted && to.path !== '/account-deleted')
+      return '/account-deleted'
+
     // Номер телефона обязателен: вошедший через Telegram без привязанного
     // номера не идёт дальше экрана «Подтвердите номер».
     if (auth.isAuthenticated && !auth.phoneVerified && to.path !== '/login/phone')

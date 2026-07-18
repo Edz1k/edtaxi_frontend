@@ -12,6 +12,7 @@ vi.mock('~/api/auth', () => ({
   linkTelegramPhone: vi.fn(),
   logout: vi.fn(),
   logoutAll: vi.fn(),
+  recreateDriverAccount: vi.fn(),
   refreshToken: vi.fn(),
   sendDriverAuthOtp: vi.fn(),
   sendLinkPhoneOtp: vi.fn(),
