@@ -1,7 +1,18 @@
 export type TripStatus = 'awaiting_payment' | 'cancelled' | 'completed' | 'driver_arriving' | 'driver_assigned' | 'in_progress' | 'searching'
 export const TERMINAL_TRIP_STATUSES = ['cancelled', 'completed'] as const
 export type TripFlowState = 'awaiting_payment' | 'driver_arriving' | 'driver_assigned' | 'finished' | 'idle' | 'in_progress' | 'route_ready' | 'searching' | 'tariffs'
-export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
+export type VehicleCategory = 'business' | 'business_plus' | 'comfort' | 'comfort_plus' | 'economy' | 'minivan' | 'moped' | 'moto'
+// Группа категорий (п.30): табы карусели. moto — мото-лестница (мопед,
+// мотоцикл), taxi — обычное такси, khan — премиальное «Хантакси».
+export type CategoryGroup = 'khan' | 'moto' | 'taxi'
+
+// Активная категория тарифа с бэка (GET /tariffs/categories): источник
+// карусели — оцениваем только эти категории, пустые группы не показываем.
+export interface TariffCategoryInfo {
+  category: VehicleCategory
+  group: CategoryGroup
+  name: string
+}
 // Способ оплаты: cash — наличные водителю, card — списание с привязанной
 // карты при завершении поездки (если карты нет или списание не прошло, бэкенд
 // сам откатывается на баланс кошелька, затем на наличные), prepaid —
@@ -45,6 +56,8 @@ export interface EstimateTripPayload {
 
 export interface EstimateTripResponse {
   category: VehicleCategory
+  // Группа категории (п.30); опциональна для обратной совместимости со старым бэком.
+  group?: CategoryGroup
   distance_km: number
   duration_min: number
   estimated_fare: number

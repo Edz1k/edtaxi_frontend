@@ -10,6 +10,10 @@ declare module 'vue-router' {
     guestRedirect?: string
     guestOnly?: boolean
     guestOnlyRole?: RouteRole
+    // holdSplash — экран сам снимет стартовый сплэш, когда будет реально готов
+    // (карта: отрисовка + геопозиция). Без флага сплэш уходит сразу после
+    // монтирования, потому что ждать нечего. См. useAppSplash.
+    holdSplash?: boolean
     requiresAuth?: boolean
     requiresPendingPhone?: boolean
     requiredRole?: RouteRole

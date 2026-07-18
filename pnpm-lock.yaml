@@ -685,6 +685,9 @@ importers:
         specifier: catalog:frontend
         version: 3.5.39(typescript@5.9.3)
     devDependencies:
+      jsdom:
+        specifier: catalog:dev
+        version: 29.1.1
       typescript:
         specifier: catalog:dev
         version: 5.9.3

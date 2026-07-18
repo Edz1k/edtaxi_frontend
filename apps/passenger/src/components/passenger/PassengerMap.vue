@@ -26,6 +26,8 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   cancelPicker: []
   confirmPicker: [place: GeoPlace, mode: MapPickerMode]
+  // Карта отрисована — пробрасываем наверх, стартовый экран ждёт этого сигнала.
+  ready: []
   selectFavorite: [place: GeoPlace]
 }>()
 
@@ -87,6 +89,7 @@ function handleConfirmPicker(place: GeoPlace, mode: MapPickerMode) {
     :user-coordinates="userCoordinates"
     @cancel-picker="emit('cancelPicker')"
     @confirm-picker="handleConfirmPicker"
+    @ready="emit('ready')"
     @select-favorite="emit('selectFavorite', $event)"
   />
 </template>

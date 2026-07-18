@@ -1,6 +1,6 @@
 export type TripStatus = 'cancelled' | 'completed' | 'driver_arriving' | 'driver_assigned' | 'in_progress' | 'searching'
 export const TERMINAL_TRIP_STATUSES = ['cancelled', 'completed'] as const
-export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
+export type VehicleCategory = 'business' | 'business_plus' | 'comfort' | 'comfort_plus' | 'economy' | 'minivan' | 'moped' | 'moto'
 
 // Промежуточная остановка маршрута (до 3 на поездку).
 export interface TripStop {

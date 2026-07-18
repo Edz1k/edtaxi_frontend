@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Tariff, TariffCategory } from '~/types/admin'
-import { CATEGORY_ICONS, CATEGORY_LABELS, CATEGORY_ORDER } from '~/constants/admin'
+import { CATEGORY_GROUP_LABELS, CATEGORY_GROUPS, CATEGORY_ICONS, CATEGORY_LABELS, CATEGORY_ORDER } from '~/constants/admin'
 import { useAdminStore } from '~/stores/admin'
 
 const admin = useAdminStore()
@@ -155,6 +155,9 @@ onMounted(() => {
             <p class="mt-1 inline-flex items-center gap-1.5 text-xs text-white/42 font-900 uppercase">
               <span class="text-4" :class="CATEGORY_ICONS[tariff.category]" />
               {{ CATEGORY_LABELS[tariff.category] }}
+              <span class="border border-white/12 rounded-full px-1.5 py-0.5 text-[10px] text-white/50 normal-case">
+                {{ CATEGORY_GROUP_LABELS[CATEGORY_GROUPS[tariff.category]] }}
+              </span>
             </p>
           </div>
           <span

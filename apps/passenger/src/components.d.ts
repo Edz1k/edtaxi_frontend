@@ -38,5 +38,6 @@ declare module 'vue' {
     TripComplaintModal: typeof import('./components/history/TripComplaintModal.vue')['default']
     TripHistoryCard: typeof import('./components/history/TripHistoryCard.vue')['default']
     TripRatingModal: typeof import('./components/history/TripRatingModal.vue')['default']
+    WhoRidesSheet: typeof import('./components/passenger/downbar/WhoRidesSheet.vue')['default']
   }
 }

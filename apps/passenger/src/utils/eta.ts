@@ -4,12 +4,16 @@
 const EARTH_RADIUS_M = 6371000
 const CITY_SPEED_MS = (25 * 1000) / 3600
 
-export function coarseEtaSeconds(lat: number, lng: number, targetLat: number, targetLng: number) {
+// distanceMeters — расстояние по прямой (haversine) между двумя точками.
+export function distanceMeters(lat: number, lng: number, targetLat: number, targetLng: number) {
   const toRad = (deg: number) => (deg * Math.PI) / 180
   const dLat = toRad(targetLat - lat)
   const dLng = toRad(targetLng - lng)
   const a = Math.sin(dLat / 2) ** 2
     + Math.cos(toRad(lat)) * Math.cos(toRad(targetLat)) * Math.sin(dLng / 2) ** 2
-  const distM = 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a))
-  return Math.round(distM / CITY_SPEED_MS)
+  return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a))
+}
+
+export function coarseEtaSeconds(lat: number, lng: number, targetLat: number, targetLng: number) {
+  return Math.round(distanceMeters(lat, lng, targetLat, targetLng) / CITY_SPEED_MS)
 }

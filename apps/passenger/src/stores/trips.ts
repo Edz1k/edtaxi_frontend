@@ -6,8 +6,9 @@ import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocati
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
 import { getUserErrorMessage, showErrorToast } from '~/api/errors'
+import { getTariffCategories } from '~/api/tariffs'
 import { cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getTrip, getTripHistory, rateTrip, retryTripPrepay } from '~/api/trips'
-import { TARIFF_ORDER } from '~/constants/tariffs'
+import { DEFAULT_ACTIVE_CATEGORIES, isMotoCategory, TARIFF_ORDER } from '~/constants/tariffs'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
 import { isTerminalTripStatus } from '~/utils/trip'
 
@@ -31,6 +32,11 @@ function emptyTripOptions(): TripOptionsDraft {
 export const useTripsStore = defineStore('trips', () => {
   const estimate = ref<EstimateTripResponse | null>(null)
   const tariffEstimates = ref<EstimateTripResponse[]>([])
+  // Активные категории тарифов с бэка (п.30): оцениваем только их — оценка
+  // категории без активного тарифа падает. До ответа (или на старом бэке) —
+  // исторический фолбэк-набор.
+  const availableCategories = ref<VehicleCategory[]>(DEFAULT_ACTIVE_CATEGORIES)
+  let categoriesLoaded = false
   const selectedCategories = ref<VehicleCategory[]>(['economy'])
   // Способ оплаты — пользовательская настройка, живёт между заказами (не сбрасываем).
   const paymentMethod = ref<PaymentMethod>('cash')
@@ -79,6 +85,11 @@ export const useTripsStore = defineStore('trips', () => {
   // Сигнал даунбару «после выбора точки с карты/избранного — раскрыть поиск
   // адреса (2-й экран)», чтобы выбранная точка была на виду, а не терялась.
   const expandOnReturn = ref(false)
+  // Открыт поиск адреса (пользователь печатает). Telegram при клавиатуре сжимает
+  // всю мини-аппу, места остаётся мало — на это время лейаут прячет таб-бар, а
+  // шторка забирает освободившуюся высоту. Флаг живёт в сторе, потому что читают
+  // его из разных мест (даунбар выставляет, лейаут снаружи RouterView читает).
+  const isAddressSearchOpen = ref(false)
 
   let searchTimer: number | undefined
   let activeTripPollingTimer: number | undefined
@@ -177,7 +188,7 @@ export const useTripsStore = defineStore('trips', () => {
   // поэтому для мото-котировки платные опции не отправляем вовсе.
   function wireTripOptionsFor(category: VehicleCategory): TripOptions | undefined {
     const options = wireTripOptions()
-    if (!options || category !== 'moto')
+    if (!options || !isMotoCategory(category))
       return options
 
     const { child_seat: _childSeat, pets: _pets, ...rest } = options
@@ -361,15 +372,30 @@ export const useTripsStore = defineStore('trips', () => {
     }
   }
 
+  // Тихая одноразовая загрузка активных категорий: при ошибке (старый бэк,
+  // сеть) остаёмся на фолбэке — карусель работает как раньше.
+  async function ensureTariffCategories() {
+    if (categoriesLoaded)
+      return
+    try {
+      const { categories } = await getTariffCategories()
+      if (categories.length)
+        availableCategories.value = categories.map(item => item.category)
+      categoriesLoaded = true
+    }
+    catch {}
+  }
+
   async function estimateTariffs(payload: Omit<EstimateTripPayload, 'category' | 'options' | 'stops'>) {
     isEstimating.value = true
     errorMessage.value = ''
 
     try {
+      await ensureTariffCategories()
       // Стопы и опции всегда берём из стора: единый контракт с create —
       // доплата и chain-проверка метрик входят уже в оценку.
       const estimates = await Promise.all(
-        TARIFF_ORDER.map(category => estimateTrip({
+        availableCategories.value.map(category => estimateTrip({
           ...payload,
           category,
           options: wireTripOptionsFor(category),
@@ -413,10 +439,10 @@ export const useTripsStore = defineStore('trips', () => {
     dropPaidOptionsForMoto()
   }
 
-  // Выбрано мото — платные опции снимаем (кресло/животное на мото невозможны,
-  // бэкенд ответил бы 400 на создание заказа).
+  // Выбрана мото-группа (мотоцикл/мопед) — платные опции снимаем (кресло/
+  // животное на мото невозможны, бэкенд ответил бы 400 на создание заказа).
   function dropPaidOptionsForMoto() {
-    if (!selectedCategories.value.includes('moto'))
+    if (!selectedCategories.value.some(isMotoCategory))
       return
     if (!tripOptions.value.childSeat && !tripOptions.value.pets)
       return
@@ -806,6 +832,7 @@ export const useTripsStore = defineStore('trips', () => {
     hasActiveTrip,
     history,
     historyHasMore,
+    isAddressSearchOpen,
     historyOffset,
     isCancelling,
     isCreating,
@@ -840,6 +867,7 @@ export const useTripsStore = defineStore('trips', () => {
     setPaymentMethod,
     setRouteCoordinates,
     tariffEstimates,
+    availableCategories,
     toggleCategory,
     tripFlowState,
     pickup,
