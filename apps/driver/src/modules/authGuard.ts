@@ -61,6 +61,11 @@ export const install: UserModule = ({ router }) => {
       }
     }
 
+    // Роль этого приложения была удалена: сессия жива, но роли нет — уводим на
+    // экран «Аккаунт удалён. Создать новый?».
+    if (auth.isAuthenticated && auth.accountDeleted && to.path !== '/account-deleted')
+      return '/account-deleted'
+
     // Номер телефона обязателен: вошедший через Telegram без привязанного
     // номера не идёт дальше экрана «Подтвердите номер».
     if (auth.isAuthenticated && !auth.phoneVerified && to.path !== '/login/phone')

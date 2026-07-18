@@ -36,6 +36,9 @@ export interface AdminUser {
   roles: AdminUserRole[]
   telegram_username: null | string
   updated_at?: string
+  // Момент «выхода на пенсию» (мягкое удаление аккаунта). null/undefined —
+  // активный аккаунт. Заполнен только при include_deleted.
+  deleted_at?: null | string
 }
 
 export interface AdminListUsersParams {
@@ -45,6 +48,8 @@ export interface AdminListUsersParams {
   role?: AdminUserRole | ''
   // search — поиск по имени/фамилии/телефону/telegram-юзернейму (регистронезависимо).
   search?: string
+  // Включить удалённые (на пенсии) аккаунты — для родословной номера.
+  includeDeleted?: boolean
 }
 
 // Сводка по городу: всего пользователей и сколько из них водителей/пассажиров.

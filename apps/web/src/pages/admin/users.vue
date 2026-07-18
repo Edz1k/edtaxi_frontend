@@ -35,6 +35,9 @@ const hasMore = computed(() => offset.value + LIMIT < admin.usersTotal)
 
 const searchInput = ref('')
 const search = refDebounced(searchInput, 350)
+// Показать удалённые (на пенсии) аккаунты — родословная номера. По умолчанию
+// скрыты; под этим флагом фильтр роли смотрит и в архив.
+const includeDeleted = ref(false)
 
 const roles: Array<{ label: string, value: AdminUserRole | '' }> = [
   { label: 'Все', value: '' },
@@ -90,18 +93,18 @@ onMounted(() => {
     .catch(() => {})
 })
 
-watch([role, city, search], () => {
+watch([role, city, search, includeDeleted], () => {
   offset.value = 0
   load()
 })
 
 function load() {
-  admin.loadUsers({ role: role.value || undefined, city: city.value || undefined, search: search.value || undefined, limit: LIMIT, offset: offset.value }).catch(() => {})
+  admin.loadUsers({ role: role.value || undefined, city: city.value || undefined, search: search.value || undefined, includeDeleted: includeDeleted.value || undefined, limit: LIMIT, offset: offset.value }).catch(() => {})
 }
 
 async function loadMore() {
   const nextOffset = offset.value + LIMIT
-  const response = await admin.loadUsers({ role: role.value || undefined, city: city.value || undefined, search: search.value || undefined, limit: LIMIT, offset: nextOffset }).catch(() => null)
+  const response = await admin.loadUsers({ role: role.value || undefined, city: city.value || undefined, search: search.value || undefined, includeDeleted: includeDeleted.value || undefined, limit: LIMIT, offset: nextOffset }).catch(() => null)
   if (response) {
     offset.value = nextOffset
   }
@@ -222,6 +225,11 @@ function blockedLabel(user: AdminUser) {
       >
     </div>
 
+    <label class="mt-3 flex cursor-pointer items-center gap-2 text-xs text-white/60 font-700 select-none">
+      <input v-model="includeDeleted" type="checkbox" class="h-4 w-4 accent-cyan-400">
+      Показывать удалённые аккаунты (родословная номера)
+    </label>
+
     <div class="mt-3 overflow-hidden border border-white/10 rounded-3xl bg-white/8 backdrop-blur">
       <div class="grid-cols-[minmax(180px,1fr)_minmax(260px,1.25fr)_100px_130px] hidden gap-3 border-b border-white/8 px-4 py-3 text-xs text-white/42 font-900 uppercase md:grid">
         <span>Пользователь</span>
@@ -255,6 +263,12 @@ function blockedLabel(user: AdminUser) {
           <p class="mt-0.5 truncate text-xs text-white/42">
             {{ user.phone }}<span v-if="user.city"> · {{ user.city }}</span>
           </p>
+          <span
+            v-if="user.deleted_at"
+            class="mt-1 inline-flex items-center gap-1 rounded-full bg-red-500/12 px-2 py-0.5 text-[10px] text-red-300 font-900 uppercase"
+          >
+            <span class="i-mdi-account-off-outline text-3" /> Удалён
+          </span>
         </div>
 
         <div class="min-w-0">

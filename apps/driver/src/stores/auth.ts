@@ -1,6 +1,6 @@
 import { createAuthStore } from '@edtaxi/shared/stores/create-auth-store'
 import { acceptHMRUpdate } from 'pinia'
-import { getAuthSession, linkTelegramPhone, logout, sendDriverAuthOtp, sendLinkPhoneOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyLinkPhoneOtp, verifyOtp, verifyTelegramDriver } from '~/api/auth'
+import { getAuthSession, linkTelegramPhone, logout, recreateDriverAccount, sendDriverAuthOtp, sendLinkPhoneOtp, sendOtp, syncTelegramName, verifyDriverAuthOtp, verifyLinkPhoneOtp, verifyOtp, verifyTelegramDriver } from '~/api/auth'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverEarningsStore } from '~/stores/driverEarnings'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
@@ -23,6 +23,7 @@ export const useAuthStore = createAuthStore({
     verifyLinkPhoneOtp,
     verifyOtp,
     verifyTelegramSilent: verifyTelegramDriver,
+    recreateAccount: recreateDriverAccount,
   },
   clearRelatedStores() {
     useDriverStore().clearDriverState()

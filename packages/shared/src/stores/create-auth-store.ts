@@ -39,6 +39,9 @@ export interface AuthStoreApi {
   verifyOtp: (payload: VerifyOtpPayload) => Promise<unknown>
   // Role-specific silent Telegram login (passenger vs driver bot signature).
   verifyTelegramSilent: (initData: string, deviceFingerprint?: string) => Promise<unknown>
+  // Пересоздание ранее удалённой роли этого приложения (POST /account/<role>).
+  // Каждый апп подставляет свою роль. Возвращает обновлённую сессию.
+  recreateAccount: () => Promise<unknown>
 }
 
 export interface CreateAuthStoreOptions {
@@ -61,6 +64,10 @@ export function createAuthStore({ api, clearRelatedStores, savedAccountsKey }: C
     const isLoading = ref(false)
     const errorMessage = ref('')
     const sessionStatus = ref<'authenticated' | 'guest' | 'unknown'>('unknown')
+    // true, если роль этого приложения была удалена (двухролевой удалил её, но
+    // сессия жива). Гард уводит на экран «создать заново». Ставится из ответа
+    // входа (account_deleted), сбрасывается при выходе и успешном пересоздании.
+    const accountDeleted = ref(false)
     let sessionChangeController: AbortController | null = null
 
     const isAuthenticated = computed(() => Boolean(currentUser.value))
@@ -79,12 +86,18 @@ export function createAuthStore({ api, clearRelatedStores, savedAccountsKey }: C
       pendingOtpDeliveryMethod.value = readOtpDeliveryMethod()
     }
 
+    // captureAccountDeleted — вытаскивает флаг из ответа входа (Telegram/OTP).
+    function captureAccountDeleted(res: unknown) {
+      accountDeleted.value = Boolean((res as { account_deleted?: boolean } | null)?.account_deleted)
+    }
+
     function clearLocalSession() {
       currentUser.value = null
       pendingPhone.value = ''
       pendingOtpDeliveryMethod.value = 'whatsapp'
       errorMessage.value = ''
       sessionStatus.value = 'guest'
+      accountDeleted.value = false
       clearPendingPhone()
       clearOtpDeliveryMethod()
       clearRelatedStores()
@@ -187,7 +200,7 @@ export function createAuthStore({ api, clearRelatedStores, savedAccountsKey }: C
         return false
 
       try {
-        await api.verifyTelegramSilent(initData, getDeviceFingerprint())
+        captureAccountDeleted(await api.verifyTelegramSilent(initData, getDeviceFingerprint()))
         return true
       }
       catch {
@@ -208,7 +221,7 @@ export function createAuthStore({ api, clearRelatedStores, savedAccountsKey }: C
       isLoading.value = true
       errorMessage.value = ''
       try {
-        await api.verifyTelegramSilent(initData, getDeviceFingerprint())
+        captureAccountDeleted(await api.verifyTelegramSilent(initData, getDeviceFingerprint()))
         clearExplicitLogout()
         return await restoreSessionAfterLogin(undefined)
       }
@@ -248,6 +261,26 @@ export function createAuthStore({ api, clearRelatedStores, savedAccountsKey }: C
 
       completeLogin()
       return session
+    }
+
+    // Пересоздание удалённой роли этого приложения (экран «Аккаунт удалён.
+    // Создать новый?»). Бэк восстанавливает роль и перевыпускает токен; затем
+    // перезагружаем сессию, чтобы гард пропустил на защищённые роутом экраны.
+    async function recreateAccount() {
+      isLoading.value = true
+      errorMessage.value = ''
+      try {
+        await api.recreateAccount()
+        accountDeleted.value = false
+        return await restoreSessionAfterLogin(role.value ?? undefined)
+      }
+      catch (error) {
+        errorMessage.value = showErrorToast(error, 'Не удалось создать аккаунт заново.')
+        throw error
+      }
+      finally {
+        isLoading.value = false
+      }
     }
 
     // Если приложение открыто внутри Telegram, подставляем имя/фамилию из
@@ -450,6 +483,8 @@ export function createAuthStore({ api, clearRelatedStores, savedAccountsKey }: C
     }
 
     return {
+      accountDeleted,
+      recreateAccount,
       clearSession,
       confirmDriverOtp,
       confirmLinkPhoneOtp,
