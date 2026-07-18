@@ -82,14 +82,61 @@ export const useDriverStore = defineStore('driver', () => {
 
   const hasActiveTrip = computed(() => Boolean(currentTripId.value))
 
+  // --- Прогресс по остановкам активной поездки (только на клиенте) ---
+  // Бэкенд не отслеживает «остановка пройдена»: прогресс живёт здесь и переживает
+  // перезапуск вебвью через localStorage (один ключ {tripId, passed}).
+  const passedStopCount = ref(0)
+  const NAV_PROGRESS_KEY = 'driver:trip-nav-progress'
+
+  function readNavProgress(): { passed: number, tripId: string } | null {
+    try {
+      const raw = localStorage.getItem(NAV_PROGRESS_KEY)
+      if (!raw)
+        return null
+      const parsed = JSON.parse(raw) as { passed?: unknown, tripId?: unknown }
+      if (typeof parsed.tripId === 'string' && typeof parsed.passed === 'number')
+        return { passed: parsed.passed, tripId: parsed.tripId }
+    }
+    catch {}
+    return null
+  }
+
+  function persistNavProgress() {
+    try {
+      if (currentTripId.value)
+        localStorage.setItem(NAV_PROGRESS_KEY, JSON.stringify({ passed: passedStopCount.value, tripId: currentTripId.value }))
+    }
+    catch {}
+  }
+
+  function clearNavProgress() {
+    passedStopCount.value = 0
+    try {
+      localStorage.removeItem(NAV_PROGRESS_KEY)
+    }
+    catch {}
+  }
+
+  // Инициализация прогресса при смене поездки: тот же id — не трогаем; новый —
+  // восстанавливаем сохранённый по нему прогресс или начинаем с нуля. Вызывать
+  // ДО присваивания currentTripId (сравнение по старому значению).
+  function initNavProgress(tripId: string) {
+    if (currentTripId.value === tripId)
+      return
+    const saved = readNavProgress()
+    passedStopCount.value = saved && saved.tripId === tripId ? saved.passed : 0
+  }
+
   function clearActiveTripState() {
     activeTrip.value = null
     activeOffer.value = null
     activeTripStep.value = null
     currentTripId.value = ''
+    clearNavProgress()
   }
 
   function syncActiveTrip(trip: Trip) {
+    initNavProgress(trip.id)
     activeTrip.value = trip
     activeOffer.value = tripToOffer(trip)
     activeTripStep.value = tripStatusToStep(trip.status)
@@ -97,6 +144,75 @@ export const useDriverStore = defineStore('driver', () => {
 
     if (pendingOffer.value?.trip_id === trip.id)
       clearOffer()
+  }
+
+  // Точки маршрута для навигации: А → остановки 1..N → Б, с текущей целью.
+  // До in_progress цель — точка А; в поездке — первая непройденная остановка,
+  // после всех остановок — точка Б.
+  interface TripNavPoint {
+    address: string
+    kind: 'dropoff' | 'pickup' | 'stop'
+    label: string
+    lat: number
+    lng: number
+    state: 'current' | 'next' | 'passed'
+  }
+
+  const tripNavPoints = computed<TripNavPoint[]>(() => {
+    const trip = activeTrip.value
+    if (!trip)
+      return []
+
+    const inProgress = activeTripStep.value === 'in_progress'
+    const stops = trip.stops ?? []
+    const passed = passedStopCount.value
+
+    const pickup: TripNavPoint = {
+      address: trip.pickup_address,
+      kind: 'pickup',
+      label: 'Точка А',
+      lat: trip.pickup_lat,
+      lng: trip.pickup_lng,
+      state: inProgress ? 'passed' : 'current',
+    }
+
+    const stopPoints: TripNavPoint[] = stops.map((stop, index) => ({
+      address: stop.address,
+      kind: 'stop',
+      label: `Остановка ${index + 1}`,
+      lat: stop.lat,
+      lng: stop.lng,
+      state: !inProgress ? 'next' : index < passed ? 'passed' : index === passed ? 'current' : 'next',
+    }))
+
+    const dropoff: TripNavPoint = {
+      address: trip.dropoff_address,
+      kind: 'dropoff',
+      label: 'Точка Б',
+      lat: trip.dropoff_lat,
+      lng: trip.dropoff_lng,
+      state: inProgress && passed >= stops.length ? 'current' : 'next',
+    }
+
+    return [pickup, ...stopPoints, dropoff]
+  })
+
+  // Текущая цель навигатора — точка со state 'current'.
+  const currentNavPoint = computed<TripNavPoint | null>(() =>
+    tripNavPoints.value.find(point => point.state === 'current') ?? null,
+  )
+
+  // Ещё есть непройденные остановки — водитель может переключить навигатор дальше.
+  const canAdvanceNavPoint = computed(() =>
+    activeTripStep.value === 'in_progress'
+    && passedStopCount.value < (activeTrip.value?.stops?.length ?? 0),
+  )
+
+  function advanceNavPoint() {
+    if (!canAdvanceNavPoint.value)
+      return
+    passedStopCount.value++
+    persistNavProgress()
   }
 
   function applyStatus(status: DriverStatusResponse) {
@@ -350,6 +466,7 @@ export const useDriverStore = defineStore('driver', () => {
       await acceptDriverTrip(pendingOffer.value.trip_id)
       activeOffer.value = pendingOffer.value
       activeTripStep.value = 'to_pickup'
+      initNavProgress(pendingOffer.value.trip_id)
       currentTripId.value = pendingOffer.value.trip_id
       clearOffer()
       await refreshActiveTrip().catch(() => {})
@@ -463,6 +580,7 @@ export const useDriverStore = defineStore('driver', () => {
       return
     }
 
+    initNavProgress(tripId)
     currentTripId.value = tripId
     activeTripStep.value = tripStatusToStep(status)
 
@@ -564,9 +682,12 @@ export const useDriverStore = defineStore('driver', () => {
     activeOffer,
     activeTrip,
     activeTripStep,
+    advanceNavPoint,
     applyTripStatus,
     availableCategories,
+    canAdvanceNavPoint,
     cancelTrip,
+    currentNavPoint,
     clearDriverState,
     clearOffer,
     completeTrip,
@@ -611,6 +732,8 @@ export const useDriverStore = defineStore('driver', () => {
     setOnline,
     startTrip,
     toggleCategory,
+    tripNavPoints,
+    passedStopCount,
   }
 })
 

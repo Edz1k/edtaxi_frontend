@@ -71,6 +71,7 @@ const {
   isTariffsVisible,
   pickupDistanceMeters,
   primaryText,
+  resolveRoute,
   selectedEstimate,
   submitTrip,
   trips,
@@ -95,7 +96,9 @@ const stopSearches = stopPlaces.map((selectedPlace, index) => useAddressSearch({
   query: stopQueries[index]!,
   selectedPlace,
 }))
-const stopCount = ref(0)
+// Число видимых строк — производное от стора (единственный источник длины):
+// стор держит по слоту (в т.ч. null для невыбранных) на каждую строку.
+const stopCount = computed(() => trips.stops.length)
 
 function syncStopsToStore() {
   trips.setStops(stopPlaces.slice(0, stopCount.value).map(place => place.value))
@@ -106,9 +109,9 @@ function syncStopsToStore() {
 stopPlaces.forEach(place => watch(place, syncStopsToStore))
 
 // Restore черновика из стора (remount даунбара на peek, «заказать ещё одну
-// машину»): setStops в сторе игнорирует ресинк без изменений.
+// машину»): setStops в сторе игнорирует ресинк без изменений. Длина берётся
+// из стора сама (stopCount — computed), заполняем только локальные слоты.
 onMounted(() => {
-  stopCount.value = Math.min(3, trips.stops.length)
   trips.stops.slice(0, 3).forEach((place, index) => {
     stopPlaces[index]!.value = place
     stopQueries[index]!.value = place?.address ?? ''
@@ -122,14 +125,26 @@ const stopRows = computed(() => Array.from({ length: stopCount.value }, (_, inde
 })))
 
 function addStopRow() {
-  if (stopCount.value >= 3)
-    return
-  stopCount.value++
+  // Длина растёт в сторе (стор пушит null-слот); stopCount отследит сам.
   trips.addStopRow()
 }
 
 function updateStopQuery(index: number, value: string) {
   stopQueries[index]!.value = value
+}
+
+// «+ остановка» с тарифного этапа: помечаем ожидание фокуса, добавляем строку и
+// чистим оценку — смена sheetState вернёт форму адреса, где watch ниже раскроет
+// полный поиск и сфокусирует новую строку (саджест откроется при вводе).
+const pendingStopFocus = ref(false)
+const focusStopIndex = ref<number | null>(null)
+
+function addStopFromTariffs() {
+  if (!trips.canAddStop)
+    return
+  pendingStopFocus.value = true
+  addStopRow()
+  trips.clearEstimate()
 }
 
 function searchStop(index: number) {
@@ -143,16 +158,60 @@ function selectStop(index: number, place: GeoPlace) {
 }
 
 function removeStopRow(index: number) {
-  // Сдвигаем слоты выше удалённого вверх, хвост очищаем.
-  for (let i = index; i < stopCount.value - 1; i++) {
+  // Сначала сжимаем стор (длина — производная от него), затем подтягиваем
+  // локальные слоты текста/поиска под новую расстановку.
+  trips.removeStop(index)
+  const count = trips.stops.length
+  for (let i = index; i < count; i++) {
     stopQueries[i]!.value = stopQueries[i + 1]!.value
     stopPlaces[i]!.value = stopPlaces[i + 1]!.value
   }
-  const last = stopCount.value - 1
-  stopQueries[last]!.value = ''
-  stopPlaces[last]!.value = null
-  stopCount.value--
+  stopQueries[count]!.value = ''
+  stopPlaces[count]!.value = null
+}
+
+// Пересортировка точек маршрута (drag&drop): роль определяется позицией —
+// первая строка становится А, последняя Б, промежуточные — остановками.
+// Индексы — позиции в общем списке [А, остановки…, Б].
+function reorderRoutePoints(from: number, to: number) {
+  if (from === to)
+    return
+
+  const points = [
+    { place: pickupPlace.value, text: pickup.value },
+    ...Array.from({ length: stopCount.value }, (_, i) => ({
+      place: stopPlaces[i]!.value,
+      text: stopQueries[i]!.value,
+    })),
+    { place: destinationPlace.value, text: destination.value },
+  ]
+
+  const [moved] = points.splice(from, 1)
+  if (!moved)
+    return
+  points.splice(to, 0, moved)
+
+  const last = points.length - 1
+  pickup.value = points[0]!.text
+  pickupPlace.value = points[0]!.place
+  destination.value = points[last]!.text
+  destinationPlace.value = points[last]!.place
+  points.slice(1, last).forEach((point, i) => {
+    stopQueries[i]!.value = point.text
+    stopPlaces[i]!.value = point.place
+  })
+
+  trips.clearEstimate()
   syncStopsToStore()
+  redrawRouteIfComplete()
+}
+
+// Мгновенно перерисовываем линию после пересортировки, если все точки
+// подтверждены — иначе линия появится на следующем «Показать цены».
+function redrawRouteIfComplete() {
+  const allStopsConfirmed = stopPlaces.slice(0, stopCount.value).every(place => place.value)
+  if (pickupPlace.value && destinationPlace.value && allStopsConfirmed)
+    resolveRoute().catch(() => {})
 }
 
 // «Умные подсказки» для поля «Куда»: частые и недавние адреса из истории
@@ -417,6 +476,16 @@ const peekPill = computed(() => {
 
 // Смена состояния возвращает шторку на рабочую высоту нового вида.
 watch(sheetState, () => {
+  // Возврат «добавить остановку» с тарифов: форма адреса видна только на full;
+  // раскрываем её и после рендера оверлея фокусируем новую строку остановки.
+  if (pendingStopFocus.value) {
+    pendingStopFocus.value = false
+    snapTo('full')
+    nextTick(() => {
+      focusStopIndex.value = stopCount.value - 1
+    })
+    return
+  }
   nextTick(() => snapTo('half'))
 })
 
@@ -478,6 +547,7 @@ function onHandleKeydown(event: KeyboardEvent) {
               v-if="isTariffsVisible"
               :is-ordering="isBusy"
               :primary-text="primaryText"
+              @add-stop="addStopFromTariffs"
               @edit-route="trips.clearEstimate"
               @order="submitTrip"
             />
@@ -547,9 +617,10 @@ function onHandleKeydown(event: KeyboardEvent) {
         >
           <AddressForm
             class="min-h-0 flex-1"
-            :can-add-stop="stopCount < 3"
+            :can-add-stop="stopCount < 3 && Boolean(destinationPlace)"
             :destination="destination"
             :destination-suggestions="destinationSuggestions"
+            :focus-stop-index="focusStopIndex"
             :is-locating-user="isLocatingUser"
             :is-searching-destination="isSearchingDestination"
             :is-searching-pickup="isSearchingPickup"
@@ -561,12 +632,14 @@ function onHandleKeydown(event: KeyboardEvent) {
             @locate-user="emit('locateUser')"
             @pick-from-map="emit('pickFromMap', $event)"
             @remove-stop="removeStopRow"
+            @reorder-points="reorderRoutePoints"
             @search-destination="searchDestination"
             @search-pickup="searchPickup"
             @search-stop="searchStop"
             @select-destination="chooseDestination"
             @select-pickup="selectPickup"
             @select-stop="selectStop"
+            @stop-focus-handled="focusStopIndex = null"
             @update:destination="destination = $event"
             @update:pickup="pickup = $event"
             @update:stop="updateStopQuery"

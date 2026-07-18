@@ -13,6 +13,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
+  addStop: []
   editRoute: []
   order: []
 }>()
@@ -185,6 +186,18 @@ function toggleFriendOrder() {
           <span class="i-mdi-flag-checkered shrink-0 text-4.5 text-main-300" aria-hidden="true" />
           <span class="truncate">{{ trips.destination }}</span>
         </p>
+
+        <!-- Добавить остановку прямо с тарифов: возврат в форму адреса, где
+             новая строка сразу в фокусе (Downbar.addStopFromTariffs). -->
+        <button
+          v-if="trips.canAddStop"
+          class="flex items-center gap-2 pt-0.5 text-[12px] text-main-300 font-800 transition active:scale-[0.98]"
+          type="button"
+          @click="emit('addStop')"
+        >
+          <span class="i-mdi-plus-circle-outline text-4.5" aria-hidden="true" />
+          Добавить остановку
+        </button>
       </div>
 
       <button

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
+import { useRowReorder } from '~/composables/passenger/useRowReorder'
 
 // «Умная подсказка» назначения из истории поездок: место + сколько раз ездил.
 export interface QuickDestination {
@@ -20,6 +21,8 @@ const props = defineProps<{
   canAddStop?: boolean
   destination: string
   destinationSuggestions: GeoPlace[]
+  // Индекс остановки, чью строку надо сфокусировать (возврат «+» с тарифов).
+  focusStopIndex?: number | null
   isLocatingUser: boolean
   isSearchingDestination: boolean
   isSearchingPickup: boolean
@@ -34,12 +37,14 @@ const emit = defineEmits<{
   'locateUser': []
   'pickFromMap': [mode: MapPickerMode]
   'removeStop': [index: number]
+  'reorderPoints': [from: number, to: number]
   'searchDestination': []
   'searchPickup': []
   'searchStop': [index: number]
   'selectDestination': [place: GeoPlace]
   'selectPickup': [place: GeoPlace]
   'selectStop': [index: number, place: GeoPlace]
+  'stopFocusHandled': []
   'update:destination': [value: string]
   'update:pickup': [value: string]
   'update:stop': [index: number, value: string]
@@ -52,6 +57,95 @@ const showQuickDestinations = computed(() =>
   && props.destination.trim() === ''
   && props.destinationSuggestions.length === 0,
 )
+
+// Единый список точек маршрута: позиция определяет роль (первая — А, последняя
+// — Б, между ними — остановки). Из него рендерятся строки и работает drag&drop.
+type RouteRow
+  = | { kind: 'pickup' }
+    | { index: number, kind: 'stop', stop: StopRow }
+    | { kind: 'destination' }
+
+const routeRows = computed<RouteRow[]>(() => [
+  { kind: 'pickup' },
+  ...(props.stops ?? []).map((stop, index) => ({ index, kind: 'stop' as const, stop })),
+  { kind: 'destination' },
+])
+
+// Есть что переставлять только при ≥3 строках (А + Б + хотя бы одна остановка);
+// иначе не блокируем скролл формы touch-none'ом на строках.
+const isReorderable = computed(() => routeRows.value.length >= 3)
+
+function rowValue(row: RouteRow): string {
+  if (row.kind === 'pickup')
+    return props.pickup
+  if (row.kind === 'destination')
+    return props.destination
+  return row.stop.query
+}
+
+function rowPlaceholder(row: RouteRow): string {
+  if (row.kind === 'pickup')
+    return 'Откуда'
+  if (row.kind === 'destination')
+    return 'Куда'
+  return 'Остановка'
+}
+
+function rowAriaLabel(row: RouteRow): string {
+  if (row.kind === 'pickup')
+    return 'Адрес отправления'
+  if (row.kind === 'destination')
+    return 'Адрес назначения'
+  return `Адрес остановки ${row.index + 1}`
+}
+
+function rowName(row: RouteRow): string {
+  if (row.kind === 'pickup')
+    return 'pickup_address'
+  if (row.kind === 'destination')
+    return 'destination_address'
+  return `stop_address_${row.index}`
+}
+
+function onRowFocus(row: RouteRow) {
+  if (row.kind === 'pickup')
+    emit('searchPickup')
+  else if (row.kind === 'destination')
+    emit('searchDestination')
+  else
+    emit('searchStop', row.index)
+}
+
+function onRowInput(row: RouteRow, value: string) {
+  if (row.kind === 'pickup')
+    emit('update:pickup', value)
+  else if (row.kind === 'destination')
+    emit('update:destination', value)
+  else
+    emit('update:stop', row.index, value)
+}
+
+// Инпуты остановок для программного фокуса (возврат «+» с тарифов). Ref-колбэк
+// всегда функция (а не undefined) — иначе VNodeRef-тип не сходится.
+const stopInputEls: (HTMLInputElement | null)[] = []
+function setInputEl(row: RouteRow, el: unknown) {
+  if (row.kind === 'stop')
+    stopInputEls[row.index] = (el as HTMLInputElement | null) ?? null
+}
+
+watch(() => props.focusStopIndex, async (index) => {
+  if (index == null)
+    return
+  await nextTick()
+  stopInputEls[index]?.focus()
+  emit('stopFocusHandled')
+}, { flush: 'post' })
+
+// Drag&drop: индексы — позиции в routeRows; роли пересчитывает Downbar.
+const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReorder({
+  count: () => routeRows.value.length,
+  onReorder: (from, to) => emit('reorderPoints', from, to),
+})
 </script>
 
 <template>
@@ -86,95 +180,95 @@ const showQuickDestinations = computed(() =>
     </header>
 
     <div class="space-y-1.5">
-      <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-white/6 px-3.5 transition focus-within:bg-white/10">
-        <span class="i-mdi-near-me shrink-0 text-5 text-main-300" aria-hidden="true" />
-
-        <input
-          :value="pickup"
-          aria-label="Адрес отправления"
-          class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-400"
-          name="pickup_address"
-          placeholder="Откуда"
-          type="text"
-          @focus="emit('searchPickup')"
-          @input="emit('update:pickup', ($event.target as HTMLInputElement).value)"
-        >
-
-        <button
-          aria-label="Определить мое местоположение"
-          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-          :disabled="isLocatingUser"
-          title="Моя геопозиция"
-          type="button"
-          @click="emit('locateUser')"
-        >
-          <span
-            class="text-5"
-            :class="isLocatingUser ? 'i-mdi-loading animate-spin' : 'i-mdi-crosshairs-gps'"
-          />
-        </button>
-
-        <button
-          aria-label="Выбрать адрес отправления на карте"
-          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
-          title="Выбрать на карте"
-          type="button"
-          @click="emit('pickFromMap', 'pickup')"
-        >
-          <span class="i-mdi-map-marker-radius-outline text-5" />
-        </button>
-      </div>
-
-      <!-- Промежуточные остановки (до 3): нумерованные строки между А и Б -->
+      <!-- Единый список точек маршрута (А / остановки / Б). Зажать строку и
+           перетащить, чтобы сменить порядок: позиция задаёт роль (первая — А,
+           последняя — Б). Долгое удержание стартует драг, обычный тап — фокус;
+           кнопки строки свои тапы сохраняют (useRowReorder). -->
       <div
-        v-for="(stop, index) in stops"
-        :key="`stop-${index}`"
-        class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-white/6 px-3.5 transition focus-within:bg-white/10"
+        v-for="(row, rowIndex) in routeRows"
+        :key="row.kind === 'stop' ? `stop-${row.index}` : row.kind"
+        :ref="el => setRowEl(rowIndex, el)"
+        class="min-h-14 flex items-center gap-3 rounded-[1.35rem] px-3.5 transition"
+        :class="[
+          dragIndex === rowIndex ? 'bg-white/14 shadow-lg shadow-black/30' : 'bg-white/6 focus-within:bg-white/10',
+          isReorderable ? 'touch-none' : '',
+          isPressing ? 'select-none [-webkit-touch-callout:none]' : '',
+        ]"
+        :style="rowStyle(rowIndex)"
+        @pointerdown="onPointerDown(rowIndex, $event)"
       >
         <span
+          v-if="row.kind === 'pickup'"
+          class="i-mdi-near-me shrink-0 text-5 text-main-300"
+          aria-hidden="true"
+        />
+        <span
+          v-else-if="row.kind === 'destination'"
+          class="i-mdi-flag-checkered shrink-0 text-5 text-main-300"
+          aria-hidden="true"
+        />
+        <span
+          v-else
           class="h-5 w-5 flex shrink-0 items-center justify-center rounded-full bg-main-500/22 text-[11px] text-main-200 font-950"
           aria-hidden="true"
         >
-          {{ index + 1 }}
+          {{ row.index + 1 }}
         </span>
 
         <input
-          :value="stop.query"
-          :aria-label="`Адрес остановки ${index + 1}`"
+          :ref="el => setInputEl(row, el)"
+          :value="rowValue(row)"
+          :aria-label="rowAriaLabel(row)"
           class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-400"
-          :name="`stop_address_${index}`"
-          placeholder="Остановка"
+          :name="rowName(row)"
+          :placeholder="rowPlaceholder(row)"
           type="text"
-          @focus="emit('searchStop', index)"
-          @input="emit('update:stop', index, ($event.target as HTMLInputElement).value)"
+          @focus="onRowFocus(row)"
+          @input="onRowInput(row, ($event.target as HTMLInputElement).value)"
         >
 
+        <!-- Точка А: геолокация + выбор на карте -->
+        <template v-if="row.kind === 'pickup'">
+          <button
+            aria-label="Определить мое местоположение"
+            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="isLocatingUser"
+            title="Моя геопозиция"
+            type="button"
+            @click="emit('locateUser')"
+          >
+            <span
+              class="text-5"
+              :class="isLocatingUser ? 'i-mdi-loading animate-spin' : 'i-mdi-crosshairs-gps'"
+            />
+          </button>
+
+          <button
+            aria-label="Выбрать адрес отправления на карте"
+            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
+            title="Выбрать на карте"
+            type="button"
+            @click="emit('pickFromMap', 'pickup')"
+          >
+            <span class="i-mdi-map-marker-radius-outline text-5" />
+          </button>
+        </template>
+
+        <!-- Остановка: убрать -->
         <button
-          :aria-label="`Убрать остановку ${index + 1}`"
+          v-else-if="row.kind === 'stop'"
+          :aria-label="`Убрать остановку ${row.index + 1}`"
           class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
           title="Убрать остановку"
           type="button"
-          @click="emit('removeStop', index)"
+          @click="emit('removeStop', row.index)"
         >
           <span class="i-mdi-close text-5" />
         </button>
-      </div>
 
-      <div class="min-h-14 flex items-center gap-3 rounded-[1.35rem] bg-white/6 px-3.5 transition focus-within:bg-white/10">
-        <span class="i-mdi-flag-checkered shrink-0 text-5 text-main-300" aria-hidden="true" />
-
-        <input
-          :value="destination"
-          aria-label="Адрес назначения"
-          class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-400"
-          name="destination_address"
-          placeholder="Куда"
-          type="text"
-          @focus="emit('searchDestination')"
-          @input="emit('update:destination', ($event.target as HTMLInputElement).value)"
-        >
-
+        <!-- Точка Б: выбор на карте -->
         <button
+          v-else
           aria-label="Выбрать адрес назначения на карте"
           class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
           title="Выбрать на карте"
