@@ -1,0 +1,74 @@
+name: Back-merge main → staging
+
+# Держит инвариант main ⊆ staging автоматически.
+#
+# Зачем: если main уехал вперёд staging (промоушен или хотфикс), а back-merge
+# не сделали, то СЛЕДУЮЩИЙ промоушен staging → main ОТКАТИТ эти изменения —
+# в staging лежит старая версия файла, и она побеждает как более поздний мерж.
+# Это классическая катастрофа environment-branches, и полагаться тут на «не
+# забыть» нельзя: забывают ровно в тот раз, когда цена максимальна (хотфикс).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: back-merge
+  cancel-in-progress: false
+
+jobs:
+  back-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 обязателен: с дефолтным 1 нет ни истории для merge,
+          # ни ref'а origin/staging.
+          fetch-depth: 0
+          # Обычный GITHUB_TOKEN не пройдёт branch protection на staging.
+          # Нужен PAT или GitHub App с правом push в защищённую ветку, а сам
+          # актор — в bypass-list ruleset'а.
+          token: ${{ secrets.BACK_MERGE_TOKEN }}
+
+      - name: Back-merge
+        run: |
+          set -euo pipefail
+
+          # git merge создаёт коммит, а на раннере автор не настроен — без этого
+          # фолбэк ниже упадёт с "Please tell me who you are" ровно на хотфиксе.
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! git show-ref --verify --quiet refs/remotes/origin/staging; then
+            echo "ветки staging ещё нет — пропускаем (это нормально до её создания)"
+            exit 0
+          fi
+
+          if git merge-base --is-ancestor origin/main origin/staging; then
+            echo "main уже в staging — делать нечего"
+            exit 0
+          fi
+
+          # Штатный случай (после промоушена): staging_tip — родитель мерж-коммита
+          # в main, поэтому main является потомком staging и push проходит
+          # fast-forward'ом. Проверяем явным if, а не `&&`: push может упасть по
+          # правам или сети, и тогда уходить в merge-ветку и врать про конфликт
+          # нельзя.
+          if git push origin origin/main:staging; then
+            echo "fast-forward staging → main: OK"
+            exit 0
+          fi
+
+          echo "fast-forward не прошёл (в staging есть свои коммиты — например, после хотфикса) → обычный merge"
+          git checkout -B staging origin/staging
+          if git merge --no-edit origin/main; then
+            git push origin staging
+            echo "back-merge смержен"
+          else
+            echo "::error::конфликт back-merge main → staging. Разреши руками:"
+            echo "  git checkout staging && git merge origin/main && git push"
+            exit 1
+          fi
