@@ -203,6 +203,8 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
     isTariffsVisible,
     pickupDistanceMeters,
     primaryText,
+    // Наружу для мгновенной перерисовки линии после пересортировки точек.
+    resolveRoute,
     selectedEstimate,
     submitTrip,
     trips,

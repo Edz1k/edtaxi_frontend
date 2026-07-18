@@ -59,18 +59,12 @@ const driver = useDriverStore()
 
 // Навигатор (TODO п.1а): только https-ссылки — кастомные схемы (dgis://,
 // yandexnavi://) из TG-вебвью открываются ненадёжно, а https перехватит
-// установленное приложение само. Цель: едем к пассажиру → точка А, в поездке
-// → точка Б. НЕ копировать map.vue fitBounds-логику — она про другое.
+// установленное приложение само. Цель — текущая непройденная точка маршрута
+// (А → остановки → Б, driver.currentNavPoint). НЕ копировать map.vue
+// fitBounds-логику — она про другое.
 const isNavSheetOpen = ref(false)
 
-const navTarget = computed(() => {
-  const trip = driver.activeTrip
-  if (!trip)
-    return null
-  return driver.activeTripStep === 'to_pickup'
-    ? { lat: trip.pickup_lat, lng: trip.pickup_lng }
-    : { lat: trip.dropoff_lat, lng: trip.dropoff_lng }
-})
+const navTarget = computed(() => driver.currentNavPoint)
 
 const navApps = computed(() => {
   const target = navTarget.value
@@ -419,7 +413,8 @@ const peekPill = computed(() => {
                 <p
                   v-for="(stop, index) in tripStops"
                   :key="`panel-stop-${index}`"
-                  class="mt-1.5 flex items-center gap-2 text-[13px] text-white/80 font-800"
+                  class="mt-1.5 flex items-center gap-2 text-[13px] font-800"
+                  :class="index < driver.passedStopCount ? 'text-slate-500 line-through' : 'text-white/80'"
                 >
                   <span
                     class="h-4 w-4 flex shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-[9px] text-amber-300 font-950"
@@ -475,7 +470,18 @@ const peekPill = computed(() => {
                 {{ tripStep.action }}
               </button>
 
-              <!-- Навигатор: к пассажиру / к точке Б во внешнем приложении -->
+              <!-- Остановка пройдена: навигатор переключается на следующую точку -->
+              <button
+                v-if="driver.canAdvanceNavPoint"
+                class="h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.99]"
+                type="button"
+                @click="driver.advanceNavPoint()"
+              >
+                <span class="i-mdi-map-marker-check-outline text-5" />
+                Остановка пройдена — следующая точка
+              </button>
+
+              <!-- Навигатор к текущей точке маршрута во внешнем приложении -->
               <button
                 v-if="navTarget"
                 class="h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.99]"
@@ -483,19 +489,36 @@ const peekPill = computed(() => {
                 @click="isNavSheetOpen = !isNavSheetOpen"
               >
                 <span class="i-mdi-navigation text-5" />
-                {{ driver.activeTripStep === 'to_pickup' ? 'Навигатор к пассажиру' : 'Навигатор к точке Б' }}
+                {{ driver.activeTripStep === 'to_pickup' ? 'Навигатор к пассажиру' : `Навигатор: ${navTarget?.label}` }}
               </button>
-              <div v-if="isNavSheetOpen && navApps.length" class="grid grid-cols-3 gap-2">
-                <button
-                  v-for="app in navApps"
-                  :key="app.label"
-                  class="h-14 flex flex-col items-center justify-center gap-1 rounded-2xl bg-white/6 text-[11px] text-slate-300 font-800 transition active:scale-[0.97]"
-                  type="button"
-                  @click="openNavigator(app.url)"
-                >
-                  <span :class="app.icon" class="text-5 text-main-300" aria-hidden="true" />
-                  {{ app.label }}
-                </button>
+              <div v-if="isNavSheetOpen && navApps.length" class="space-y-2">
+                <!-- Точки маршрута: текущая цель подсвечена, пройденные — приглушены -->
+                <div v-if="driver.tripNavPoints.length > 2" class="rounded-2xl bg-white/6 p-2 space-y-1">
+                  <p
+                    v-for="point in driver.tripNavPoints"
+                    :key="`${point.kind}-${point.label}`"
+                    class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-[13px] font-800"
+                    :class="point.state === 'current'
+                      ? 'bg-main-500/16 text-main-100'
+                      : point.state === 'passed' ? 'text-slate-500 line-through' : 'text-slate-300'"
+                  >
+                    <span class="shrink-0 text-[11px] font-950 opacity-70">{{ point.label }}</span>
+                    <span class="truncate">{{ point.address }}</span>
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                  <button
+                    v-for="app in navApps"
+                    :key="app.label"
+                    class="h-14 flex flex-col items-center justify-center gap-1 rounded-2xl bg-white/6 text-[11px] text-slate-300 font-800 transition active:scale-[0.97]"
+                    type="button"
+                    @click="openNavigator(app.url)"
+                  >
+                    <span :class="app.icon" class="text-5 text-main-300" aria-hidden="true" />
+                    {{ app.label }}
+                  </button>
+                </div>
               </div>
 
               <RouterLink
