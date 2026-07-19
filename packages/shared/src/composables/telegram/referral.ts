@@ -1,4 +1,5 @@
-import { retrieveLaunchParams } from '@telegram-apps/sdk'
+import { retrieveLaunchParams, shareURL } from '@telegram-apps/sdk'
+import { initTelegramSdk } from './sdk'
 
 // Рефералка через диплинк бота: «Поделиться» шлёт ссылку
 // https://t.me/<bot>?startapp=ref_<КОД>. Telegram открывает мини-апп и кладёт
@@ -74,4 +75,30 @@ export function buildReferralDeepLink(botUsername: string, code: string): string
 export function buildReferralShareUrl(botUsername: string, code: string, text: string): string {
   const link = buildReferralDeepLink(botUsername, code)
   return `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`
+}
+
+// shareReferral открывает нативный шит Telegram «Поделиться»: пользователь
+// выбирает чат, куда отправить диплинк-приглашение с текстом. Раньше ссылку
+// открывали через openLink (web_app_open_link) во внешнем браузере — там
+// t.me/share/url не показывает выбор чата, а просто уводит на бота. shareURL
+// (web_app_open_tg_link) отдаёт ссылку самому Telegram, и он рисует шит.
+// Вне Telegram (обычный браузер в dev) откатываемся на t.me/share/url.
+export function shareReferral(botUsername: string, code: string, text: string): void {
+  if (typeof window === 'undefined')
+    return
+
+  const link = buildReferralDeepLink(botUsername, code)
+
+  try {
+    initTelegramSdk()
+    if (shareURL.isAvailable()) {
+      shareURL(link, text)
+      return
+    }
+  }
+  catch {
+    // падаем в обычный переход ниже
+  }
+
+  window.open(buildReferralShareUrl(botUsername, code, text), '_blank')
 }

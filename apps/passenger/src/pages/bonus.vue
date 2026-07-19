@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { BonusOverview, BonusPromotion } from '@edtaxi/shared/types/bonus'
 import { getBonusOverview, getMyPromotions, redeemReferralCode } from '@edtaxi/shared/api/bonus'
-import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
-import { buildReferralShareUrl } from '@edtaxi/shared/composables/telegram/referral'
+import { shareReferral } from '@edtaxi/shared/composables/telegram/referral'
 import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
 import { mediaUrl } from '~/api/client'
 import { showErrorToast } from '~/api/errors'
@@ -74,15 +73,15 @@ function copyCode() {
     copy(overview.value.referral_code)
 }
 
-// «Поделиться» шлёт диплинк на бота: друг открывает ссылку, мини-апп
-// запускается сам, и после входа бонусы начисляются автоматически — вводить
-// код руками больше не нужно.
+// «Поделиться» открывает нативный шит Telegram (выбор чата) с диплинком на
+// бота: друг открывает ссылку, мини-апп запускается сам, и после входа бонусы
+// начисляются автоматически — вводить код руками больше не нужно.
 function shareCode() {
   if (!overview.value)
     return
 
   const text = `Поехали с Telegram Taxi! Открой ссылку и войди — получишь +${formatBonus(overview.value.invitee_reward)} бонусов на первый счёт 🚕`
-  openExternalLink(buildReferralShareUrl(TG_BOT_USERNAME, overview.value.referral_code, text))
+  shareReferral(TG_BOT_USERNAME, overview.value.referral_code, text)
 }
 
 async function redeem() {
