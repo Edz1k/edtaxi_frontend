@@ -19,6 +19,11 @@ function formatFare(value: number) {
 
 const stops = computed(() => props.offer.stops ?? [])
 const optionBadges = computed(() => tripOptionBadges(props.offer.options))
+// Ставка ₸/км (с сюрджем, п.40). 0/отсутствует у легаси-поездок — бейдж прячем.
+const perKmLabel = computed(() => {
+  const rate = props.offer.per_km ?? 0
+  return rate > 0 ? `${Math.round(rate).toLocaleString('ru-RU')} ₸/км` : ''
+})
 </script>
 
 <template>
@@ -27,10 +32,13 @@ const optionBadges = computed(() => tripOptionBadges(props.offer.options))
       <section class="w-full rounded-3xl bg-secondary-900 p-5 shadow-2xl">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="flex items-center gap-2 text-xs text-main-300 font-900 uppercase">
+            <p class="flex flex-wrap items-center gap-2 text-xs text-main-300 font-900 uppercase">
               Новый заказ
               <span v-if="offer.category" class="rounded-full bg-main-500/18 px-2 py-0.5 text-[11px] text-main-200 normal-case">
                 {{ categoryLabel(offer.category) }}
+              </span>
+              <span v-if="perKmLabel" class="rounded-full bg-emerald-500/18 px-2 py-0.5 text-[11px] text-emerald-200 normal-case">
+                {{ perKmLabel }}
               </span>
             </p>
             <h2 class="mt-2 text-3xl font-950">

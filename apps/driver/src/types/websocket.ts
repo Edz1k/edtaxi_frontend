@@ -12,6 +12,9 @@ export interface DriverTripOffer {
   dropoff_lng?: number
   estimated_fare: number
   options?: null | TripOptions
+  // Ставка ₸/км (с учётом сюрджа) для показа в шапке оффера (п.40).
+  // Отсутствует/0 у легаси-поездок без снапшота тарифа — бейдж не рисуем.
+  per_km?: number
   pickup_address: string
   pickup_lat?: number
   pickup_lng?: number
@@ -30,6 +33,7 @@ export interface DriverTripOfferWireData {
   estimated_fare?: number
   fare?: number
   options?: null | TripOptions
+  per_km?: number
   pickup_address: string
   pickup_lat?: number
   pickup_lng?: number
