@@ -16,5 +16,6 @@ declare module 'vue' {
     PassengerMapPicker: typeof import('./components/passenger/PassengerMapPicker.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    StaticTripMap: typeof import('./components/map/StaticTripMap.vue')['default']
   }
 }

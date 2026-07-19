@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import type { TripStatus } from '~/types/trips'
+import { hasWebgl2 } from '@edtaxi/shared/composables/mapbox/webgl'
 import { mediaUrl } from '~/api/client'
 import MapView from '~/components/map/MapView.vue'
+import StaticTripMap from '~/components/map/StaticTripMap.vue'
 import { TARIFF_META } from '~/constants/tariffs'
 import { useShareStore } from '~/stores/share'
 
 const route = useRoute()
 const shareStore = useShareStore()
+
+// Интерактивная mapbox-gl v3 требует WebGL2. В части мобильных браузеров его нет
+// (или выключено аппаратное ускорение) — там карта раньше молча падала чёрным
+// экраном. В таком окружении показываем статичную карту (PNG, без WebGL).
+// Страница — чистое SPA, так что проба безопасна прямо в setup.
+const mapUnavailable = ref(!hasWebgl2())
 
 definePage({
   meta: {
@@ -184,13 +192,21 @@ onBeforeUnmount(() => {
   <main class="min-h-screen bg-secondary-950 text-white">
     <section class="relative min-h-screen overflow-hidden">
       <MapView
-        v-if="shareStore.canShowMap"
+        v-if="shareStore.canShowMap && !mapUnavailable"
         :destination-place="shareStore.destinationPlace"
         :driver-category="driverCategory"
         :driver-location="shareStore.driverLocation"
         :pickup-place="shareStore.pickupPlace"
         :route-coordinates="shareStore.routeCoordinates"
         :show-route="shareStore.canShowRoute"
+      />
+
+      <!-- Фолбэк без WebGL2: статичная карта вместо чёрного экрана. -->
+      <StaticTripMap
+        v-else-if="shareStore.canShowMap"
+        :destination="shareStore.destinationPlace"
+        :driver-location="shareStore.driverLocation"
+        :pickup="shareStore.pickupPlace"
       />
 
       <div
