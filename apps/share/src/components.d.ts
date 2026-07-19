@@ -12,10 +12,9 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppToaster: typeof import('./components/app/AppToaster.vue')['default']
-    MapView: typeof import('./components/map/MapView.vue')['default']
-    PassengerMapPicker: typeof import('./components/passenger/PassengerMapPicker.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ShareTripMap: typeof import('./components/map/ShareTripMap.vue')['default']
     StaticTripMap: typeof import('./components/map/StaticTripMap.vue')['default']
   }
 }
