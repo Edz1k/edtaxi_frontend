@@ -49,6 +49,9 @@ export interface DriverCategoriesResponse {
 export interface DriverDistrict {
   id: string
   name: string
+  // polygon — геометрия (GeoJSON) для подсветки района на карте; бэкенд отдаёт
+  // упрощённый ST_AsGeoJSON, у сид-районов есть, у ручных — тоже.
+  polygon?: { coordinates: number[][][][], type: 'MultiPolygon' | 'Polygon' } | null
 }
 
 export interface DriverDistrictsResponse {

@@ -350,58 +350,22 @@ const peekPill = computed(() => {
               </p>
             </div>
 
-            <!-- Районы приёма заказов (TODO п.6): пустой выбор = весь город.
-                 Фильтр мягкий — при пустом районе заказ всё равно может прийти. -->
-            <div v-if="!driver.hasActiveTrip && driver.availableDistricts.length" class="mt-4">
-              <p class="mb-2 text-xs text-slate-400 font-800 uppercase">
-                Районы заказов
-              </p>
-
-              <div class="flex flex-wrap gap-2">
-                <template v-if="driver.isOnline">
-                  <span
-                    v-if="!driver.activeDistrictIds.length"
-                    class="rounded-full bg-main-500/18 px-3 py-1.5 text-xs text-main-200 font-800"
-                  >
-                    Весь город
-                  </span>
-                  <span
-                    v-for="district in activeDistricts"
-                    :key="district.id"
-                    class="rounded-full bg-main-500/18 px-3 py-1.5 text-xs text-main-200 font-800"
-                  >
-                    {{ district.name }}
-                  </span>
-                </template>
-
-                <template v-else>
-                  <button
-                    :disabled="driver.isSavingDistricts"
-                    class="rounded-full px-3 py-1.5 text-xs font-800 transition active:scale-[0.96] disabled:opacity-60"
-                    :class="!driver.activeDistrictIds.length ? 'bg-main-500 text-white' : 'bg-white/8 text-slate-400'"
-                    type="button"
-                    @click="driver.clearDistricts()"
-                  >
-                    Весь город
-                  </button>
-                  <button
-                    v-for="district in driver.availableDistricts"
-                    :key="district.id"
-                    :disabled="driver.isSavingDistricts"
-                    class="rounded-full px-3 py-1.5 text-xs font-800 transition active:scale-[0.96] disabled:opacity-60"
-                    :class="driver.activeDistrictIds.includes(district.id) ? 'bg-main-500 text-white' : 'bg-white/8 text-slate-400'"
-                    type="button"
-                    @click="driver.toggleDistrict(district.id)"
-                  >
-                    {{ district.name }}
-                  </button>
-                </template>
-              </div>
-
-              <p class="mt-2 text-xs text-slate-500 font-700 leading-4">
-                Сначала ищем заказы из выбранных районов. Если рядом никого нет — заказ может прийти из любого района.
-              </p>
-            </div>
+            <!-- Районы приёма заказов (TODO п.6): read-only сводка, редактирование
+                 переехало в Настройки (там карта-превью с подсветкой). -->
+            <RouterLink
+              v-if="!driver.hasActiveTrip && driver.availableDistricts.length"
+              class="mt-4 flex items-center gap-3 rounded-2xl bg-white/6 px-4 py-3 transition active:scale-[0.99]"
+              to="/menu/settings"
+            >
+              <span class="i-mdi-map-marker-radius-outline shrink-0 text-5 text-main-300" aria-hidden="true" />
+              <span class="min-w-0 flex-1">
+                <span class="block text-xs text-slate-400 font-800 uppercase">Районы заказов</span>
+                <span class="mt-0.5 block truncate text-sm font-800">
+                  {{ activeDistricts.length ? activeDistricts.map(d => d.name).join(', ') : 'Весь город' }}
+                </span>
+              </span>
+              <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-500" aria-hidden="true" />
+            </RouterLink>
 
             <div v-if="driver.hasActiveTrip && tripStep" class="mt-4 space-y-2">
               <!-- Маршрут заказа: А / остановки / Б + опции + комментарий -->

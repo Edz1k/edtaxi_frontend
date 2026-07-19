@@ -35,14 +35,14 @@ onMounted(load)
 // Баланс и прогресс акций обновляются сами при возврате на экран — как у
 // пассажира: начисления за заказы видны без ручной перезагрузки.
 useAutoRefresh(async () => {
-  const [me, promos] = await Promise.all([getBonusOverview(), getMyPromotions()])
+  const [me, promos] = await Promise.all([getBonusOverview(), getMyPromotions('driver')])
   overview.value = me
   promotions.value = promos.promotions
 })
 
 async function load() {
   try {
-    const [me, promos] = await Promise.all([getBonusOverview(), getMyPromotions()])
+    const [me, promos] = await Promise.all([getBonusOverview(), getMyPromotions('driver')])
     overview.value = me
     promotions.value = promos.promotions
   }
@@ -121,7 +121,7 @@ async function joinPromo(promo: BonusPromotion) {
   joiningPromoId.value = promo.id
   try {
     await joinPromotion(promo.id)
-    const promos = await getMyPromotions()
+    const promos = await getMyPromotions('driver')
     promotions.value = promos.promotions
   }
   catch (error) {

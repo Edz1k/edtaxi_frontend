@@ -38,6 +38,7 @@ const {
   clearSuggestions: clearPickupSuggestions,
   isSearching: isSearchingPickup,
   search: searchPickup,
+  searchFailed: searchFailedPickup,
   selectPlace: selectPickup,
   suggestions: pickupSuggestions,
 } = useAddressSearch({
@@ -50,6 +51,7 @@ const {
   clearSuggestions: clearDestinationSuggestions,
   isSearching: isSearchingDestination,
   search: searchDestination,
+  searchFailed: searchFailedDestination,
   selectPlace: selectDestination,
   suggestions: destinationSuggestions,
 } = useAddressSearch({
@@ -121,6 +123,7 @@ onMounted(() => {
 const stopRows = computed(() => Array.from({ length: stopCount.value }, (_, index) => ({
   isSearching: stopSearches[index]!.isSearching.value,
   query: stopQueries[index]!.value,
+  searchFailed: stopSearches[index]!.searchFailed.value,
   suggestions: stopSearches[index]!.suggestions.value,
 })))
 
@@ -627,6 +630,8 @@ function onHandleKeydown(event: KeyboardEvent) {
             :pickup="pickup"
             :pickup-suggestions="pickupSuggestions"
             :quick-destinations="quickDestinations"
+            :search-failed-destination="searchFailedDestination"
+            :search-failed-pickup="searchFailedPickup"
             :stops="stopRows"
             @add-stop="addStopRow"
             @locate-user="emit('locateUser')"

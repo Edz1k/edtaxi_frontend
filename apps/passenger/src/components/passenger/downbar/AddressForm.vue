@@ -14,6 +14,8 @@ export interface QuickDestination {
 export interface StopRow {
   isSearching: boolean
   query: string
+  // searchFailed — геокодер недоступен: показываем подсказку вместо пустоты.
+  searchFailed: boolean
   suggestions: GeoPlace[]
 }
 
@@ -29,6 +31,9 @@ const props = defineProps<{
   pickup: string
   pickupSuggestions: GeoPlace[]
   quickDestinations?: QuickDestination[]
+  // Флаги «геокодер лёг» для точек А/Б (по строкам остановок — в StopRow).
+  searchFailedDestination?: boolean
+  searchFailedPickup?: boolean
   stops?: StopRow[]
 }>()
 
@@ -295,6 +300,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
     <div class="space-y-3">
       <AddressSuggestions
         color="emerald"
+        :failed="searchFailedPickup"
         :is-loading="isSearchingPickup"
         :places="pickupSuggestions"
         @select="emit('selectPickup', $event)"
@@ -305,6 +311,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
         v-for="(stop, index) in stops"
         :key="`stop-suggestions-${index}`"
         color="amber"
+        :failed="stop.searchFailed"
         :is-loading="stop.isSearching"
         :places="stop.suggestions"
         @select="emit('selectStop', index, $event)"
@@ -312,6 +319,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
 
       <AddressSuggestions
         color="red"
+        :failed="searchFailedDestination"
         :is-loading="isSearchingDestination"
         :places="destinationSuggestions"
         @select="emit('selectDestination', $event)"

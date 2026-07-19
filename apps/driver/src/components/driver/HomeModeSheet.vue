@@ -33,6 +33,7 @@ const near = computed<GeoPlace | null>(() => {
 const {
   isSearching,
   search,
+  searchFailed,
   selectPlace,
   suggestions,
 } = useAddressSearch({
@@ -175,6 +176,7 @@ function chooseSuggestion(place: GeoPlace) {
           <div class="[scrollbar-width:none] mt-2 min-h-0 flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
             <AddressSuggestions
               color="amber"
+              :failed="searchFailed"
               :is-loading="isSearching"
               :places="suggestions"
               @select="chooseSuggestion"

@@ -194,6 +194,14 @@ const destinationPlace = computed(() =>
   driver.activeTripStep === 'to_pickup' ? null : offerToPlace(mapOffer.value, 'dropoff'),
 )
 
+// Подсветка выбранных районов приёма заказов на карте: только активные и только
+// с полигоном (у «Весь город» список пуст → заливки нет).
+const activeDistrictShapes = computed(() =>
+  driver.availableDistricts
+    .filter(d => d.polygon && driver.activeDistrictIds.includes(d.id))
+    .map(d => ({ id: d.id, polygon: d.polygon })),
+)
+
 // Остановки заказа: нумерованные маркеры на карте (кроме этапа подъезда к
 // пассажиру — там маршрут строится от машины до точки А).
 const stopPlaces = computed(() => {
@@ -402,6 +410,7 @@ async function toggleOnline() {
 
     <!-- Касание карты приопускает панель — карту видно целиком -->
     <DriverMap
+      :active-districts="activeDistrictShapes"
       :destination-place="destinationPlace"
       :pickup-place="pickupPlace"
       :route-coordinates="routeCoordinates"

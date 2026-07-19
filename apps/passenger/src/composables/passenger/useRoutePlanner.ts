@@ -16,8 +16,8 @@ async function resolvePlace(value: string, selectedPlace: GeoPlace | null, near?
   if (selectedPlace)
     return selectedPlace
 
-  const suggestions = await searchPlaces(value, near ? { lat: near.lat, lng: near.lng } : undefined)
-  const place = suggestions[0]
+  const { places } = await searchPlaces(value, near ? { lat: near.lat, lng: near.lng } : undefined)
+  const place = places[0]
 
   if (!place)
     throw new Error('Адрес не найден')

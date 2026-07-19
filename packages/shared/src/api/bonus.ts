@@ -15,8 +15,11 @@ export function redeemReferralCode(code: string) {
 }
 
 // Активные акции для текущего пользователя (с его прогрессом по заказам).
-export function getMyPromotions() {
-  return apiRequest<BonusPromotionsResponse>('/bonus/promotions')
+// audience — какое мини-приложение спрашивает: пассажирское шлёт 'passenger',
+// водительское 'driver'. Бэкенд пересекает с реальными ролями, чтобы двухролевой
+// аккаунт не видел чужие акции (пассажир — водительские и наоборот).
+export function getMyPromotions(audience?: 'driver' | 'passenger') {
+  return apiRequest<BonusPromotionsResponse>(`/bonus/promotions${audience ? `?for=${audience}` : ''}`)
 }
 
 // Вступить в парковую акцию («Участвовать») — прогресс считается с этого

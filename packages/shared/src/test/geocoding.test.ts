@@ -11,8 +11,8 @@ beforeEach(() => {
 
 describe('searchPlaces', () => {
   it('short-circuits queries shorter than 3 characters without a request', async () => {
-    await expect(searchPlaces('ab')).resolves.toEqual([])
-    await expect(searchPlaces('   a   ')).resolves.toEqual([])
+    await expect(searchPlaces('ab')).resolves.toEqual({ degraded: false, places: [] })
+    await expect(searchPlaces('   a   ')).resolves.toEqual({ degraded: false, places: [] })
     expect(apiRequestMock).not.toHaveBeenCalled()
   })
 
@@ -21,7 +21,7 @@ describe('searchPlaces', () => {
       { title: 'Аэропорт', subtitle: 'Алматы', lat: 43.35, lng: 77.04 },
     ])
 
-    const places = await searchPlaces('  аэро  ')
+    const { places } = await searchPlaces('  аэро  ')
 
     expect(apiRequestMock).toHaveBeenCalledWith('/geocoding/suggest', {
       method: 'POST',
@@ -47,7 +47,7 @@ describe('searchPlaces', () => {
       { title: 'мкр Мирас, 62а', subtitle: 'Алматы', lat: 43.186, lng: 76.877, distance_m: 973_000 },
     ])
 
-    const places = await searchPlaces('Мирас 62', { lat: 51.1168, lng: 71.4163 })
+    const { places } = await searchPlaces('Мирас 62', { lat: 51.1168, lng: 71.4163 })
 
     expect(apiRequestMock).toHaveBeenCalledWith('/geocoding/suggest', {
       method: 'POST',
@@ -61,11 +61,24 @@ describe('searchPlaces', () => {
       results: [{ title: 'A', subtitle: '', lat: 1, lng: 2 }],
     })
 
-    const places = await searchPlaces('abc')
+    const { places } = await searchPlaces('abc')
 
     // Empty subtitle must not leave a trailing separator in the address.
     expect(places[0].address).toBe('A')
     expect(places[0].id).toBe('1:2:0')
+  })
+
+  it('surfaces the degraded flag when the geocoder is down', async () => {
+    // Бэк отдал только избранные + degraded:true вместо 500.
+    apiRequestMock.mockResolvedValue({
+      degraded: true,
+      results: [{ title: 'Дом', subtitle: '', lat: 5, lng: 6, is_favorite: true }],
+    })
+
+    const { degraded, places } = await searchPlaces('дом')
+
+    expect(degraded).toBe(true)
+    expect(places[0].isFavorite).toBe(true)
   })
 })
 
