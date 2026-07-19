@@ -112,7 +112,7 @@ async function loadMyPark(id: string) {
 // Парковые акции с прогрессом (joined=false → прогресс ещё не считается).
 async function loadMyPromotions() {
   try {
-    const response = await getMyPromotions()
+    const response = await getMyPromotions('driver')
     myPromos.value = response.promotions.filter(promo => promo.scope === 'park')
   }
   catch {

@@ -24,7 +24,7 @@ const emit = defineEmits<{
 const promotions = ref<BonusPromotion[]>([])
 
 onMounted(() => {
-  getMyPromotions()
+  getMyPromotions('passenger')
     .then((response) => {
       promotions.value = response.promotions ?? []
     })
