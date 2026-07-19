@@ -15,6 +15,7 @@ function normalizeOffer(message: Extract<DriverWebSocketMessage, { type: 'trip_o
     dropoff_lng: message.data.dropoff_lng,
     estimated_fare: message.data.estimated_fare ?? message.data.fare ?? 0,
     options: message.data.options,
+    per_km: message.data.per_km,
     pickup_address: message.data.pickup_address,
     pickup_lat: message.data.pickup_lat,
     pickup_lng: message.data.pickup_lng,
