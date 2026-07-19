@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import type { DistrictShape } from '@edtaxi/shared/composables/mapbox/useMapboxDistricts'
 import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
+import { useMapboxDistricts } from '@edtaxi/shared/composables/mapbox/useMapboxDistricts'
 import { useMapboxMap } from '@edtaxi/shared/composables/mapbox/useMapboxMap'
 import { useMapboxPicker } from '@edtaxi/shared/composables/mapbox/useMapboxPicker'
 import { useMapboxRoute } from '@edtaxi/shared/composables/mapbox/useMapboxRoute'
@@ -16,6 +18,8 @@ interface PassengerMapPickerExpose {
 }
 
 const props = withDefaults(defineProps<{
+  // Выбранные водителем районы приёма заказов — подсвечиваем на карте.
+  activeDistricts?: DistrictShape[]
   destinationPlace?: GeoPlace | null
   driverLocation?: PassengerDriverLocation | null
   driverView?: boolean
@@ -31,6 +35,7 @@ const props = withDefaults(defineProps<{
   stopPlaces?: GeoPlace[]
   userCoordinates?: UserCoordinates | null
 }>(), {
+  activeDistricts: () => [],
   destinationPlace: null,
   driverLocation: null,
   driverView: false,
@@ -93,6 +98,16 @@ const {
   pickupPlace: computed(() => props.pickupPlace),
   routeCoordinates,
   stopPlaces: computed(() => props.stopPlaces),
+})
+
+// Подсветка выбранных районов приёма заказов (заливка под линией маршрута).
+const {
+  renderDistricts,
+  restoreDistricts,
+} = useMapboxDistricts({
+  districts: computed(() => props.activeDistricts),
+  map,
+  sourcePrefix: 'active-districts',
 })
 
 const {
@@ -295,16 +310,23 @@ onMounted(async () => {
       showTripRoute()
     }
 
+    // Подсветка выбранных районов (пустой список сам снимает слои).
+    renderDistricts()
+
     syncFavoriteMarkers()
 
-    // Смена темы карты сбрасывает кастомные слои (линию маршрута) — рисуем их
-    // заново на свежем стиле, не дёргая камеру.
+    // Смена темы карты сбрасывает кастомные слои (линию маршрута, районы) — рисуем
+    // их заново на свежем стиле, не дёргая камеру.
     map.value?.on('style.load', () => {
       if (hasRoute.value)
         restoreRoute()
+      restoreDistricts()
     })
   }, cachedCenter ?? undefined)
 })
+
+// Переключение районов в настройках — перерисовываем подсветку на лету.
+watch(() => props.activeDistricts, () => renderDistricts(), { deep: true })
 
 // Тема карты применяется на лету — выбор в переключателе виден сразу.
 const { currentUrl: mapStyleUrl } = useMapStyle()

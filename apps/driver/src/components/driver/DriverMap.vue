@@ -1,17 +1,23 @@
 <script setup lang="ts">
+import type { DistrictShape } from '@edtaxi/shared/composables/mapbox/useMapboxDistricts'
 import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
 withDefaults(defineProps<{
+  activeDistricts?: DistrictShape[]
   destinationPlace?: GeoPlace | null
   pickupPlace?: GeoPlace | null
   routeCoordinates?: RouteCoordinate[]
+  // Промежуточные остановки заказа — прокидываем в MapView (нумерованные метки).
+  stopPlaces?: GeoPlace[]
   userCoordinates?: UserCoordinates | null
 }>(), {
+  activeDistricts: () => [],
   destinationPlace: null,
   pickupPlace: null,
   routeCoordinates: () => [],
+  stopPlaces: () => [],
   userCoordinates: null,
 })
 
@@ -30,6 +36,7 @@ const selfCategory = computed(() => {
 
 <template>
   <MapView
+    :active-districts="activeDistricts"
     :destination-place="destinationPlace"
     driver-view
     focus-user-on-first-fix
@@ -37,6 +44,7 @@ const selfCategory = computed(() => {
     :route-coordinates="routeCoordinates"
     :self-category="selfCategory"
     :show-route="routeCoordinates.length >= 2"
+    :stop-places="stopPlaces"
     :user-coordinates="userCoordinates"
     @ready="emit('ready')"
   />
