@@ -557,6 +557,9 @@ export const useDriverStore = defineStore('driver', () => {
     try {
       await cancelDriverTrip(currentTripId.value)
       clearActiveTripState()
+      // Отмена НЕ гасит режим «Домой» на бэке (он одноразовый, гаснет только при
+      // завершении у дома) — обновляем состояние, чтобы бейдж отражал факт.
+      loadHomeMode().catch(() => {})
     }
     catch (error) {
       errorMessage.value = showErrorToast(error, 'Не удалось отменить поездку.')
@@ -577,6 +580,10 @@ export const useDriverStore = defineStore('driver', () => {
         useToast().warning('Пассажир отменил заказ', 'Ищем вам следующий заказ рядом...')
       }
       clearActiveTripState()
+      // Терминальный статус пришёл по websocket (не через локальный
+      // complete/cancel): завершение у дома гасит режим «Домой» на бэке —
+      // подтягиваем свежее состояние, иначе бейдж «горит» после гашения.
+      loadHomeMode().catch(() => {})
       return
     }
 
