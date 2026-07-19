@@ -7,6 +7,7 @@ import { CATEGORY_LABELS } from '~/constants/admin'
 import { useVerificationStore } from '~/stores/verification'
 import { formatDate } from '~/utils/format'
 import { validateIin } from '~/utils/iin'
+import { splitDisplayName } from '~/utils/verifiedName'
 
 const verification = useVerificationStore()
 const tab = ref<'daily' | 'faces' | 'vehicles'>('vehicles')
@@ -212,8 +213,19 @@ const activeIin = computed(() =>
   activeFace.value?.iin ?? activeDaily.value?.driver_iin ?? null,
 )
 
+// Имя с удостоверения (TODO п.27): его увидит пассажир. Обязательно при одобрении
+// лица (в UI), reject имён не требует.
+const docName = reactive({ first: '', last: '' })
+
 const checklistComplete = computed(() => checks.first !== null && checks.second !== null)
-const canApprove = computed(() => checks.first === true && checks.second === true)
+const canApprove = computed(() => {
+  if (checks.first !== true || checks.second !== true)
+    return false
+  // Для лица требуем заполнить имя/фамилию с удостоверения.
+  if (activeRequest.value?.kind === 'face')
+    return docName.first.trim().length > 0 && docName.last.trim().length > 0
+  return true
+})
 const canReject = computed(() =>
   checklistComplete.value
   && (checks.first === false || checks.second === false)
@@ -225,6 +237,21 @@ function openRequest(kind: RequestKind, id: string) {
   checks.first = null
   checks.second = null
   rejectReason.value = ''
+  docName.first = ''
+  docName.last = ''
+  if (kind === 'face') {
+    const face = verification.faces.find(f => f.driver_id === id)
+    // Ранее введённое имя, иначе разбор driver_name (@ник/телефон → пусто).
+    if (face?.verified_first_name || face?.verified_last_name) {
+      docName.first = face.verified_first_name ?? ''
+      docName.last = face.verified_last_name ?? ''
+    }
+    else {
+      const parsed = splitDisplayName(face?.driver_name)
+      docName.first = parsed.first
+      docName.last = parsed.last
+    }
+  }
 }
 
 function closeRequest() {
@@ -242,7 +269,7 @@ async function submitDecision(approve: boolean) {
   if (request.kind === 'vehicle')
     await verification.decideVehicleChecklist(request.id, first, second, reason)
   else if (request.kind === 'face')
-    await verification.decideFaceChecklist(request.id, first, second, reason)
+    await verification.decideFaceChecklist(request.id, first, second, reason, docName.first.trim(), docName.last.trim())
   else
     await verification.decideDailyCheckChecklist(request.id, first, second, reason)
 
@@ -620,6 +647,37 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                   </span>
                 </p>
               </template>
+            </section>
+
+            <!-- Имя с удостоверения (TODO п.27): его увидит пассажир. Обязательно
+                 при одобрении лица. -->
+            <section v-if="activeFace" class="border border-white/8 rounded-2xl bg-white/4 p-4">
+              <p class="text-xs text-white/42 font-900 uppercase">
+                Имя с удостоверения
+              </p>
+              <p class="mt-1 text-xs text-white/45">
+                Это имя увидит пассажир. Впишите точно как в документе.
+              </p>
+              <div class="grid mt-3 gap-2 sm:grid-cols-2">
+                <label class="grid gap-1.5">
+                  <span class="text-xs text-white/42 font-900 uppercase">Имя</span>
+                  <input
+                    v-model="docName.first"
+                    class="h-10 border border-white/10 rounded-xl bg-white/8 px-3 text-sm outline-none focus:border-cyan-300/40"
+                    maxlength="100"
+                    placeholder="Имя"
+                  >
+                </label>
+                <label class="grid gap-1.5">
+                  <span class="text-xs text-white/42 font-900 uppercase">Фамилия</span>
+                  <input
+                    v-model="docName.last"
+                    class="h-10 border border-white/10 rounded-xl bg-white/8 px-3 text-sm outline-none focus:border-cyan-300/40"
+                    maxlength="100"
+                    placeholder="Фамилия"
+                  >
+                </label>
+              </div>
             </section>
 
             <!-- Причина отказа: обязательна, когда хотя бы один блок с проблемой -->

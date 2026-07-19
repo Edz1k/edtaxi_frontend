@@ -106,6 +106,10 @@ export interface DriverVerificationsResponse {
   face_selfie_check?: VerificationStatus
   face_doc_check?: VerificationStatus
   face_rejection_reason?: null | string
+  // Имя с удостоверения, подтверждённое поддержкой (TODO п.27): под ним водителя
+  // показывают пассажирам. null/undefined — саппорт ещё не заполнял.
+  verified_first_name?: null | string
+  verified_last_name?: null | string
   // has_approved_vehicle — есть хотя бы одна одобренная машина. Именно так
   // бэкенд решает, пускать ли водителя на линию.
   has_approved_vehicle: boolean
