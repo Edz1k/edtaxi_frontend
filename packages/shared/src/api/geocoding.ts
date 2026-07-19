@@ -17,6 +17,10 @@ function getSuggestResults(response: GeocodingSuggestResponse) {
   return Array.isArray(response) ? response : response.results
 }
 
+function isDegraded(response: GeocodingSuggestResponse) {
+  return Array.isArray(response) ? false : Boolean(response.degraded)
+}
+
 function suggestionToPlace(suggestion: GeocodingSuggestion, index: number): GeoPlace {
   return {
     address: [suggestion.title, suggestion.subtitle].filter(Boolean).join(', '),
@@ -64,19 +68,26 @@ export function getRoute(payload: RoutePayload | RoutePointsPayload) {
 // near — координаты пользователя (обычно точка А): с ними бэкенд ищет сначала
 // в городе пользователя, затем в остальных, и проставляет расстояния до
 // подсказок (distance_m). Без near — как раньше, без гео-приоритета.
-export async function searchPlaces(query: string, near?: { lat: number, lng: number } | null) {
+//
+// Возвращает { places, degraded }: degraded=true — геокодер недоступен, в places
+// только избранные (или пусто). Вызывающий показывает подсказку и не трактует
+// пустой список как «адрес не найден».
+export async function searchPlaces(query: string, near?: { lat: number, lng: number } | null): Promise<{ degraded: boolean, places: GeoPlace[] }> {
   const trimmedQuery = query.trim()
 
   if (trimmedQuery.length < 3)
-    return []
+    return { degraded: false, places: [] }
 
-  const results = getSuggestResults(await suggestAddresses({
+  const response = await suggestAddresses({
     query: trimmedQuery,
     lat: near?.lat,
     lng: near?.lng,
-  }))
+  })
 
-  return results.map(suggestionToPlace)
+  return {
+    degraded: isDegraded(response),
+    places: getSuggestResults(response).map(suggestionToPlace),
+  }
 }
 
 export async function reverseGeocodePlace(lng: number, lat: number) {

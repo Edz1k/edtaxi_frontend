@@ -3,6 +3,9 @@ import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 
 defineProps<{
   color: 'amber' | 'emerald' | 'red'
+  // failed — геокодер недоступен (2ГИС + Mapbox легли): показываем подсказку
+  // вместо молчаливо пустого списка.
+  failed?: boolean
   isLoading: boolean
   places: GeoPlace[]
 }>()
@@ -42,7 +45,7 @@ function formatDistance(m?: null | number) {
   <!-- Список сам не скроллится: прокрутку даёт родительский контейнер
        (скролл-область AddressForm или страницы избранного). -->
   <div
-    v-if="places.length || isLoading"
+    v-if="places.length || isLoading || failed"
     class="min-w-0 overflow-x-hidden rounded-2xl bg-white/5 p-2 space-y-1"
   >
     <button
@@ -75,6 +78,13 @@ function formatDistance(m?: null | number) {
       class="px-2 py-2 text-xs text-slate-400 font-700"
     >
       Ищем адрес...
+    </p>
+
+    <p
+      v-else-if="failed && !places.length"
+      class="px-2 py-2 text-xs text-amber-300/80 font-700 leading-4"
+    >
+      Поиск адресов временно недоступен — попробуйте позже или укажите точку на карте.
     </p>
   </div>
 </template>

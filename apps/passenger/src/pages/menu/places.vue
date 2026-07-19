@@ -17,6 +17,7 @@ const addressSearchInput = ref<HTMLInputElement | null>(null)
 const {
   clearSuggestions,
   isSearching,
+  searchFailed,
   selectPlace,
   suggestions,
 } = useAddressSearch({
@@ -356,6 +357,7 @@ async function submit() {
               <AddressSuggestions
                 class="mt-3"
                 color="emerald"
+                :failed="searchFailed"
                 :is-loading="isSearching"
                 :places="suggestions"
                 @select="selectFavoriteAddress($event)"

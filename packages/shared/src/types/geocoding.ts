@@ -31,6 +31,10 @@ export interface GeocodingSuggestion {
 }
 
 export type GeocodingSuggestResponse = GeocodingSuggestion[] | {
+  // degraded — геокодер (2ГИС + Mapbox-фолбэк) недоступен: бэкенд отдал только
+  // избранные адреса вместо 500. Фронт показывает подсказку «поиск временно
+  // недоступен» и не считает пустую выдачу «адрес не найден».
+  degraded?: boolean
   results: GeocodingSuggestion[]
 }
 

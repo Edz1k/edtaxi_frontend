@@ -12,11 +12,15 @@ interface UseAddressSearchOptions {
 export function useAddressSearch(options: UseAddressSearchOptions) {
   const suggestions = ref<GeoPlace[]>([])
   const isSearching = ref(false)
+  // searchFailed — геокодер лёг (сеть/500) или бэкенд отдал degraded: показываем
+  // подсказку «поиск временно недоступен», а не молчаливо пустой список.
+  const searchFailed = ref(false)
   const lastQuery = ref('')
 
   const search = useDebounceFn(async () => {
     const query = options.query.value.trim()
     lastQuery.value = query
+    searchFailed.value = false
 
     if (options.selectedPlace.value?.address === options.query.value) {
       isSearching.value = false
@@ -33,14 +37,18 @@ export function useAddressSearch(options: UseAddressSearchOptions) {
 
     try {
       const near = options.near?.value
-      const places = await searchPlaces(query, near ? { lat: near.lat, lng: near.lng } : undefined)
+      const { degraded, places } = await searchPlaces(query, near ? { lat: near.lat, lng: near.lng } : undefined)
 
-      if (lastQuery.value === query)
+      if (lastQuery.value === query) {
         suggestions.value = places
+        searchFailed.value = degraded
+      }
     }
     catch {
-      if (lastQuery.value === query)
+      if (lastQuery.value === query) {
         suggestions.value = []
+        searchFailed.value = true
+      }
     }
     finally {
       if (lastQuery.value === query)
@@ -63,12 +71,14 @@ export function useAddressSearch(options: UseAddressSearchOptions) {
 
   function clearSuggestions() {
     suggestions.value = []
+    searchFailed.value = false
   }
 
   return {
     clearSuggestions,
     isSearching,
     search,
+    searchFailed,
     selectPlace,
     suggestions,
   }
