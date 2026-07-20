@@ -538,16 +538,21 @@ async function shareTrip() {
           {{ driver.vehicle.plate_number }}
         </p>
       </div>
-
-      <a
-        v-if="driver.phone"
-        :href="`tel:${driver.phone}`"
-        class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full bg-main-500/20 text-main-300 transition active:scale-[0.95]"
-        aria-label="Позвонить водителю"
-      >
-        <span class="i-mdi-phone text-5" />
-      </a>
     </div>
+
+    <!-- Связь после поездки. Пока поездка активна, ниже есть «Чат с водителем»,
+         но на завершённой чат уже закрыт на запись — а вспоминают о забытых
+         вещах как раз тогда. Телефон водителя пассажиру не показываем
+         (приватность), поэтому ведём в поддержку: она видит контакты обеих
+         сторон и связывает их сама. -->
+    <RouterLink
+      v-if="isCompleted && driver"
+      to="/menu/support"
+      class="mt-2 h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98]"
+    >
+      <span class="i-mdi-bag-suitcase text-5" />
+      Забыл вещь в машине
+    </RouterLink>
 
     <!-- Платное ожидание: таймер после прибытия водителя -->
     <div
