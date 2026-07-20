@@ -12,6 +12,7 @@ import { captureReferralStartParam, takePendingReferralCode } from '@edtaxi/shar
 import { hideAppSplash } from '@edtaxi/shared/composables/useAppSplash'
 import { useUserCity } from '@edtaxi/shared/composables/useUserCity'
 import { useWeather } from '@edtaxi/shared/composables/useWeather'
+import { useNow } from '@vueuse/core'
 import { ApiError } from '~/api/client'
 import { getDriverOverview, getVerificationReminder } from '~/api/driver'
 import { getUserErrorMessage } from '~/api/errors'
@@ -27,7 +28,9 @@ import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
 import { useToast } from '~/composables/useToast'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
+import { isDailyCheckValid } from '~/utils/dailyCheck'
 import { offerToPlace } from '~/utils/geoPlace'
+import { onlineBlockTargetFor } from '~/utils/onlineBlock'
 
 const driver = useDriverStore()
 const toast = useToast()
@@ -84,8 +87,37 @@ const reminderPendingLabel = computed(() =>
 )
 
 // Причина отказа в выходе на линию (403 от POST /driver/status) — показываем
-// панель с текстом и переходом к верификации.
+// панель с текстом и переходом на нужный экран.
 const onlineBlockMessage = ref('')
+const onlineBlockTarget = ref<'daily-check' | 'park' | 'verification'>('verification')
+
+// Самоистечение фотоконтроля (п.45). Сервер снимает водителя с линии фоновым
+// проходом, но приложение об этом не узнаёт: is_online обновляется только из
+// ответа на собственное нажатие, статус водитель не переспрашивает, а
+// WS-события смены статуса нет. Без локального тикера кнопка осталась бы в
+// положении «Уйти с линии», сокет продолжил бы слать локацию, а тишину в
+// офферах водитель прочитал бы как «нет заказов».
+const now = useNow({ interval: 15_000 })
+const isDailyCheckActive = computed(() =>
+  isDailyCheckValid(onboarding.verification, now.value.getTime()),
+)
+
+watch(isDailyCheckActive, (active, wasActive) => {
+  // Реагируем только на переход «действовала → истекла»: при первой загрузке
+  // wasActive === undefined, и гасить там нечего.
+  if (active || wasActive !== true)
+    return
+
+  onlineBlockMessage.value = 'Срок фотоконтроля истёк — вы сняты с линии. Пройдите проверку заново.'
+  onlineBlockTarget.value = 'daily-check'
+
+  if (!driver.isOnline)
+    return
+
+  driver.applyStatus({ is_available: false, is_online: false })
+  if (!driver.hasActiveTrip)
+    tracking.close()
+})
 
 // Бейдж бонусов в углу карты: пока баланс не загрузился (или упал) — не
 // показываем, чтобы не рисовать пустышку поверх карты.
@@ -291,6 +323,9 @@ onMounted(async () => {
     driver.ensureProfile().catch(() => {})
     // Подтягиваем уже добавленную машину, чтобы водитель не добавлял её заново.
     onboarding.loadVehicles().catch(() => {})
+    // Верификация нужна на карте ради срока фотоконтроля: по нему приложение
+    // само снимает водителя с линии, когда проверка истекает посреди смены.
+    onboarding.loadVerification().catch(() => {})
     checkVerificationReminder()
     startWatchingUserLocation()
 
@@ -337,6 +372,7 @@ async function toggleOnline() {
   // На линию нельзя без геолокации — без неё диспетчер не видит водителя.
   if (nextOnline && !isLocationGranted.value) {
     onlineBlockMessage.value = 'Включите геолокацию, чтобы выйти на линию.'
+    onlineBlockTarget.value = 'verification'
     return
   }
 
@@ -345,10 +381,12 @@ async function toggleOnline() {
     onlineBlockMessage.value = ''
   }
   catch (error) {
-    // 403 — не пройдена верификация (лицо/машина): показываем причину с бэка
-    // и предлагаем перейти к верификации.
-    if (nextOnline && error instanceof ApiError && error.status === 403)
+    // 403 — не пройден один из гейтов (парк, лицо/машина, фотоконтроль):
+    // показываем причину с бэка и ведём на экран, где её можно закрыть.
+    if (nextOnline && error instanceof ApiError && error.status === 403) {
       onlineBlockMessage.value = getUserErrorMessage(error, 'Выход на линию сейчас недоступен.')
+      onlineBlockTarget.value = onlineBlockTargetFor(onlineBlockMessage.value)
+    }
     return
   }
 
@@ -431,6 +469,7 @@ async function toggleOnline() {
       ref="statusPanelRef"
       :is-location-granted="isLocationGranted"
       :online-block-message="onlineBlockMessage"
+      :online-block-target="onlineBlockTarget"
       :show-route-loading="Boolean(mapOffer && isRouteLoading)"
       :tracking-status="tracking.status.value"
       @primary-action="handlePrimaryTripAction"

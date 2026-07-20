@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import PhotoEditorModal from '@edtaxi/shared/components/photo/PhotoEditorModal.vue'
 import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
+import { useNow } from '@vueuse/core'
 import AuthButton from '~/components/auth/AuthButton.vue'
 import FaceCaptureCamera from '~/components/verification/FaceCaptureCamera.vue'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
+import { dailyCheckState, validUntilLabel } from '~/utils/dailyCheck'
 
 const router = useRouter()
 const driver = useDriverOnboardingStore()
@@ -37,16 +39,22 @@ const canSubmit = computed(() =>
   hasVehicle.value && selfieFile.value !== null && vehiclePhotoFile.value !== null,
 )
 
-// Статус сегодняшней проверки: если уже отправлена (пройдена или на проверке) —
-// показываем статус, а не форму. daily_check_valid покрывает approved+pending.
+// Статус проверки: если она действует или отправлена — показываем статус, а не
+// форму. Срок считается от тикера, а не только от серверного флага: проверка
+// истекает по часам, и без этого экран навсегда застывал бы на «Пройдено».
+const now = useNow({ interval: 15_000 })
 const latestDaily = computed(() => driver.verification?.latest_daily_check ?? null)
-const dailyValid = computed(() => Boolean(driver.verification?.daily_check_valid))
-const dailyPending = computed(() => dailyValid.value && latestDaily.value?.status === 'pending')
-const dailyRejectionReason = computed(() =>
-  !dailyValid.value && latestDaily.value?.status === 'rejected'
-    ? latestDaily.value?.rejection_reason ?? ''
-    : '',
+const dailyState = computed(() => dailyCheckState(driver.verification, now.value.getTime()))
+const dailyValid = computed(() => dailyState.value === 'valid')
+const dailyPending = computed(() => dailyState.value === 'pending')
+const dailyValidUntil = computed(() =>
+  dailyValid.value ? validUntilLabel(driver.verification?.daily_check_valid_until) : '',
 )
+const dailyRejectionReason = computed(() =>
+  dailyState.value === 'rejected' ? latestDaily.value?.rejection_reason ?? '' : '',
+)
+// Заявку не успели рассмотреть — водитель должен понимать, что дело не в нём.
+const dailyExpired = computed(() => dailyState.value === 'expired')
 
 onMounted(async () => {
   if (!driver.verification)
@@ -58,6 +66,14 @@ onMounted(async () => {
 useAutoRefresh(() => driver.loadVerification(), {
   enabled: computed(() => dailyPending.value),
   intervalMs: 12_000,
+})
+
+// Когда срок истёк по тикеру, один раз перечитываем статус с сервера: локально
+// мы знаем только «пора заново», а причину (сгорела заявка или просто вышли
+// сутки) и свежий latest_daily_check отдаёт бэкенд.
+watch(dailyValid, (valid, wasValid) => {
+  if (!valid && wasValid)
+    driver.loadVerification().catch(() => {})
 })
 
 // Селфи снимается ТОЛЬКО живой камерой внутри приложения (овал + автоснимок по
@@ -174,8 +190,8 @@ async function submit() {
         </RouterLink>
       </div>
 
-      <!-- Уже отправлено сегодня — пройдено или на проверке: статус, а не форма -->
-      <template v-else-if="dailyValid">
+      <!-- Уже отправлено — пройдено или на проверке: статус, а не форма -->
+      <template v-else-if="dailyValid || dailyPending">
         <div
           class="mt-8 rounded-3xl p-5"
           :class="dailyPending ? 'bg-amber-500/10' : 'bg-emerald-500/10'"
@@ -194,7 +210,9 @@ async function submit() {
               <p class="mt-0.5 text-sm leading-5" :class="dailyPending ? 'text-amber-300/85' : 'text-emerald-300/85'">
                 {{ dailyPending
                   ? 'Мы проверяем ваше селфи и фото машины. Обычно это занимает недолго.'
-                  : 'Ежедневный фотоконтроль пройден — можно на линию. Следующий перед завтрашней сменой.' }}
+                  : dailyValidUntil
+                    ? `Фотоконтроль пройден — можно на линию. Действует до ${dailyValidUntil}, после этого нужна новая проверка.`
+                    : 'Ежедневный фотоконтроль пройден — можно на линию.' }}
               </p>
             </div>
           </div>
@@ -210,6 +228,13 @@ async function submit() {
       </template>
 
       <div v-else class="mt-8 space-y-6">
+        <!-- Заявка сгорела: поддержка не успела её посмотреть. Отдельно от
+             отказа — водитель ничего не сделал не так. -->
+        <div v-if="dailyExpired" class="flex items-start gap-3 rounded-2xl bg-amber-500/10 px-4 py-3 text-sm text-amber-200 leading-5">
+          <span class="i-mdi-timer-sand-complete shrink-0 text-5 text-amber-400" />
+          <span>Заявку не успели рассмотреть, и её срок истёк. Отправьте фото заново — так проверка идёт по свежим снимкам.</span>
+        </div>
+
         <!-- Причина отказа поддержки — что исправить перед повторной отправкой -->
         <div v-if="dailyRejectionReason" class="flex items-start gap-3 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-300 leading-5">
           <span class="i-mdi-alert-circle shrink-0 text-5 text-red-400" />
@@ -300,8 +325,8 @@ async function submit() {
         </div>
 
         <p class="text-center text-xs text-slate-500 leading-5">
-          Проверка действует 24 часа.<br>
-          Требуется каждый день перед выходом.
+          Проверка действует 24 часа с момента одобрения.<br>
+          Отправляйте фото прямо перед сменой — заявку нужно успеть рассмотреть.
         </p>
 
         <AuthButton

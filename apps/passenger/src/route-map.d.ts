@@ -45,6 +45,13 @@ declare module 'vue-router/auto-routes' {
       { all: ParamValue<false> },
       | never
     >,
+    '/account-deleted': RouteRecordInfo<
+      '/account-deleted',
+      '/account-deleted',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/bonus': RouteRecordInfo<
       '/bonus',
       '/bonus',
@@ -199,6 +206,14 @@ declare module 'vue-router/auto-routes' {
         | never
       pathParamNames:
         | 'all'
+    }
+    'src/pages/account-deleted.vue': {
+      routes:
+        | '/account-deleted'
+      views:
+        | never
+      pathParamNames:
+        | never
     }
     'src/pages/bonus.vue': {
       routes:

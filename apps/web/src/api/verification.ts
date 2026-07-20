@@ -1,8 +1,8 @@
 import type {
   DailyChecksResponse,
+  DailyCheckStatus,
   FacesResponse,
   VehiclesResponse,
-  VerificationStatus,
 } from '~/types/verification'
 import { apiRequest } from '~/api/client'
 
@@ -27,7 +27,7 @@ export function reviewVehicle(id: string, approve: boolean) {
   })
 }
 
-export function listDailyChecks(params: { status?: VerificationStatus, limit?: number, offset?: number } = {}) {
+export function listDailyChecks(params: { status?: DailyCheckStatus, limit?: number, offset?: number } = {}) {
   return apiRequest<DailyChecksResponse>('/tech-support/verifications/daily-checks', { params })
 }
 
