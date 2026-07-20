@@ -53,6 +53,7 @@ const groups: Array<{ label: string, items: NavItem[] }> = [
       { icon: 'i-mdi-gift-outline', label: 'Акции', to: '/admin/promotions' },
       { icon: 'i-mdi-lightbulb-outline', label: 'Предложения', to: '/admin/feedback' },
       { icon: 'i-mdi-map-search-outline', label: 'Районы', to: '/admin/districts' },
+      { icon: 'i-mdi-map-marker-radius-outline', label: 'Точки подачи', to: '/admin/pickup-points' },
       { icon: 'i-mdi-tune', label: 'Настройки', to: '/admin/settings' },
     ],
   },

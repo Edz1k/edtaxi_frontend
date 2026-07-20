@@ -94,6 +94,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/admin/pickup-points': RouteRecordInfo<
+      '/admin/pickup-points',
+      '/admin/pickup-points',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/admin/promotions': RouteRecordInfo<
       '/admin/promotions',
       '/admin/promotions',
@@ -377,6 +384,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/admin/payouts.vue': {
       routes:
         | '/admin/payouts'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/admin/pickup-points.vue': {
+      routes:
+        | '/admin/pickup-points'
       views:
         | never
       pathParamNames:
