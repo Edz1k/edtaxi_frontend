@@ -52,8 +52,11 @@ export function useOrderSound() {
         unlocked = true
       })
       .catch(() => {
-        // Останется заблокированным до следующего жеста — не критично.
+        // Прогрев отклонён — ждём следующего жеста. Слушатель ниже
+        // перевешивается именно поэтому: с {once:true} и без этого повтора
+        // единственная неудачная попытка глушила бы мелодию на всю сессию.
         el.muted = false
+        armFirstGesture()
       })
   }
 
@@ -104,10 +107,15 @@ export function useOrderSound() {
 
   const onFirstGesture = () => unlock()
 
-  onMounted(() => {
-    // Разблокируем звук на первом касании/клике по приложению.
+  // Вешаем разблокировку на очередной жест. Вызывается повторно, если прогрев
+  // не удался: браузер мог отклонить его, например пока вкладка была скрыта.
+  function armFirstGesture() {
+    if (unlocked)
+      return
     window.addEventListener('pointerdown', onFirstGesture, { once: true, passive: true })
-  })
+  }
+
+  onMounted(armFirstGesture)
 
   onBeforeUnmount(() => {
     window.removeEventListener('pointerdown', onFirstGesture)
