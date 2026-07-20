@@ -513,8 +513,13 @@ const peekPill = computed(() => {
               </button>
             </div>
 
+            <!-- v-else-if, а не голый v-else: блок выше висит на
+                 (hasActiveTrip && tripStep), и при активной поездке без шага
+                 (неизвестный статус, момент восстановления) сюда проваливалась
+                 кнопка линии прямо посреди заказа. Тап по ней сбрасывал признак
+                 занятости, и водителю прилетал оффер в пути. -->
             <button
-              v-else
+              v-else-if="!driver.hasActiveTrip"
               :disabled="driver.isChangingStatus || driver.isRestoringActiveTrip || (!driver.isOnline && !isLocationGranted) || blockedByNoCategory"
               class="mt-4 h-14 w-full flex items-center justify-center gap-2 rounded-2xl text-base font-900 transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
               :class="driver.isOnline ? 'bg-red-500/12 text-red-300' : 'bg-main-500 text-white shadow-[0_12px_30px_rgba(230,173,46,0.28)]'"

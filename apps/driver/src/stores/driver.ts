@@ -436,12 +436,50 @@ export const useDriverStore = defineStore('driver', () => {
   }
 
   function receiveOffer(offer: DriverTripOffer) {
+    // Занятому водителю оффер не показываем. Основную защиту делает бэкенд
+    // (диспетчер не берёт водителя с активной поездкой), но между отбором
+    // кандидатов и отправкой есть окно, да и WS-сообщение могло догнать нас уже
+    // после принятия другого заказа. Дешёвая страховка: иначе поверх активной
+    // поездки всплывает модалка чужого заказа с мелодией.
+    if (hasActiveTrip.value)
+      return
+
     // Новый оффер (в т.ч. автоперекидка после отмены) заменяет баннер отмены.
     dismissCancelledBanner()
     pendingOffer.value = offer
+    startOfferExpiryTimer(offer)
+  }
+
+  // Клиентское истечение оффера. Сервер присылает trip_offer_expired, но если
+  // сообщение потерялось (разрыв WS, спящий вебвью), модалка висела бы вечно —
+  // а вместе с ней и мелодия, у неё loop=true. timeout_sec приходит в самом
+  // оффере и до этого не использовался.
+  let offerExpiryTimer: number | undefined
+
+  function stopOfferExpiryTimer() {
+    if (offerExpiryTimer === undefined)
+      return
+    window.clearTimeout(offerExpiryTimer)
+    offerExpiryTimer = undefined
+  }
+
+  function startOfferExpiryTimer(offer: DriverTripOffer) {
+    stopOfferExpiryTimer()
+
+    const seconds = offer.timeout_sec
+    if (!Number.isFinite(seconds) || seconds <= 0)
+      return
+
+    // Небольшой запас: если сервер всё-таки пришлёт trip_offer_expired, пусть
+    // отработает он — так статус оффера на бэке и на экране совпадут.
+    offerExpiryTimer = window.setTimeout(() => {
+      if (pendingOffer.value?.trip_id === offer.trip_id)
+        clearOffer()
+    }, (seconds + 1) * 1000)
   }
 
   function clearOffer() {
+    stopOfferExpiryTimer()
     pendingOffer.value = null
   }
 
@@ -660,7 +698,9 @@ export const useDriverStore = defineStore('driver', () => {
 
   function clearDriverState() {
     profile.value = null
-    pendingOffer.value = null
+    // Через clearOffer, а не присваиванием: иначе таймер истечения переживёт
+    // логаут и через минуту дёрнет уже чужое состояние.
+    clearOffer()
     dismissCancelledBanner()
     clearActiveTripState()
     isOnline.value = false
