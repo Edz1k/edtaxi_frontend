@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import type { TripStatus } from '~/types/trips'
+import { hasWebgl2 } from '@edtaxi/shared/composables/mapbox/webgl'
 import { mediaUrl } from '~/api/client'
-import MapView from '~/components/map/MapView.vue'
+import ShareTripMap from '~/components/map/ShareTripMap.vue'
+import StaticTripMap from '~/components/map/StaticTripMap.vue'
 import { TARIFF_META } from '~/constants/tariffs'
 import { useShareStore } from '~/stores/share'
 
 const route = useRoute()
 const shareStore = useShareStore()
+
+// Интерактивная mapbox-gl v3 требует WebGL2. В части мобильных браузеров его нет
+// (или выключено аппаратное ускорение) — там карта раньше молча падала чёрным
+// экраном. В таком окружении показываем статичную карту (PNG, без WebGL).
+// Страница — чистое SPA, так что проба безопасна прямо в setup.
+const mapUnavailable = ref(!hasWebgl2())
 
 definePage({
   meta: {
@@ -106,6 +114,26 @@ const etaText = computed(() => {
   return ''
 })
 
+// Устаревание геопозиции машины: возраст точки с бэка (age_sec) + время с
+// момента ответа. Если точка старше порога — честно говорим об этом вместо
+// машинки, застывшей как будто водитель стоит.
+const LOCATION_STALE_AFTER_SEC = 15
+const nowForStale = useNow({ interval: 1000 })
+const staleLocationText = computed(() => {
+  const base = shareStore.driverLocationAgeBaseSec
+  const fetchedAt = shareStore.driverLocationFetchedAt
+  if (base == null || fetchedAt == null || !shareStore.driverLocation)
+    return ''
+
+  const sec = base + Math.max(0, Math.floor((nowForStale.value.getTime() - fetchedAt) / 1000))
+  if (sec < LOCATION_STALE_AFTER_SEC)
+    return ''
+
+  return sec < 60
+    ? `Геопозиция машины обновлялась ${sec} сек назад`
+    : `Геопозиция машины обновлялась ${Math.floor(sec / 60)} мин назад`
+})
+
 // Фактическое время пути для завершённой поездки.
 const durationText = computed(() => {
   const trip = shareStore.trip
@@ -183,14 +211,22 @@ onBeforeUnmount(() => {
 <template>
   <main class="min-h-screen bg-secondary-950 text-white">
     <section class="relative min-h-screen overflow-hidden">
-      <MapView
-        v-if="shareStore.canShowMap"
+      <ShareTripMap
+        v-if="shareStore.canShowMap && !mapUnavailable"
         :destination-place="shareStore.destinationPlace"
         :driver-category="driverCategory"
         :driver-location="shareStore.driverLocation"
         :pickup-place="shareStore.pickupPlace"
         :route-coordinates="shareStore.routeCoordinates"
         :show-route="shareStore.canShowRoute"
+      />
+
+      <!-- Фолбэк без WebGL2: статичная карта вместо чёрного экрана. -->
+      <StaticTripMap
+        v-else-if="shareStore.canShowMap"
+        :destination="shareStore.destinationPlace"
+        :driver-location="shareStore.driverLocation"
+        :pickup="shareStore.pickupPlace"
       />
 
       <div
@@ -258,6 +294,12 @@ onBeforeUnmount(() => {
             <div v-if="etaText" class="mt-3 inline-flex items-center gap-2 rounded-full bg-main-500/14 px-4 py-1.5">
               <span class="i-mdi-clock-fast text-4 text-main-300" aria-hidden="true" />
               <span class="text-sm text-main-200 font-950 tabular-nums">{{ etaText }}</span>
+            </div>
+
+            <!-- Геопозиция машины устарела -->
+            <div v-if="staleLocationText" class="mt-2 inline-flex items-center gap-2 rounded-full bg-amber-500/12 px-4 py-1.5">
+              <span class="i-mdi-map-marker-alert-outline text-4 text-amber-300" aria-hidden="true" />
+              <span class="text-xs text-amber-200 font-800 tabular-nums">{{ staleLocationText }}</span>
             </div>
 
             <!-- Карточка водителя: имя, рейтинг, машина и номер -->

@@ -45,13 +45,24 @@ export const useShareStore = defineStore('share', () => {
   const isTerminal = computed(() => trip.value?.status === 'cancelled' || trip.value?.status === 'completed')
 
   // Живой маркер машины: бэкенд кладёт последнюю известную позицию водителя
-  // в driver.location, страница обновляет её поллингом раз в 10 секунд.
+  // в driver.location, страница обновляет её поллингом раз в 4 секунды.
   const driverLocation = computed(() => {
     const location = trip.value?.driver?.location
     if (!location || isTerminal.value)
       return null
 
-    return { lat: location.lat, lng: location.lng }
+    return { heading: location.heading, lat: location.lat, lng: location.lng }
+  })
+
+  // Когда позиция машины реально записана: age_sec с бэка + время получения
+  // ответа. По ним страница считает «геопозиция обновлялась N сек назад».
+  const driverLocationFetchedAt = ref<null | number>(null)
+  const driverLocationAgeBaseSec = computed(() => {
+    const location = trip.value?.driver?.location
+    if (!location || isTerminal.value)
+      return null
+
+    return typeof location.age_sec === 'number' ? location.age_sec : null
   })
 
   const driverEtaSeconds = computed(() => {
@@ -118,6 +129,7 @@ export const useShareStore = defineStore('share', () => {
       trip.value = response.trip
       viewCount.value = response.view_count
       expiresAt.value = response.expires_at
+      driverLocationFetchedAt.value = Date.now()
       isMissing.value = false
       await refreshRoute(token)
     }
@@ -142,6 +154,7 @@ export const useShareStore = defineStore('share', () => {
     viewCount.value = 0
     expiresAt.value = ''
     routeCoordinates.value = []
+    driverLocationFetchedAt.value = null
     isLoading.value = false
     isRefreshing.value = false
     isMissing.value = false
@@ -154,6 +167,8 @@ export const useShareStore = defineStore('share', () => {
     destinationPlace,
     driverEtaSeconds,
     driverLocation,
+    driverLocationAgeBaseSec,
+    driverLocationFetchedAt,
     errorMessage,
     expiresAt,
     isLoading,

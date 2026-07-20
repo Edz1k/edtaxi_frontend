@@ -214,9 +214,27 @@ export function useMapboxRoute(options: UseMapboxRouteOptions) {
     )
   }
 
+  // Отложенная отрисовка: на share-странице маршрут приходит с API раньше, чем
+  // Mapbox догрузил стиль (на медленной сети — почти всегда), и addSource/
+  // addLayer кидали «Style is not done loading», роняя вотчер Vue. Ждём
+  // style.load один раз — повторные вызовы не копят слушателей.
+  let pendingStyleLoad = false
+
   function showTripRoute() {
-    if (!options.map.value || !options.hasRoute.value)
+    const map = options.map.value
+    if (!map || !options.hasRoute.value)
       return
+
+    if (!map.isStyleLoaded()) {
+      if (!pendingStyleLoad) {
+        pendingStyleLoad = true
+        map.once('style.load', () => {
+          pendingStyleLoad = false
+          showTripRoute()
+        })
+      }
+      return
+    }
 
     renderRoute()
     renderRouteMarkers()
