@@ -206,6 +206,11 @@ async function setPickupFromCurrentLocation() {
     const place = await locateUser()
     if (!trips.pickupPlace)
       trips.setPickupPlace(place)
+
+    // Кружки-подсказки грузим вокруг места, где пассажир реально находится, —
+    // именно там он будет ставить точку. Промах не критичен: без подсказок
+    // карта работает ровно как раньше.
+    trips.loadPickupHints(place.lat, place.lng)
   }
   catch {}
 }
@@ -252,6 +257,7 @@ async function setPickupFromCurrentLocation() {
       :favorite-places="places.places"
       :picker-mode="trips.mapPickerMode"
       :pickup-place="trips.pickupPlace"
+      :pickup-hints="trips.pickupHints"
       :show-route="trips.routeCoordinates.length >= 2"
       :user-coordinates="liveCoordinates"
       @cancel-picker="trips.cancelMapPicker"

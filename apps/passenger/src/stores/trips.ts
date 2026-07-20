@@ -1,3 +1,4 @@
+import type { PickupHint } from '@edtaxi/shared/composables/mapbox/useMapboxPickupHints'
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, PaymentMethod, Trip, TripFlowState, TripOptions, TripStop, VehicleCategory } from '~/types/trips'
@@ -6,10 +7,12 @@ import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocati
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
 import { getUserErrorMessage, showErrorToast } from '~/api/errors'
+import { getPickupHints } from '~/api/pickupHints'
 import { getTariffCategories } from '~/api/tariffs'
 import { cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getTrip, getTripHistory, rateTrip, retryTripPrepay } from '~/api/trips'
 import { DEFAULT_ACTIVE_CATEGORIES, isMotoCategory, TARIFF_ORDER } from '~/constants/tariffs'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
+import { distanceM, nearestHint } from '~/utils/pickupHints'
 import { clearRouteDraft, readRouteDraft, saveRouteDraft } from '~/utils/routeDraft'
 import { isTerminalTripStatus } from '~/utils/trip'
 
@@ -85,6 +88,32 @@ export const useTripsStore = defineStore('trips', () => {
   const mapPickerMode = ref<MapPickerMode | null>(null)
   // Какую именно остановку выбираем точкой на карте (актуален при mode='stop').
   const mapPickerStopIndex = ref(0)
+
+  // Кружки-подсказки вокруг видимой области карты (п.41): где обычно садятся и
+  // выходят. Подгружаются по мере перемещения карты, к ним же притягивается пин.
+  const pickupHints = ref<PickupHint[]>([])
+  // Координата, для которой подсказки уже загружены — чтобы не дёргать бэкенд
+  // на каждый мелкий сдвиг карты.
+  let hintsFetchedAt: null | { lat: number, lng: number } = null
+
+  // Перезапрашиваем, только когда ушли от прошлой точки заметно дальше половины
+  // радиуса выдачи: иначе карта сыпала бы запросами на каждое движение пальцем.
+  const HINTS_REFETCH_DISTANCE_M = 400
+
+  async function loadPickupHints(lat: number, lng: number) {
+    if (hintsFetchedAt && distanceM(lat, lng, hintsFetchedAt.lat, hintsFetchedAt.lng) < HINTS_REFETCH_DISTANCE_M)
+      return
+
+    try {
+      const { hints } = await getPickupHints(lat, lng)
+      pickupHints.value = hints
+      hintsFetchedAt = { lat, lng }
+    }
+    catch {
+      // Подсказки вспомогательные: без них карта работает как раньше, поэтому
+      // ошибку не показываем и прошлый набор не стираем.
+    }
+  }
   // Сигнал даунбару «после выбора точки с карты/избранного — раскрыть поиск
   // адреса (2-й экран)», чтобы выбранная точка была на виду, а не терялась.
   const expandOnReturn = ref(false)
@@ -590,7 +619,15 @@ export const useTripsStore = defineStore('trips', () => {
   }
 
   function confirmMapPicker(place: GeoPlace, mode: MapPickerMode) {
-    setPlaceFromPicker(place, mode)
+    // Пин рядом с подсказкой притягивается к ней: кружки показывают места, где
+    // реально садятся, и попасть в них точнее, чем ставить точку на глаз.
+    // Дальше порога не трогаем — пассажир мог выбрать место в стороне намеренно.
+    const hint = nearestHint(place.lat, place.lng, pickupHints.value)
+    const snapped = hint
+      ? { ...place, address: hint.title || place.address, lat: hint.lat, lng: hint.lng }
+      : place
+
+    setPlaceFromPicker(snapped, mode)
     cancelMapPicker()
     expandOnReturn.value = true
   }
@@ -904,6 +941,8 @@ export const useTripsStore = defineStore('trips', () => {
     refreshActiveTrip,
     restoreActiveTrip,
     restoreRouteDraft,
+    pickupHints,
+    loadPickupHints,
     retryPrepay,
     setPrepaySource,
     resetActiveTrip,
