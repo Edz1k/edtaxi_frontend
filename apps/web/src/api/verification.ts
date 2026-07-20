@@ -55,9 +55,11 @@ export function reviewDailyCheckChecklist(id: string, selfieOk: boolean, vehicle
   })
 }
 
-export function reviewFaceChecklist(driverId: string, selfieOk: boolean, documentOk: boolean, reason = '') {
+// firstName/lastName — имя с удостоверения (TODO п.27): его увидит пассажир.
+// Старый бэк лишние поля игнорирует — фронт можно деплоить раньше бэка.
+export function reviewFaceChecklist(driverId: string, selfieOk: boolean, documentOk: boolean, reason = '', firstName = '', lastName = '') {
   return apiRequest<{ message: string }>(`/tech-support/verifications/faces/${driverId}/review`, {
     method: 'POST',
-    body: { selfie_ok: selfieOk, document_ok: documentOk, reason },
+    body: { selfie_ok: selfieOk, document_ok: documentOk, reason, first_name: firstName, last_name: lastName },
   })
 }

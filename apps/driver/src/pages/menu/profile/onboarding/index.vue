@@ -46,6 +46,8 @@ interface OnboardingItem {
   blocks?: ItemBlock[]
   // Причина отказа от поддержки — что именно исправить.
   reason?: null | string
+  // Имя, под которым водителя показывают пассажирам (TODO п.27).
+  note?: null | string
 }
 
 function checkToStatus(check?: VerificationStatus | string): ItemStatus {
@@ -69,6 +71,16 @@ const faceStatus = computed<ItemStatus>(() => {
   if (v.face_status === 'rejected')
     return 'rejected'
   return 'missing'
+})
+
+// Имя с удостоверения, под которым водителя видят пассажиры (TODO п.27):
+// показываем только когда лицо одобрено и поддержка заполнила имя.
+const verifiedName = computed<null | string>(() => {
+  const v = driver.verification
+  if (!v || v.face_status !== 'approved')
+    return null
+  const name = `${v.verified_first_name ?? ''} ${v.verified_last_name ?? ''}`.trim()
+  return name ? `Пассажиры видят вас как: ${name}` : null
 })
 
 // «Основная» машина для фотоконтроля: активная, иначе первая.
@@ -133,6 +145,7 @@ const items = computed<OnboardingItem[]>(() => {
           ]
         : undefined,
       reason: faceStatus.value === 'rejected' ? v?.face_rejection_reason : null,
+      note: verifiedName.value,
     },
     {
       label: 'Фотоконтроль машины',
@@ -372,6 +385,14 @@ function blockIcon(status: ItemStatus) {
               class="mt-2 block rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-300 leading-5"
             >
               {{ item.reason }}
+            </span>
+
+            <!-- Имя для пассажиров (verified с удостоверения) -->
+            <span
+              v-if="item.note"
+              class="mt-2 block rounded-xl bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 leading-5"
+            >
+              {{ item.note }}
             </span>
           </RouterLink>
         </nav>

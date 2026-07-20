@@ -87,9 +87,9 @@ export const useVerificationStore = defineStore('verification', () => {
     }, 'Не удалось сохранить решение по ежедневной проверке.')
   }
 
-  async function decideFaceChecklist(driverId: string, selfieOk: boolean, documentOk: boolean, reason = '') {
+  async function decideFaceChecklist(driverId: string, selfieOk: boolean, documentOk: boolean, reason = '', firstName = '', lastName = '') {
     return withLoading(isMutating, async () => {
-      await reviewFaceChecklist(driverId, selfieOk, documentOk, reason)
+      await reviewFaceChecklist(driverId, selfieOk, documentOk, reason, firstName, lastName)
       faces.value = faces.value.filter(f => f.driver_id !== driverId)
     }, 'Не удалось сохранить решение по проверке лица.')
   }

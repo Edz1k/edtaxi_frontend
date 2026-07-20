@@ -67,6 +67,10 @@ export interface FaceVerification {
   // ИИН, заявленный водителем; бэкенд уже проверил контрольную сумму, фронт
   // повторяет проверку для наглядного бейджа рядом с документом.
   iin?: null | string
+  // Ранее введённое имя с удостоверения (TODO п.27) — предзаполнение инпутов
+  // при повторной верификации; пусто/undefined — саппорт ещё не заполнял.
+  verified_first_name?: null | string
+  verified_last_name?: null | string
   created_at: string
 }
 
