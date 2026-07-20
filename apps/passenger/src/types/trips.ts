@@ -115,6 +115,17 @@ export interface TripDriver {
   location?: null | { lat: number, lng: number }
 }
 
+// Перевозчик — таксопарк, фактически выполняющий поездку. Телефон здесь
+// корпоративный (taxi_parks.phone), а не личный номер водителя: приватность
+// участников поездки это не нарушает. Полей может не быть — у части парков
+// телефон и БИН не заполнены, а у самозанятого водителя нет и самого объекта.
+export interface TripCarrier {
+  name: string
+  is_platform?: boolean
+  phone?: string
+  bin?: string
+}
+
 // Оценка, которую пассажир уже поставил за поездку (бэкенд кладёт my_rating в
 // завершённые поездки) — по ней экран завершения показывает выставленные звёзды.
 export interface TripMyRating {
@@ -139,6 +150,8 @@ export interface Trip {
   created_at?: string
   distance_km: number
   driver?: null | TripDriver
+  // Перевозчик (таксопарк) поездки; нет у самозанятого водителя.
+  carrier?: null | TripCarrier
   driver_assigned_at?: null | string
   driver_id?: null | string
   dropoff_address: string
