@@ -71,10 +71,19 @@ export interface RouteResponse {
   coordinates: RouteCoordinate[]
   distance_km: number
   duration_min: number
+  // Точка подачи, поправленная бэкендом на проезжую часть (п.41): пин и GPS
+  // часто попадают в середину здания, а машина подъедет к дороге. Приходит,
+  // только если поправка реальная и в пределах порога — иначе поля нет и точку
+  // менять не нужно. undefined — старый бэкенд.
+  snapped_pickup?: RoutePoint
 }
 
 export interface TripRoute {
   distance_km: number
   duration_min: number
   geometry: RouteCoordinate[]
+  // Прокидывается дальше по цепочке: заказ обязан уйти с той же координатой,
+  // которую увидел пассажир, иначе сервер поправит её ещё раз уже втихую и
+  // пин разойдётся с точкой, куда едет водитель.
+  snapped_pickup?: RoutePoint
 }
