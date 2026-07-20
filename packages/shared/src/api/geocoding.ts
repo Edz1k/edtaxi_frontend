@@ -108,6 +108,7 @@ export async function getDrivingRoute(from: GeoPlace, to: GeoPlace): Promise<Tri
     distance_km: route.distance_km,
     duration_min: route.duration_min,
     geometry: route.coordinates,
+    snapped_pickup: route.snapped_pickup,
   }
 }
 
@@ -122,5 +123,6 @@ export async function getDrivingRouteVia(points: RoutePoint[]): Promise<TripRout
     distance_km: route.distance_km,
     duration_min: route.duration_min,
     geometry: route.coordinates,
+    snapped_pickup: route.snapped_pickup,
   }
 }
