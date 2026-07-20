@@ -4,7 +4,7 @@ import { hasWebgl2 } from '@edtaxi/shared/composables/mapbox/webgl'
 import { mediaUrl } from '~/api/client'
 import ShareTripMap from '~/components/map/ShareTripMap.vue'
 import StaticTripMap from '~/components/map/StaticTripMap.vue'
-import { TARIFF_META } from '~/constants/tariffs'
+import { tariffLabel } from '~/constants/tariffs'
 import { useShareStore } from '~/stores/share'
 
 const route = useRoute()
@@ -74,6 +74,17 @@ const statusMeta: Record<TripStatus, {
   },
 }
 
+// Статус, которого нет в справочнике (awaiting_payment, любой будущий), не
+// должен обнулять всю карточку: тело шаблона висит на currentStatus, и при
+// undefined страница показывала пустой прямоугольник — ни данных, ни ошибки, ни
+// загрузки. Лучше нейтральная заглушка: адреса и машина всё равно есть.
+const UNKNOWN_STATUS = {
+  description: 'Отслеживаем поездку.',
+  icon: 'i-mdi-map-marker-path',
+  title: 'Поездка',
+  tone: 'text-slate-300',
+}
+
 const currentStatus = computed(() => {
   if (!shareStore.trip)
     return null
@@ -81,7 +92,7 @@ const currentStatus = computed(() => {
   if (shareStore.trip.completed_at)
     return statusMeta.completed
 
-  return statusMeta[shareStore.trip.status]
+  return statusMeta[shareStore.trip.status] ?? UNKNOWN_STATUS
 })
 
 const fareText = computed(() => {
@@ -236,8 +247,17 @@ onBeforeUnmount(() => {
 
       <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 from-secondary-950 via-secondary-950/88 to-transparent bg-gradient-to-t pt-24" />
 
-      <div class="relative z-20 min-h-screen flex items-end px-4 pb-[calc(var(--app-safe-area-bottom)+1rem)] pt-[calc(var(--app-safe-area-top)+1rem)]">
-        <section class="mx-auto max-w-sm w-full border border-white/10 rounded-[2rem] bg-secondary-950/88 p-4 shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
+      <!-- pointer-events-none на обёртке + pointer-events-auto на карточке —
+           тот же приём, что в пассажирском даунбаре и водительской панели. Без
+           него этот полноэкранный блок перехватывал ВСЕ жесты над карточкой:
+           карту нельзя было ни двигать, ни зумить, а кнопка возврата камеры
+           внутри карты не нажималась вовсе. -->
+      <div class="pointer-events-none relative z-20 min-h-screen flex items-end px-4 pb-[calc(var(--app-safe-area-bottom)+1rem)] pt-[calc(var(--app-safe-area-top)+1rem)]">
+        <!-- max-h + overflow-y-auto: у карточки нет сворачивания, и на полном
+             наборе (водитель, адреса, плитки, SOS, просмотры) она перерастала
+             экран, утаскивая карту вверх. Теперь длинный контент скроллится
+             внутри себя. -->
+        <section class="pointer-events-auto mx-auto max-h-[calc(100vh-var(--app-safe-area-top)-var(--app-safe-area-bottom)-2rem)] max-w-sm w-full overflow-y-auto border border-white/10 rounded-[2rem] bg-secondary-950/88 p-4 shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
           <div v-if="shareStore.isLoading" class="py-10 text-center">
             <span class="i-mdi-loading mx-auto block animate-spin text-9 text-main-300" />
             <p class="mt-3 text-sm text-slate-300 font-800">
@@ -355,7 +375,7 @@ onBeforeUnmount(() => {
                   Тариф
                 </p>
                 <p class="mt-1 text-sm font-900">
-                  {{ TARIFF_META[shareStore.trip.category].label }}
+                  {{ tariffLabel(shareStore.trip.category) }}
                 </p>
               </div>
 

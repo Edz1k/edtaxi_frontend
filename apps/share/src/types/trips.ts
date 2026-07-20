@@ -1,5 +1,8 @@
 export type TripStatus = 'cancelled' | 'completed' | 'driver_arriving' | 'driver_assigned' | 'in_progress' | 'searching'
-export type VehicleCategory = 'business' | 'comfort' | 'economy' | 'minivan' | 'moto'
+// Полный набор категорий бэка. comfort_plus/business_plus (Хантакси) и moped
+// добавились в п.30, а share про них так и не узнал — поездка в такой категории
+// роняла страницу на TARIFF_META[...].label.
+export type VehicleCategory = 'business' | 'business_plus' | 'comfort' | 'comfort_plus' | 'economy' | 'minivan' | 'moped' | 'moto'
 
 // Публичный срез данных о водителе для share-страницы: без телефона и
 // прочих контактов (ссылка доступна любому, у кого она есть).
