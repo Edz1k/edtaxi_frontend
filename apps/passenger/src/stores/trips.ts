@@ -10,6 +10,7 @@ import { getTariffCategories } from '~/api/tariffs'
 import { cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getTrip, getTripHistory, rateTrip, retryTripPrepay } from '~/api/trips'
 import { DEFAULT_ACTIVE_CATEGORIES, isMotoCategory, TARIFF_ORDER } from '~/constants/tariffs'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
+import { clearRouteDraft, readRouteDraft, saveRouteDraft } from '~/utils/routeDraft'
 import { isTerminalTripStatus } from '~/utils/trip'
 
 // Максимум промежуточных остановок на поездку (совпадает с бэкендом).
@@ -638,6 +639,9 @@ export const useTripsStore = defineStore('trips', () => {
         startSearchTimer()
       }
       startActiveTripPolling()
+      // Заказ создан — черновик отработал. Дальше маршрут живёт в самой поездке
+      // и приезжает с сервера.
+      clearRouteDraft()
       return activeTrip.value
     }
     catch (error) {
@@ -822,6 +826,45 @@ export const useTripsStore = defineStore('trips', () => {
     isFilingComplaint.value = false
     isLoadingHistory.value = false
     isRestoringActiveTrip.value = false
+    // Зовётся из auth.clearRelatedStores() при логауте: чужие адреса не должны
+    // достаться следующему аккаунту на этом устройстве.
+    clearRouteDraft()
+  }
+
+  // --- Черновик маршрута между запусками мини-аппа ---
+
+  // Сохраняем на каждое изменение адресов: пассажир может свернуть Telegram в
+  // любой момент, и «сохранить при выходе» тут негде — события ухода вебвью нет.
+  watch([pickup, destination, pickupPlace, destinationPlace, stops], () => {
+    // Активная поездка приезжает с сервера (syncRouteDraftFromTrip) — черновик
+    // на неё не влияет и хранить его смысла нет.
+    if (activeTrip.value)
+      return
+
+    saveRouteDraft({
+      destination: destination.value,
+      destinationPlace: destinationPlace.value,
+      pickup: pickup.value,
+      pickupPlace: pickupPlace.value,
+      stops: stops.value.filter((stop): stop is GeoPlace => Boolean(stop)),
+    }, Date.now())
+  }, { deep: true })
+
+  // restoreRouteDraft вызывается картой на старте — ТОЛЬКО когда активной
+  // поездки нет и пользователь ещё ничего не ввёл в этой сессии.
+  function restoreRouteDraft() {
+    if (activeTrip.value || pickupPlace.value || destinationPlace.value)
+      return
+
+    const draft = readRouteDraft(Date.now())
+    if (!draft)
+      return
+
+    pickup.value = draft.pickup
+    destination.value = draft.destination
+    pickupPlace.value = draft.pickupPlace
+    destinationPlace.value = draft.destinationPlace
+    stops.value = draft.stops
   }
 
   return {
@@ -860,6 +903,7 @@ export const useTripsStore = defineStore('trips', () => {
     prepayUrl,
     refreshActiveTrip,
     restoreActiveTrip,
+    restoreRouteDraft,
     retryPrepay,
     setPrepaySource,
     resetActiveTrip,

@@ -39,6 +39,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'addStop': []
+  'clearPoint': [role: 'destination' | 'pickup']
   'locateUser': []
   'pickFromMap': [mode: MapPickerMode, stopIndex?: number]
   'removeStop': [index: number]
@@ -231,6 +232,19 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
           @focus="onRowFocus(row)"
           @input="onRowInput(row, ($event.target as HTMLInputElement).value)"
         >
+
+        <!-- Очистка поля. Показываем только у заполненного: у точки А и так две
+             кнопки, третья постоянная сжала бы инпут на узких экранах. -->
+        <button
+          v-if="row.kind !== 'stop' && rowValue(row)"
+          :aria-label="row.kind === 'pickup' ? 'Очистить адрес отправления' : 'Очистить адрес назначения'"
+          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
+          title="Очистить"
+          type="button"
+          @click="emit('clearPoint', row.kind)"
+        >
+          <span class="i-mdi-close text-5" />
+        </button>
 
         <!-- Точка А: геолокация + выбор на карте -->
         <template v-if="row.kind === 'pickup'">
