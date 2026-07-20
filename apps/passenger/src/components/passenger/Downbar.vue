@@ -154,6 +154,9 @@ function updateStopQuery(index: number, value: string) {
 // чистим оценку — смена sheetState вернёт форму адреса, где watch ниже раскроет
 // полный поиск и сфокусирует новую строку (саджест откроется при вводе).
 const pendingStopFocus = ref(false)
+// Возврат с тарифов по карандашу: форму адресов надо не просто показать, а
+// раскрыть шторку на full — иначе она останется скрытой (см. isAddressSearchOpen).
+const pendingAddressEdit = ref(false)
 const focusStopIndex = ref<number | null>(null)
 
 function addStopFromTariffs() {
@@ -162,6 +165,35 @@ function addStopFromTariffs() {
   pendingStopFocus.value = true
   addStopRow()
   trips.clearEstimate()
+}
+
+// Карандаш «изменить маршрут» на экране тарифов. Раньше он звал clearEstimate
+// напрямую — и вместо формы адресов пользователь получал стартовый экран
+// «Куда едем?»: clearEstimate обнуляет routeCoordinates, tripFlowState падает в
+// 'idle', а watch ниже уводит шторку на 'half', где форма скрыта.
+//
+// Флаг нужен именно watch'у: снапнуть на 'full' прямо здесь не выйдет — watch
+// на sheetState отработает следом через nextTick и вернёт 'half'.
+function editRouteFromTariffs() {
+  pendingAddressEdit.value = true
+  trips.clearEstimate()
+}
+
+// Крестик очистки в строке А или Б. Модели биндятся прямо на рефы стора
+// (map.vue), поэтому наверх ничего тянуть не нужно. Саджесты гасим явно:
+// поиск дебаунсится на 300 мс, и без этого список подсказок ещё мгновение
+// висел бы под уже пустым полем.
+function clearRoutePoint(role: 'destination' | 'pickup') {
+  if (role === 'pickup') {
+    pickup.value = ''
+    pickupPlace.value = null
+    clearPickupSuggestions()
+    return
+  }
+
+  destination.value = ''
+  destinationPlace.value = null
+  clearDestinationSuggestions()
 }
 
 function searchStop(index: number) {
@@ -503,6 +535,13 @@ watch(sheetState, () => {
     })
     return
   }
+  // Возврат с тарифов по карандашу: показываем форму адресов с уже
+  // заполненными полями, а не стартовый экран.
+  if (pendingAddressEdit.value) {
+    pendingAddressEdit.value = false
+    snapTo('full')
+    return
+  }
   nextTick(() => snapTo('half'))
 })
 
@@ -565,7 +604,7 @@ function onHandleKeydown(event: KeyboardEvent) {
               :is-ordering="isBusy"
               :primary-text="primaryText"
               @add-stop="addStopFromTariffs"
-              @edit-route="trips.clearEstimate"
+              @edit-route="editRouteFromTariffs"
               @order="submitTrip"
             />
 
@@ -648,6 +687,7 @@ function onHandleKeydown(event: KeyboardEvent) {
             :search-failed-pickup="searchFailedPickup"
             :stops="stopRows"
             @add-stop="addStopRow"
+            @clear-point="clearRoutePoint"
             @locate-user="emit('locateUser')"
             @pick-from-map="(mode, stopIndex) => emit('pickFromMap', mode, stopIndex)"
             @remove-stop="removeStopRow"

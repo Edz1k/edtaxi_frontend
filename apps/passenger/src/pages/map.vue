@@ -174,8 +174,12 @@ onMounted(async () => {
 
     const restoredTrip = await trips.restoreActiveTrip().catch(() => null)
 
-    if (!restoredTrip)
+    if (!restoredTrip) {
+      // Черновик адресов с прошлого запуска — до геопозиции: иначе она успела
+      // бы занять «Откуда», и восстанавливать стало бы нечего.
+      trips.restoreRouteDraft()
       await setPickupFromCurrentLocation()
+    }
 
     startWatchingUserLocation()
   }
@@ -186,10 +190,22 @@ onMounted(async () => {
   }
 })
 
+// Геопозицию запрашиваем всегда — ею живут синяя точка на карте и центрирование.
+// А вот подставлять её в «Откуда» можно, ТОЛЬКО если пользователь ещё ничего не
+// выбрал сам.
+//
+// Иначе получался вот такой баг: <KeepAlive> в проекте нет, поэтому карта
+// перемонтируется на каждом возврате с другой вкладки, и этот метод затирал
+// выбранный адрес текущей геопозицией. Попутно setPickupPlace зовёт
+// clearEstimate(), тот обнуляет routeCoordinates, tripFlowState падает в 'idle'
+// — и даунбар показывал стартовый экран «Куда едем?». Со стороны выглядело так,
+// будто слетели вообще все адреса, хотя «Куда» и остановки всё это время лежали
+// в сторе целыми.
 async function setPickupFromCurrentLocation() {
   try {
     const place = await locateUser()
-    trips.setPickupPlace(place)
+    if (!trips.pickupPlace)
+      trips.setPickupPlace(place)
   }
   catch {}
 }
