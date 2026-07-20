@@ -2,7 +2,7 @@
 import type { DriverOverview, DriverRatingEvent } from '~/types/driver-overview'
 import { useRoute as useVueRoute } from 'vue-router'
 import { mediaUrl } from '~/api/client'
-import { adminClearRatingEvents, adminDeleteRatingEvent, adminSetDriverRating, getDriverOverview } from '~/api/driver'
+import { adminClearRatingEvents, adminDeleteRatingEvent, adminSetDriverRating, getDriverOverview, setDriverVerifiedName } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
 import { reviewVehicle } from '~/api/verification'
 import WebPageShell from '~/components/app/WebPageShell.vue'
@@ -47,6 +47,43 @@ async function load() {
   }
   finally {
     isLoading.value = false
+  }
+}
+
+// --- Имя с удостоверения (TODO п.27): задаёт/правит только поддержка ---
+const docName = reactive({ first: '', last: '' })
+const isNameOpen = ref(false)
+const isSavingName = ref(false)
+
+const verifiedName = computed(() => {
+  const d = data.value?.driver
+  return [d?.verified_first_name, d?.verified_last_name].filter(Boolean).join(' ').trim()
+})
+
+function openNameEditor() {
+  const d = data.value?.driver
+  const u = data.value?.user
+  // Предзаполняем подтверждённым именем, иначе — текущим профильным.
+  docName.first = d?.verified_first_name || u?.first_name || ''
+  docName.last = d?.verified_last_name || u?.last_name || ''
+  isNameOpen.value = true
+}
+
+async function saveVerifiedName() {
+  if (isSavingName.value || !docName.first.trim() || !docName.last.trim())
+    return
+  isSavingName.value = true
+  try {
+    await setDriverVerifiedName(userId.value, docName.first.trim(), docName.last.trim())
+    toast.success('Имя сохранено', 'Оно стало именем водителя во всех разделах.')
+    isNameOpen.value = false
+    await load()
+  }
+  catch (error) {
+    showErrorToast(error, 'Не удалось сохранить имя.')
+  }
+  finally {
+    isSavingName.value = false
   }
 }
 
@@ -382,6 +419,74 @@ async function clearEvents() {
                 Проверить
                 <span class="i-mdi-arrow-right text-3.5" />
               </RouterLink>
+            </div>
+          </div>
+        </div>
+
+        <!-- Имя с удостоверения: задаёт/правит поддержка, водитель — не может -->
+        <div class="mt-3 border border-white/8 rounded-2xl bg-white/5 px-4 py-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm font-900">
+                Имя по удостоверению
+              </p>
+              <p v-if="verifiedName" class="mt-0.5 text-sm text-emerald-200 font-800">
+                {{ verifiedName }}
+              </p>
+              <p v-else class="mt-0.5 text-xs text-amber-300">
+                Не задано — водитель отображается под именем, которое вписал сам.
+              </p>
+            </div>
+            <button
+              v-if="!isNameOpen"
+              class="shrink-0 rounded-full bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-200 font-900 transition hover:bg-cyan-300/20"
+              type="button"
+              @click="openNameEditor"
+            >
+              {{ verifiedName ? 'Изменить' : 'Задать' }}
+            </button>
+          </div>
+
+          <div v-if="isNameOpen" class="mt-3">
+            <p class="text-xs text-white/45">
+              Это имя увидят пассажиры, и оно станет именем водителя во всех разделах. Сам он его изменить не сможет.
+            </p>
+            <div class="grid mt-2 gap-2 sm:grid-cols-2">
+              <label class="grid gap-1.5">
+                <span class="text-xs text-white/42 font-900 uppercase">Имя</span>
+                <input
+                  v-model="docName.first"
+                  class="h-10 border border-white/10 rounded-xl bg-white/8 px-3 text-sm outline-none focus:border-cyan-300/40"
+                  maxlength="60"
+                  placeholder="Имя"
+                >
+              </label>
+              <label class="grid gap-1.5">
+                <span class="text-xs text-white/42 font-900 uppercase">Фамилия</span>
+                <input
+                  v-model="docName.last"
+                  class="h-10 border border-white/10 rounded-xl bg-white/8 px-3 text-sm outline-none focus:border-cyan-300/40"
+                  maxlength="60"
+                  placeholder="Фамилия"
+                >
+              </label>
+            </div>
+            <div class="mt-3 flex gap-2">
+              <button
+                class="h-9 rounded-xl bg-white/8 px-4 text-xs font-900 transition hover:bg-white/12"
+                type="button"
+                @click="isNameOpen = false"
+              >
+                Отмена
+              </button>
+              <button
+                :disabled="isSavingName || !docName.first.trim() || !docName.last.trim()"
+                class="h-9 rounded-xl bg-cyan-300 px-4 text-xs text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
+                type="button"
+                @click="saveVerifiedName"
+              >
+                {{ isSavingName ? 'Сохраняем…' : 'Сохранить' }}
+              </button>
             </div>
           </div>
         </div>

@@ -7,6 +7,16 @@ export function getDriverOverview(userId: string) {
   return apiRequest<DriverOverview>(`/tech-support/drivers/${userId}/profile`)
 }
 
+// setDriverVerifiedName — имя с удостоверения (TODO п.27). Меняет и профильное
+// имя водителя: сам он переименоваться не может. Доступно вне очереди
+// верификации — у давно одобренных водителей заявки там уже нет.
+export function setDriverVerifiedName(userId: string, firstName: string, lastName: string) {
+  return apiRequest<{ message: string }>(`/tech-support/drivers/${userId}/verified-name`, {
+    method: 'PUT',
+    body: { first_name: firstName, last_name: lastName },
+  })
+}
+
 // --- Ручное управление рейтингом (только админ) ---
 
 export function adminSetDriverRating(userId: string, rating: number, reason: string) {
