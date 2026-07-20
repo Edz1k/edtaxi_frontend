@@ -150,6 +150,34 @@ declare module 'vue-router/auto-routes' {
       { id: ParamValue<false> },
       | never
     >,
+    '/legal/offer': RouteRecordInfo<
+      '/legal/offer',
+      '/legal/offer',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/legal/privacy': RouteRecordInfo<
+      '/legal/privacy',
+      '/legal/privacy',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/legal/refund': RouteRecordInfo<
+      '/legal/refund',
+      '/legal/refund',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/legal/requisites': RouteRecordInfo<
+      '/legal/requisites',
+      '/legal/requisites',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/login': RouteRecordInfo<
       '/login',
       '/login',
@@ -417,6 +445,38 @@ declare module 'vue-router/auto-routes' {
         | never
       pathParamNames:
         | 'id'
+    }
+    'src/pages/legal/offer.md': {
+      routes:
+        | '/legal/offer'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/legal/privacy.md': {
+      routes:
+        | '/legal/privacy'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/legal/refund.md': {
+      routes:
+        | '/legal/refund'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/legal/requisites.md': {
+      routes:
+        | '/legal/requisites'
+      views:
+        | never
+      pathParamNames:
+        | never
     }
     'src/pages/login.vue': {
       routes:
