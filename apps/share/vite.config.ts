@@ -5,9 +5,9 @@ import Unocss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import VueMacros from 'unplugin-vue-macros/vite'
-import { defineConfig } from 'vite'
 import VueDevTools from 'vite-plugin-vue-devtools'
 import Layouts from 'vite-plugin-vue-layouts'
+import { defineConfig } from 'vitest/config'
 import { VueRouterAutoImports } from 'vue-router/unplugin'
 import VueRouter from 'vue-router/vite'
 
@@ -57,5 +57,12 @@ export default defineConfig({
         cookieDomainRewrite: 'localhost',
       },
     },
+  },
+
+  // Тестов у share не было вообще, поэтому pnpm -r test молча его пропускал —
+  // у приложения уже была история тихих поломок. Покрываем чистые функции.
+  test: {
+    include: ['test/**/*.test.ts'],
+    environment: 'jsdom',
   },
 })

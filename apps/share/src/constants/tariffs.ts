@@ -10,10 +10,20 @@ export const TARIFF_META: Record<VehicleCategory, {
     icon: 'i-mdi-diamond-stone',
     label: 'Бизнес',
   },
+  business_plus: {
+    caption: 'Хантакси · S-класс',
+    icon: 'i-mdi-crown',
+    label: 'Бизнес+',
+  },
   comfort: {
     caption: 'Больше комфорта',
     icon: 'i-mdi-car-seat',
     label: 'Комфорт',
+  },
+  comfort_plus: {
+    caption: 'Хантакси · выше класс',
+    icon: 'i-mdi-car-sports',
+    label: 'Комфорт+',
   },
   economy: {
     caption: 'Быстро и выгодно',
@@ -25,9 +35,25 @@ export const TARIFF_META: Record<VehicleCategory, {
     icon: 'i-mdi-van-passenger',
     label: 'Минивэн',
   },
+  moped: {
+    caption: 'Дешевле мото · 1 пассажир',
+    icon: 'i-mdi-moped',
+    label: 'Мопед',
+  },
   moto: {
     caption: 'Быстро по городу · 1 пассажир',
     icon: 'i-mdi-motorbike',
     label: 'Мото',
   },
+}
+
+// tariffLabel — безопасный доступ к названию тарифа.
+//
+// Прямое обращение TARIFF_META[category].label роняло всю страницу белым
+// экраном, когда бэк присылал категорию, которой в справочнике ещё нет: тип
+// VehicleCategory это не ловит, ответ API в него просто приводится. Такое уже
+// случилось после п.30 (появились Хантакси и мопед), и повторится с любой
+// следующей категорией — поэтому фолбэк, а не только дополненный справочник.
+export function tariffLabel(category: string): string {
+  return TARIFF_META[category as VehicleCategory]?.label ?? 'Тариф'
 }
