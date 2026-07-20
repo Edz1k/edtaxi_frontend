@@ -16,6 +16,7 @@ nav:
   home: Home
   platform: Platform
   apps: Mini Apps
+  services: Payments
   token: Token
   fleets: For Fleets
   investment: Investment
@@ -90,12 +91,55 @@ roadmap:
   phase3Title: Central Asia
   phase4: Phase 4
   phase4Title: International
+services:
+  eyebrow: Services & payment
+  title: Paid services and pricing
+  description: Telegram Taxi provides a paid ride-ordering service via Telegram Mini App. The cost of every ride is calculated before the order is placed and shown in the app — you confirm the order knowing the exact price.
+  moto: Moto
+  motoText: Fast pickup and rides without traffic jams
+  economy: Economy
+  economyText: Affordable everyday rides
+  comfort: Comfort
+  comfortText: Spacious cars and extra comfort
+  business: Business
+  businessText: Premium cars and a high level of service
+  minivan: Minivan
+  minivanText: For big groups and luggage — up to 7 seats
+  pricingTitle: How the price is calculated
+  pricingText: 'The ride price is built from the tariff of the selected category (base fare, price per kilometre and per minute) and the length and duration of the route. Paid options — child seat and pet transport — are added as a fixed surcharge. The final price is shown before you confirm the order; all payments are in tenge (KZT).'
+  stepsTitle: How ordering and payment work
+  step1Title: Open the Mini App
+  step1Text: Launch Telegram Taxi right inside Telegram — no separate app to install.
+  step2Title: Set your route
+  step2Text: Choose pickup and destination addresses and a ride category — the app shows the exact price right away.
+  step3Title: Choose a payment method
+  step3Text: Visa or Mastercard bank card, Apple Pay, Google Pay, or cash to the driver.
+  step4Title: Confirm the order
+  step4Text: Online payments go through the secure Freedom Pay service with 3-D Secure support. Card details are never stored on our side.
+  paymentsTitle: We accept
+  paymentsNote: 'Online payments are processed by the Freedom Pay payment provider (3-D Secure, PCI DSS). Up to 50% of the ride price can be paid with bonuses.'
+  docsNote: 'By placing an order you accept the terms of the offer:'
+  docsOffer: Public offer
+  docsRefund: Refund policy
+footer:
+  tagline: Taxi ordering service inside Telegram
+  docsTitle: Documents
+  offer: Public offer agreement
+  privacy: Privacy policy
+  refund: Refund policy
+  requisites: Merchant details
+  companyTitle: Company
+  companyName: City Flow Mobility Ltd.
+  companyJurisdiction: Republic of Kazakhstan
+  paymentsTitle: We accept
+  paymentsNote: Online payments via Freedom Pay
+  rights: All rights reserved
 contact:
   title: Contact us
   description: 'Fast contact: email, website, or Telegram. For partnerships and investment requests, please write separately.'
   websiteLabel: Website
   websiteValue: telegramtaxi.kz
   emailLabel: Email
-  telegramLabel: Telegram
-  telegramValue: "{'@'}telegramtaxi"
+  passengerBotLabel: Telegram for passengers
+  driverBotLabel: Telegram for drivers
   note: For investor documents and requests, include "Investment" in the email subject.
