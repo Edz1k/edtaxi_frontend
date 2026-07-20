@@ -23,15 +23,23 @@ jobs:
   back-merge:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # fetch-depth: 0 обязателен: с дефолтным 1 нет ни истории для merge,
           # ни ref'а origin/staging.
           fetch-depth: 0
-          # Обычный GITHUB_TOKEN не пройдёт branch protection на staging.
-          # Нужен PAT или GitHub App с правом push в защищённую ветку, а сам
-          # актор — в bypass-list ruleset'а.
-          token: ${{ secrets.BACK_MERGE_TOKEN }}
+          # Обычный GITHUB_TOKEN не пройдёт branch protection на staging: нужен
+          # PAT или GitHub App с правом push в защищённую ветку, а сам актор —
+          # в bypass-list ruleset'а.
+          #
+          # Фолбэк на github.token обязателен. Если секрета нет, `token:`
+          # получает пустую строку, а для checkout это не «возьми дефолтный», а
+          # ошибка «Input required and not supplied: token» — workflow падал на
+          # КАЖДОМ push в main, не дойдя даже до проверки «а есть ли staging».
+          # С фолбэком он спокойно доходит до неё и выходит зелёным, а когда
+          # staging появится и окажется защищённым — упадёт уже на push, с
+          # понятной причиной (см. подсказку ниже).
+          token: ${{ secrets.BACK_MERGE_TOKEN || github.token }}
 
       - name: Back-merge
         run: |
@@ -64,11 +72,20 @@ jobs:
 
           echo "fast-forward не прошёл (в staging есть свои коммиты — например, после хотфикса) → обычный merge"
           git checkout -B staging origin/staging
-          if git merge --no-edit origin/main; then
-            git push origin staging
-            echo "back-merge смержен"
-          else
+          if ! git merge --no-edit origin/main; then
             echo "::error::конфликт back-merge main → staging. Разреши руками:"
             echo "  git checkout staging && git merge origin/main && git push"
+            exit 1
+          fi
+
+          # Проверяем push явным if: без секрета BACK_MERGE_TOKEN мы работаем под
+          # обычным GITHUB_TOKEN, которому защищённая ветка откажет. Без этой
+          # подсказки в логе осталась бы только сырая ошибка git про 403.
+          if git push origin staging; then
+            echo "back-merge смержен"
+          else
+            echo "::error::не удалось запушить staging. Если ветка защищена —"
+            echo "  задай секрет BACK_MERGE_TOKEN (PAT или GitHub App с правом"
+            echo "  push в staging, актор — в bypass-list ruleset'а)."
             exit 1
           fi
