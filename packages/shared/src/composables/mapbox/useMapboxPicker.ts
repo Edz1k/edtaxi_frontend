@@ -23,7 +23,13 @@ export function useMapboxPicker(options: UseMapboxPickerOptions) {
   const pickerError = ref('')
 
   const isPickingLocation = computed(() => Boolean(options.pickerMode.value))
-  const pickerTitle = computed(() => options.pickerMode.value === 'pickup' ? 'Выберите точку А' : 'Выберите точку Б')
+  const pickerTitle = computed(() => {
+    switch (options.pickerMode.value) {
+      case 'pickup': return 'Выберите точку А'
+      case 'stop': return 'Выберите остановку'
+      default: return 'Выберите точку Б'
+    }
+  })
 
   async function waitForPickerLayout() {
     await nextTick()

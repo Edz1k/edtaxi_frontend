@@ -99,10 +99,13 @@ export interface TripDriverVehicle {
   category: string
 }
 
+// Телефона водителя тут нет намеренно: участники поездки не обмениваются
+// контактами. Бэкенд его пассажиру и не отдаёт (enrichTripDriver без телефона,
+// стафф получает его отдельным входом). Связь — чат поездки, после завершения —
+// через поддержку.
 export interface TripDriver {
   name?: string
   avatar_url?: null | string
-  phone?: string
   rating: number
   total_trips: number
   user_id?: string

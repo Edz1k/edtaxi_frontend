@@ -1,5 +1,6 @@
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import { getDrivingRoute, getDrivingRouteVia, searchPlaces } from '@edtaxi/shared/api/geocoding'
+import { applyPickupSnap } from '~/utils/pickupSnap'
 
 interface UseRoutePlannerOptions {
   destination: Ref<string>
@@ -44,15 +45,21 @@ export function useRoutePlanner(options: UseRoutePlannerOptions) {
         ? await getDrivingRouteVia([resolvedPickup, ...resolvedStops, resolvedDestination])
         : await getDrivingRoute(resolvedPickup, resolvedDestination)
 
-      options.pickupPlace.value = resolvedPickup
+      // Точка подачи, поправленная бэком на проезжую часть (п.41). Применяем
+      // ЗДЕСЬ, потому что дальше в заказ уходит именно этот объект, а не
+      // pickupPlace из стора — это единственное место, где координата ещё под
+      // контролем.
+      const snappedPickup = applyPickupSnap(resolvedPickup, route)
+
+      options.pickupPlace.value = snappedPickup
       options.destinationPlace.value = resolvedDestination
-      options.pickup.value = resolvedPickup.address
+      options.pickup.value = snappedPickup.address
       options.destination.value = resolvedDestination.address
       options.onRouteGeometry(route.geometry)
 
       return {
         destination: resolvedDestination,
-        pickup: resolvedPickup,
+        pickup: snappedPickup,
         route,
         stops: resolvedStops,
       }

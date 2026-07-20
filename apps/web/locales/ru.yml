@@ -16,6 +16,7 @@ nav:
   home: Главная
   platform: Платформа
   apps: Mini Apps
+  services: Оплата
   token: Token
   fleets: Для таксопарков
   investment: Инвестиции
@@ -90,12 +91,55 @@ roadmap:
   phase3Title: Central Asia
   phase4: Phase 4
   phase4Title: International
+services:
+  eyebrow: Услуги и оплата
+  title: Платные услуги и стоимость
+  description: 'Telegram Taxi предоставляет платную услугу заказа поездок через Telegram Mini App. Стоимость каждой поездки рассчитывается до оформления заказа и отображается в приложении — вы подтверждаете заказ, уже зная точную цену.'
+  moto: Мото
+  motoText: Быстрая подача и поездки без пробок
+  economy: Эконом
+  economyText: Доступные повседневные поездки
+  comfort: Комфорт
+  comfortText: Просторные автомобили и больше комфорта
+  business: Бизнес
+  businessText: Премиальные автомобили и высокий уровень сервиса
+  minivan: Минивэн
+  minivanText: Для больших компаний и багажа — до 7 мест
+  pricingTitle: Как формируется стоимость
+  pricingText: 'Цена поездки складывается из тарифа выбранной категории (посадка, стоимость километра и минуты), длины и длительности маршрута. Платные опции — детское кресло и перевозка животного — добавляются фиксированной доплатой. Итоговая стоимость показывается до подтверждения заказа; все расчёты — в тенге (KZT).'
+  stepsTitle: Как проходит заказ и оплата
+  step1Title: Откройте Mini App
+  step1Text: Запустите Telegram Taxi прямо в Telegram — без установки отдельного приложения.
+  step2Title: Укажите маршрут
+  step2Text: Выберите адреса подачи и назначения и категорию поездки — приложение сразу покажет точную стоимость.
+  step3Title: Выберите способ оплаты
+  step3Text: Банковская карта Visa или Mastercard, Apple Pay, Google Pay либо наличные водителю.
+  step4Title: Подтвердите заказ
+  step4Text: Онлайн-платёж проходит через защищённый сервис Freedom Pay с поддержкой 3-D Secure. Данные карты не хранятся на нашей стороне.
+  paymentsTitle: Принимаем к оплате
+  paymentsNote: 'Онлайн-платежи обрабатывает платёжный провайдер Freedom Pay (3-D Secure, PCI DSS). До 50% стоимости поездки можно оплатить бонусами.'
+  docsNote: 'Оформляя заказ, вы принимаете условия оферты:'
+  docsOffer: Договор оферты
+  docsRefund: Порядок возврата
+footer:
+  tagline: Сервис заказа такси в Telegram
+  docsTitle: Документы
+  offer: Договор публичной оферты
+  privacy: Политика конфиденциальности
+  refund: Порядок возврата средств
+  requisites: Реквизиты
+  companyTitle: Компания
+  companyName: City Flow Mobility Ltd.
+  companyJurisdiction: Республика Казахстан
+  paymentsTitle: Принимаем к оплате
+  paymentsNote: Онлайн-оплата через Freedom Pay
+  rights: Все права защищены
 contact:
   title: Связаться с нами
   description: 'Быстро: email, сайт или Telegram. Для партнёрств и инвестиций пишите отдельно.'
   websiteLabel: Website
   websiteValue: telegramtaxi.kz
   emailLabel: Email
-  telegramLabel: Telegram
-  telegramValue: "{'@'}telegramtaxi"
+  passengerBotLabel: Telegram для пассажиров
+  driverBotLabel: Telegram для водителей
   note: 'Документы и запросы для инвесторов: укажите в теме письма "Инвестиции".'
