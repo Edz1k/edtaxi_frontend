@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { VerificationStatus } from '~/types/driver'
 import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
+import { useNow } from '@vueuse/core'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
+import { dailyCheckState, validUntilLabel } from '~/utils/dailyCheck'
 
 const driver = useDriverOnboardingStore()
 
@@ -109,22 +111,27 @@ const vehicleDocsStatus = computed<ItemStatus>(() => {
   return checkToStatus(v.docs_check ?? v.verification_status)
 })
 
+// Срок фотоконтроля истекает по часам, поэтому состояние считается от тикера,
+// а не только от серверного флага: иначе экран показывал бы «Пройдено» до
+// следующего запроса, хотя проверка уже сгорела.
+const now = useNow({ interval: 15_000 })
 const dailyStatus = computed<ItemStatus>(() => {
-  const v = driver.verification
-  if (!v)
-    return 'missing'
-  if (v.daily_check_valid)
+  const state = dailyCheckState(driver.verification, now.value.getTime())
+  if (state === 'valid')
     return 'ok'
-  const latest = v.latest_daily_check
-  if (!latest)
-    return 'missing'
-  if (latest.status === 'pending')
-    return 'pending'
-  if (latest.status === 'rejected')
-    return 'rejected'
-  // Последний дэйлик approved, но старше 24ч — нужна новая проверка.
+  if (state === 'pending' || state === 'rejected')
+    return state
+  // expired (заявку не рассмотрели вовремя) и истёкший срок одинаково означают
+  // «нужна новая проверка».
   return 'missing'
 })
+
+// «Действует до 19:40» — водителю важно знать, когда идти сниматься заново.
+const dailyValidUntilLabel = computed(() =>
+  dailyStatus.value === 'ok'
+    ? validUntilLabel(driver.verification?.daily_check_valid_until)
+    : '',
+)
 
 const items = computed<OnboardingItem[]>(() => {
   const v = driver.verification
@@ -213,10 +220,15 @@ const hero = computed(() => {
 
 // «Следующая проверка» — про ежедневный фотоконтроль (он повторяется каждую смену).
 const nextCheckLine = computed(() => {
-  if (driver.verification?.daily_check_valid)
-    return 'Ежедневный фотоконтроль пройден. Следующий — перед завтрашней сменой.'
+  if (dailyStatus.value === 'ok') {
+    return dailyValidUntilLabel.value
+      ? `Ежедневный фотоконтроль пройден. Действует до ${dailyValidUntilLabel.value}.`
+      : 'Ежедневный фотоконтроль пройден.'
+  }
   if (dailyStatus.value === 'pending')
     return 'Ежедневный фотоконтроль на проверке.'
+  if (driver.verification?.latest_daily_check?.status === 'expired')
+    return 'Заявку на фотоконтроль не успели рассмотреть — отправьте фото заново.'
   return 'Проходите ежедневный фотоконтроль перед каждой сменой.'
 })
 

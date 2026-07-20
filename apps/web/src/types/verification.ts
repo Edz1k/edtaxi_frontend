@@ -1,5 +1,11 @@
 export type VerificationStatus = 'approved' | 'pending' | 'rejected'
 
+// DailyCheckStatus — статусы ежедневного фотоконтроля: к общим трём добавлен
+// 'expired' (заявку не успели рассмотреть за отведённое время, и она сгорела).
+// Отдельный тип, а не расширение VerificationStatus: у машин и лица такого
+// статуса нет, и подмешивать его в общий юнион ослабило бы проверки там.
+export type DailyCheckStatus = VerificationStatus | 'expired'
+
 export interface PendingVehicle {
   id: string
   driver_id: string
@@ -46,7 +52,7 @@ export interface DailyCheck {
   driver_id_document_url: null | string
   driver_iin?: null | string
   vehicle_tech_passport_photo_url: null | string
-  status: VerificationStatus
+  status: DailyCheckStatus
   // Пер-блочные вердикты чек-листа дэйлика: селфи / фото машины.
   selfie_check?: VerificationStatus
   vehicle_check?: VerificationStatus

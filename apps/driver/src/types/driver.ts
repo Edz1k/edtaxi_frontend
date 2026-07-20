@@ -114,6 +114,10 @@ export interface DriverVerificationsResponse {
   // бэкенд решает, пускать ли водителя на линию.
   has_approved_vehicle: boolean
   daily_check_valid: boolean
+  // Момент истечения фотоконтроля (ISO). Отсчёт идёт от одобрения поддержкой,
+  // а не от отправки фото. По нему приложение гасит кнопку «на линии» само, не
+  // дожидаясь фонового прохода на сервере. undefined — старый бэкенд.
+  daily_check_valid_until?: null | string
   // Последний дэйлик с блочными вердиктами (null, если проверок не было).
   latest_daily_check?: DailyCheck | null
   vehicles: DriverVehicleVerification[]
@@ -127,13 +131,19 @@ export interface VerificationReminder {
   face_status: DriverVerificationsResponse['face_status']
 }
 
+// DailyCheckStatus — статусы дэйлика: к общим трём добавлен 'expired' (заявку
+// не успели рассмотреть за отведённое время). Отдельный тип, а не расширение
+// VerificationStatus: у лица и машин такого статуса нет, и подмешивать его в
+// общий юнион означало бы ослабить проверки там.
+export type DailyCheckStatus = VerificationStatus | 'expired'
+
 export interface DailyCheck {
   id: string
   driver_id: string
   vehicle_id: string
   selfie_url: string
   vehicle_photo_url: string
-  status: VerificationStatus
+  status: DailyCheckStatus
   // Пер-блочные вердикты дэйлика: селфи / фото машины.
   selfie_check?: VerificationStatus
   vehicle_check?: VerificationStatus

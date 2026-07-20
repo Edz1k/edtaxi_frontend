@@ -10,6 +10,9 @@ import { categoryLabel } from '~/utils/vehicleCategories'
 const props = defineProps<{
   trackingStatus: 'closed' | 'connecting' | 'open'
   onlineBlockMessage: string
+  // Куда вести водителя из баннера-блокировки. Явный признак, а не разбор
+  // текста ошибки: любая переформулировка сообщения ломала бы маршрутизацию.
+  onlineBlockTarget: 'daily-check' | 'park' | 'verification'
   showRouteLoading: boolean
   isLocationGranted: boolean
 }>()
@@ -47,13 +50,15 @@ function onHandleKeydown(event: KeyboardEvent) {
   }
 }
 
-// 403 из-за отсутствия таксопарка решается выбором парка, а не верификацией —
-// ведём водителя на нужный экран по содержимому сообщения с бэка.
-const onlineBlockLink = computed(() =>
-  props.onlineBlockMessage.toLowerCase().includes('таксопарк')
-    ? { label: 'Выбрать таксопарк', to: '/menu/parks' }
-    : { label: 'Пройти верификацию', to: '/menu/profile/onboarding' },
-)
+// Разные причины блокировки решаются на разных экранах: парк выбирают в списке
+// парков, просроченный фотоконтроль проходят заново на его собственном экране.
+const ONLINE_BLOCK_LINKS = {
+  'daily-check': { label: 'Пройти фотоконтроль', to: '/menu/profile/onboarding/daily-check' },
+  'park': { label: 'Выбрать таксопарк', to: '/menu/parks' },
+  'verification': { label: 'Пройти верификацию', to: '/menu/profile/onboarding' },
+} as const
+
+const onlineBlockLink = computed(() => ONLINE_BLOCK_LINKS[props.onlineBlockTarget])
 
 const driver = useDriverStore()
 

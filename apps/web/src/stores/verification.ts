@@ -1,5 +1,6 @@
-import type { DailyCheck, FaceVerification, PendingVehicle, VerificationStatus } from '~/types/verification'
+import type { DailyCheck, DailyCheckStatus, FaceVerification, PendingVehicle } from '~/types/verification'
 import { acceptHMRUpdate, defineStore } from 'pinia'
+import { ApiError } from '~/api/client'
 import {
   listDailyChecks,
   listPendingFaces,
@@ -48,7 +49,7 @@ export const useVerificationStore = defineStore('verification', () => {
     }, 'Не удалось загрузить заявки на проверку машин.')
   }
 
-  async function loadDailyChecks(status?: VerificationStatus) {
+  async function loadDailyChecks(status?: DailyCheckStatus) {
     return withLoading(isLoadingDailyChecks, async () => {
       const response = await listDailyChecks({ status, limit: 100 })
       dailyChecks.value = response.daily_checks ?? []
@@ -82,7 +83,16 @@ export const useVerificationStore = defineStore('verification', () => {
 
   async function decideDailyCheckChecklist(id: string, selfieOk: boolean, vehicleOk: boolean, reason = '') {
     return withLoading(isMutating, async () => {
-      await reviewDailyCheckChecklist(id, selfieOk, vehicleOk, reason)
+      try {
+        await reviewDailyCheckChecklist(id, selfieOk, vehicleOk, reason)
+      }
+      catch (error) {
+        // 409 — заявка сгорела или её уже рассмотрели: она больше не наша, и
+        // держать её на экране нельзя. Тост о причине покажет withLoading.
+        if (error instanceof ApiError && error.status === 409)
+          loadDailyChecks('pending').catch(() => {})
+        throw error
+      }
       dailyChecks.value = dailyChecks.value.filter(c => c.id !== id)
     }, 'Не удалось сохранить решение по ежедневной проверке.')
   }

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { PendingVehicle } from '~/types/verification'
 import { useAutoRefresh } from '@edtaxi/shared/composables/useAutoRefresh'
+import { useNow } from '@vueuse/core'
 import { mediaUrl } from '~/api/client'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { CATEGORY_LABELS } from '~/constants/admin'
 import { useVerificationStore } from '~/stores/verification'
+import { ageLabel, expiresInLabel, urgency } from '~/utils/dailyCheckAge'
 import { formatDate } from '~/utils/format'
 import { validateIin } from '~/utils/iin'
 import { splitDisplayName } from '~/utils/verifiedName'
@@ -288,9 +290,26 @@ useHead({
   title: 'Верификация водителей | Telegram Taxi',
 })
 
+// Фильтр очереди дэйликов. Просроченные заявки уходят из «На рассмотрении»
+// сами, и без этой вкладки они исчезали бы бесследно — поддержка не смогла бы
+// ни увидеть, что сгорело, ни объяснить это водителю.
+const dailyFilter = ref<'expired' | 'pending'>('pending')
+const DAILY_FILTERS = [
+  { label: 'На рассмотрении', value: 'pending' },
+  { label: 'Просроченные', value: 'expired' },
+] as const
+
+// Возраст заявки пересчитывается тикером: «сгорит через 20 мин» должно таять
+// на глазах, иначе поддержка увидит его только после следующего поллинга.
+const now = useNow({ interval: 30_000 })
+
+watch(dailyFilter, (status) => {
+  verification.loadDailyChecks(status).catch(() => {})
+})
+
 onMounted(() => {
   verification.loadVehicles().catch(() => {})
-  verification.loadDailyChecks('pending').catch(() => {})
+  verification.loadDailyChecks(dailyFilter.value).catch(() => {})
   verification.loadFaces().catch(() => {})
 })
 
@@ -300,7 +319,7 @@ onMounted(() => {
 // списке, чтобы фоновое обновление не мигало.
 useAutoRefresh(() => Promise.all([
   verification.loadVehicles(),
-  verification.loadDailyChecks('pending'),
+  verification.loadDailyChecks(dailyFilter.value),
   verification.loadFaces(),
 ]), { intervalMs: 15_000 })
 
@@ -468,11 +487,25 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
     <!-- Daily checks -->
     <div v-else class="mt-5 space-y-3">
+      <!-- Заявки живут ограниченное время: сгоревшие видно отдельной вкладкой -->
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="filter in DAILY_FILTERS"
+          :key="filter.value"
+          class="h-9 rounded-xl px-3.5 text-xs font-900 transition active:scale-[0.98]"
+          :class="dailyFilter === filter.value ? 'bg-cyan-300 text-#06142f' : 'bg-white/8 text-white/60 hover:bg-white/12'"
+          type="button"
+          @click="dailyFilter = filter.value"
+        >
+          {{ filter.label }}
+        </button>
+      </div>
+
       <div v-if="verification.isLoadingDailyChecks && !verification.dailyChecks.length" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
         Загружаем проверки...
       </div>
       <div v-else-if="!verification.dailyChecks.length" class="border border-white/10 rounded-3xl bg-white/8 px-4 py-6 text-sm text-white/50">
-        Нет ежедневных проверок в ожидании.
+        {{ dailyFilter === 'expired' ? 'Просроченных заявок нет.' : 'Нет ежедневных проверок в ожидании.' }}
       </div>
 
       <article
@@ -495,10 +528,24 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </RouterLink>
             <span v-else class="font-800">{{ check.driver_name || 'Водитель' }}</span>
             · {{ formatDate(check.created_at) }}
+            · {{ ageLabel(check.created_at, now.getTime()) }}
+          </p>
+          <!-- Заявка сгорает, если её не успеть посмотреть: показываем остаток,
+               только когда до этого близко, иначе счётчик просто шумит. -->
+          <p
+            v-if="expiresInLabel(check.created_at, now.getTime())"
+            class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-800"
+            :class="urgency(check.created_at, now.getTime()) === 'expired'
+              ? 'bg-red-500/12 text-red-300'
+              : 'bg-amber-500/12 text-amber-200'"
+          >
+            <span class="i-mdi-timer-sand text-4" />
+            {{ expiresInLabel(check.created_at, now.getTime()) }}
           </p>
         </div>
 
         <button
+          v-if="dailyFilter === 'pending'"
           class="h-11 inline-flex shrink-0 items-center gap-2 rounded-xl bg-cyan-300 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98]"
           type="button"
           @click="openRequest('daily', check.id)"
@@ -506,6 +553,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           <span class="i-mdi-clipboard-check-outline text-5" />
           Открыть заявку
         </button>
+        <!-- Сгоревшую решать нечего: водитель снимает фото заново -->
+        <span v-else class="h-11 inline-flex shrink-0 items-center gap-2 rounded-xl bg-white/6 px-4 text-sm text-white/45 font-800">
+          <span class="i-mdi-timer-sand-complete text-5" />
+          Срок истёк
+        </span>
       </article>
     </div>
 

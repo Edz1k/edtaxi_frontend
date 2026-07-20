@@ -690,6 +690,7 @@ export const useDriverStore = defineStore('driver', () => {
     activeTrip,
     activeTripStep,
     advanceNavPoint,
+    applyStatus,
     applyTripStatus,
     availableCategories,
     canAdvanceNavPoint,
