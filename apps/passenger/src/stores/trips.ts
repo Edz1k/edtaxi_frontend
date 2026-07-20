@@ -82,6 +82,8 @@ export const useTripsStore = defineStore('trips', () => {
   // пере-оценка при переключении пожеланий, чтобы цены в карусели обновились.
   const lastEstimatePayload = ref<Omit<EstimateTripPayload, 'category'> | null>(null)
   const mapPickerMode = ref<MapPickerMode | null>(null)
+  // Какую именно остановку выбираем точкой на карте (актуален при mode='stop').
+  const mapPickerStopIndex = ref(0)
   // Сигнал даунбару «после выбора точки с карты/избранного — раскрыть поиск
   // адреса (2-й экран)», чтобы выбранная точка была на виду, а не терялась.
   const expandOnReturn = ref(false)
@@ -562,17 +564,24 @@ export const useTripsStore = defineStore('trips', () => {
       destinationPlace.value = null
   }
 
-  function startMapPicker(mode: MapPickerMode) {
+  function startMapPicker(mode: MapPickerMode, stopIndex = 0) {
     mapPickerMode.value = mode
+    // Индекс остановки держим здесь, а не гоняем через пропсы всей цепочки
+    // компонентов: режим по пути нужен всем, номер остановки — только тут.
+    mapPickerStopIndex.value = mode === 'stop' ? stopIndex : 0
   }
 
   function cancelMapPicker() {
     mapPickerMode.value = null
+    mapPickerStopIndex.value = 0
   }
 
   function setPlaceFromPicker(place: GeoPlace, mode: MapPickerMode) {
     if (mode === 'pickup') {
       setPickupPlace(place)
+    }
+    else if (mode === 'stop') {
+      setStop(mapPickerStopIndex.value, place)
     }
     else {
       setDestinationPlace(place)

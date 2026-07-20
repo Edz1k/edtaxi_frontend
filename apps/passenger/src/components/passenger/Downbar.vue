@@ -26,7 +26,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   locateUser: []
-  pickFromMap: [mode: MapPickerMode]
+  pickFromMap: [mode: MapPickerMode, stopIndex?: number]
 }>()
 const pickup = defineModel<string>('pickup', { default: '' })
 const destination = defineModel<string>('destination', { default: '' })
@@ -119,6 +119,20 @@ onMounted(() => {
     stopQueries[index]!.value = place?.address ?? ''
   })
 })
+
+// Остановку можно задать и снаружи даунбара — выбором точки на карте. Тогда
+// место приезжает прямо в стор, а локальные слоты (в них живёт текст инпута)
+// об этом не знают: без синка адрес проставился бы в маршрут, а поле осталось
+// бы пустым. Сверяем по id, поэтому собственный ввод сюда не возвращается.
+watch(() => trips.stops, (next) => {
+  next.slice(0, 3).forEach((place, index) => {
+    if ((place?.id ?? null) === (stopPlaces[index]?.value?.id ?? null))
+      return
+
+    stopPlaces[index]!.value = place
+    stopQueries[index]!.value = place?.address ?? ''
+  })
+}, { deep: true })
 
 const stopRows = computed(() => Array.from({ length: stopCount.value }, (_, index) => ({
   isSearching: stopSearches[index]!.isSearching.value,
@@ -604,7 +618,7 @@ function onHandleKeydown(event: KeyboardEvent) {
               v-else
               :quick-destinations="quickDestinations"
               @expand="expandForInput(searchDestination)"
-              @pick-from-map="emit('pickFromMap', $event)"
+              @pick-from-map="(mode, stopIndex) => emit('pickFromMap', mode, stopIndex)"
               @select-destination="chooseDestination"
             />
           </div>
@@ -635,7 +649,7 @@ function onHandleKeydown(event: KeyboardEvent) {
             :stops="stopRows"
             @add-stop="addStopRow"
             @locate-user="emit('locateUser')"
-            @pick-from-map="emit('pickFromMap', $event)"
+            @pick-from-map="(mode, stopIndex) => emit('pickFromMap', mode, stopIndex)"
             @remove-stop="removeStopRow"
             @reorder-points="reorderRoutePoints"
             @search-destination="searchDestination"

@@ -14,7 +14,7 @@ const emit = defineEmits<{
   // «Куда едем?» — раскрыть полный поиск адреса.
   expand: []
   // Выбор точки на карте — полезный старт, пока истории поездок нет.
-  pickFromMap: [mode: MapPickerMode]
+  pickFromMap: [mode: MapPickerMode, stopIndex?: number]
   // Быстрый адрес — сразу выбрать назначение (дальше уходим к тарифам).
   selectDestination: [place: GeoPlace]
 }>()
