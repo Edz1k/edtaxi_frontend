@@ -35,6 +35,10 @@ export interface DriverOverviewDriver {
   face_selfie_check?: 'approved' | 'pending' | 'rejected'
   face_doc_check?: 'approved' | 'pending' | 'rejected'
   face_rejection_reason?: null | string
+  // Имя с удостоверения (TODO п.27): под ним водителя видят пассажиры, и оно же
+  // стало его профильным именем. Правит только поддержка.
+  verified_first_name?: null | string
+  verified_last_name?: null | string
   created_at: string
 }
 
