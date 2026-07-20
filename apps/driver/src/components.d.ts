@@ -17,6 +17,8 @@ declare module 'vue' {
     AuthError: typeof import('./components/auth/AuthError.vue')['default']
     AuthScreen: typeof import('./components/auth/AuthScreen.vue')['default']
     BottomNav: typeof import('./components/app/BottomNav.vue')['default']
+    CatalogRequestBlock: typeof import('./components/vehicle/CatalogRequestBlock.vue')['default']
+    DistrictsMiniMap: typeof import('./components/driver/DistrictsMiniMap.vue')['default']
     DriverMap: typeof import('./components/driver/DriverMap.vue')['default']
     DriverStatusPanel: typeof import('./components/driver/DriverStatusPanel.vue')['default']
     DriverTripOffer: typeof import('./components/driver/DriverTripOffer.vue')['default']

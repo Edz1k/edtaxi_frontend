@@ -234,6 +234,13 @@ declare module 'vue-router/auto-routes' {
       { id: ParamValue<false> },
       | never
     >,
+    '/support/car-requests': RouteRecordInfo<
+      '/support/car-requests',
+      '/support/car-requests',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/support/login': RouteRecordInfo<
       '/support/login',
       '/support/login',
@@ -506,6 +513,14 @@ declare module 'vue-router/auto-routes' {
         | never
       pathParamNames:
         | 'id'
+    }
+    'src/pages/support/car-requests.vue': {
+      routes:
+        | '/support/car-requests'
+      views:
+        | never
+      pathParamNames:
+        | never
     }
     'src/pages/support/login.vue': {
       routes:

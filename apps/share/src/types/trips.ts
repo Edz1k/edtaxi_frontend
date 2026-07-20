@@ -12,7 +12,13 @@ export interface ShareTripDriverVehicle {
 }
 
 export interface ShareTripDriverLocation {
+  // Сколько секунд назад записана позиция (нет — возраст неизвестен,
+  // например фолбэк из Postgres без таймстампа).
+  age_sec?: number
   eta_sec?: number
+  // Курс машины в градусах (0 = север). 0 также значит «нет данных» —
+  // тогда фронт доворачивает машинку по направлению движения.
+  heading?: number
   lat: number
   lng: number
 }

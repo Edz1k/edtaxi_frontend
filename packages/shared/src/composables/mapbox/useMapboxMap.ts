@@ -5,6 +5,7 @@ import type { PassengerDriverLocation } from '../../types/websocket'
 import type { UserCoordinates } from './useUserLocation'
 import { ref, shallowRef } from 'vue'
 import { currentMapStyleUrl } from './useMapStyle'
+import { hasWebgl2 } from './webgl'
 
 export type MapboxModule = typeof import('mapbox-gl')
 export const ALMATY_CENTER: [number, number] = [76.9286, 43.2389]
@@ -92,18 +93,33 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
       return
     }
 
-    mapboxglModule.value = await import('mapbox-gl')
-    mapboxglModule.value.default.accessToken = mapboxToken
+    // Инициализация Mapbox может упасть синхронно: чанк mapbox-gl не подтянулся
+    // (сеть) или окружение зрителя не поддерживает WebGL2 — mapbox-gl v3 его
+    // требует, а встроенный браузер Telegram и старые вебвью его иногда не дают.
+    // Раньше исключение всплывало из onMounted и терялось → карта молча
+    // оставалась чёрной (особенно на share-странице). Теперь ловим, показываем
+    // понятное сообщение и логируем причину.
+    try {
+      mapboxglModule.value = await import('mapbox-gl')
+      mapboxglModule.value.default.accessToken = mapboxToken
 
-    map.value = new mapboxglModule.value.default.Map({
-      attributionControl: false,
-      center: initialCenter ?? ALMATY_CENTER,
-      container: mapContainer.value,
-      pitch: 10,
-      // Тема карты — выбранная пользователем (Схема/Спутник/Ночная).
-      style: currentMapStyleUrl(),
-      zoom: 12,
-    })
+      map.value = new mapboxglModule.value.default.Map({
+        attributionControl: false,
+        center: initialCenter ?? ALMATY_CENTER,
+        container: mapContainer.value,
+        pitch: 10,
+        // Тема карты — выбранная пользователем (Схема/Спутник/Ночная).
+        style: currentMapStyleUrl(),
+        zoom: 12,
+      })
+    }
+    catch (error) {
+      console.error('[useMapboxMap] не удалось инициализировать карту', error)
+      mapError.value = hasWebgl2()
+        ? 'Не удалось загрузить карту. Обновите страницу.'
+        : 'Ваш браузер не поддерживает карту. Откройте ссылку в другом браузере.'
+      return
+    }
 
     map.value.once('load', () => {
       onLoad?.()

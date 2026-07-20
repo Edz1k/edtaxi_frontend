@@ -3,6 +3,7 @@ import type { CatalogCarItem, CatalogResolveResponse } from '~/types/catalog'
 import type { VehicleCategory } from '~/types/trips'
 import { resolveCatalogCar, searchCatalogCars } from '~/api/catalog'
 import AuthButton from '~/components/auth/AuthButton.vue'
+import CatalogRequestBlock from '~/components/vehicle/CatalogRequestBlock.vue'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { categoryLabel, sortCategories } from '~/utils/vehicleCategories'
 
@@ -383,9 +384,12 @@ async function submitVehicle() {
               {{ categoryLabel(cat) }}
             </span>
           </div>
-          <p v-if="!resolveResult.matched" class="mt-3 text-xs text-amber-300 leading-5">
-            Модель не найдена в каталоге — будет доступен только Эконом. Обратитесь в поддержку, если это ошибка.
-          </p>
+          <template v-if="!resolveResult.matched">
+            <p class="mt-3 text-xs text-amber-300 leading-5">
+              Модель не найдена в каталоге — будет доступен только Эконом.
+            </p>
+            <CatalogRequestBlock :make="form.make" :model="form.model" :year="form.year" />
+          </template>
         </div>
 
         <label class="block">
