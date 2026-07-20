@@ -2,7 +2,13 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover обязателен: без него env(safe-area-inset-*) на iOS
+         равны нулю, --app-safe-area-* схлопываются, и низ карточки (SOS, счётчик
+         просмотров) лезет под home indicator. Share чаще других открывают в
+         обычном браузере, а не в вебвью Telegram, так что ему это нужнее всего.
+         user-scalable здесь НЕ запрещаем, в отличие от мини-аппов: это обычная
+         веб-страница, и зум пальцами на ней уместен. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Telegram Taxi — Поездка</title>
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
   </head>
