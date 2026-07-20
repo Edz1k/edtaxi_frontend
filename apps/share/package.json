@@ -7,6 +7,7 @@
     "dev": "vite --port 3003 --open",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
@@ -31,6 +32,7 @@
     "@vue-macros/volar": "catalog:dev",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
+    "jsdom": "catalog:dev",
     "typescript": "catalog:dev",
     "unocss": "catalog:build",
     "unplugin-auto-import": "catalog:build",
@@ -39,6 +41,7 @@
     "vite": "catalog:build",
     "vite-plugin-vue-devtools": "catalog:build",
     "vite-plugin-vue-layouts": "catalog:build",
+    "vitest": "catalog:dev",
     "vue-tsc": "catalog:dev"
   }
 }
