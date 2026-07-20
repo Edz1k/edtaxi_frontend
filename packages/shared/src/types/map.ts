@@ -1,1 +1,4 @@
-export type MapPickerMode = 'destination' | 'pickup'
+// Что именно пассажир выбирает точкой на карте. 'stop' — промежуточная
+// остановка; какая именно, знает стор (mapPickerStopIndex): по цепочке
+// компонентов ходит только режим, чтобы не тащить индекс через каждый проп.
+export type MapPickerMode = 'destination' | 'pickup' | 'stop'

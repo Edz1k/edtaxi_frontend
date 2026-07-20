@@ -40,7 +40,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'addStop': []
   'locateUser': []
-  'pickFromMap': [mode: MapPickerMode]
+  'pickFromMap': [mode: MapPickerMode, stopIndex?: number]
   'removeStop': [index: number]
   'reorderPoints': [from: number, to: number]
   'searchDestination': []
@@ -259,17 +259,28 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
           </button>
         </template>
 
-        <!-- Остановка: убрать -->
-        <button
-          v-else-if="row.kind === 'stop'"
-          :aria-label="`Убрать остановку ${row.index + 1}`"
-          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
-          title="Убрать остановку"
-          type="button"
-          @click="emit('removeStop', row.index)"
-        >
-          <span class="i-mdi-close text-5" />
-        </button>
+        <!-- Остановка: выбрать на карте и убрать -->
+        <template v-else-if="row.kind === 'stop'">
+          <button
+            :aria-label="`Выбрать остановку ${row.index + 1} на карте`"
+            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
+            title="Выбрать на карте"
+            type="button"
+            @click="emit('pickFromMap', 'stop', row.index)"
+          >
+            <span class="i-mdi-map-marker-radius-outline text-5" />
+          </button>
+
+          <button
+            :aria-label="`Убрать остановку ${row.index + 1}`"
+            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
+            title="Убрать остановку"
+            type="button"
+            @click="emit('removeStop', row.index)"
+          >
+            <span class="i-mdi-close text-5" />
+          </button>
+        </template>
 
         <!-- Точка Б: выбор на карте -->
         <button
