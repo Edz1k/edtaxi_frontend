@@ -405,6 +405,18 @@ const tariffLine = computed(() => {
 // Водитель показывается, когда заказ принят (бэкенд добавляет объект driver).
 const driver = computed(() => props.activeTrip?.driver ?? null)
 
+// Перевозчик — таксопарк поездки. Приезжает только когда водитель приписан к
+// парку: у самозанятых объекта нет, и блок не показывается.
+const carrier = computed(() => props.activeTrip?.carrier ?? null)
+
+// Отдельный инстанс копирования: общий с «поделиться ссылкой» показывал бы
+// галочку не в том месте.
+const { copy: copyPhone, copied: carrierPhoneCopied } = useClipboard({ legacy: true })
+
+function copyCarrierPhone(phone: string) {
+  copyPhone(phone)
+}
+
 const { share, isSupported: isShareSupported } = useShare()
 const { copy, copied: linkCopied } = useClipboard({ legacy: true })
 const isSharing = ref(false)
@@ -538,6 +550,37 @@ async function shareTrip() {
           {{ driver.vehicle.plate_number }}
         </p>
       </div>
+    </div>
+
+    <!-- Перевозчик: пассажир вправе знать, кто фактически выполняет поездку.
+         Телефон здесь корпоративный, парка — личных контактов водителя мы
+         по-прежнему не показываем. У части парков телефон и БИН не заполнены,
+         поэтому каждая строка со своим v-if; у самозанятого водителя объекта
+         carrier нет вовсе, и блок не рисуется. -->
+    <div v-if="carrier" class="mt-2 rounded-2xl bg-white/5 px-3 py-3 text-left">
+      <p class="text-[11px] text-slate-500 font-800 uppercase">
+        Перевозчик
+      </p>
+      <p class="mt-1 truncate text-sm font-900">
+        {{ carrier.name }}
+      </p>
+      <p v-if="carrier.bin" class="mt-0.5 text-xs text-slate-400 font-700">
+        БИН {{ carrier.bin }}
+      </p>
+
+      <!-- Не tel:-ссылка: Telegram-вебвью блокирует такую навигацию, и кнопка
+           «позвонить» просто ничего бы не делала (на этом уже обожглись в
+           вызове 112). Тап копирует номер — набрать его пользователь сможет
+           в своей звонилке. -->
+      <button
+        v-if="carrier.phone"
+        class="mt-2 h-10 w-full flex items-center justify-center gap-2 rounded-xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98]"
+        type="button"
+        @click="copyCarrierPhone(carrier.phone)"
+      >
+        <span :class="carrierPhoneCopied ? 'i-mdi-check' : 'i-mdi-content-copy'" class="text-4.5" />
+        {{ carrierPhoneCopied ? 'Номер скопирован' : carrier.phone }}
+      </button>
     </div>
 
     <!-- Связь после поездки. Пока поездка активна, ниже есть «Чат с водителем»,
