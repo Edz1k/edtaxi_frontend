@@ -54,7 +54,9 @@ export function useAddressSearch(options: UseAddressSearchOptions) {
       if (lastQuery.value === query)
         isSearching.value = false
     }
-  }, 300)
+    // 450 мс вместо 300: каждый промежуточный ввод — платный запрос саджеста
+    // к 2GIS, а на 300 мс срабатывание между буквами было почти гарантировано.
+  }, 450)
 
   watch(options.query, () => {
     if (options.selectedPlace.value?.address !== options.query.value)

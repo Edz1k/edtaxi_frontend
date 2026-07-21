@@ -406,8 +406,12 @@ const statusMeta = computed(() => {
 })
 
 const fareText = computed(() => {
-  if (props.activeTrip)
-    return `${Math.round(props.activeTrip.estimated_fare).toLocaleString('ru-RU')} ₸`
+  if (props.activeTrip) {
+    // total_fare — текущий итог с бэка (котировка + доплаты за добавленные
+    // остановки): после согласия водителя пассажир видит новую цену сразу.
+    const fare = props.activeTrip.total_fare ?? props.activeTrip.estimated_fare
+    return `${Math.round(fare).toLocaleString('ru-RU')} ₸`
+  }
 
   return props.selectedEstimate ? formatFare(props.selectedEstimate) : 'Цена рассчитана'
 })
