@@ -10,7 +10,9 @@ import { getUserErrorMessage, showErrorToast } from '~/api/errors'
 import { getPickupHints } from '~/api/pickupHints'
 import { getTariffCategories } from '~/api/tariffs'
 import { cancelRouteChange, cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getPendingRouteChange, getTrip, getTripHistory, proposeRouteChange, rateTrip, retryTripPrepay } from '~/api/trips'
+import { useToast } from '~/composables/useToast'
 import { DEFAULT_ACTIVE_CATEGORIES, isMotoCategory, TARIFF_ORDER } from '~/constants/tariffs'
+import { clearFinishedTrip, readFinishedTrip, saveFinishedTrip } from '~/utils/finishedTripSnapshot'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
 import { distanceM, nearestHint } from '~/utils/pickupHints'
 import { clearRouteDraft, readRouteDraft, saveRouteDraft } from '~/utils/routeDraft'
@@ -261,9 +263,28 @@ export const useTripsStore = defineStore('trips', () => {
     searchElapsedSeconds.value = 0
     stopSearchTimer()
     stopActiveTripPolling()
+
+    // Терминальный снапшот для экрана оценки: GET /trips/active про завершённую
+    // поездку уже ничего не знает, и без снапшота уход в меню/перезапуск
+    // приложения терял экран оценки (см. restoreActiveTrip). Оценённые и
+    // отменённые поездки хранить незачем.
+    if (trip.status === 'completed' && !trip.my_rating)
+      saveFinishedTrip(trip)
+    else
+      clearFinishedTrip()
   }
 
   function syncActiveTrip(trip: Trip) {
+    // Онлайн-оплата не прошла — бэкенд перекинул поездку на наличные. Тост
+    // одноразовый по построению: после этого рефетча payment_method в сторе
+    // уже 'cash'. Проверка ДО терминальной ветки: у постоплаты перекидка
+    // случается уже на завершённой поездке (janitor).
+    const previous = activeTrip.value
+    if (previous?.id === trip.id && trip.payment_method === 'cash'
+      && (previous.payment_method === 'card' || previous.payment_method === 'prepaid')) {
+      useToast().warning('Оплата наличными', 'Онлайн-оплата не прошла — поездка оплачивается наличными.')
+    }
+
     if (isTerminalTripStatus(trip.status)) {
       prepayUrl.value = ''
       finishActiveTrip(trip)
@@ -487,6 +508,47 @@ export const useTripsStore = defineStore('trips', () => {
     startActiveTripPolling()
   }
 
+  // restoreFinishedTrip — ветка restoreActiveTrip для «активной поездки нет».
+  // Null от GET /trips/active не означает «показывать нечего»: эндпоинт знает
+  // только НЕзавершённые поездки, а на экране (или в localStorage после
+  // перезапуска) может ждать оценки только что завершённая. Сброс здесь и был
+  // багом «ушёл в меню — поездка пропала».
+  async function restoreFinishedTrip(): Promise<Trip | null> {
+    const current = activeTrip.value
+    if (current && current.status === 'completed' && !current.my_rating) {
+      // Поездка уже на экране (возврат из меню без ремоунта стора) — просто
+      // не даём её сбросить.
+      stopActiveTripPolling()
+      return current
+    }
+
+    const snapshot = readFinishedTrip()
+    if (!snapshot) {
+      resetActiveTrip()
+      return null
+    }
+
+    // Дотягиваем свежее состояние поездки: в нём финальная цена и, возможно,
+    // оценка, уже поставленная с другого устройства.
+    try {
+      const fresh = await getTrip(snapshot.id)
+      if (fresh.status === 'completed' && !fresh.my_rating) {
+        finishActiveTrip(fresh)
+        return fresh
+      }
+      clearFinishedTrip()
+      resetActiveTrip()
+      return null
+    }
+    catch {
+      // Сеть моргнула — показываем снапшот как есть: цена в нём уже итоговая
+      // (finishActiveTrip сохраняет завершённую поездку), а оценка важнее
+      // идеальной свежести.
+      finishActiveTrip(snapshot)
+      return snapshot
+    }
+  }
+
   async function restoreActiveTrip() {
     isRestoringActiveTrip.value = true
     errorMessage.value = ''
@@ -494,10 +556,8 @@ export const useTripsStore = defineStore('trips', () => {
     try {
       const trip = await getActiveTrip()
 
-      if (!trip) {
-        resetActiveTrip()
-        return null
-      }
+      if (!trip)
+        return restoreFinishedTrip()
 
       syncActiveTrip(trip)
       resumeActiveTripEffects(trip)
@@ -935,6 +995,8 @@ export const useTripsStore = defineStore('trips', () => {
       if (activeTrip.value?.id === tripId)
         activeTrip.value = { ...activeTrip.value, my_rating: rated }
       history.value = history.value.map(item => item.id === tripId ? { ...item, my_rating: rated } : item)
+      // Оценка доставлена — снапшот «ждёт оценки» больше не нужен.
+      clearFinishedTrip()
       return response
     }
     catch (error) {
@@ -977,6 +1039,9 @@ export const useTripsStore = defineStore('trips', () => {
   }
 
   function resetActiveTrip() {
+    // Пассажир осознанно уходит с экрана поездки (новый заказ, отмена, логаут)
+    // — восстанавливать её после этого не нужно.
+    clearFinishedTrip()
     activeTrip.value = null
     driverLocation.value = null
     searchStartedAt.value = null

@@ -28,7 +28,10 @@ export function tripToOffer(trip: Trip): DriverTripOffer {
     dropoff_address: trip.dropoff_address,
     dropoff_lat: trip.dropoff_lat,
     dropoff_lng: trip.dropoff_lng,
-    estimated_fare: trip.final_fare ?? trip.estimated_fare,
+    // Текущий итог поездки: с бэка приходит total_fare = estimated + ожидание
+    // + доплаты за добавленные остановки — водитель видит актуальную сумму,
+    // а не котировку на момент заказа.
+    estimated_fare: trip.final_fare ?? trip.total_fare ?? trip.estimated_fare,
     options: trip.options,
     pickup_address: trip.pickup_address,
     pickup_lat: trip.pickup_lat,

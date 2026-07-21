@@ -45,9 +45,16 @@ export interface Trip {
   final_fare?: null | number
   id: string
   passenger_id?: string
+  // Способ оплаты; может смениться на 'cash' прямо в поездке (онлайн-оплата
+  // не прошла) — водителю важно узнать, что деньги надо взять наличными.
+  payment_method?: string
   pickup_address: string
   pickup_lat: number
   pickup_lng: number
+  // Доплаты за добавленные в пути остановки и текущий итог поездки
+  // (estimated + waiting + route_change_fee) — до появления final_fare.
+  route_change_fee?: number
+  total_fare?: number
   started_at?: null | string
   status: TripStatus
   surge_multiplier: number

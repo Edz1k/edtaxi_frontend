@@ -154,6 +154,15 @@ export const useDriverStore = defineStore('driver', () => {
   }
 
   function syncActiveTrip(trip: Trip) {
+    // Онлайн-оплата не прошла — бэкенд перекинул поездку на наличные. Тост
+    // одноразовый по построению: после этого рефетча payment_method в сторе
+    // уже 'cash', и условие больше не выполняется.
+    const previous = activeTrip.value
+    if (previous?.id === trip.id && trip.payment_method === 'cash'
+      && (previous.payment_method === 'card' || previous.payment_method === 'prepaid')) {
+      useToast().warning('Оплата наличными', 'Онлайн-оплата не прошла — возьмите оплату наличными.')
+    }
+
     initNavProgress(trip.id)
     activeTrip.value = trip
     activeOffer.value = tripToOffer(trip)
@@ -686,8 +695,10 @@ export const useDriverStore = defineStore('driver', () => {
       await refreshActiveTrip()
     }
     catch (error) {
-      // Частый случай — у пассажира не хватило денег на доплату. Заявку не
-      // гасим: бэкенд ничего не изменил, и водитель может ответить ещё раз.
+      // Бэкенд больше не отвечает 402 «не хватает средств»: остановка
+      // принимается всегда, доплата копится в итоге поездки. Сюда попадают
+      // только транспортные/статусные ошибки — заявку не гасим, бэкенд ничего
+      // не изменил, и водитель может ответить ещё раз.
       errorMessage.value = showErrorToast(error, 'Не удалось принять остановку.')
       throw error
     }
@@ -734,7 +745,10 @@ export const useDriverStore = defineStore('driver', () => {
       return trip
     }
     catch (error) {
-      errorMessage.value = showErrorToast(error, 'Не удалось обновить активную поездку.')
+      // Без тоста: рефреш дёргается из WS-обработчика на каждое событие, и
+      // разовый сетевой сбой показывал водителю «Не удалось обновить активную
+      // поездку» посреди заказа, хотя следующее событие всё чинило само.
+      errorMessage.value = getUserErrorMessage(error, 'Не удалось обновить активную поездку.')
       throw error
     }
   }
