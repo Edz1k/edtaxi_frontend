@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
+import type { Marker } from 'mapbox-gl'
 import { useMapboxMap } from '@edtaxi/shared/composables/mapbox/useMapboxMap'
-import { useMapboxRoute } from '@edtaxi/shared/composables/mapbox/useMapboxRoute'
+import { createPointElement, useMapboxRoute } from '@edtaxi/shared/composables/mapbox/useMapboxRoute'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 // Живая карта share-страницы. В отличие от карт мини-аппов ей не нужны
@@ -59,6 +60,52 @@ const { clearRoute, restoreRoute, showTripRoute } = useMapboxRoute({
   routeCoordinates,
 })
 
+// ===== Точки А/Б и камера ДО прихода маршрута =====
+//
+// Раньше до загрузки геометрии карта показывала захардкоженный центр (Алматы)
+// без единой метки — для поездки в Астане страница выглядела пустой и «не той».
+// Теперь: карта создаётся сразу с центром между А и Б (initialCenter ниже),
+// пины ставятся немедленно из координат поездки, камера подгоняется по двум
+// точкам. Когда придёт маршрут — его отрисовка (showTripRoute) нарисует свои
+// маркеры и линию, а провизорные пины снимаются.
+
+const provisionalMarkers: Marker[] = []
+
+function clearProvisionalPoints() {
+  provisionalMarkers.forEach(item => item.remove())
+  provisionalMarkers.length = 0
+}
+
+function showProvisionalPoints() {
+  const mapInstance = map.value
+  const gl = mapboxglModule.value
+  const from = props.pickupPlace
+  const to = props.destinationPlace
+  if (!mapInstance || !gl || hasRoute.value || !from || !to)
+    return
+
+  clearProvisionalPoints()
+  provisionalMarkers.push(
+    new gl.default.Marker({ anchor: 'bottom', element: createPointElement('A', '#e6ad2e') })
+      .setLngLat([from.lng, from.lat])
+      .addTo(mapInstance),
+    new gl.default.Marker({ anchor: 'bottom', element: createPointElement('B', '#ef4444') })
+      .setLngLat([to.lng, to.lat])
+      .addTo(mapInstance),
+  )
+
+  const bounds = new gl.default.LngLatBounds([from.lng, from.lat], [from.lng, from.lat])
+  bounds.extend([to.lng, to.lat])
+  // Паддинги повторяют fitRoute из useMapboxRoute — камера не прыгает, когда
+  // провизорный fit сменится маршрутным.
+  mapInstance.fitBounds(bounds, {
+    maxZoom: 13,
+    padding: { bottom: 290, left: 48, right: 48, top: 110 },
+  })
+}
+
+watch([map, () => props.pickupPlace, () => props.destinationPlace], showProvisionalPoints)
+
 // ===== Камера: fitBounds только при первом появлении маршрута =====
 
 let didFitRoute = false
@@ -87,6 +134,7 @@ function syncRoute() {
   }
 
   didFitRoute = true
+  clearProvisionalPoints()
   showTripRoute()
 }
 
@@ -224,10 +272,22 @@ watch(map, () => {
     showDriverLocation(props.driverLocation, { category: props.driverCategory })
 })
 
-onMounted(() => initializeMap())
+// Стартовый центр — середина между А и Б: первая же отрисовка показывает
+// город поездки, а не захардкоженный фолбэк (ALMATY_CENTER остаётся только
+// на случай, когда компонент смонтировали без координат — на share-странице
+// это невозможно: карта рендерится по canShowMap).
+onMounted(() => {
+  const from = props.pickupPlace
+  const to = props.destinationPlace
+  const center: [number, number] | undefined = from && to
+    ? [(from.lng + to.lng) / 2, (from.lat + to.lat) / 2]
+    : undefined
+  initializeMap(undefined, center)
+})
 
 onBeforeUnmount(() => {
   stopCarAnimation()
+  clearProvisionalPoints()
   destroyMap(clearRoute)
 })
 </script>
