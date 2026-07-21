@@ -1,4 +1,4 @@
-import type { DriverDistrict, DriverProfile, DriverStatusResponse, DriverTripStep, HomeModeState } from '~/types/driver'
+import type { DriverDistrict, DriverProfile, DriverRouteChange, DriverStatusResponse, DriverTripStep, HomeModeState } from '~/types/driver'
 import type { Trip, VehicleCategory } from '~/types/trips'
 import type { DriverTripOffer } from '~/types/websocket'
 import { useToast } from '@edtaxi/shared/composables/useToast'
@@ -6,6 +6,7 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
 import {
   acceptDriverParkInvite,
+  acceptDriverRouteChange,
   acceptDriverTrip,
   activateHomeMode,
   cancelDriverTrip,
@@ -15,8 +16,10 @@ import {
   getActiveDriverTrip,
   getDriverCategories,
   getDriverDistricts,
+  getDriverRouteChange,
   getHomeMode,
   markDriverArrived,
+  rejectDriverRouteChange,
   rejectDriverTrip,
   setDriverCategories,
   setDriverDistricts,
@@ -34,6 +37,11 @@ export const useDriverStore = defineStore('driver', () => {
   const activeOffer = ref<DriverTripOffer | null>(null)
   const activeTripStep = ref<DriverTripStep | null>(null)
   const currentTripId = ref('')
+  // Пассажир просит заехать по пути и ждёт ответа. Держим отдельно от
+  // pendingOffer: тот про новый заказ, а этот — про уже идущую поездку, и
+  // спутать их значило бы проиграть мелодию нового заказа на остановку.
+  const pendingRouteChange = ref<DriverRouteChange | null>(null)
+  const isAnsweringRouteChange = ref(false)
   const isOnline = ref(false)
   const isAvailable = ref(false)
   const isLoadingProfile = ref(false)
@@ -85,6 +93,13 @@ export const useDriverStore = defineStore('driver', () => {
   // --- Прогресс по остановкам активной поездки (только на клиенте) ---
   // Бэкенд не отслеживает «остановка пройдена»: прогресс живёт здесь и переживает
   // перезапуск вебвью через localStorage (один ключ {tripId, passed}).
+  //
+  // ⚠️ Это ИНДЕКС в trip.stops, а не идентификатор остановки. Пока новые
+  // остановки добавляются только в КОНЕЦ списка (так и делает пассажир в
+  // proposeTripStop), уже пройденные точки не сдвигаются и счётчик остаётся
+  // верным. Если когда-нибудь появится вставка в середину или перестановка,
+  // счётчик молча зачеркнёт не ту остановку — тогда прогресс придётся переводить
+  // на идентификаторы остановок, а не чинить эту функцию.
   const passedStopCount = ref(0)
   const NAV_PROGRESS_KEY = 'driver:trip-nav-progress'
 
@@ -132,6 +147,9 @@ export const useDriverStore = defineStore('driver', () => {
     activeOffer.value = null
     activeTripStep.value = null
     currentTripId.value = ''
+    // Заявка живёт ровно столько же, сколько поездка: неотвеченная модалка на
+    // следующем заказе — чужой хвост.
+    pendingRouteChange.value = null
     clearNavProgress()
   }
 
@@ -635,6 +653,67 @@ export const useDriverStore = defineStore('driver', () => {
     }
   }
 
+  // --- Остановка по пути: пассажир предложил, водитель отвечает ---
+
+  async function refreshRouteChange() {
+    if (!currentTripId.value) {
+      pendingRouteChange.value = null
+      return null
+    }
+
+    try {
+      const response = await getDriverRouteChange(currentTripId.value)
+      pendingRouteChange.value = response.route_change
+      return response.route_change
+    }
+    catch {
+      // Молча: отсутствие заявки — обычное состояние поездки, ронять из-за
+      // этого экран водителя нельзя.
+      return null
+    }
+  }
+
+  async function acceptRouteChange() {
+    if (!currentTripId.value || !pendingRouteChange.value)
+      return
+
+    isAnsweringRouteChange.value = true
+    try {
+      await acceptDriverRouteChange(currentTripId.value)
+      pendingRouteChange.value = null
+      // Маршрут поездки удлинился — перечитываем его целиком, чтобы новая
+      // остановка появилась в списке и в навигаторе.
+      await refreshActiveTrip()
+    }
+    catch (error) {
+      // Частый случай — у пассажира не хватило денег на доплату. Заявку не
+      // гасим: бэкенд ничего не изменил, и водитель может ответить ещё раз.
+      errorMessage.value = showErrorToast(error, 'Не удалось принять остановку.')
+      throw error
+    }
+    finally {
+      isAnsweringRouteChange.value = false
+    }
+  }
+
+  async function rejectRouteChange() {
+    if (!currentTripId.value || !pendingRouteChange.value)
+      return
+
+    isAnsweringRouteChange.value = true
+    try {
+      await rejectDriverRouteChange(currentTripId.value)
+      pendingRouteChange.value = null
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось отклонить остановку.')
+      throw error
+    }
+    finally {
+      isAnsweringRouteChange.value = false
+    }
+  }
+
   async function refreshActiveTrip() {
     if (!currentTripId.value)
       return null
@@ -648,6 +727,10 @@ export const useDriverStore = defineStore('driver', () => {
       }
 
       syncActiveTrip(trip)
+      // Заявку на остановку тянем здесь же: отдельного WS-события у неё нет,
+      // бэкенд шлёт обычный trip_status. Поездка не поллится, а обновляется по
+      // событиям, так что лишним запросом это не станет.
+      refreshRouteChange().catch(() => {})
       return trip
     }
     catch (error) {
@@ -772,6 +855,11 @@ export const useDriverStore = defineStore('driver', () => {
     passengerCancelledBanner,
     dismissCancelledBanner,
     pendingOffer,
+    pendingRouteChange,
+    isAnsweringRouteChange,
+    acceptRouteChange,
+    rejectRouteChange,
+    refreshRouteChange,
     profile,
     receiveOffer,
     refreshActiveTrip,

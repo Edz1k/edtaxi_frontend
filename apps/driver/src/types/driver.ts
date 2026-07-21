@@ -1,4 +1,4 @@
-import type { VehicleCategory } from '~/types/trips'
+import type { TripStop, VehicleCategory } from '~/types/trips'
 
 export type VerificationStatus = 'approved' | 'pending' | 'rejected'
 export type DriverTripStep = 'arrived' | 'in_progress' | 'to_pickup'
@@ -200,6 +200,27 @@ export interface DriverLocationPayload {
 
 export interface DriverTripActionResponse {
   message: string
+}
+
+// Пассажир просит заехать ещё в одно место по пути. Пока водитель не ответил,
+// маршрут и цена поездки не меняются.
+export interface DriverRouteChange {
+  created_at: string
+  distance_km: number
+  duration_min: number
+  // Доплата пассажира за крюк, посчитанная бэкендом от снапшота тарифа поездки.
+  // Ту же цифру видит пассажир — она согласована обеими сторонами до согласия.
+  fee: number
+  id: string
+  status: 'accepted' | 'cancelled' | 'pending' | 'rejected'
+  // ПОЛНЫЙ новый список остановок, а не одна добавленная: бэкенд хранит и
+  // применяет его целиком. Та, куда просят заехать, — последняя.
+  stops: TripStop[]
+  trip_id: string
+}
+
+export interface DriverPendingRouteChangeResponse {
+  route_change: DriverRouteChange | null
 }
 
 export interface DriverEarnings {

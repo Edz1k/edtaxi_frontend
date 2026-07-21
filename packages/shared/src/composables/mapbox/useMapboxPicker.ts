@@ -27,6 +27,7 @@ export function useMapboxPicker(options: UseMapboxPickerOptions) {
     switch (options.pickerMode.value) {
       case 'pickup': return 'Выберите точку А'
       case 'stop': return 'Выберите остановку'
+      case 'trip-stop': return 'Куда заехать по пути'
       default: return 'Выберите точку Б'
     }
   })

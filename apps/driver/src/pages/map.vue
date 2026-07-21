@@ -35,6 +35,14 @@ import { onlineBlockTargetFor } from '~/utils/onlineBlock'
 const driver = useDriverStore()
 const toast = useToast()
 
+// Куда просят заехать. В заявке лежит ПОЛНЫЙ новый маршрут, а добавленная
+// точка всегда последняя: пассажир дописывает остановку в конец, чтобы не
+// сдвинуть уже пройденные (их прогресс у нас — индекс, а не идентификатор).
+const requestedStopAddress = computed(() => {
+  const stops = driver.pendingRouteChange?.stops ?? []
+  return stops.at(-1)?.address ?? 'Новая точка на карте'
+})
+
 // Режим «Домой» (TODO п.7): шит выбора адреса/выключения + пилюля-статус.
 const isHomeSheetOpen = ref(false)
 const homeUntilLabel = computed(() => {
@@ -482,6 +490,17 @@ async function toggleOnline() {
       :offer="driver.pendingOffer"
       @accept="driver.acceptOffer()"
       @reject="driver.rejectOffer()"
+    />
+
+    <!-- Пассажир просит заехать по пути. Показываем только когда нет оффера
+         нового заказа: две модалки друг на друге — и водитель нажмёт не ту. -->
+    <DriverStopRequest
+      v-if="driver.pendingRouteChange && !driver.pendingOffer"
+      :is-busy="driver.isAnsweringRouteChange"
+      :request="driver.pendingRouteChange"
+      :stop-address="requestedStopAddress"
+      @accept="driver.acceptRouteChange().catch(() => {})"
+      @reject="driver.rejectRouteChange().catch(() => {})"
     />
 
     <HomeModeSheet

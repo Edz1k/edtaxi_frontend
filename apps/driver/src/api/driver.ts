@@ -6,9 +6,11 @@ import type {
   DriverLocationPayload,
   DriverPayoutPayload,
   DriverPayoutsResponse,
+  DriverPendingRouteChangeResponse,
   DriverPhoneOtpResponse,
   DriverPhoneVerifyResponse,
   DriverProfile,
+  DriverRouteChange,
   DriverStatusPayload,
   DriverStatusResponse,
   DriverTripActionResponse,
@@ -96,6 +98,26 @@ export function acceptDriverTrip(id: string) {
 
 export function rejectDriverTrip(id: string) {
   return apiRequest<DriverTripActionResponse>(`/driver/trips/${id}/reject`, {
+    method: 'POST',
+  })
+}
+
+// Остановка, которую пассажир просит добавить по пути. Отсутствие заявки —
+// норма, а не ошибка: бэкенд отдаёт 200 с route_change: null.
+export function getDriverRouteChange(id: string) {
+  return apiRequest<DriverPendingRouteChangeResponse>(`/driver/trips/${id}/route-change`)
+}
+
+// Согласие: доплата сначала списывается с пассажира и только потом маршрут
+// удлиняется. Не хватило денег — бэкенд вернёт ошибку и не изменит ничего.
+export function acceptDriverRouteChange(id: string) {
+  return apiRequest<DriverRouteChange>(`/driver/trips/${id}/route-change/accept`, {
+    method: 'POST',
+  })
+}
+
+export function rejectDriverRouteChange(id: string) {
+  return apiRequest<DriverTripActionResponse>(`/driver/trips/${id}/route-change/reject`, {
     method: 'POST',
   })
 }

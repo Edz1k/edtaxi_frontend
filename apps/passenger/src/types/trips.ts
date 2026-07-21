@@ -189,6 +189,26 @@ export interface ActiveTripResponse {
   trip: null | Trip
 }
 
+// Заявка на добавление остановки в идущей поездке: пассажир предлагает, водитель
+// подтверждает или отклоняет. Пока статус 'pending', маршрут и цена поездки не
+// меняются — доплата показывается обеим сторонам заранее, до согласия.
+export interface TripRouteChange {
+  created_at: string
+  distance_km: number
+  duration_min: number
+  // Доплата в тенге, посчитанная бэкендом от снапшота тарифа поездки. Считать её
+  // на фронте нельзя: ставки и сюрдж могли смениться уже после заказа, и цифра
+  // разошлась бы с той, что увидит водитель.
+  fee: number
+  id: string
+  status: 'accepted' | 'cancelled' | 'pending' | 'rejected'
+  trip_id: string
+}
+
+export interface PendingRouteChangeResponse {
+  route_change: null | TripRouteChange
+}
+
 // «Умная подсказка» адреса назначения из истории поездок.
 export interface DestinationSuggestion {
   address: string

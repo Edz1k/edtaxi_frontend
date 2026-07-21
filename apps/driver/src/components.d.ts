@@ -21,6 +21,7 @@ declare module 'vue' {
     DistrictsMiniMap: typeof import('./components/driver/DistrictsMiniMap.vue')['default']
     DriverMap: typeof import('./components/driver/DriverMap.vue')['default']
     DriverStatusPanel: typeof import('./components/driver/DriverStatusPanel.vue')['default']
+    DriverStopRequest: typeof import('./components/driver/DriverStopRequest.vue')['default']
     DriverTripOffer: typeof import('./components/driver/DriverTripOffer.vue')['default']
     EarningsBarChart: typeof import('./components/driver/EarningsBarChart.vue')['default']
     EarningsChart: typeof import('./components/driver/EarningsChart.vue')['default']
