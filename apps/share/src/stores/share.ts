@@ -86,31 +86,43 @@ export const useShareStore = defineStore('share', () => {
   // Маршрут строится через публичный /share/:token/route (штатный POST /route
   // требует авторизацию, из-за чего страница раньше рисовала прямую линию).
   // Геометрия A→B не меняется — грузим один раз, при ошибке падаем на прямую.
+  //
+  // hasRealRoute — а не проверка длины: прямолинейный фолбэк тоже состоит из
+  // 2 точек, и guard «length > 2» гонял запрос маршрута каждый 4-секундный
+  // поллинг вечно; а настоящий короткий маршрут ровно из 2 точек, наоборот,
+  // перезапрашивался бы зря. Пока настоящего маршрута нет — поллинг продолжает
+  // пробовать (позже он может построиться), фолбэк рисуется сразу.
+  const hasRealRoute = ref(false)
+
   async function refreshRoute(token: string) {
     const from = pickupPlace.value
     const to = destinationPlace.value
 
     if (!from || !to) {
       routeCoordinates.value = []
+      hasRealRoute.value = false
       return
     }
 
-    if (routeCoordinates.value.length > 2)
-      return // настоящий маршрут уже загружен
+    if (hasRealRoute.value)
+      return
 
     try {
       const route = await getSharedTripRoute(token)
       if (route.coordinates.length >= 2) {
         routeCoordinates.value = route.coordinates
+        hasRealRoute.value = true
         return
       }
     }
     catch {}
 
-    routeCoordinates.value = [
-      [from.lng, from.lat],
-      [to.lng, to.lat],
-    ]
+    if (routeCoordinates.value.length === 0) {
+      routeCoordinates.value = [
+        [from.lng, from.lat],
+        [to.lng, to.lat],
+      ]
+    }
   }
 
   async function load(token: string, options: { silent?: boolean } = {}) {
@@ -154,6 +166,7 @@ export const useShareStore = defineStore('share', () => {
     viewCount.value = 0
     expiresAt.value = ''
     routeCoordinates.value = []
+    hasRealRoute.value = false
     driverLocationFetchedAt.value = null
     isLoading.value = false
     isRefreshing.value = false
