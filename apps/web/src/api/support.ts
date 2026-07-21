@@ -6,6 +6,7 @@ import type {
   SupportParticipantType,
   SupportRoom,
 } from '~/types/support'
+import type { Trip } from '~/types/trips'
 import { apiRequest } from '~/api/client'
 
 const SUPPORT_ROOM_LIST_ENDPOINTS: Record<SupportParticipantType, string> = {
@@ -27,6 +28,13 @@ export function listTechSupportRooms(params: SupportListRoomsParams = {}) {
 
 export function getTechSupportRoom(id: string) {
   return apiRequest<SupportRoom>(`/tech-support/chats/rooms/${id}`)
+}
+
+// Деталь поездки для поддержки — та же форма ответа, что у GET /admin/trips/:id
+// (пассажир и водитель с контактами): агент разбирает «забыл вещь» и споры,
+// не прося админа.
+export function getTechSupportTrip(id: string) {
+  return apiRequest<Trip>(`/tech-support/trips/${id}`)
 }
 
 export function claimTechSupportRoom(id: string) {

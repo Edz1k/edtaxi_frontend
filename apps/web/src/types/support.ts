@@ -1,3 +1,5 @@
+import type { TripDriver } from '~/types/trips'
+
 export type SupportParticipantType = 'driver' | 'passenger'
 export type SupportRoomStatus = 'closed' | 'open' | 'pending_close'
 
@@ -12,6 +14,9 @@ export interface SupportRoomTrip {
   final_fare: null | number
   payment_method: null | string
   created_at: string
+  // Водитель поездки (имя, телефон, машина): по обращению «забыл вещь в
+  // машине» агенту нужен именно он — раньше приходилось искать через админа.
+  driver?: null | TripDriver
 }
 
 export interface SupportRoom {

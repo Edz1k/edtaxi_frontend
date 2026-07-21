@@ -890,11 +890,13 @@ export const useTripsStore = defineStore('trips', () => {
     }
   }
 
-  // Повторная ссылка на оплату предоплаченной поездки (пассажир закрыл
-  // платёжную страницу или оплата не прошла).
+  // Ссылка на оплату поездки через платёжную страницу (Apple Pay / Google Pay
+  // / карта). Постоплата: платёж создаётся ПОСЛЕ завершения поездки на итоговую
+  // сумму; awaiting_payment остаётся для легаси-поездок переходного окна.
   async function retryPrepay() {
     const trip = activeTrip.value
-    if (!trip || trip.status !== 'awaiting_payment')
+    const isPostpayDue = trip?.status === 'completed' && trip.payment_method === 'prepaid'
+    if (!trip || (trip.status !== 'awaiting_payment' && !isPostpayDue))
       return null
 
     try {
@@ -903,6 +905,14 @@ export const useTripsStore = defineStore('trips', () => {
       return response.payment_url
     }
     catch (error) {
+      // 409 — платить уже не за что: поездка рассчитана (оплата прошла) или
+      // переведена на наличные. Не ошибка: перечитываем поездку, чтобы экран
+      // оплаты закрылся свежим состоянием.
+      if (error instanceof ApiError && error.status === 409) {
+        prepayUrl.value = ''
+        refreshActiveTrip().catch(() => {})
+        return null
+      }
       errorMessage.value = showErrorToast(error, 'Не удалось получить ссылку на оплату.')
       throw error
     }

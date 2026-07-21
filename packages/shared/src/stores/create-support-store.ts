@@ -154,10 +154,25 @@ export function createSupportStore(defaultParticipant: SupportParticipantType) {
       }
     }
 
-    // attachTrip открывает обращение по теме «Поездка» и прикрепляет к нему поездку.
-    async function attachTrip(tripId: string, participantType: SupportParticipantType = defaultParticipant) {
+    // attachTrip открывает обращение по теме «Поездка» и прикрепляет к нему
+    // поездку. firstMessage — шаблонное первое сообщение («забыл вещь в
+    // машине»): поддержка сразу видит и суть, и поездку, и водителя, без
+    // расспросов. Best-effort: сбой отправки не ломает открытие обращения.
+    async function attachTrip(
+      tripId: string,
+      participantType: SupportParticipantType = defaultParticipant,
+      options: { firstMessage?: string } = {},
+    ) {
       const room = await openRoom('trip', participantType)
       await attachTripToSupport(room.id, tripId)
+      if (options.firstMessage) {
+        try {
+          const message = await sendSupportMessage(room.id, { content: options.firstMessage })
+          if (activeRoom.value?.id === room.id)
+            messages.value = [...messages.value, message]
+        }
+        catch {}
+      }
       return room
     }
 
