@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import type { PickupHint } from '@edtaxi/shared/composables/mapbox/useMapboxPickupHints'
 import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { PassengerDriverLocation } from '@edtaxi/shared/types/websocket'
 import { useMapboxMap } from '@edtaxi/shared/composables/mapbox/useMapboxMap'
 import { useMapboxPicker } from '@edtaxi/shared/composables/mapbox/useMapboxPicker'
+import { useMapboxPickupHints } from '@edtaxi/shared/composables/mapbox/useMapboxPickupHints'
 import { useMapboxRoute } from '@edtaxi/shared/composables/mapbox/useMapboxRoute'
 import { useMapStyle } from '@edtaxi/shared/composables/mapbox/useMapStyle'
 import { loadCachedLocation } from '@edtaxi/shared/composables/mapbox/useUserLocation'
@@ -29,6 +31,9 @@ const props = withDefaults(defineProps<{
   showRoute?: boolean
   // Промежуточные остановки маршрута — нумерованные маркеры между А и Б.
   stopPlaces?: GeoPlace[]
+  // Кружки-подсказки: где обычно садятся и выходят (п.41). Подсказка, а не
+  // ограничение — точку можно поставить куда угодно.
+  pickupHints?: PickupHint[]
   userCoordinates?: UserCoordinates | null
 }>(), {
   destinationPlace: null,
@@ -42,6 +47,7 @@ const props = withDefaults(defineProps<{
   routeCoordinates: () => [],
   showRoute: false,
   stopPlaces: () => [],
+  pickupHints: () => [],
   userCoordinates: null,
 })
 
@@ -111,6 +117,11 @@ const {
   pickerMode,
   routeCoordinates,
   userCoordinates: computed(() => props.userCoordinates),
+})
+
+const { renderHints, restoreHints } = useMapboxPickupHints({
+  hints: computed(() => props.pickupHints),
+  map,
 })
 
 // Избранные места показываем синими пинами только в режиме простоя —
@@ -297,11 +308,14 @@ onMounted(async () => {
 
     syncFavoriteMarkers()
 
-    // Смена темы карты сбрасывает кастомные слои (линию маршрута) — рисуем их
-    // заново на свежем стиле, не дёргая камеру.
+    renderHints()
+
+    // Смена темы карты сбрасывает кастомные слои (линию маршрута, подсказки) —
+    // рисуем их заново на свежем стиле, не дёргая камеру.
     map.value?.on('style.load', () => {
       if (hasRoute.value)
         restoreRoute()
+      restoreHints()
     })
   }, cachedCenter ?? undefined)
 })

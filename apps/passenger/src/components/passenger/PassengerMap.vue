@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { PickupHint } from '@edtaxi/shared/composables/mapbox/useMapboxPickupHints'
 import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import type { GeoPlace } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
@@ -11,6 +12,8 @@ const props = withDefaults(defineProps<{
   favoritePlaces?: GeoPlace[]
   pickerMode?: MapPickerMode | null
   pickupPlace?: GeoPlace | null
+  // Кружки-подсказки мест посадки/высадки (п.41).
+  pickupHints?: PickupHint[]
   showRoute?: boolean
   userCoordinates?: UserCoordinates | null
 }>(), {
@@ -19,6 +22,7 @@ const props = withDefaults(defineProps<{
   favoritePlaces: () => [],
   pickerMode: null,
   pickupPlace: null,
+  pickupHints: () => [],
   showRoute: false,
   userCoordinates: null,
 })
@@ -83,6 +87,7 @@ function handleConfirmPicker(place: GeoPlace, mode: MapPickerMode) {
     :favorite-places="favoritePlaces"
     :picker-mode="pickerMode"
     :pickup-place="pickupPlace"
+    :pickup-hints="pickupHints"
     :route-coordinates="trips.routeCoordinates"
     :show-route="showRoute"
     :stop-places="stopPlaces"
