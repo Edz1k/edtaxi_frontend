@@ -1,4 +1,4 @@
-import type { ActiveTripResponse, CreateTripPayload, DestinationSuggestionsResponse, EstimateTripPayload, EstimateTripResponse, FileTripComplaintPayload, FileTripComplaintResponse, RateTripPayload, TipResponse, Trip, TripHistoryResponse } from '~/types/trips'
+import type { ActiveTripResponse, CreateTripPayload, DestinationSuggestionsResponse, EstimateTripPayload, EstimateTripResponse, FileTripComplaintPayload, FileTripComplaintResponse, PendingRouteChangeResponse, RateTripPayload, TipResponse, Trip, TripHistoryResponse, TripRouteChange, TripStop } from '~/types/trips'
 import { apiRequest } from '~/api/client'
 
 export function estimateTrip(payload: EstimateTripPayload) {
@@ -47,6 +47,30 @@ export function cancelTrip(id: string) {
 export function retryTripPrepay(id: string) {
   return apiRequest<{ payment_url: string }>(`/trips/${id}/prepay`, {
     method: 'POST',
+  })
+}
+
+// Остановки во время поездки. Передаётся ПОЛНЫЙ новый список остановок, а не
+// одна добавленная: бэкенд применяет его целиком, поэтому две заявки не могут
+// наложиться друг на друга частично. В ответе — доплата, её показываем
+// пассажиру до того, как водитель согласится.
+export function proposeRouteChange(id: string, stops: TripStop[]) {
+  return apiRequest<TripRouteChange>(`/trips/${id}/route-change`, {
+    method: 'POST',
+    body: { stops },
+  })
+}
+
+// Незакрытая заявка поездки. Отсутствие заявки — норма, а не ошибка: бэкенд
+// отдаёт 200 с route_change: null.
+export function getPendingRouteChange(id: string) {
+  return apiRequest<PendingRouteChangeResponse>(`/trips/${id}/route-change`)
+}
+
+// Пассажир передумал до ответа водителя.
+export function cancelRouteChange(id: string) {
+  return apiRequest<{ message: string }>(`/trips/${id}/route-change`, {
+    method: 'DELETE',
   })
 }
 

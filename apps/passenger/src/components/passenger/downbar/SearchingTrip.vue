@@ -9,7 +9,7 @@ import { tagsForScore } from '~/constants/ratingTags'
 import { formatFare, TARIFF_META } from '~/constants/tariffs'
 import { usePlacesStore } from '~/stores/places'
 import { useTripChatStore } from '~/stores/tripChat'
-import { useTripsStore } from '~/stores/trips'
+import { MAX_TRIP_STOPS, useTripsStore } from '~/stores/trips'
 import { coarseEtaSeconds } from '~/utils/eta'
 
 const props = defineProps<{
@@ -89,6 +89,34 @@ const isChatAvailable = computed(() => {
   return status === 'driver_assigned' || status === 'driver_arriving' || status === 'in_progress'
 })
 const isDriverArrived = computed(() => props.activeTrip?.status === 'driver_arriving')
+
+// --- Остановка по пути ---
+
+const pendingRouteChange = computed(() => trips.pendingRouteChange)
+
+// formatFare из constants/tariffs принимает оценку целиком; здесь у нас голая
+// сумма доплаты, поэтому форматируем её отдельно тем же способом.
+function formatTenge(value: number) {
+  return `${Math.round(value).toLocaleString('ru-RU')} ₸`
+}
+
+// Предлагать остановку можно в том же окне, что и писать в чат: водитель уже
+// назначен, поездка ещё не закрыта. Ровно этот же коридор проверяет бэкенд.
+const canProposeStop = computed(() => {
+  if (!isChatAvailable.value || pendingRouteChange.value)
+    return false
+
+  return (props.activeTrip?.stops?.length ?? 0) < MAX_TRIP_STOPS
+})
+
+function startStopPicker() {
+  // Даунбар прячется сам, пока пикер активен, — карта остаётся целиком под пальцем.
+  trips.startMapPicker('trip-stop')
+}
+
+function cancelStopRequest() {
+  trips.cancelPendingRouteChange().catch(() => {})
+}
 
 function openChat() {
   router.push('/trip-chat')
@@ -529,6 +557,71 @@ async function shareTrip() {
       <p class="mt-2.5 border-t border-white/6 pt-2.5 text-xs text-slate-400 font-700">
         {{ tariffLine }}
       </p>
+    </div>
+
+    <!-- Остановка по пути: предложить водителю заехать ещё в одно место -->
+    <button
+      v-if="canProposeStop"
+      type="button"
+      class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/5 px-4 py-3 text-sm font-800 transition active:scale-98"
+      @click="startStopPicker"
+    >
+      <span class="i-mdi-map-marker-plus shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+      <span>Заехать по пути</span>
+    </button>
+
+    <!-- Заявка отправлена: ждём ответа водителя. Доплату показываем ту, что
+         посчитал бэкенд, — ровно её увидит и водитель. -->
+    <div v-if="pendingRouteChange" class="mt-3 rounded-2xl bg-main-500/12 px-4 py-3 text-left">
+      <p class="flex items-center gap-2 text-sm text-main-200 font-900">
+        <span class="i-mdi-clock-outline shrink-0 text-4.5" aria-hidden="true" />
+        <span>Ждём ответа водителя</span>
+      </p>
+      <p class="mt-1.5 text-xs text-slate-300 font-700">
+        Доплата за остановку — {{ formatTenge(pendingRouteChange.fee) }}.
+        Если водитель откажется, поездка поедет прежним маршрутом и доплаты не будет.
+      </p>
+      <button
+        type="button"
+        class="mt-2.5 text-xs text-slate-400 font-800 underline underline-offset-2 disabled:opacity-50"
+        :disabled="trips.isProposingRouteChange"
+        @click="cancelStopRequest"
+      >
+        Отменить остановку
+      </button>
+    </div>
+
+    <!-- Водитель ответил. Плашка одноразовая: закрывается и больше не всплывает. -->
+    <div
+      v-else-if="trips.routeChangeOutcome"
+      class="mt-3 flex items-start gap-2 rounded-2xl px-4 py-3 text-left"
+      :class="trips.routeChangeOutcome === 'accepted' ? 'bg-emerald-500/12' : 'bg-white/5'"
+    >
+      <span
+        class="mt-0.5 shrink-0 text-4.5"
+        :class="trips.routeChangeOutcome === 'accepted'
+          ? 'i-mdi-check-circle text-emerald-300'
+          : 'i-mdi-close-circle text-slate-400'"
+        aria-hidden="true"
+      />
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-900" :class="trips.routeChangeOutcome === 'accepted' ? 'text-emerald-200' : 'text-slate-200'">
+          {{ trips.routeChangeOutcome === 'accepted' ? 'Водитель согласился заехать' : 'Водитель отказался от остановки' }}
+        </p>
+        <p class="mt-1 text-xs text-slate-400 font-700">
+          {{ trips.routeChangeOutcome === 'accepted'
+            ? 'Остановка добавлена в маршрут, доплата уже учтена в стоимости.'
+            : 'Маршрут и цена поездки не изменились.' }}
+        </p>
+      </div>
+      <button
+        type="button"
+        class="shrink-0 p-1 text-slate-400"
+        aria-label="Закрыть"
+        @click="trips.clearRouteChangeOutcome()"
+      >
+        <span class="i-mdi-close text-4" aria-hidden="true" />
+      </button>
     </div>
 
     <!-- Карточка водителя — показывается после принятия заказа -->

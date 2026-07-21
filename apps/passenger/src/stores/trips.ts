@@ -1,7 +1,7 @@
 import type { PickupHint } from '@edtaxi/shared/composables/mapbox/useMapboxPickupHints'
 import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
-import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, PaymentMethod, Trip, TripFlowState, TripOptions, TripStop, VehicleCategory } from '~/types/trips'
+import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, PaymentMethod, Trip, TripFlowState, TripOptions, TripRouteChange, TripStop, VehicleCategory } from '~/types/trips'
 import type { PassengerDriverLocation } from '~/types/websocket'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { acceptHMRUpdate, defineStore } from 'pinia'
@@ -9,7 +9,7 @@ import { ApiError } from '~/api/client'
 import { getUserErrorMessage, showErrorToast } from '~/api/errors'
 import { getPickupHints } from '~/api/pickupHints'
 import { getTariffCategories } from '~/api/tariffs'
-import { cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getTrip, getTripHistory, rateTrip, retryTripPrepay } from '~/api/trips'
+import { cancelRouteChange, cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getPendingRouteChange, getTrip, getTripHistory, proposeRouteChange, rateTrip, retryTripPrepay } from '~/api/trips'
 import { DEFAULT_ACTIVE_CATEGORIES, isMotoCategory, TARIFF_ORDER } from '~/constants/tariffs'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
 import { distanceM, nearestHint } from '~/utils/pickupHints'
@@ -88,6 +88,19 @@ export const useTripsStore = defineStore('trips', () => {
   const mapPickerMode = ref<MapPickerMode | null>(null)
   // Какую именно остановку выбираем точкой на карте (актуален при mode='stop').
   const mapPickerStopIndex = ref(0)
+
+  // Заявка на остановку в идущей поездке: ждём ответа водителя. Держим отдельно
+  // от черновика stops — тот принадлежит форме заказа, и syncRouteDraftFromTrip
+  // перезаписывает его из поездки при каждом обновлении.
+  const pendingRouteChange = ref<TripRouteChange | null>(null)
+  const isProposingRouteChange = ref(false)
+  // Чем закончилась последняя заявка — показать пассажиру и сбросить. Сама
+  // заявка к этому моменту уже исчезла из pending, а без этого поля ответ
+  // водителя выглядел бы просто как молча пропавшая плашка.
+  const routeChangeOutcome = ref<'accepted' | 'rejected' | null>(null)
+  // Сколько остановок было в поездке, пока заявка висела неотвеченной. С этим
+  // числом сравниваем маршрут после ответа, чтобы отличить согласие от отказа.
+  const routeChangeBaseStops = ref(0)
 
   // Кружки-подсказки вокруг видимой области карты (п.41): где обычно садятся и
   // выходят. Подгружаются по мере перемещения карты, к ним же притягивается пин.
@@ -304,12 +317,110 @@ export const useTripsStore = defineStore('trips', () => {
     try {
       const trip = await getTrip(activeTrip.value.id)
       syncActiveTrip(trip)
+      // Дёргаем заявку только пока она висит: у поездки без остановок это был бы
+      // лишний запрос каждые 3 секунды на весь поток пассажиров.
+      if (pendingRouteChange.value)
+        await refreshPendingRouteChange()
       return trip
     }
     catch (error) {
       errorMessage.value = getUserErrorMessage(error, 'Не удалось обновить статус поездки.')
       throw error
     }
+  }
+
+  // Остановки во время поездки. Отдельного WS-события у заявки нет: бэкенд шлёт
+  // обычный trip_status, по которому обе стороны и так перезапрашивают поездку,
+  // — заявку подтягиваем тем же движением.
+  async function refreshPendingRouteChange() {
+    if (!activeTrip.value) {
+      pendingRouteChange.value = null
+      return null
+    }
+
+    const previous = pendingRouteChange.value
+
+    try {
+      const response = await getPendingRouteChange(activeTrip.value.id)
+      pendingRouteChange.value = response.route_change
+
+      if (response.route_change && !previous) {
+        // Заявка появилась (наша или восстановлена после перезапуска) — пока она
+        // не применена, текущий маршрут поездки и есть точка отсчёта.
+        routeChangeBaseStops.value = activeTrip.value.stops?.length ?? 0
+      }
+      else if (previous && !response.route_change) {
+        // Заявка была и пропала — водитель ответил. Что именно он ответил, в
+        // ответе не сказано, поэтому смотрим на поездку: при согласии остановок
+        // в ней стало больше. Сравниваем количество, а не километры — те
+        // округляются на бэкенде и точного равенства не дадут.
+        const stopsNow = activeTrip.value.stops?.length ?? 0
+        routeChangeOutcome.value = stopsNow > routeChangeBaseStops.value ? 'accepted' : 'rejected'
+      }
+      return response.route_change
+    }
+    catch {
+      // Молча: отсутствие заявки — обычное состояние поездки, и ронять из-за
+      // этого экран поездки нельзя.
+      return null
+    }
+  }
+
+  // Новая остановка добавляется В КОНЕЦ списка, перед точкой Б, и это не
+  // косметика. У водителя пройденные остановки отмечаются счётчиком-индексом в
+  // localStorage; вставка в середину сдвинула бы уже посещённые точки и
+  // зачеркнула бы не ту. Добавление в конец не двигает ничего.
+  async function proposeTripStop(place: GeoPlace) {
+    if (!activeTrip.value)
+      return null
+
+    const current = activeTrip.value.stops ?? []
+    if (current.length >= MAX_TRIP_STOPS) {
+      errorMessage.value = `В поездке можно не больше ${MAX_TRIP_STOPS} остановок.`
+      showErrorToast(null, errorMessage.value)
+      return null
+    }
+
+    const stops: TripStop[] = [
+      ...current,
+      { address: place.address, lat: place.lat, lng: place.lng },
+    ]
+
+    isProposingRouteChange.value = true
+    try {
+      const change = await proposeRouteChange(activeTrip.value.id, stops)
+      pendingRouteChange.value = change
+      routeChangeBaseStops.value = current.length
+      routeChangeOutcome.value = null
+      return change
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось предложить остановку.')
+      throw error
+    }
+    finally {
+      isProposingRouteChange.value = false
+    }
+  }
+
+  async function cancelPendingRouteChange() {
+    if (!activeTrip.value || !pendingRouteChange.value)
+      return
+
+    try {
+      await cancelRouteChange(activeTrip.value.id)
+      pendingRouteChange.value = null
+      // Отмена — не ответ водителя, плашку «водитель отказался» показывать не за что.
+      routeChangeOutcome.value = null
+    }
+    catch (error) {
+      errorMessage.value = showErrorToast(error, 'Не удалось отменить остановку.')
+      throw error
+    }
+  }
+
+  function clearRouteChangeOutcome() {
+    routeChangeOutcome.value = null
   }
 
   function startActiveTripPolling() {
@@ -375,6 +486,9 @@ export const useTripsStore = defineStore('trips', () => {
 
       syncActiveTrip(trip)
       resumeActiveTripEffects(trip)
+      // Единственный безусловный запрос заявки за поездку: приложение могли
+      // перезапустить, пока водитель ещё не ответил на предложенную остановку.
+      refreshPendingRouteChange().catch(() => {})
       return trip
     }
     catch (error) {
@@ -613,6 +727,11 @@ export const useTripsStore = defineStore('trips', () => {
     else if (mode === 'stop') {
       setStop(mapPickerStopIndex.value, place)
     }
+    else if (mode === 'trip-stop') {
+      // Остановка в идущей поездке в черновик заказа не пишется: она уходит
+      // заявкой водителю, и до его ответа маршрут поездки не меняется.
+      proposeTripStop(place).catch(() => {})
+    }
     else {
       setDestinationPlace(place)
     }
@@ -838,6 +957,11 @@ export const useTripsStore = defineStore('trips', () => {
     searchStartedAt.value = null
     searchElapsedSeconds.value = 0
     prepayUrl.value = ''
+    // Заявка живёт ровно столько же, сколько поездка: незакрытая плашка
+    // «ждём ответа водителя» на следующем заказе — чужой хвост.
+    pendingRouteChange.value = null
+    routeChangeOutcome.value = null
+    routeChangeBaseStops.value = 0
     stopSearchTimer()
     stopActiveTripPolling()
   }
@@ -930,8 +1054,15 @@ export const useTripsStore = defineStore('trips', () => {
     isLoadingHistory,
     isMapPickerActive,
     isPollingActiveTrip,
+    isProposingRouteChange,
     isRating,
     isRestoringActiveTrip,
+    cancelPendingRouteChange,
+    clearRouteChangeOutcome,
+    pendingRouteChange,
+    proposeTripStop,
+    refreshPendingRouteChange,
+    routeChangeOutcome,
     loadHistory,
     loadMoreHistory,
     mapPickerMode,
