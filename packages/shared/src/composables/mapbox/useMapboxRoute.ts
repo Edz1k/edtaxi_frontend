@@ -19,7 +19,9 @@ function assignStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>
   Object.assign(element.style, styles)
 }
 
-function createPointElement(label: string, color: string) {
+// createPointElement экспортируется: share-странице нужны такие же пины А/Б
+// ещё ДО прихода геометрии маршрута (см. ShareTripMap).
+export function createPointElement(label: string, color: string) {
   const wrapper = document.createElement('div')
   const bubble = document.createElement('div')
   const stem = document.createElement('div')
