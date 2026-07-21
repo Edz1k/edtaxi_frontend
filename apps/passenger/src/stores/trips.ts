@@ -10,6 +10,7 @@ import { getUserErrorMessage, showErrorToast } from '~/api/errors'
 import { getPickupHints } from '~/api/pickupHints'
 import { getTariffCategories } from '~/api/tariffs'
 import { cancelRouteChange, cancelTrip, createTrip, estimateTrip, fileTripComplaint, getActiveTrip, getPendingRouteChange, getTrip, getTripHistory, proposeRouteChange, rateTrip, retryTripPrepay } from '~/api/trips'
+import { useToast } from '~/composables/useToast'
 import { DEFAULT_ACTIVE_CATEGORIES, isMotoCategory, TARIFF_ORDER } from '~/constants/tariffs'
 import { tripDropoffPlace, tripPickupPlace } from '~/utils/geoPlace'
 import { distanceM, nearestHint } from '~/utils/pickupHints'
@@ -264,6 +265,16 @@ export const useTripsStore = defineStore('trips', () => {
   }
 
   function syncActiveTrip(trip: Trip) {
+    // Онлайн-оплата не прошла — бэкенд перекинул поездку на наличные. Тост
+    // одноразовый по построению: после этого рефетча payment_method в сторе
+    // уже 'cash'. Проверка ДО терминальной ветки: у постоплаты перекидка
+    // случается уже на завершённой поездке (janitor).
+    const previous = activeTrip.value
+    if (previous?.id === trip.id && trip.payment_method === 'cash'
+      && (previous.payment_method === 'card' || previous.payment_method === 'prepaid')) {
+      useToast().warning('Оплата наличными', 'Онлайн-оплата не прошла — поездка оплачивается наличными.')
+    }
+
     if (isTerminalTripStatus(trip.status)) {
       prepayUrl.value = ''
       finishActiveTrip(trip)

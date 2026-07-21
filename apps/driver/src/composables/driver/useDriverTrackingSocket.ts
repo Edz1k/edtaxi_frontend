@@ -68,8 +68,11 @@ export function useDriverTrackingSocket() {
       stopLocationStreaming()
     },
     onError() {
+      // Без тоста: onError стреляет на КАЖДЫЙ обрыв, а связь в машине рвётся и
+      // возвращается постоянно — водителя засыпало «Связь с сервером
+      // недоступна» при каждом моргании сети. Пользователю сообщаем один раз,
+      // когда реконнект исчерпал попытки (autoReconnect.onFailed выше).
       errorMessage.value = 'WebSocket водителя недоступен.'
-      toast.error('Связь с сервером недоступна', errorMessage.value)
     },
     onMessage: (_ws, event) => handleMessage(event as MessageEvent<string>),
   })

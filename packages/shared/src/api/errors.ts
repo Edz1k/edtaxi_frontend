@@ -99,6 +99,7 @@ function statusFallback(status: number, fallback: string) {
     case 0: return 'Нет соединения с сервером. Проверьте интернет.'
     case 400: return 'Проверьте введённые данные.'
     case 401: return 'Сессия истекла. Войдите заново.'
+    case 402: return 'Недостаточно средств для оплаты.'
     case 403: return 'Недостаточно прав для этого действия.'
     case 404: return 'Данные не найдены.'
     case 409: return 'Действие конфликтует с текущим состоянием.'

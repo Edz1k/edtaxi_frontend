@@ -167,8 +167,15 @@ export interface Trip {
   pickup_address: string
   pickup_lat: number
   pickup_lng: number
+  // Способ оплаты; может смениться на 'cash' прямо в поездке (онлайн-оплата
+  // не прошла — бэкенд перекидывает на наличные и шлёт trip_status).
+  payment_method?: PaymentMethod | string
   // Ссылка на оплату предоплаты (только в ответе создания prepaid-поездки).
   payment_url?: string
+  // Доплаты за добавленные в пути остановки и текущий итог поездки
+  // (estimated + waiting + route_change_fee) — до появления final_fare.
+  route_change_fee?: number
+  total_fare?: number
   started_at?: null | string
   status: TripStatus
   surge_multiplier: number
