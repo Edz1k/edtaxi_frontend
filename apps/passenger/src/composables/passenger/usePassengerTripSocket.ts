@@ -3,8 +3,22 @@ import { buildWsUrl } from '~/api/client'
 import { useToast } from '~/composables/useToast'
 import { useTripsStore } from '~/stores/trips'
 
-const MAX_RECONNECT_ATTEMPTS = 3
-const RECONNECT_DELAY_MS = 1500
+// Реконнект не сдаётся, пока поездка активна. Это условие безопасности для
+// редкого поллинга (15 с) в сторе: сокет — первичный канал доставки статуса, и
+// «попробовали три раза и бросили» оставляло бы пассажира с моргнувшей сетью на
+// одном поллинге до конца поездки.
+//
+// Задержка растёт экспоненциально до потолка: молотить сервер при долгом сбое
+// незачем, а первые попытки должны быть быстрыми — обычно сеть возвращается
+// через секунды.
+const RECONNECT_BASE_DELAY_MS = 1500
+const RECONNECT_MAX_DELAY_MS = 30_000
+// Джиттер обязателен: деплой сносит все контейнеры разом, и без него все
+// пассажиры пошли бы переподключаться синхронными волнами.
+const RECONNECT_JITTER = 0.3
+// После скольких подряд неудач показать «онлайн-обновления недоступны». Тост —
+// только информирование: попытки продолжаются и после него.
+const RECONNECT_TOAST_AFTER = 5
 
 export function usePassengerTripSocket(tripId: Ref<string>) {
   const toast = useToast()
@@ -16,6 +30,7 @@ export function usePassengerTripSocket(tripId: Ref<string>) {
   let reconnectAttempts = 0
   let reconnectTimer: number | undefined
   let intentionallyClosed = false
+  let toastShown = false
 
   function handleMessage(event: MessageEvent<string>) {
     try {
@@ -51,9 +66,20 @@ export function usePassengerTripSocket(tripId: Ref<string>) {
     return socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)
   }
 
+  // Задержка n-й попытки: экспонента с потолком, размазанная джиттером.
+  function reconnectDelayMs(attempt: number) {
+    const base = Math.min(RECONNECT_BASE_DELAY_MS * 2 ** (attempt - 1), RECONNECT_MAX_DELAY_MS)
+    const jitter = 1 + (Math.random() * 2 - 1) * RECONNECT_JITTER
+    return Math.round(base * jitter)
+  }
+
   function openSocket() {
     if (!tripId.value || canReuseSocket())
       return
+
+    // Реконнект это или первый коннект — решаем ДО onopen: он различает,
+    // нужен ли ресинк.
+    const isReconnect = reconnectAttempts > 0
 
     intentionallyClosed = false
     status.value = 'connecting'
@@ -64,8 +90,15 @@ export function usePassengerTripSocket(tripId: Ref<string>) {
 
     ws.onopen = () => {
       reconnectAttempts = 0
+      toastShown = false
       status.value = 'open'
       errorMessage.value = ''
+
+      // Пока сокет лежал, trip_status мог прийти и пропасть навсегда — сервер
+      // не ретранслирует пропущенное. Перечитываем поездку, иначе пассажир
+      // смотрел бы на устаревший статус до следующего тика поллинга (15 с).
+      if (isReconnect)
+        trips.refreshActiveTrip().catch(() => {})
     }
 
     ws.onmessage = event => handleMessage(event)
@@ -83,18 +116,21 @@ export function usePassengerTripSocket(tripId: Ref<string>) {
       if (intentionallyClosed || !tripId.value)
         return
 
-      if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-        errorMessage.value = 'Не удалось восстановить обновления поездки.'
+      reconnectAttempts += 1
+
+      // Сообщаем о деградации один раз за сбой, но НЕ бросаем попытки: связь в
+      // машине рвётся и возвращается, а поллинг стора тем временем страхует.
+      if (reconnectAttempts >= RECONNECT_TOAST_AFTER && !toastShown) {
+        toastShown = true
+        errorMessage.value = 'Обновления приходят с задержкой — пытаемся восстановить связь.'
         toast.warning('Онлайн-обновления недоступны', errorMessage.value)
-        return
       }
 
-      reconnectAttempts += 1
       clearReconnectTimer()
       reconnectTimer = window.setTimeout(() => {
         reconnectTimer = undefined
         openSocket()
-      }, RECONNECT_DELAY_MS)
+      }, reconnectDelayMs(reconnectAttempts))
     }
   }
 
@@ -103,6 +139,22 @@ export function usePassengerTripSocket(tripId: Ref<string>) {
       return
 
     openSocket()
+  }
+
+  // Сеть вернулась или мини-апп вышел из фона — переподключаемся сразу, не
+  // дожидаясь хвоста бэкоффа (в фоне вебвью замораживает таймеры, и без этого
+  // вернувшийся пассажир ждал бы до 30 секунд).
+  function reconnectNow() {
+    if (intentionallyClosed || !tripId.value || canReuseSocket())
+      return
+
+    clearReconnectTimer()
+    openSocket()
+  }
+
+  function handleVisibilityChange() {
+    if (document.visibilityState === 'visible')
+      reconnectNow()
   }
 
   function close() {
@@ -126,11 +178,21 @@ export function usePassengerTripSocket(tripId: Ref<string>) {
     if (nextTripId) {
       intentionallyClosed = false
       reconnectAttempts = 0
+      toastShown = false
       connect()
     }
   }, { immediate: true })
 
-  onBeforeUnmount(close)
+  onMounted(() => {
+    window.addEventListener('online', reconnectNow)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+  })
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('online', reconnectNow)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    close()
+  })
 
   return {
     close,

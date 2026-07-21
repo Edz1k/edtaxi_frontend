@@ -423,6 +423,21 @@ export const useTripsStore = defineStore('trips', () => {
     routeChangeOutcome.value = null
   }
 
+  // Первичный канал обновлений — WebSocket (usePassengerTripSocket): он
+  // приносит trip_status и driver_location сразу. Поллинг — только страховка на
+  // случай мёртвого сокета, поэтому интервал редкий.
+  //
+  // Раньше здесь стояло 3 секунды, и это был самый массовый запрос к БД во всей
+  // системе: каждая активная поездка × 20 запросов в минуту, при этом WS уже
+  // доставлял то же самое. Гейта «сокет жив» тут по-прежнему нет намеренно —
+  // проверять readyState через стор значило бы связать стор с композаблом; при
+  // 15 секундах избыточность стоит дёшево.
+  //
+  // ⚠️ Растягивать интервал дальше можно только вместе с реконнектом сокета:
+  // именно потому, что тот больше не сдаётся после трёх попыток, редкий
+  // поллинг безопасен.
+  const ACTIVE_TRIP_POLL_MS = 15_000
+
   function startActiveTripPolling() {
     if (typeof window === 'undefined' || !activeTrip.value || activeTripPollingTimer)
       return
@@ -435,7 +450,7 @@ export const useTripsStore = defineStore('trips', () => {
       }
 
       refreshActiveTrip().catch(() => {})
-    }, 3_000)
+    }, ACTIVE_TRIP_POLL_MS)
   }
 
   function startSearchTimer(startedAt = Date.now()) {
