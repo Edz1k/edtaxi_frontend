@@ -8,6 +8,7 @@ import { useToast } from '~/composables/useToast'
 import { tagsForScore } from '~/constants/ratingTags'
 import { formatFare, TARIFF_META } from '~/constants/tariffs'
 import { usePlacesStore } from '~/stores/places'
+import { useSupportStore } from '~/stores/support'
 import { useTripChatStore } from '~/stores/tripChat'
 import { MAX_TRIP_STOPS, useTripsStore } from '~/stores/trips'
 import { coarseEtaSeconds } from '~/utils/eta'
@@ -223,6 +224,32 @@ async function toggleSaveFavorite(event: Event) {
 // ===== Итог завершённой поездки: время пути, стоимость, оценка водителя =====
 
 const toast = useToast()
+
+// «Забыл вещь в машине»: обращение в поддержку с прикреплённой ИМЕННО ЭТОЙ
+// поездкой и шаблонным первым сообщением — агент сразу видит поездку и
+// водителя (бэк отдаёт его в тикете), без расспросов «когда и куда вы ехали».
+const support = useSupportStore()
+const isOpeningLostItem = ref(false)
+
+async function reportLostItem() {
+  const trip = props.activeTrip
+  if (!trip || isOpeningLostItem.value)
+    return
+
+  isOpeningLostItem.value = true
+  try {
+    await support.attachTrip(trip.id, 'passenger', {
+      firstMessage: 'Здравствуйте! Я забыл(а) вещь в машине по этой поездке. Помогите, пожалуйста, связаться с водителем.',
+    })
+    await router.push('/menu/support')
+  }
+  catch {
+    toast.error('Ошибка', 'Не удалось открыть поддержку по поездке.')
+  }
+  finally {
+    isOpeningLostItem.value = false
+  }
+}
 
 function formatClock(value: null | string | undefined) {
   if (!value)
@@ -680,15 +707,19 @@ async function shareTrip() {
          но на завершённой чат уже закрыт на запись — а вспоминают о забытых
          вещах как раз тогда. Телефон водителя пассажиру не показываем
          (приватность), поэтому ведём в поддержку: она видит контакты обеих
-         сторон и связывает их сама. -->
-    <RouterLink
+         сторон и связывает их сама. Кнопка прикрепляет ИМЕННО ЭТУ поездку к
+         обращению и шлёт шаблонное первое сообщение — раньше тикет уходил
+         «в воздух», и поддержка не знала, о какой поездке и водителе речь. -->
+    <button
       v-if="isCompleted && driver"
-      to="/menu/support"
-      class="mt-2 h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98]"
+      :disabled="isOpeningLostItem"
+      class="mt-2 h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98] disabled:opacity-60"
+      type="button"
+      @click="reportLostItem"
     >
       <span class="i-mdi-bag-suitcase text-5" />
-      Забыл вещь в машине
-    </RouterLink>
+      {{ isOpeningLostItem ? 'Открываем поддержку...' : 'Забыл вещь в машине' }}
+    </button>
 
     <!-- Платное ожидание: таймер после прибытия водителя -->
     <div

@@ -50,6 +50,7 @@ declare module 'vue' {
     SupportClientPanel: typeof import('./components/support/SupportClientPanel.vue')['default']
     SupportMessageList: typeof import('./components/support/SupportMessageList.vue')['default']
     SupportReplyForm: typeof import('./components/support/SupportReplyForm.vue')['default']
+    SupportTripModal: typeof import('./components/support/SupportTripModal.vue')['default']
     TariffsSection: typeof import('./components/admin/settings/TariffsSection.vue')['default']
     WebPageShell: typeof import('./components/app/WebPageShell.vue')['default']
   }

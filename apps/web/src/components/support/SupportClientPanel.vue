@@ -2,6 +2,7 @@
 import type { SupportRoom } from '~/types/support'
 import { showErrorToast } from '~/api/errors'
 import { blockUserBySupport } from '~/api/trip-chats'
+import SupportTripModal from '~/components/support/SupportTripModal.vue'
 import { formatTime, shortId } from '~/utils/format'
 import {
   isAssignedTo,
@@ -33,6 +34,11 @@ const primary = computed(() => props.room?.participant_name || typeLabel.value)
 const secondary = computed(() => props.room?.participant_phone || props.room?.passenger_id || props.room?.id || '')
 // Прикреплённая к обращению поездка — чтобы агент видел, о какой поездке речь.
 const attachedTrip = computed(() => props.room?.trip ?? null)
+// Полная деталь поездки (участники с контактами) — по клику, модалкой.
+const isTripModalOpen = ref(false)
+watch(() => props.room?.id, () => {
+  isTripModalOpen.value = false
+})
 
 const statusToneClass = computed(() => {
   if (isClosed.value)
@@ -229,6 +235,42 @@ async function confirmBlock() {
         <span>{{ formatTime(attachedTrip.created_at) }}</span>
         <span>ID {{ shortId(attachedTrip.id) }}</span>
       </div>
+
+      <!-- Водитель поездки (приезжает вместе с тикетом): по «забыл вещь в
+           машине» агенту нужен именно он. Ссылка ведёт в кабинет водителя. -->
+      <RouterLink
+        v-if="attachedTrip.driver?.user_id"
+        class="mt-3 flex items-center justify-between gap-2 rounded-lg bg-white/6 px-2.5 py-2 transition hover:bg-white/10"
+        :to="`/drivers/${attachedTrip.driver.user_id}`"
+      >
+        <div class="min-w-0">
+          <p class="truncate text-xs text-white/80 font-900">
+            {{ attachedTrip.driver.name || 'Водитель' }}
+          </p>
+          <p v-if="attachedTrip.driver.phone" class="mt-0.5 text-[11px] text-white/50 font-800">
+            {{ attachedTrip.driver.phone }}
+          </p>
+          <p v-if="attachedTrip.driver.vehicle" class="mt-0.5 truncate text-[11px] text-white/50 font-800">
+            {{ attachedTrip.driver.vehicle.make }} {{ attachedTrip.driver.vehicle.model }} · {{ attachedTrip.driver.vehicle.plate_number }}
+          </p>
+        </div>
+        <span class="i-mdi-chevron-right shrink-0 text-4 text-white/35" aria-hidden="true" />
+      </RouterLink>
+
+      <button
+        class="mt-2 h-9 w-full flex items-center justify-center gap-1.5 rounded-lg bg-cyan-500/12 text-xs text-cyan-200 font-900 transition hover:bg-cyan-500/20"
+        type="button"
+        @click="isTripModalOpen = true"
+      >
+        <span class="i-mdi-open-in-new text-3.5" aria-hidden="true" />
+        Открыть поездку
+      </button>
     </div>
+
+    <SupportTripModal
+      v-if="isTripModalOpen && attachedTrip"
+      :trip-id="attachedTrip.id"
+      @close="isTripModalOpen = false"
+    />
   </aside>
 </template>

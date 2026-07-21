@@ -294,6 +294,19 @@ const isActiveTripFinished = computed(() => {
 // или «Оплатить заказ»), и закрывается, когда оплата подтвердилась — стор
 // очищает prepayUrl при переходе поездки в searching.
 const isAwaitingPayment = computed(() => trips.activeTrip?.status === 'awaiting_payment')
+// Постоплата: поездка завершена, а оплата AP/GP/картой делается СЕЙЧАС по
+// итоговой сумме. Кнопка прячется, когда платить уже не за что: retryPrepay
+// вернул null (поездка рассчитана / переведена на наличные — бэкенд 409) либо
+// payment_method сменился на cash при рефетче.
+const isPostpaySettled = ref(false)
+const isPostpayDue = computed(() =>
+  trips.activeTrip?.status === 'completed'
+  && trips.activeTrip?.payment_method === 'prepaid'
+  && !isPostpaySettled.value,
+)
+watch(() => trips.activeTrip?.id, () => {
+  isPostpaySettled.value = false
+})
 const isPrepayFrameOpen = ref(false)
 const isRequestingPrepay = ref(false)
 
@@ -317,6 +330,9 @@ watch(() => trips.prepayUrl, (url) => {
 
 function closePrepayFrame() {
   isPrepayFrameOpen.value = false
+  // Ссылка одноразовая по смыслу: следующий тап должен получить свежую (у
+  // постоплаты сумма фиксируется на момент выписки платежа).
+  trips.prepayUrl = ''
   trips.refreshActiveTrip().catch(() => {})
 }
 
@@ -330,8 +346,11 @@ async function openPrepay() {
   isRequestingPrepay.value = true
   try {
     // retryPrepay кладёт новую ссылку в prepayUrl — watch выше сам откроет
-    // фрейм или внешний браузер в зависимости от prepaySource.
-    await trips.retryPrepay()
+    // фрейм или внешний браузер в зависимости от prepaySource. null без
+    // ошибки — платить уже не за что (оплачено/наличные), прячем кнопку.
+    const url = await trips.retryPrepay()
+    if (!url && isPostpayDue.value)
+      isPostpaySettled.value = true
   }
   catch {}
   finally {
@@ -628,16 +647,17 @@ function onHandleKeydown(event: KeyboardEvent) {
                 {{ finishedButtonLabel }}
               </button>
 
-              <!-- Предоплата не подтверждена: открыть оплату повторно -->
+              <!-- Оплата на платёжной странице: постоплата завершённой поездки
+                   (итоговая сумма) или легаси-предоплата в awaiting_payment. -->
               <button
-                v-if="isAwaitingPayment"
+                v-if="isAwaitingPayment || isPostpayDue"
                 :disabled="isRequestingPrepay"
                 class="mt-3 h-13 w-full flex items-center justify-center gap-2 rounded-[1.35rem] bg-main-500 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.26)] transition active:scale-[0.99] disabled:opacity-60"
                 type="button"
                 @click="openPrepay"
               >
                 <span class="i-mdi-credit-card-fast-outline text-5" aria-hidden="true" />
-                {{ isRequestingPrepay ? 'Готовим оплату...' : 'Оплатить заказ' }}
+                {{ isRequestingPrepay ? 'Готовим оплату...' : (isPostpayDue ? 'Оплатить поездку' : 'Оплатить заказ') }}
               </button>
 
               <button
