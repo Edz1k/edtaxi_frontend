@@ -5,6 +5,7 @@ import { useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const toast = useToast()
+const { t } = useI18n()
 
 definePage({
   meta: {
@@ -14,7 +15,7 @@ definePage({
 })
 
 useHead({
-  title: 'Аккаунт удалён | EdTaxi Driver',
+  title: () => `${t('deleted.title')} | Telegram Taxi Driver`,
 })
 
 onMounted(() => {
@@ -34,7 +35,7 @@ async function createAgain() {
     await router.replace('/map')
   }
   catch (e: any) {
-    toast.error('Не получилось', e?.message || 'Попробуйте позже или обратитесь в поддержку.')
+    toast.error(t('profile.deleteFailTitle'), e?.message || t('profile.deleteFailText'))
   }
   finally {
     isCreating.value = false
@@ -54,10 +55,10 @@ async function signOut() {
         <span class="i-mdi-account-off-outline text-8" />
       </span>
       <h1 class="mt-5 text-2xl font-950 leading-tight">
-        Аккаунт удалён
+        {{ t('deleted.title') }}
       </h1>
       <p class="mt-3 text-sm app-muted leading-6">
-        Вы удалили аккаунт водителя. Можно создать его заново — рейтинг и история сохранятся.
+        {{ t('deleted.textDriver') }}
       </p>
 
       <button
@@ -66,14 +67,14 @@ async function signOut() {
         type="button"
         @click="createAgain"
       >
-        {{ isCreating ? 'Создаём...' : 'Создать аккаунт' }}
+        {{ isCreating ? t('deleted.creating') : t('deleted.create') }}
       </button>
       <button
         class="mt-3 h-12 w-full flex items-center justify-center rounded-2xl app-chip text-sm text-slate-300 font-900 transition active:scale-[0.98] light:text-slate-600"
         type="button"
         @click="signOut"
       >
-        Выйти
+        {{ t('menu.logout') }}
       </button>
     </section>
   </main>

@@ -375,3 +375,106 @@ slots:
   insurance: Insurance policy
   vin: VIN number
   secondHelmet: Second helmet for the passenger
+earn:
+  title: Earnings
+  totalEarned: Total earned
+  cash: Cash
+  card: Card
+  trips: Trips
+  avgFare: Average fare
+  refreshing: Refreshing...
+  refresh: Refresh
+  balance: Balance
+  debt: 'Cash trip debt: {sum}'
+  debtBlocking: Debt exceeded {limit} — going online is blocked. Top up your balance to get back online (the debt clears automatically).
+  debtOk: The debt doesn’t block going online yet, but above {limit} the line will be blocked. It clears automatically on your next top-up.
+  anyBalance: You can go online with any balance.
+  topUp: Top up
+  topUpAria: Top-up amount
+  payout: Withdrawal
+  payoutMin: Minimum amount — {min}. An administrator reviews the request.
+  withdraw: Withdraw
+  notEnough: Not enough funds to withdraw
+  amount: Amount
+  destination: Details (card or IBAN)
+  destPlaceholder: E.g. 4400 1234 5678 9012
+  createRequest: Create request
+  payoutRequests: Withdrawal requests
+  noDestination: No details provided
+  rejectionReason: 'Rejection reason: {reason}'
+  payoutCreatedTitle: Request created
+  payoutCreatedText: We’ll transfer the money after reviewing the request.
+  pending: Under review
+  paid: Paid
+  rejected: Rejected
+login:
+  driverTitle: Driver sign in
+  driverLead: Enter your phone number to get a confirmation code.
+  adminAccess: Access to the driver app is granted by an administrator
+  sendingCode: Sending code...
+  getCode: Get the code
+  codeTitle: Enter the code
+  codeSent: We sent the code {via} to {phone}
+  viaWhatsapp: via WhatsApp
+  viaSms: via SMS
+  checkingCode: Checking code...
+  signIn: Sign in
+  changePhone: Change phone number
+  codeNotReceived: If the code didn’t arrive, check the phone number
+  pickAccountTitle: Choose account
+  pickAccountLead: Choose an account you’ve signed in with before, or sign in to another by phone number.
+  loggingIn: Signing in...
+  viaTelegram: Sign in with Telegram
+  otherAccount: Sign in to another account by number
+  confirmPhoneTitle: Confirm your number
+  phoneRequiredDriver: 'A phone number is required: passengers, the park and support need it to reach you.'
+  confirming: Confirming...
+  sharePhone: Share number from Telegram
+  manualPhone: Enter the number manually
+  confirm: Confirm
+  switchAccount: Log out and switch account
+deleted:
+  title: Account deleted
+  textDriver: You deleted your driver account. You can create it again — rating and history will be kept.
+  creating: Creating...
+  create: Create account
+tripChat:
+  titleDriver: Chat with passenger
+  passenger: Passenger
+  backAriaDriver: Back to the order
+  open: Trip chat
+  closed: Trip finished — chat closed
+  emptyDriver: Write to the passenger — for example, ask where they are.
+  msgAriaDriver: Message to the passenger
+  toMap: To the map
+bonus:
+  title: Bonuses
+  subtitle: Telegram Taxi loyalty program
+  loadFail: Failed to load bonuses.
+  loadFailFull: Failed to load bonuses. Pull down or come back later.
+  balance: Balance
+  balanceValue: '{n} bonuses'
+  notTenge: Platform bonuses — not tenge
+  perTrip: +{n} bonuses for every ride
+  myCode: My code
+  share: Share
+  copied: Copied
+  copy: Copy code
+  invited: Invited {count} of {limit} · +{reward} bonuses per friend
+  friendCode: Enter a friend’s code
+  friendCodeAria: Friend’s code
+  codePlaceholder: E.g. ED7X4K
+  redeem: Apply
+  redeemed: +{reward} bonuses credited
+  redeemFail: Failed to apply the code.
+  friendReward: You’ll get +{n} bonuses for a friend’s code
+  promos: Promotions
+  noPromos: No active promotions yet — check back later.
+  promoReward: +{n} bonuses
+  promoProgress: '{done} / {total} orders'
+  until: until {date}
+  autoCredit: Bonuses are credited automatically once you meet the condition.
+  shareText: Let’s ride with Telegram Taxi! Open the link and sign in — you’ll get +{reward} bonuses on your first bill 🚕
+  milestone: +{n} bonuses for every {every} orders
+  manualAward: You’ll get the reward after the promotion ends — the organizer sends it.
+  shareTextDriver: Earn with Telegram Taxi! Open the link and sign in — you’ll get +{reward} bonuses 🚕

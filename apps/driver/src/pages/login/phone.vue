@@ -13,6 +13,7 @@ import { useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const { shouldShake, shake } = useShakeAnimation()
+const { t } = useI18n()
 
 // share — главный экран с кнопкой «Поделиться номером»;
 // manual — ручной ввод номера; code — подтверждение OTP.
@@ -33,7 +34,7 @@ definePage({
 })
 
 useHead({
-  title: 'Подтверждение номера | Telegram Taxi Driver',
+  title: () => `${t('login.confirmPhoneTitle')} | Telegram Taxi Driver`,
 })
 
 onMounted(() => {
@@ -103,9 +104,9 @@ async function logoutToLogin() {
 
 <template>
   <AuthScreen
-    description="Номер телефона обязателен: он нужен пассажирам, парку и поддержке для связи с вами."
+    :description="t('login.phoneRequiredDriver')"
     icon="i-mdi-phone-check"
-    title="Подтвердите номер"
+    :title="t('login.confirmPhoneTitle')"
   >
     <template v-if="step !== 'share'" #before>
       <button
@@ -128,7 +129,7 @@ async function logoutToLogin() {
         @click="shareTelegramContact()"
       >
         <span class="i-mdi-send mr-2 text-5" />
-        {{ auth.isLoading ? 'Подтверждаем...' : 'Поделиться номером из Telegram' }}
+        {{ auth.isLoading ? t('login.confirming') : t('login.sharePhone') }}
       </button>
 
       <button
@@ -136,7 +137,7 @@ async function logoutToLogin() {
         type="button"
         @click="step = 'manual'"
       >
-        Ввести номер вручную
+        {{ t('login.manualPhone') }}
       </button>
     </div>
 
@@ -148,8 +149,8 @@ async function logoutToLogin() {
       <AuthButton
         :disabled="auth.isLoading || !canSubmitPhone"
         :loading="auth.isLoading"
-        loading-text="Отправляем код..."
-        text="Получить код"
+        :loading-text="t('login.sendingCode')"
+        :text="t('login.getCode')"
       />
     </form>
 
@@ -161,14 +162,14 @@ async function logoutToLogin() {
         :disabled="auth.isLoading || !canSubmitCode"
         icon="i-mdi-check"
         :loading="auth.isLoading"
-        loading-text="Проверяем код..."
-        text="Подтвердить"
+        :loading-text="t('login.checkingCode')"
+        :text="t('login.confirm')"
       />
     </form>
 
     <template #footer>
       <button class="text-xs app-faint underline" type="button" @click="logoutToLogin">
-        Выйти и сменить аккаунт
+        {{ t('login.switchAccount') }}
       </button>
     </template>
   </AuthScreen>

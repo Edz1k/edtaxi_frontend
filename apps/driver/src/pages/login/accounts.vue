@@ -8,6 +8,7 @@ import { SAVED_ACCOUNTS_KEY, useAuthStore } from '~/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const accounts = ref<SavedAccount[]>([])
 const canUseTelegram = computed(() => isTelegramWebApp())
@@ -21,7 +22,7 @@ definePage({
 })
 
 useHead({
-  title: 'Выбор аккаунта | Telegram Taxi Driver',
+  title: () => `${t('login.pickAccountTitle')} | Telegram Taxi Driver`,
 })
 
 onMounted(() => {
@@ -60,9 +61,9 @@ function loginWithNewAccount() {
 
 <template>
   <AuthScreen
-    description="Выберите аккаунт, под которым уже входили, или войдите в другой по номеру телефона."
+    :description="t('login.pickAccountLead')"
     icon="i-mdi-account-switch"
-    title="Выбор аккаунта"
+    :title="t('login.pickAccountTitle')"
   >
     <div class="mt-8 space-y-5">
       <AuthError :message="auth.errorMessage" />
@@ -106,7 +107,7 @@ function loginWithNewAccount() {
         @click="loginViaTelegram"
       >
         <span class="i-mdi-send mr-2 text-5" />
-        {{ auth.isLoading ? 'Входим...' : 'Войти через Telegram' }}
+        {{ auth.isLoading ? t('login.loggingIn') : t('login.viaTelegram') }}
       </button>
 
       <button
@@ -114,7 +115,7 @@ function loginWithNewAccount() {
         type="button"
         @click="loginWithNewAccount"
       >
-        Войти в другой аккаунт по номеру
+        {{ t('login.otherAccount') }}
       </button>
     </div>
   </AuthScreen>

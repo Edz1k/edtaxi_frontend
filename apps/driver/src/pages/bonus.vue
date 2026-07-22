@@ -8,6 +8,7 @@ import { showErrorToast } from '~/api/errors'
 import { TG_BOT_USERNAME } from '~/constants/telegram'
 
 const router = useRouter()
+const { t, locale } = useI18n()
 
 const overview = ref<BonusOverview | null>(null)
 const promotions = ref<BonusPromotion[]>([])
@@ -26,7 +27,7 @@ definePage({
 })
 
 useHead({
-  title: 'Бонусы | Telegram Taxi',
+  title: () => `${t('bonus.title')} | Telegram Taxi`,
 })
 
 onMounted(load)
@@ -46,7 +47,7 @@ async function load() {
     promotions.value = promos.promotions
   }
   catch (error) {
-    showErrorToast(error, 'Не удалось загрузить бонусы.')
+    showErrorToast(error, t('bonus.loadFail'))
   }
   finally {
     isLoading.value = false
@@ -54,7 +55,7 @@ async function load() {
 }
 
 function formatBonus(value: number) {
-  return Math.floor(value).toLocaleString('ru-RU')
+  return Math.floor(value).toLocaleString(locale.value)
 }
 
 // Лимит приглашений фиксирован на бэке (3): invited + left в сумме дают его.
@@ -76,7 +77,7 @@ function shareCode() {
   if (!overview.value)
     return
 
-  const text = `Зарабатывай с Telegram Taxi! Открой ссылку и войди — получишь +${formatBonus(overview.value.invitee_reward)} бонусов на счёт 🚕`
+  const text = t('bonus.shareTextDriver', { reward: formatBonus(overview.value.invitee_reward) })
   shareReferral(TG_BOT_USERNAME, overview.value.referral_code, text)
 }
 
@@ -89,12 +90,12 @@ async function redeem() {
   try {
     await redeemReferralCode(code)
     // Сумму фиксируем до перезагрузки обзора — после неё форма скрывается.
-    redeemSuccess.value = `+${formatBonus(overview.value?.invitee_reward ?? 0)} бонусов начислено`
+    redeemSuccess.value = t('bonus.redeemed', { reward: formatBonus(overview.value?.invitee_reward ?? 0) })
     friendCode.value = ''
     await load()
   }
   catch (error) {
-    showErrorToast(error, 'Не удалось применить код.')
+    showErrorToast(error, t('bonus.redeemFail'))
   }
   finally {
     isRedeeming.value = false
@@ -102,7 +103,7 @@ async function redeem() {
 }
 
 function formatDeadline(value: string) {
-  return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(new Date(value))
+  return new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'long' }).format(new Date(value))
 }
 
 function promoProgress(promo: BonusPromotion) {
@@ -124,7 +125,7 @@ async function joinPromo(promo: BonusPromotion) {
     promotions.value = promos.promotions
   }
   catch (error) {
-    showErrorToast(error, 'Не удалось вступить в акцию.')
+    showErrorToast(error, t('parks.joinPromoFail'))
   }
   finally {
     joiningPromoId.value = ''
@@ -138,7 +139,7 @@ async function joinPromo(promo: BonusPromotion) {
       <!-- Header -->
       <div class="mb-4 flex items-center gap-2">
         <button
-          aria-label="Назад"
+          :aria-label="t('nav.back')"
           class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full app-chip transition active:scale-95"
           type="button"
           @click="router.back()"
@@ -147,10 +148,10 @@ async function joinPromo(promo: BonusPromotion) {
         </button>
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-900">
-            Бонусы
+            {{ t('bonus.title') }}
           </p>
           <p class="text-xs app-muted font-700">
-            Программа лояльности Telegram Taxi
+            {{ t('bonus.subtitle') }}
           </p>
         </div>
       </div>
@@ -165,24 +166,24 @@ async function joinPromo(promo: BonusPromotion) {
         <!-- Баланс -->
         <section class="border border-main-500/20 rounded-3xl app-card p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
           <p class="text-xs app-muted font-800 uppercase">
-            Баланс
+            {{ t('bonus.balance') }}
           </p>
           <h1 class="mt-2 text-4xl text-main-200 font-950 light:text-main-700">
-            {{ formatBonus(overview.balance) }} бонусов
+            {{ t('bonus.balanceValue', { n: formatBonus(overview.balance) }) }}
           </h1>
           <p class="mt-1 text-sm app-muted">
-            Бонусы платформы — не тенге
+            {{ t('bonus.notTenge') }}
           </p>
           <p class="mt-3 rounded-2xl app-card px-4 py-2.5 text-xs text-main-100 font-800 light:text-main-700">
             <span class="i-mdi-star-four-points mr-1 inline-block align-middle text-3.5 app-accent" />
-            +{{ formatBonus(overview.milestone_bonus) }} бонусов за каждые {{ overview.milestone_every }} заказов
+            {{ t('bonus.milestone', { n: formatBonus(overview.milestone_bonus), every: overview.milestone_every }) }}
           </p>
         </section>
 
         <!-- Мой код -->
         <section class="mt-6">
           <h2 class="text-xs app-muted font-800 uppercase">
-            Мой код
+            {{ t('bonus.myCode') }}
           </h2>
           <div class="mt-3 rounded-3xl app-card p-4">
             <p class="select-all rounded-2xl app-input-surface py-3 text-center text-2xl font-950 tracking-[0.18em] font-mono">
@@ -196,7 +197,7 @@ async function joinPromo(promo: BonusPromotion) {
                 @click="shareCode"
               >
                 <span class="i-mdi-share-variant text-4.5" />
-                Поделиться
+                {{ t('bonus.share') }}
               </button>
               <button
                 class="h-12 flex items-center justify-center gap-1.5 rounded-2xl app-chip text-sm font-900 transition active:scale-[0.98]"
@@ -204,12 +205,12 @@ async function joinPromo(promo: BonusPromotion) {
                 @click="copyCode"
               >
                 <span :class="copied ? 'i-mdi-check text-emerald-300' : 'i-mdi-content-copy'" class="text-4.5" />
-                {{ copied ? 'Скопировано' : 'Скопировать код' }}
+                {{ copied ? t('bonus.copied') : t('bonus.copy') }}
               </button>
             </div>
 
             <p class="mt-3 text-xs app-faint leading-4">
-              Приглашено {{ overview.invited_count }} из {{ inviteLimit }} · за каждого друга +{{ formatBonus(overview.owner_reward) }} бонусов
+              {{ t('bonus.invited', { count: overview.invited_count, limit: inviteLimit, reward: formatBonus(overview.owner_reward) }) }}
             </p>
           </div>
         </section>
@@ -223,38 +224,38 @@ async function joinPromo(promo: BonusPromotion) {
         <!-- Ввести код друга -->
         <section v-if="!overview.code_redeemed" class="mt-6">
           <h2 class="text-xs app-muted font-800 uppercase">
-            Ввести код друга
+            {{ t('bonus.friendCode') }}
           </h2>
           <form class="grid grid-cols-[1fr_auto] mt-3 gap-2" @submit.prevent="redeem">
             <input
               v-model="friendCode"
-              aria-label="Код друга"
+              :aria-label="t('bonus.friendCodeAria')"
               class="h-13 min-w-0 border app-border rounded-2xl app-card px-4 text-sm uppercase outline-none transition focus:border-main-400/60"
               maxlength="12"
               name="friend_code"
-              placeholder="Например, ED7X4K"
+              :placeholder="t('bonus.codePlaceholder')"
             >
             <button
               :disabled="!friendCode.trim() || isRedeeming"
               class="h-13 rounded-2xl bg-main-500 px-5 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
               type="submit"
             >
-              {{ isRedeeming ? '...' : 'Применить' }}
+              {{ isRedeeming ? '...' : t('bonus.redeem') }}
             </button>
           </form>
           <p class="mt-2 text-xs app-faint">
-            За код друга вы получите +{{ formatBonus(overview.invitee_reward) }} бонусов
+            {{ t('bonus.friendReward', { n: formatBonus(overview.invitee_reward) }) }}
           </p>
         </section>
 
         <!-- Акции -->
         <section class="mt-6">
           <h2 class="text-xs app-muted font-800 uppercase">
-            Акции
+            {{ t('bonus.promos') }}
           </h2>
 
           <p v-if="!promotions.length" class="mt-3 rounded-3xl app-card p-6 text-center text-sm app-muted">
-            Активных акций пока нет — загляните позже.
+            {{ t('bonus.noPromos') }}
           </p>
 
           <div v-else class="mt-3 space-y-3">
@@ -271,7 +272,7 @@ async function joinPromo(promo: BonusPromotion) {
                   {{ promo.title }}
                 </p>
                 <span class="shrink-0 rounded-full bg-main-500/14 px-3 py-1.5 text-xs text-main-200 font-900 light:text-main-700">
-                  +{{ formatBonus(promo.reward) }} бонусов
+                  {{ t('bonus.promoReward', { n: formatBonus(promo.reward) }) }}
                 </span>
               </div>
               <p v-if="promo.description" class="mt-1 text-xs app-muted leading-4">
@@ -290,20 +291,20 @@ async function joinPromo(promo: BonusPromotion) {
                 type="button"
                 @click="joinPromo(promo)"
               >
-                {{ joiningPromoId === promo.id ? 'Подключаем...' : 'Участвовать' }}
+                {{ joiningPromoId === promo.id ? t('parks.joining') : t('parks.join') }}
               </button>
               <template v-else>
                 <div class="mt-3 h-1.5 overflow-hidden rounded-full app-chip">
                   <div class="h-full rounded-full bg-main-400" :style="{ width: `${promoProgress(promo)}%` }" />
                 </div>
                 <div class="mt-2 flex items-center justify-between text-xs font-700">
-                  <span class="app-muted">{{ promo.my_trips }} / {{ promo.target_trips }} заказов</span>
-                  <span class="app-faint">до {{ formatDeadline(promo.ends_at) }}</span>
+                  <span class="app-muted">{{ t('bonus.promoProgress', { done: promo.my_trips, total: promo.target_trips }) }}</span>
+                  <span class="app-faint">{{ t('bonus.until', { date: formatDeadline(promo.ends_at) }) }}</span>
                 </div>
                 <p class="mt-1.5 text-[11px] app-faint leading-4">
                   {{ promo.award_mode === 'manual'
-                    ? 'Награду получите после завершения акции — её отправит организатор.'
-                    : 'Бонусы начислятся автоматически при выполнении условия.' }}
+                    ? t('bonus.manualAward')
+                    : t('bonus.autoCredit') }}
                 </p>
               </template>
             </article>
@@ -312,7 +313,7 @@ async function joinPromo(promo: BonusPromotion) {
       </template>
 
       <p v-else class="rounded-3xl app-card p-6 text-center text-sm app-muted">
-        Не удалось загрузить бонусы. Потяните вниз или зайдите позже.
+        {{ t('bonus.loadFailFull') }}
       </p>
     </section>
   </main>

@@ -375,3 +375,106 @@ slots:
   insurance: Сақтандыру полисі
   vin: VIN нөмірі
   secondHelmet: Жолаушыға арналған екінші шлем
+earn:
+  title: Табыс
+  totalEarned: Барлығы табылды
+  cash: Қолма-қол
+  card: Картамен
+  trips: Сапар
+  avgFare: Орташа чек
+  refreshing: Жаңартудамыз...
+  refresh: Жаңарту
+  balance: Баланс
+  debt: 'Қолма-қол сапарлар бойынша қарыз: {sum}'
+  debtBlocking: Қарыз {limit} асты — желіге шығу бұғатталды. Желіге оралу үшін балансты толтырыңыз (қарыз автоматты түрде шешіледі).
+  debtOk: Қарыз әзірге желіге шығуға кедергі емес, бірақ {limit} асса, желі бұғатталады. Келесі толтыруда автоматты түрде шешіледі.
+  anyBalance: Желіге кез келген баланспен шығуға болады.
+  topUp: Толтыру
+  topUpAria: Толтыру сомасы
+  payout: Қаражатты шығару
+  payoutMin: Ең аз сома — {min}. Өтінімді әкімші тексереді.
+  withdraw: Шығару
+  notEnough: Шығаруға қаражат жеткіліксіз
+  amount: Сома
+  destination: Реквизиттер (карта немесе IBAN)
+  destPlaceholder: Мысалы, 4400 1234 5678 9012
+  createRequest: Өтінім жасау
+  payoutRequests: Шығару өтінімдері
+  noDestination: Реквизиттер көрсетілмеген
+  rejectionReason: 'Бас тарту себебі: {reason}'
+  payoutCreatedTitle: Өтінім жасалды
+  payoutCreatedText: Өтінімді тексергеннен кейін ақшаны аударамыз.
+  pending: Қаралуда
+  paid: Төленді
+  rejected: Қабылданбады
+login:
+  driverTitle: Жүргізуші кірісі
+  driverLead: Растау кодын алу үшін телефон нөмірін енгізіңіз.
+  adminAccess: Жүргізуші қолданбасына рұқсатты әкімші береді
+  sendingCode: Код жіберудеміз...
+  getCode: Код алу
+  codeTitle: Кодты енгізіңіз
+  codeSent: Кодты {via} {phone} нөміріне жібердік
+  viaWhatsapp: WhatsApp-та
+  viaSms: SMS арқылы
+  checkingCode: Кодты тексерудеміз...
+  signIn: Кіру
+  changePhone: Телефон нөмірін өзгерту
+  codeNotReceived: Код келмесе, телефон нөмірін тексеріңіз
+  pickAccountTitle: Аккаунт таңдау
+  pickAccountLead: Бұрын кірген аккаунтты таңдаңыз немесе нөмір арқылы басқасына кіріңіз.
+  loggingIn: Кірудеміз...
+  viaTelegram: Telegram арқылы кіру
+  otherAccount: Нөмір арқылы басқа аккаунтқа кіру
+  confirmPhoneTitle: Нөмірді растаңыз
+  phoneRequiredDriver: 'Телефон нөмірі міндетті: ол жолаушыларға, паркке және қолдау қызметіне сізбен байланысу үшін керек.'
+  confirming: Растаудамыз...
+  sharePhone: Telegram-нан нөмірмен бөлісу
+  manualPhone: Нөмірді қолмен енгізу
+  confirm: Растау
+  switchAccount: Шығып, аккаунтты ауыстыру
+deleted:
+  title: Аккаунт жойылды
+  textDriver: Жүргізуші аккаунтын жойдыңыз. Оны қайта құруға болады — рейтинг пен тарих сақталады.
+  creating: Құрудамыз...
+  create: Аккаунт құру
+tripChat:
+  titleDriver: Жолаушымен чат
+  passenger: Жолаушы
+  backAriaDriver: Тапсырысқа оралу
+  open: Сапар чаты
+  closed: Сапар аяқталды — чат жабық
+  emptyDriver: Жолаушыға жазыңыз — мысалы, қай жерде екенін нақтылаңыз.
+  msgAriaDriver: Жолаушыға хабарлама
+  toMap: Картаға
+bonus:
+  title: Бонустар
+  subtitle: Telegram Taxi адалдық бағдарламасы
+  loadFail: Бонустарды жүктеу сәтсіз аяқталды.
+  loadFailFull: Бонустарды жүктеу сәтсіз аяқталды. Төмен тартыңыз немесе кейінірек кіріңіз.
+  balance: Баланс
+  balanceValue: '{n} бонус'
+  notTenge: Платформа бонустары — теңге емес
+  perTrip: Әр сапар үшін +{n} бонус
+  myCode: Менің кодым
+  share: Бөлісу
+  copied: Көшірілді
+  copy: Кодты көшіру
+  invited: '{limit} ішінен {count} шақырылды · әр дос үшін +{reward} бонус'
+  friendCode: Дос кодын енгізу
+  friendCodeAria: Дос коды
+  codePlaceholder: Мысалы, ED7X4K
+  redeem: Қолдану
+  redeemed: +{reward} бонус есептелді
+  redeemFail: Кодты қолдану сәтсіз аяқталды.
+  friendReward: Дос коды үшін +{n} бонус аласыз
+  promos: Акциялар
+  noPromos: Әзірге белсенді акциялар жоқ — кейінірек кіріңіз.
+  promoReward: +{n} бонус
+  promoProgress: '{done} / {total} тапсырыс'
+  until: '{date} дейін'
+  autoCredit: Шарт орындалған соң бонустар автоматты түрде есептеледі.
+  shareText: Telegram Taxi-мен жүрейік! Сілтемені ашып кір — алғашқы шотқа +{reward} бонус аласың 🚕
+  milestone: Әр {every} тапсырыс үшін +{n} бонус
+  manualAward: Сыйақыны акция аяқталған соң аласыз — оны ұйымдастырушы жібереді.
+  shareTextDriver: Telegram Taxi-мен таб! Сілтемені ашып кір — шотыңа +{reward} бонус аласың 🚕

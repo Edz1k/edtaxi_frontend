@@ -375,3 +375,106 @@ slots:
   insurance: Страховой полис
   vin: VIN-номер
   secondHelmet: Второй шлем для пассажира
+earn:
+  title: Заработок
+  totalEarned: Всего заработано
+  cash: Наличными
+  card: Картой
+  trips: Поездок
+  avgFare: Средний чек
+  refreshing: Обновляем...
+  refresh: Обновить
+  balance: Баланс
+  debt: 'Долг по наличным поездкам: {sum}'
+  debtBlocking: Долг превысил {limit} — выход на линию заблокирован. Пополните баланс, чтобы вернуться на линию (долг спишется автоматически).
+  debtOk: Долг пока не мешает выходить на линию, но при превышении {limit} линия заблокируется. Спишется автоматически при следующем пополнении.
+  anyBalance: Выходить на линию можно с любым балансом.
+  topUp: Пополнить
+  topUpAria: Сумма пополнения
+  payout: Вывод средств
+  payoutMin: Минимальная сумма — {min}. Заявку проверит администратор.
+  withdraw: Вывести
+  notEnough: Недостаточно средств для вывода
+  amount: Сумма
+  destination: Реквизиты (карта или IBAN)
+  destPlaceholder: Например, 4400 1234 5678 9012
+  createRequest: Создать заявку
+  payoutRequests: Заявки на вывод
+  noDestination: Реквизиты не указаны
+  rejectionReason: 'Причина отказа: {reason}'
+  payoutCreatedTitle: Заявка создана
+  payoutCreatedText: Мы переведём деньги после проверки заявки.
+  pending: На рассмотрении
+  paid: Выплачено
+  rejected: Отклонено
+login:
+  driverTitle: Вход водителя
+  driverLead: Введите номер телефона, чтобы получить код подтверждения.
+  adminAccess: Доступ к водительскому приложению выдаёт администратор
+  sendingCode: Отправляем код...
+  getCode: Получить код
+  codeTitle: Введите код
+  codeSent: Мы отправили код {via} на номер {phone}
+  viaWhatsapp: в WhatsApp
+  viaSms: по SMS
+  checkingCode: Проверяем код...
+  signIn: Войти
+  changePhone: Изменить номер телефона
+  codeNotReceived: Если код не пришел, проверьте номер телефона
+  pickAccountTitle: Выбор аккаунта
+  pickAccountLead: Выберите аккаунт, под которым уже входили, или войдите в другой по номеру телефона.
+  loggingIn: Входим...
+  viaTelegram: Войти через Telegram
+  otherAccount: Войти в другой аккаунт по номеру
+  confirmPhoneTitle: Подтвердите номер
+  phoneRequiredDriver: 'Номер телефона обязателен: он нужен пассажирам, парку и поддержке для связи с вами.'
+  confirming: Подтверждаем...
+  sharePhone: Поделиться номером из Telegram
+  manualPhone: Ввести номер вручную
+  confirm: Подтвердить
+  switchAccount: Выйти и сменить аккаунт
+deleted:
+  title: Аккаунт удалён
+  textDriver: Вы удалили аккаунт водителя. Можно создать его заново — рейтинг и история сохранятся.
+  creating: Создаём...
+  create: Создать аккаунт
+tripChat:
+  titleDriver: Чат с пассажиром
+  passenger: Пассажир
+  backAriaDriver: Назад к заказу
+  open: Чат поездки
+  closed: Поездка завершена — чат закрыт
+  emptyDriver: Напишите пассажиру — например, уточните, где он находится.
+  msgAriaDriver: Сообщение пассажиру
+  toMap: К карте
+bonus:
+  title: Бонусы
+  subtitle: Программа лояльности Telegram Taxi
+  loadFail: Не удалось загрузить бонусы.
+  loadFailFull: Не удалось загрузить бонусы. Потяните вниз или зайдите позже.
+  balance: Баланс
+  balanceValue: '{n} бонусов'
+  notTenge: Бонусы платформы — не тенге
+  perTrip: +{n} бонусов за каждую поездку
+  myCode: Мой код
+  share: Поделиться
+  copied: Скопировано
+  copy: Скопировать код
+  invited: Приглашено {count} из {limit} · за каждого друга +{reward} бонусов
+  friendCode: Ввести код друга
+  friendCodeAria: Код друга
+  codePlaceholder: Например, ED7X4K
+  redeem: Применить
+  redeemed: +{reward} бонусов начислено
+  redeemFail: Не удалось применить код.
+  friendReward: За код друга вы получите +{n} бонусов
+  promos: Акции
+  noPromos: Активных акций пока нет — загляните позже.
+  promoReward: +{n} бонусов
+  promoProgress: '{done} / {total} заказов'
+  until: до {date}
+  autoCredit: Бонусы начислятся автоматически, как только выполните условие.
+  shareText: Поехали с Telegram Taxi! Открой ссылку и войди — получишь +{reward} бонусов на первый счёт 🚕
+  milestone: +{n} бонусов за каждые {every} заказов
+  manualAward: Награду получите после завершения акции — её отправит организатор.
+  shareTextDriver: Зарабатывай с Telegram Taxi! Открой ссылку и войди — получишь +{reward} бонусов на счёт 🚕

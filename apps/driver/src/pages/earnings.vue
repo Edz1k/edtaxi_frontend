@@ -8,6 +8,7 @@ import { DEFAULT_MAX_DEBT_TO_GO_ONLINE, MIN_PAYOUT_AMOUNT } from '~/types/driver
 
 const earnings = useDriverEarningsStore()
 const toast = useToast()
+const { t, locale } = useI18n()
 const topUpAmount = ref(2000)
 const paymentUrl = ref('')
 let paymentPollTimer: ReturnType<typeof setInterval> | undefined
@@ -26,7 +27,7 @@ definePage({
 })
 
 useHead({
-  title: 'Заработок | Telegram Taxi',
+  title: () => `${t('earn.title')} | Telegram Taxi`,
 })
 
 async function refresh() {
@@ -98,14 +99,14 @@ async function submitPayout() {
   isPayoutFormOpen.value = false
   payoutAmount.value = MIN_PAYOUT_AMOUNT
   payoutDestination.value = ''
-  toast.success('Заявка создана', 'Мы переведём деньги после проверки заявки.')
+  toast.success(t('earn.payoutCreatedTitle'), t('earn.payoutCreatedText'))
 }
 
-const PAYOUT_STATUS_LABELS: Record<PayoutStatus, string> = {
-  pending: 'На рассмотрении',
-  paid: 'Выплачено',
-  rejected: 'Отклонено',
-}
+const PAYOUT_STATUS_LABELS = computed<Record<PayoutStatus, string>>(() => ({
+  paid: t('earn.paid'),
+  pending: t('earn.pending'),
+  rejected: t('earn.rejected'),
+}))
 
 function payoutStatusClass(status: PayoutStatus) {
   if (status === 'paid')
@@ -116,7 +117,7 @@ function payoutStatusClass(status: PayoutStatus) {
 }
 
 function formatMoney(value: number) {
-  return new Intl.NumberFormat('ru-RU', {
+  return new Intl.NumberFormat(locale.value, {
     maximumFractionDigits: 0,
     style: 'currency',
     currency: 'KZT',
@@ -124,7 +125,7 @@ function formatMoney(value: number) {
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat('ru-RU', {
+  return new Intl.DateTimeFormat(locale.value, {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
@@ -138,16 +139,16 @@ function formatDate(value: string) {
     <section class="mx-auto max-w-sm">
       <header>
         <p class="text-xs app-accent font-900 uppercase">
-          Водитель
+          {{ t('nav.driver') }}
         </p>
         <h1 class="mt-1 text-3xl font-950">
-          Заработок
+          {{ t('earn.title') }}
         </h1>
       </header>
 
       <section class="mt-6 border border-main-500/20 rounded-3xl app-card p-5">
         <p class="text-xs app-muted font-800 uppercase">
-          Всего заработано
+          {{ t('earn.totalEarned') }}
         </p>
         <p class="mt-2 text-4xl text-main-200 font-950 light:text-main-700">
           {{ formatMoney(earnings.earnings?.total_earned ?? 0) }}
@@ -158,7 +159,7 @@ function formatDate(value: string) {
           <div class="rounded-2xl app-card px-3 py-2.5">
             <p class="flex items-center gap-1 text-xs app-muted font-800">
               <span class="i-mdi-cash text-4 text-emerald-300" />
-              Наличными
+              {{ t('earn.cash') }}
             </p>
             <p class="mt-0.5 text-lg font-950">
               {{ formatMoney(earnings.earnings?.cash_earned ?? 0) }}
@@ -167,7 +168,7 @@ function formatDate(value: string) {
           <div class="rounded-2xl app-card px-3 py-2.5">
             <p class="flex items-center gap-1 text-xs app-muted font-800">
               <span class="i-mdi-credit-card-outline text-4 app-accent" />
-              Картой
+              {{ t('earn.card') }}
             </p>
             <p class="mt-0.5 text-lg font-950">
               {{ formatMoney(earnings.earnings?.card_earned ?? 0) }}
@@ -179,7 +180,7 @@ function formatDate(value: string) {
       <div class="grid grid-cols-2 mt-4 gap-3">
         <article class="rounded-2xl app-card p-4">
           <p class="text-xs app-muted font-800">
-            Поездок
+            {{ t('earn.trips') }}
           </p>
           <p class="mt-1 text-2xl font-950">
             {{ earnings.earnings?.trip_count ?? 0 }}
@@ -188,7 +189,7 @@ function formatDate(value: string) {
 
         <article class="rounded-2xl app-card p-4">
           <p class="text-xs app-muted font-800">
-            Средний чек
+            {{ t('earn.avgFare') }}
           </p>
           <p class="mt-1 text-2xl font-950">
             {{ formatMoney(earnings.earnings?.trip_count ? (earnings.earnings.total_earned / earnings.earnings.trip_count) : 0) }}
@@ -209,12 +210,12 @@ function formatDate(value: string) {
         type="button"
         @click="earnings.loadEarnings()"
       >
-        {{ earnings.isLoadingEarnings ? 'Обновляем...' : 'Обновить' }}
+        {{ earnings.isLoadingEarnings ? t('earn.refreshing') : t('earn.refresh') }}
       </button>
 
       <section class="mt-6 border border-main-500/20 rounded-3xl app-card p-5">
         <p class="text-xs app-muted font-800 uppercase">
-          Баланс
+          {{ t('earn.balance') }}
         </p>
         <p class="mt-2 text-4xl text-main-200 font-950 light:text-main-700">
           {{ formatMoney(earnings.wallet?.available_balance ?? 0) }}
@@ -224,23 +225,23 @@ function formatDate(value: string) {
              (max_debt_to_go_online) — выход на линию блокируется до пополнения. -->
         <template v-if="earnings.wallet && debtBalance > 0">
           <p class="mt-1 text-sm text-red-300">
-            Долг по наличным поездкам: {{ formatMoney(debtBalance) }}
+            {{ t('earn.debt', { sum: formatMoney(debtBalance) }) }}
           </p>
           <p v-if="isDebtBlockingOnline" class="mt-0.5 text-xs text-red-300/90 font-700 leading-4">
-            Долг превысил {{ formatMoney(maxDebtToGoOnline) }} — выход на линию заблокирован. Пополните баланс, чтобы вернуться на линию (долг спишется автоматически).
+            {{ t('earn.debtBlocking', { limit: formatMoney(maxDebtToGoOnline) }) }}
           </p>
           <p v-else class="mt-0.5 text-xs app-muted leading-4">
-            Долг пока не мешает выходить на линию, но при превышении {{ formatMoney(maxDebtToGoOnline) }} линия заблокируется. Спишется автоматически при следующем пополнении.
+            {{ t('earn.debtOk', { limit: formatMoney(maxDebtToGoOnline) }) }}
           </p>
         </template>
         <p v-else class="mt-1 text-sm app-muted">
-          Выходить на линию можно с любым балансом.
+          {{ t('earn.anyBalance') }}
         </p>
 
         <form class="grid grid-cols-[1fr_auto] mt-5 gap-2" @submit.prevent="submitTopUp">
           <input
             v-model.number="topUpAmount"
-            aria-label="Сумма пополнения"
+            :aria-label="t('earn.topUpAria')"
             class="h-13 min-w-0 border app-border rounded-2xl app-input-surface px-4 text-base text-white outline-none focus:border-main-400"
             inputmode="numeric"
             min="100"
@@ -252,7 +253,7 @@ function formatDate(value: string) {
             class="h-13 rounded-2xl bg-main-500 px-5 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
             type="submit"
           >
-            {{ earnings.isMutatingWallet ? '...' : 'Пополнить' }}
+            {{ earnings.isMutatingWallet ? '...' : t('earn.topUp') }}
           </button>
         </form>
       </section>
@@ -260,10 +261,10 @@ function formatDate(value: string) {
       <!-- Вывод средств -->
       <section class="mt-6 border border-main-500/20 rounded-3xl app-card p-5">
         <p class="text-xs app-muted font-800 uppercase">
-          Вывод средств
+          {{ t('earn.payout') }}
         </p>
         <p class="mt-1 text-sm app-muted">
-          Минимальная сумма — {{ formatMoney(MIN_PAYOUT_AMOUNT) }}. Заявку проверит администратор.
+          {{ t('earn.payoutMin', { min: formatMoney(MIN_PAYOUT_AMOUNT) }) }}
         </p>
 
         <button
@@ -273,16 +274,16 @@ function formatDate(value: string) {
           type="button"
           @click="isPayoutFormOpen = true"
         >
-          Вывести
+          {{ t('earn.withdraw') }}
         </button>
         <p v-if="!isPayoutFormOpen && availableBalance < MIN_PAYOUT_AMOUNT" class="mt-2 text-center text-xs app-faint font-700">
-          Недостаточно средств для вывода
+          {{ t('earn.notEnough') }}
         </p>
 
         <form v-if="isPayoutFormOpen" class="mt-4 space-y-3" @submit.prevent="submitPayout">
           <div>
             <label class="text-xs app-muted font-800 uppercase" for="payout-amount">
-              Сумма
+              {{ t('earn.amount') }}
             </label>
             <input
               id="payout-amount"
@@ -298,7 +299,7 @@ function formatDate(value: string) {
 
           <div>
             <label class="text-xs app-muted font-800 uppercase" for="payout-destination">
-              Реквизиты (карта или IBAN)
+              {{ t('earn.destination') }}
             </label>
             <input
               id="payout-destination"
@@ -306,7 +307,7 @@ function formatDate(value: string) {
               class="mt-2 h-13 w-full border app-border rounded-2xl app-input-surface px-4 text-sm text-white outline-none focus:border-main-400"
               maxlength="200"
               name="payout_destination"
-              placeholder="Например, 4400 1234 5678 9012"
+              :placeholder="t('earn.destPlaceholder')"
             >
           </div>
 
@@ -316,14 +317,14 @@ function formatDate(value: string) {
               class="h-13 flex-1 rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
               type="submit"
             >
-              {{ earnings.isRequestingPayout ? 'Отправляем...' : 'Создать заявку' }}
+              {{ earnings.isRequestingPayout ? t('parks.sending') : t('earn.createRequest') }}
             </button>
             <button
               class="h-13 rounded-2xl app-chip px-5 text-sm font-900 transition active:scale-[0.98]"
               type="button"
               @click="isPayoutFormOpen = false"
             >
-              Отмена
+              {{ t('profile.cancel') }}
             </button>
           </div>
         </form>
@@ -332,7 +333,7 @@ function formatDate(value: string) {
       <!-- Заявки на вывод -->
       <section v-if="earnings.payouts.length || earnings.isLoadingPayouts" class="mt-6">
         <h2 class="text-xs app-muted font-800 uppercase">
-          Заявки на вывод
+          {{ t('earn.payoutRequests') }}
         </h2>
 
         <div v-if="earnings.isLoadingPayouts && !earnings.payouts.length" class="mt-3 space-y-2">
@@ -347,7 +348,7 @@ function formatDate(value: string) {
                   {{ formatMoney(payout.amount) }}
                 </p>
                 <p class="mt-0.5 truncate text-xs app-muted font-700">
-                  {{ payout.destination || 'Реквизиты не указаны' }}
+                  {{ payout.destination || t('earn.noDestination') }}
                 </p>
                 <p class="mt-0.5 text-xs app-faint font-700">
                   {{ formatDate(payout.created_at) }}
@@ -358,7 +359,7 @@ function formatDate(value: string) {
               </span>
             </div>
             <p v-if="payout.status === 'rejected' && payout.rejection_reason" class="mt-2 rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-300 leading-4">
-              Причина отказа: {{ payout.rejection_reason }}
+              {{ t('earn.rejectionReason', { reason: payout.rejection_reason }) }}
             </p>
           </article>
         </div>

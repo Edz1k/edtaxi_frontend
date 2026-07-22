@@ -5,6 +5,8 @@ import { useAuthStore } from '~/stores/auth'
 import { useDriverStore } from '~/stores/driver'
 import { useTripChatStore } from '~/stores/tripChat'
 
+const { t, locale } = useI18n()
+
 const router = useRouter()
 const auth = useAuthStore()
 const driver = useDriverStore()
@@ -24,7 +26,7 @@ definePage({
 })
 
 useHead({
-  title: 'Чат с пассажиром | Telegram Taxi Driver',
+  title: () => `${t('tripChat.titleDriver')} | Telegram Taxi Driver`,
 })
 
 const activeTrip = computed(() => driver.activeTrip)
@@ -59,7 +61,7 @@ function scrollToBottom() {
 }
 
 function formatTime(value: string) {
-  return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+  return new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit' }).format(new Date(value))
 }
 
 function isMyMessage(senderId: string) {
@@ -96,7 +98,7 @@ async function onFileSelected(event: Event) {
       <!-- Header -->
       <div class="mb-3 flex shrink-0 items-center gap-2">
         <button
-          aria-label="Назад к заказу"
+          :aria-label="t('tripChat.backAriaDriver')"
           class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full app-chip transition active:scale-95"
           type="button"
           @click="router.back()"
@@ -105,12 +107,12 @@ async function onFileSelected(event: Event) {
         </button>
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-900">
-            Пассажир
+            {{ t('tripChat.passenger') }}
           </p>
           <div class="flex items-center gap-1.5">
             <span class="h-2 w-2 rounded-full" :class="chatOpen ? 'bg-emerald-400' : 'bg-slate-500'" />
             <p class="text-xs app-muted font-700">
-              {{ chatOpen ? 'Чат поездки' : 'Поездка завершена — чат закрыт' }}
+              {{ chatOpen ? t('tripChat.open') : t('tripChat.closed') }}
             </p>
           </div>
         </div>
@@ -127,7 +129,7 @@ async function onFileSelected(event: Event) {
         <div v-else-if="!tripChat.messages.length" class="h-full min-h-60 flex flex-col items-center justify-center gap-3 text-center">
           <span class="i-mdi-message-text text-16 text-white/10" />
           <p class="text-sm app-muted">
-            Напишите пассажиру — например, уточните, где он находится.
+            {{ t('tripChat.emptyDriver') }}
           </p>
         </div>
 
@@ -150,7 +152,7 @@ async function onFileSelected(event: Event) {
               >
                 <img
                   :src="mediaUrl(msg.image_url)"
-                  alt="Вложение"
+                  :alt="t('support.attachment')"
                   class="max-h-60 w-full rounded-2xl object-cover"
                   loading="lazy"
                 >
@@ -170,7 +172,7 @@ async function onFileSelected(event: Event) {
       <form v-if="chatOpen" class="grid grid-cols-[auto_1fr_auto] mt-3 shrink-0 items-center gap-2" @submit.prevent="send">
         <input ref="fileInput" accept="image/*" class="hidden" type="file" @change="onFileSelected">
         <button
-          aria-label="Прикрепить фото"
+          :aria-label="t('support.attach')"
           :disabled="tripChat.isSending"
           class="h-13 w-13 flex items-center justify-center rounded-2xl app-chip text-white transition active:scale-[0.97] disabled:opacity-50"
           type="button"
@@ -180,15 +182,15 @@ async function onFileSelected(event: Event) {
         </button>
         <input
           v-model="draft"
-          aria-label="Сообщение пассажиру"
+          :aria-label="t('tripChat.msgAriaDriver')"
           class="h-13 min-w-0 border app-border rounded-2xl app-card px-4 text-sm outline-none transition focus:border-main-400/60"
           maxlength="2000"
           name="trip_chat_message"
-          placeholder="Напишите сообщение..."
+          :placeholder="t('support.placeholder')"
           @keydown.enter.exact.prevent="send"
         >
         <button
-          aria-label="Отправить сообщение"
+          :aria-label="t('support.sendAria')"
           :disabled="!draft.trim() || tripChat.isSending"
           class="h-13 w-13 flex items-center justify-center rounded-2xl bg-main-500 text-white transition active:scale-[0.97] disabled:opacity-50"
           type="submit"
@@ -203,7 +205,7 @@ async function onFileSelected(event: Event) {
         type="button"
         @click="router.replace('/map')"
       >
-        К карте
+        {{ t('tripChat.toMap') }}
       </button>
     </section>
   </main>

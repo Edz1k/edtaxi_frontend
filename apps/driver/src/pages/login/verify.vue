@@ -9,12 +9,13 @@ import { useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const { shouldShake, shake } = useShakeAnimation()
+const { t } = useI18n()
 
 const code = ref('')
 
 const canSubmit = computed(() => code.value.length === 6)
 const deliveryMethodLabel = computed(() =>
-  auth.pendingOtpDeliveryMethod === 'whatsapp' ? 'в WhatsApp' : 'по SMS',
+  auth.pendingOtpDeliveryMethod === 'whatsapp' ? t('login.viaWhatsapp') : t('login.viaSms'),
 )
 
 definePage({
@@ -28,7 +29,7 @@ definePage({
 })
 
 useHead({
-  title: 'Код подтверждения | Telegram Taxi',
+  title: () => `${t('login.codeTitle')} | Telegram Taxi Driver`,
 })
 
 async function submitOtp() {
@@ -51,9 +52,9 @@ function backToPhone() {
 
 <template>
   <AuthScreen
-    :description="`Мы отправили код ${deliveryMethodLabel} на номер ${auth.pendingPhone || '+7'}`"
+    :description="t('login.codeSent', { via: deliveryMethodLabel, phone: auth.pendingPhone || '+7' })"
     icon="i-mdi-shield-key"
-    title="Введите код"
+    :title="t('login.codeTitle')"
   >
     <template #before>
       <button
@@ -73,8 +74,8 @@ function backToPhone() {
         :disabled="auth.isLoading || !canSubmit"
         icon="i-mdi-check"
         :loading="auth.isLoading"
-        loading-text="Проверяем код..."
-        text="Войти"
+        :loading-text="t('login.checkingCode')"
+        :text="t('login.signIn')"
       />
 
       <button
@@ -82,12 +83,12 @@ function backToPhone() {
         type="button"
         @click="backToPhone"
       >
-        Изменить номер телефона
+        {{ t('login.changePhone') }}
       </button>
     </form>
 
     <template #footer>
-      Если код не пришел, проверьте номер телефона
+      {{ t('login.codeNotReceived') }}
     </template>
   </AuthScreen>
 </template>

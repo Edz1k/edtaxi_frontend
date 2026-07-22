@@ -12,6 +12,7 @@ import { SAVED_ACCOUNTS_KEY, useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const phoneInput = ref('')
 const otpDeliveryMethod = ref<OtpDeliveryMethod>('whatsapp')
@@ -29,7 +30,7 @@ definePage({
 })
 
 useHead({
-  title: 'Вход водителя | Telegram Taxi',
+  title: () => `${t('login.driverTitle')} | Telegram Taxi`,
 })
 
 onMounted(() => {
@@ -58,7 +59,7 @@ async function submitPhone() {
 
 <template>
   <AuthScreen
-    description="Введите номер телефона, чтобы получить код подтверждения."
+    :description="t('login.driverLead')"
     icon="i-mdi-steering"
     title="Telegram Taxi Driver"
   >
@@ -80,13 +81,13 @@ async function submitPhone() {
       <AuthButton
         :disabled="auth.isLoading || !canSubmit"
         :loading="auth.isLoading"
-        loading-text="Отправляем код..."
-        text="Получить код"
+        :loading-text="t('login.sendingCode')"
+        :text="t('login.getCode')"
       />
     </form>
 
     <template #footer>
-      Доступ к водительскому приложению выдаёт администратор
+      {{ t('login.adminAccess') }}
     </template>
   </AuthScreen>
 </template>
