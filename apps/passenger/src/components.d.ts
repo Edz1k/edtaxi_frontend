@@ -34,6 +34,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchingTrip: typeof import('./components/passenger/downbar/SearchingTrip.vue')['default']
+    TariffInfoSheet: typeof import('./components/passenger/downbar/TariffInfoSheet.vue')['default']
     TariffStage: typeof import('./components/passenger/downbar/TariffStage.vue')['default']
     TripComplaintModal: typeof import('./components/history/TripComplaintModal.vue')['default']
     TripHistoryCard: typeof import('./components/history/TripHistoryCard.vue')['default']

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CategoryGroup, EstimateTripResponse, VehicleCategory } from '~/types/trips'
 import { getBonusOverview } from '@edtaxi/shared/api/bonus'
+import TariffInfoSheet from '~/components/passenger/downbar/TariffInfoSheet.vue'
 import { CATEGORY_GROUPS, formatFare, GROUP_META, GROUP_ORDER, isMotoCategory, TARIFF_META, TARIFF_ORDER } from '~/constants/tariffs'
 import { useTripsStore } from '~/stores/trips'
 
@@ -99,6 +100,22 @@ function selectGroup(group: CategoryGroup) {
 function isSelected(category: VehicleCategory) {
   return trips.selectedCategory === category
 }
+
+const infoCategory = ref<VehicleCategory | null>(null)
+const infoEstimate = computed(() =>
+  infoCategory.value
+    ? tariffs.value.find(tariff => tariff.category === infoCategory.value)
+    : undefined,
+)
+
+function selectOrShowInfo(category: VehicleCategory) {
+  if (isSelected(category) && ['economy', 'comfort', 'business', 'minivan'].includes(category)) {
+    infoCategory.value = category
+    return
+  }
+
+  trips.selectCategory(category)
+}
 </script>
 
 <template>
@@ -187,15 +204,25 @@ function isSelected(category: VehicleCategory) {
         <button
           v-for="tariff in visibleTariffs"
           :key="tariff.category"
-          class="w-30 flex shrink-0 flex-col snap-center items-center gap-1.5 border rounded-2xl px-3 py-3 transition active:scale-[0.97]"
+          class="relative w-30 flex shrink-0 flex-col snap-center items-center gap-1.5 border rounded-2xl px-3 py-3 transition active:scale-[0.97]"
           :class="isSelected(tariff.category)
             ? 'border-main-400 bg-main-500/16 shadow-[0_14px_34px_rgba(230,173,46,0.18)]'
             : 'border-white/8 bg-white/5'"
           role="radio"
           :aria-checked="isSelected(tariff.category)"
+          :aria-label="isSelected(tariff.category)
+            ? `${TARIFF_META[tariff.category].label}, выбран. Нажмите ещё раз, чтобы узнать о тарифе`
+            : `Выбрать тариф ${TARIFF_META[tariff.category].label}`"
           type="button"
-          @click="trips.selectCategory(tariff.category)"
+          @click="selectOrShowInfo(tariff.category)"
         >
+          <span
+            v-if="isSelected(tariff.category) && ['economy', 'comfort', 'business', 'minivan'].includes(tariff.category)"
+            class="absolute right-2 top-2 h-5 w-5 flex items-center justify-center rounded-full bg-main-500/22 text-main-200"
+            aria-hidden="true"
+          >
+            <span class="i-mdi-information-outline text-3.5" />
+          </span>
           <div
             v-if="imageByCategory[tariff.category]"
             class="h-18 w-full flex items-center justify-center"
@@ -299,5 +326,12 @@ function isSelected(category: VehicleCategory) {
         />
       </span>
     </button>
+
+    <TariffInfoSheet
+      v-if="infoCategory && infoEstimate"
+      :category="infoCategory"
+      :estimate="infoEstimate"
+      @close="infoCategory = null"
+    />
   </div>
 </template>
