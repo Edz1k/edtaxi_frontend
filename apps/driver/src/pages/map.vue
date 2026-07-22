@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { VerificationReminder } from '~/types/driver'
+import type { OnlineBlockTarget } from '~/utils/onlineBlock'
 import { getBonusOverview, redeemReferralCode } from '@edtaxi/shared/api/bonus'
 import ReferralWelcomeModal from '@edtaxi/shared/components/bonus/ReferralWelcomeModal.vue'
 import LocationGate from '@edtaxi/shared/components/location/LocationGate.vue'
@@ -97,7 +98,7 @@ const reminderPendingLabel = computed(() =>
 // Причина отказа в выходе на линию (403 от POST /driver/status) — показываем
 // панель с текстом и переходом на нужный экран.
 const onlineBlockMessage = ref('')
-const onlineBlockTarget = ref<'daily-check' | 'park' | 'verification'>('verification')
+const onlineBlockTarget = ref<OnlineBlockTarget>('verification')
 
 // Самоистечение фотоконтроля (п.45). Сервер снимает водителя с линии фоновым
 // проходом, но приложение об этом не узнаёт: is_online обновляется только из

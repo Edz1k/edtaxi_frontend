@@ -164,6 +164,15 @@ export interface DriverGeoGate {
   completion_radius_m: number
 }
 
+// Трансляция геопозиции в чате с ботом — резервный канал координат на случай
+// уснувшего вебвью. Без неё на линию не пускают. Telegram не даёт включить её
+// навсегда (максимум 8 часов, и стартовать её может только сам водитель),
+// поэтому у неё есть срок: until — когда трансляция погаснет.
+export interface DriverLiveLocation {
+  active: boolean
+  until?: string
+}
+
 export interface DriverProfile {
   id: string
   is_available: boolean
@@ -173,6 +182,8 @@ export interface DriverProfile {
   user_id: string
   // Нет у старого бэкенда — тогда гейт считается выключенным.
   geo_gate?: DriverGeoGate
+  // Нет у старого бэкенда — тогда статус трансляции просто не показываем.
+  live_location?: DriverLiveLocation
 }
 
 export interface DriverStatusResponse {
