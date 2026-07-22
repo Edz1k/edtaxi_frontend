@@ -1,4 +1,4 @@
-import { miniAppReady, openLink, retrieveRawInitData } from '@telegram-apps/sdk'
+import { miniAppReady, openLink, openTelegramLink, retrieveRawInitData } from '@telegram-apps/sdk'
 import { initTelegramSdk } from '../telegram/sdk'
 
 interface TelegramWebApp {
@@ -60,6 +60,30 @@ export function openExternalLink(url: string) {
     initTelegramSdk()
     if (openLink.isAvailable()) {
       openLink(url)
+      return
+    }
+  }
+  catch {
+    // падаем в обычный переход ниже
+  }
+
+  window.open(url, '_blank')
+}
+
+// openTelegramChat уводит из мини-аппа в сам Telegram — например в чат с ботом.
+// Именно openTelegramLink, а не openExternalLink: t.me-ссылка через openLink
+// уехала бы во внешний браузер, где чат не откроется, а мини-апп останется
+// висеть поверх.
+export function openTelegramChat(botUsername: string) {
+  if (typeof window === 'undefined')
+    return
+
+  const url = `https://t.me/${botUsername}`
+
+  try {
+    initTelegramSdk()
+    if (openTelegramLink.isAvailable()) {
+      openTelegramLink(url)
       return
     }
   }
