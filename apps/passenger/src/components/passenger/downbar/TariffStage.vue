@@ -109,7 +109,7 @@ const infoEstimate = computed(() =>
 )
 
 function selectOrShowInfo(category: VehicleCategory) {
-  if (isSelected(category) && ['economy', 'comfort', 'business', 'minivan'].includes(category)) {
+  if (isSelected(category) && ['moto', 'economy', 'comfort', 'business', 'minivan'].includes(category)) {
     infoCategory.value = category
     return
   }
@@ -217,7 +217,7 @@ function selectOrShowInfo(category: VehicleCategory) {
           @click="selectOrShowInfo(tariff.category)"
         >
           <span
-            v-if="isSelected(tariff.category) && ['economy', 'comfort', 'business', 'minivan'].includes(tariff.category)"
+            v-if="isSelected(tariff.category) && ['moto', 'economy', 'comfort', 'business', 'minivan'].includes(tariff.category)"
             class="absolute right-2 top-2 h-5 w-5 flex items-center justify-center rounded-full bg-main-500/22 text-main-200"
             aria-hidden="true"
           >
