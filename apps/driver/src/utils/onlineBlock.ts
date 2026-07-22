@@ -1,5 +1,5 @@
 // Куда вести водителя из баннера «не удалось выйти на линию».
-export type OnlineBlockTarget = 'daily-check' | 'live-location' | 'park' | 'verification'
+export type OnlineBlockTarget = 'daily-check' | 'debt' | 'live-location' | 'park' | 'verification'
 
 // onlineBlockTargetFor выбирает экран по тексту 403 с бэкенда: у гейтов выхода
 // на линию нет машиночитаемого кода, а причины закрываются на разных экранах.
@@ -10,6 +10,11 @@ export type OnlineBlockTarget = 'daily-check' | 'live-location' | 'park' | 'veri
 // известно клиенту, и цель ставится явно.
 export function onlineBlockTargetFor(message: string): OnlineBlockTarget {
   const text = message.toLowerCase()
+
+  // Долг по наличным превысил порог — ведём на экран заработка пополнять баланс.
+  // Слово «долг» не встречается в остальных причинах, порядок не критичен.
+  if (text.includes('долг'))
+    return 'debt'
 
   // Раньше «парка»: сообщение про трансляцию тоже содержит слово «чате», но
   // ни одно из парковых слов — порядок важен только если формулировки сойдутся.
