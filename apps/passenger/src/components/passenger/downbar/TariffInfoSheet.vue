@@ -4,6 +4,7 @@ import businessDetailImage from '~/assets/tariffs/details/business.png'
 import comfortDetailImage from '~/assets/tariffs/details/comfort.png'
 import economyDetailImage from '~/assets/tariffs/details/economy.png'
 import minivanDetailImage from '~/assets/tariffs/details/minivan.png'
+import motoDetailImage from '~/assets/tariffs/details/moto.png'
 import { formatFare, TARIFF_META } from '~/constants/tariffs'
 
 interface TariffDetails {
@@ -25,6 +26,19 @@ const emit = defineEmits<{
 }>()
 
 const detailsByCategory: Partial<Record<VehicleCategory, TariffDetails>> = {
+  moto: {
+    description: 'Быстрый способ передвижения по городу для поездок налегке.',
+    passengers: '1 пассажир',
+    luggage: 'Небольшая сумка',
+    vehicles: 'Городской мотоцикл или макси-скутер',
+    features: [
+      { icon: 'i-mdi-motorbike', label: 'Быстрые поездки по городу и между районами' },
+      { icon: 'i-mdi-shield-check-outline', label: 'Защитный шлем для пассажира' },
+      { icon: 'i-mdi-account-outline', label: 'Тариф рассчитан на одного пассажира' },
+      { icon: 'i-mdi-weather-partly-cloudy', label: 'Доступность зависит от погоды и дорожных условий' },
+    ],
+    luggageNote: 'Мото не подходит для чемоданов и крупного багажа. Возьмите с собой только небольшую сумку или рюкзак.',
+  },
   economy: {
     description: 'Быстро и выгодно для повседневных поездок по городу.',
     passengers: 'До 4 человек',
@@ -83,9 +97,11 @@ const detailImageByCategory: Partial<Record<VehicleCategory, string>> = {
   comfort: comfortDetailImage,
   economy: economyDetailImage,
   minivan: minivanDetailImage,
+  moto: motoDetailImage,
 }
 
 const details = computed(() => detailsByCategory[props.category]!)
+const isMoto = computed(() => props.category === 'moto')
 const titleRef = ref<HTMLElement>()
 const isVisible = ref(false)
 let previousBodyOverflow = ''
@@ -172,7 +188,7 @@ onBeforeUnmount(() => {
               <div class="absolute inset-x-12 bottom-3 h-3 rounded-full bg-black/30 blur-lg" />
               <img
                 :src="detailImageByCategory[category]"
-                :alt="`Автомобиль тарифа ${TARIFF_META[category].label}`"
+                :alt="isMoto ? 'Мотоцикл тарифа Мото' : `Автомобиль тарифа ${TARIFF_META[category].label}`"
                 class="relative max-h-full max-w-full object-contain drop-shadow-[0_12px_14px_rgba(0,0,0,0.3)]"
                 draggable="false"
               >
@@ -214,13 +230,13 @@ onBeforeUnmount(() => {
 
             <div class="mt-3 rounded-[1.35rem] bg-white/5 px-3.5 py-3">
               <p class="text-[11px] text-slate-400 font-800 tracking-wide uppercase">
-                Примеры автомобилей
+                {{ isMoto ? 'Пример транспорта' : 'Примеры автомобилей' }}
               </p>
               <p class="mt-1.5 text-[13px] text-white font-850 leading-5">
                 {{ details.vehicles }}
               </p>
               <p class="mt-1 text-[11px] text-slate-500 leading-4">
-                Конкретная модель зависит от доступных машин рядом.
+                {{ isMoto ? 'Конкретная модель зависит от доступного транспорта рядом.' : 'Конкретная модель зависит от доступных машин рядом.' }}
               </p>
             </div>
 
