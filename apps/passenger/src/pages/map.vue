@@ -119,6 +119,17 @@ watch([isMapReady, isBootDone, hasUserLocation, isBlockedByLocationGate], () => 
 // Бейдж бонусов в углу карты: пока баланс не загрузился (или упал) — не
 // показываем, чтобы не рисовать пустышку поверх карты.
 const bonusBalance = ref<null | number>(null)
+const isBonusHintExpanded = ref(true)
+let bonusHintTimer: ReturnType<typeof setTimeout> | undefined
+
+function showBonusHintTemporarily() {
+  isBonusHintExpanded.value = true
+  if (bonusHintTimer)
+    clearTimeout(bonusHintTimer)
+  bonusHintTimer = setTimeout(() => {
+    isBonusHintExpanded.value = false
+  }, 6500)
+}
 
 // Автопогашение реферального кода из диплинка (t.me/bot?startapp=ref_КОД):
 // код перехватывается на старте и гасится сразу после входа; при успехе
@@ -158,6 +169,7 @@ onMounted(async () => {
   getBonusOverview()
     .then((bonus) => {
       bonusBalance.value = Math.floor(bonus.balance)
+      showBonusHintTemporarily()
     })
     .catch(() => {})
 
@@ -188,6 +200,11 @@ onMounted(async () => {
     // иначе сплэш висел бы до предохранителя.
     isBootDone.value = true
   }
+})
+
+onBeforeUnmount(() => {
+  if (bonusHintTimer)
+    clearTimeout(bonusHintTimer)
 })
 
 // Геопозицию запрашиваем всегда — ею живут синяя точка на карте и центрирование.
@@ -236,11 +253,17 @@ async function setPickupFromCurrentLocation() {
         <RouterLink
           v-if="bonusBalance !== null"
           aria-label="Бонусы"
-          class="pointer-events-auto absolute right-0 top-0 flex items-center gap-1 rounded-full bg-secondary-950/82 px-3 py-2 text-xs text-white font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
+          class="pointer-events-auto absolute right-0 top-0 h-9 flex items-center overflow-hidden rounded-full bg-secondary-950/86 text-xs text-white font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-[padding,background-color,transform] duration-500 ease-out active:scale-95"
+          :class="isBonusHintExpanded ? 'px-3' : 'px-2.25'"
           to="/bonus"
         >
-          <span class="i-mdi-star-four-points text-3.5 text-main-300" />
-          {{ bonusBalance.toLocaleString('ru-RU') }}
+          <span class="i-mdi-star-four-points shrink-0 text-4.5 text-main-300 drop-shadow-[0_2px_6px_rgba(250,191,38,0.3)]" aria-hidden="true" />
+          <span
+            class="overflow-hidden whitespace-nowrap transition-[max-width,margin,opacity] duration-500 ease-out"
+            :class="isBonusHintExpanded ? 'ml-1.5 max-w-16 opacity-100' : 'ml-0 max-w-0 opacity-0'"
+          >
+            Бонусы
+          </span>
         </RouterLink>
 
         <!-- Тема карты: схема / спутник / ночная -->
