@@ -259,6 +259,9 @@ export interface DriverWallet {
   available_balance: number
   debt_balance: number
   min_balance_to_go_online: number
+  // Порог долга (₸), выше которого выход на линию блокируется. Нет у старого
+  // бэкенда — тогда используем DEFAULT_MAX_DEBT_TO_GO_ONLINE.
+  max_debt_to_go_online?: number
 }
 
 export interface DriverWalletTopUpPayload {
@@ -271,6 +274,11 @@ export interface DriverWalletTopUpResponse {
 
 // Минимальная сумма заявки на вывод (KZT) — как entity.MinPayoutAmount на бэке.
 export const MIN_PAYOUT_AMOUNT = 1000
+
+// Порог долга по наличным (₸): долг ВЫШЕ него блокирует выход на линию — как
+// entity.MaxDriverDebtToGoOnline на бэке. Фолбэк, если кошелёк не отдал поле
+// max_debt_to_go_online (старый бэкенд). Источник истины — сервер.
+export const DEFAULT_MAX_DEBT_TO_GO_ONLINE = 1000
 
 export type PayoutStatus = 'paid' | 'pending' | 'rejected'
 

@@ -61,6 +61,7 @@ function onHandleKeydown(event: KeyboardEvent) {
 // экране апы, а в чате с ботом: у неё вместо маршрута кнопка выхода в Telegram.
 const ONLINE_BLOCK_LINKS: Record<OnlineBlockTarget, { label: string, to?: string }> = {
   'daily-check': { label: 'Пройти фотоконтроль', to: '/menu/profile/onboarding/daily-check' },
+  'debt': { label: 'Пополнить баланс', to: '/earnings' },
   'live-location': { label: 'Открыть чат с ботом' },
   'park': { label: 'Выбрать таксопарк', to: '/menu/parks' },
   'verification': { label: 'Пройти верификацию', to: '/menu/profile/onboarding' },
