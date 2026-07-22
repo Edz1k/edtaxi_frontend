@@ -152,9 +152,23 @@ export function usePassengerTripSocket(tripId: Ref<string>) {
     openSocket()
   }
 
+  // Вернулись из фона / появилась сеть.
+  //
+  // refreshActiveTrip зовём ВСЕГДА, а не только когда сокет пришлось поднимать
+  // заново: замороженный вебвью оставляет readyState=OPEN на уже мёртвом
+  // соединении, reconnectNow на таком выходит по canReuseSocket — и пассажир
+  // остался бы со статусом на момент сворачивания до следующего тика поллинга.
+  function resume() {
+    if (intentionallyClosed || !tripId.value)
+      return
+
+    trips.refreshActiveTrip().catch(() => {})
+    reconnectNow()
+  }
+
   function handleVisibilityChange() {
     if (document.visibilityState === 'visible')
-      reconnectNow()
+      resume()
   }
 
   function close() {
@@ -184,12 +198,12 @@ export function usePassengerTripSocket(tripId: Ref<string>) {
   }, { immediate: true })
 
   onMounted(() => {
-    window.addEventListener('online', reconnectNow)
+    window.addEventListener('online', resume)
     document.addEventListener('visibilitychange', handleVisibilityChange)
   })
 
   onBeforeUnmount(() => {
-    window.removeEventListener('online', reconnectNow)
+    window.removeEventListener('online', resume)
     document.removeEventListener('visibilitychange', handleVisibilityChange)
     close()
   })

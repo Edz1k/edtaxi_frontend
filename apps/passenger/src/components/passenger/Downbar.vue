@@ -132,6 +132,17 @@ watch(() => trips.stops, (next) => {
     stopPlaces[index]!.value = place
     stopQueries[index]!.value = place?.address ?? ''
   })
+
+  // Стор очистили целиком (новый заказ, отмена): вотчер выше проходит только
+  // по оставшимся слотам, поэтому тексты «лишних» строк надо снять отдельно —
+  // иначе адрес прошлой поездки остался бы в поле при пустом сторе.
+  for (let index = next.length; index < stopPlaces.length; index++) {
+    if (!stopPlaces[index]!.value && !stopQueries[index]!.value)
+      continue
+
+    stopPlaces[index]!.value = null
+    stopQueries[index]!.value = ''
+  }
 }, { deep: true })
 
 const stopRows = computed(() => Array.from({ length: stopCount.value }, (_, index) => ({
@@ -414,6 +425,10 @@ function chooseDestination(place: GeoPlace) {
 function startNewTrip() {
   trips.resetActiveTrip()
   trips.clearEstimate()
+  // Новый заказ начинается с чистой формы (решение владельца): прежний
+  // маршрут больше не подставляется. Локальные слоты остановок сбрасывает
+  // вотчер ниже — стор для них единственный источник длины.
+  trips.clearOrderForm()
 }
 
 // Свайп-шторка со снап-точками. Набор точек и высота `half` (content-fit)
