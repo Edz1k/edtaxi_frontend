@@ -1,0 +1,326 @@
+nav:
+  menu: Menu
+  line: Line
+  wallet: Wallet
+  passenger: Passenger
+  back: Back
+  backToMenu: Back to menu
+  backToSettings: Back to settings
+titles:
+  about: About the app
+  changePhone: Change number
+  feedback: Suggest an improvement
+  history: Trip history
+  places: Saved addresses
+  profile: My profile
+  safety: Safety
+  settings: Settings
+  support: Support
+settings:
+  title: Settings
+  appearance:
+    title: Appearance
+    theme:
+      auto: Match Telegram
+      dark: Dark
+      light: Light
+  language:
+    title: Language
+  phone:
+    title: Phone number
+    change: Change number
+    changeSuffix: change
+about:
+  tagline: Kazakhstani taxi — fast, fair, safe
+  why: Why Telegram Taxi
+  tariffs: Tariffs
+  tariffsNote: The exact price is calculated for your route and shown before you confirm the order.
+  madeIn: Made in Kazakhstan 🇰🇿
+  adv:
+    priceTitle: Fair price, no surprises
+    priceText: You see the price before ordering. Our fee is lower than big aggregators’, so drivers earn more and arrive faster.
+    driversTitle: Verified drivers
+    driversText: Every driver’s documents, car and photo are checked before they can take orders. See the “Safety” section.
+    bonusTitle: Bonuses for every ride
+    bonusText: Ride and collect bonuses, invite friends with your code and join promotions — all in the “Bonuses” section.
+    supportTitle: Real in-app support
+    supportText: Not a scripted bot — real people. Write to the support chat and we’ll sort it out.
+    localTitle: A Kazakhstani service
+    localText: Telegram Taxi is built in Kazakhstan for Kazakhstan — we know our cities, work in tenge, and the money stays in the country.
+safety:
+  sos:
+    title: Emergency help
+    subtitle: Single rescue number — the call is free
+    call: Call 112
+  route:
+    title: Share your route
+    subtitle: Your loved ones will see where and with whom you ride
+    share: Share on Telegram
+    inactive: The button activates once you build a route or order a ride.
+    activeNote: The message includes trip addresses, driver name, car and plate number.
+  share:
+    intro: I’m riding with Telegram Taxi.
+    route: 'Route: {from} → {to}'
+    driver: 'Driver: {name}'
+    vehicle: 'Car: {car}, plate {plate}'
+    point: 'Destination on the map: {url}'
+  verified:
+    title: Verified drivers
+    subtitle: Drivers are allowed to take orders only after document checks
+  checks:
+    docs: Identity card and driver’s licence are checked manually before the first order
+    vehicle: Registration, car photos and plate number are matched against the order
+    face: The driver’s photo is confirmed when going online — the person driving is the one in the profile
+    history: 'Every trip is saved in history: route, driver and car can always be looked up'
+  help:
+    title: Something went wrong?
+    text: Write to support — we’ll figure it out and help
+feedback:
+  eyebrow: Feedback
+  title: Suggest an improvement
+  lead: Tell us what to improve in the app. We implement the best ideas and thank you with bonuses.
+  thanksTitle: Thanks for the idea!
+  thanksText: We read every suggestion. If we implement it, we’ll credit you bonuses.
+  more: Suggest another
+  backToMenu: Back to menu
+  placeholder: 'For example: add a way to save home and work addresses…'
+  sending: Sending...
+  send: Send
+  toastOkTitle: Thank you!
+  toastOkText: Your suggestion has been sent.
+  toastFail: Failed to send the suggestion. Please try again.
+support:
+  myTickets: My tickets
+  new: + New
+  pickSubject: Choose a subject
+  empty: You have no tickets yet. Tap “New” to ask a question.
+  emptyThread: Write your question — an operator will reply shortly.
+  toList: Back to tickets
+  closed: Ticket closed
+  operatorOnline: Operator online
+  agent: Support {name}
+  statusClosed: Closed
+  statusPending: Confirm
+  statusOpen: Open
+  resolvedQ: Is your problem solved?
+  yesResolved: Yes, solved
+  no: No
+  attach: Attach a photo
+  msgAria: Message to support
+  placeholder: Type a message...
+  sendAria: Send message
+  backAria: Back to tickets
+  attachment: Attachment
+menu:
+  profileLoading: Loading profile
+  statsTitle: We are {n} already!
+  statsText: You are user №{n} of Telegram Taxi. Thanks for being with us 🚕
+  logout: Log out
+  loggingOut: Logging out...
+  items:
+    bonus: Promotions & bonuses
+    bonusDesc: All promotions and the referral program
+    history: History
+    historyDesc: Trips and ratings
+    places: Saved addresses
+    placesDesc: Your saved places
+    safety: Safety
+    safetyDesc: Call 112 and share your route
+    support: Support
+    supportDesc: Help and tickets
+    feedback: Suggest an improvement
+    feedbackDesc: An idea to improve the service
+    settings: Settings
+    settingsDesc: Profile and app
+    about: About the app
+    aboutDesc: Tariffs and about Telegram Taxi
+places:
+  lead: Saved places for quick ordering
+  addAria: Add an address
+  emptyTitle: No saved places
+  emptyText: Save frequently used addresses to find them quickly when ordering a taxi.
+  addPlace: Add a place
+  editAria: Edit
+  deleteAria: Delete
+  editTitle: Edit
+  newTitle: New place
+  closeAria: Close
+  nameLabel: Name
+  namePlaceholder: Home, Work...
+  addressLabel: Address
+  pickAddress: Choose an address
+  pickAddressTitle: Choose an address
+  pickFromList: Pick an address from the suggestions.
+  saving: Saving...
+  save: Save
+  add: Add
+  closeSearchAria: Close address search
+  searchPlaceholder: Start typing an address...
+  minChars: Type at least 3 characters to see suggestions.
+  notFound: Address not found. Try refining your query.
+changePhone:
+  enterPhone: Enter your new number — a confirmation code will be sent to it.
+  enterCode: Enter the code from the message sent to {phone}.
+  sendingCode: Sending code...
+  getCode: Get the code
+  verifying: Checking...
+  confirm: Confirm number
+  editPhone: Change number
+  sending: Sending...
+  resend: Send the code again
+  sendFail: Failed to send the code. Check the number and try again.
+  verifyFail: Failed to confirm the code. Please try again.
+  doneTitle: Done
+  doneMerged: Number confirmed, accounts merged.
+  doneUpdated: Phone number updated.
+history:
+  lead: All your orders and routes
+  refresh: Refresh
+  refreshAria: Refresh trip history
+  emptyTitle: No trips yet
+  emptyText: Once you order your first ride, it will appear here.
+  orderTaxi: Order a taxi
+  loadingMore: Loading more...
+  loadMore: Load more
+  thatsAll: That’s the whole history
+  errTitle: Error
+  errSupport: Failed to open support for this trip.
+profile:
+  loading: Loading profile...
+  loadFail: Failed to load data.
+  doneTitle: Done
+  failTitle: Oops
+  avatarUpdated: Avatar updated.
+  avatarFail: Failed to upload the avatar. Please try again.
+  changeAvatarAria: Change avatar
+  newAvatar: New avatar
+  fitAvatar: Adjust your avatar
+  editNameAria: Edit name
+  nameLabel: First name
+  lastNameLabel: Last name
+  lastNamePlaceholder: Last name (optional)
+  nameRule: First name is required, up to 60 characters.
+  nameUpdated: Name updated.
+  memberSince: With us since {date}
+  saving: Saving...
+  save: Save
+  cancel: Cancel
+  ratingTitle: Passenger rating
+  trips: Trips
+  withUsSince: With us since
+  driverRatings: Driver ratings
+  noRatings: No ratings yet. They will appear here after your trips.
+  deleteAccount: Delete account
+  deleteConfirmTitle: Delete account?
+  deleteConfirmText: Bonuses will be lost and the account cannot be restored. Next time you’ll need to enter your phone number again.
+  deleting: Deleting...
+  delete: Delete
+  deleteFailTitle: Couldn’t delete
+  deleteFailText: Try again later or contact support.
+wallet:
+  eyebrow: Payment
+  payMethod: Payment method
+  mainCard: Primary card
+  mainCardNote: Trips paid by “Card” are charged to this card automatically after completion.
+  makeDefault: Make primary
+  unbindAria: Unlink card ••{tail}
+  bindAnother: Link another card
+  unbindMain: Unlink primary
+  bindTitle: Link a card
+  bindLead: Trips will be paid automatically — no cash or manual top-ups.
+  bindPoint1: Charged after the trip ends — exactly per the bill
+  bindPoint2: To verify the card we’ll charge {amount} ₸ and refund it right away
+  bindPoint3: Card details are stored by Freedom Pay, not by the app
+  preparing: Preparing payment...
+  bindCard: Link a card
+  balance: Balance
+  topUp: Top up
+  topUpAmountAria: Top-up amount
+  pay: Pay
+  txTitle: Transactions
+  txRefreshAria: Refresh transactions
+  txEmpty: No transactions yet
+  loading: Loading...
+  loadMore: Load more
+  keep: Keep
+  unbind: Unlink
+  unbindConfirmTitle: Unlink card ••{tail}?
+  unbindConfirmText: Trips will no longer be paid with this card. You can link it again anytime.
+  bindOkTitle: Card linked
+  bindOkText: Trips are now paid with card ••{tail}.
+  bindFailTitle: Card not linked
+  bindFailText: The payment went through (it will be refunded), but the payment service didn’t send the card data — card saving isn’t enabled for the merchant yet. We’ve requested it from FreedomPay.
+  payFailTitle: Payment failed
+  payFailText: The card was not linked — please try again.
+  tx:
+    fare_debit: Trip payment
+    refund: Refund
+    topup: Top-up
+bonus:
+  title: Bonuses
+  subtitle: Telegram Taxi loyalty program
+  loadFail: Failed to load bonuses.
+  loadFailFull: Failed to load bonuses. Pull down or come back later.
+  balance: Balance
+  balanceValue: '{n} bonuses'
+  notTenge: Platform bonuses — not tenge
+  perTrip: +{n} bonuses for every ride
+  myCode: My code
+  share: Share
+  copied: Copied
+  copy: Copy code
+  invited: Invited {count} of {limit} · +{reward} bonuses per friend
+  friendCode: Enter a friend’s code
+  friendCodeAria: Friend’s code
+  codePlaceholder: E.g. ED7X4K
+  redeem: Apply
+  redeemed: +{reward} bonuses credited
+  redeemFail: Failed to apply the code.
+  friendReward: You’ll get +{n} bonuses for a friend’s code
+  promos: Promotions
+  noPromos: No active promotions yet — check back later.
+  promoReward: +{n} bonuses
+  promoProgress: '{done} / {total} orders'
+  until: until {date}
+  autoCredit: Bonuses are credited automatically once you meet the condition.
+  shareText: Let’s ride with Telegram Taxi! Open the link and sign in — you’ll get +{reward} bonuses on your first bill 🚕
+deleted:
+  title: Account deleted
+  text: You deleted your passenger account. You can create it again — your rating will be kept.
+  creating: Creating...
+  create: Create account
+login:
+  title: Sign in
+  lead: Quick taxi ordering right in Telegram. Enter your phone number to get a confirmation code.
+  sendingCode: Sending code...
+  getCode: Get the code
+  terms: By continuing you agree to the service terms
+  confirmPhoneTitle: Confirm your number
+  phoneRequired: 'A phone number is required: the driver and support need it to reach you.'
+  confirming: Confirming...
+  sharePhone: Share number from Telegram
+  manualPhone: Enter the number manually
+  checkingCode: Checking code...
+  confirm: Confirm
+  switchAccount: Log out and switch account
+  codeTitle: Enter the code
+  codeSent: We sent the code {via} to {phone}
+  viaWhatsapp: via WhatsApp
+  viaSms: via SMS
+  signIn: Sign in
+  changePhone: Change phone number
+  codeNotReceived: If the code didn’t arrive, check the phone number
+  pickAccountTitle: Choose account
+  pickAccountLead: Choose an account you’ve signed in with before, or sign in to another by phone number.
+  loggingIn: Signing in...
+  viaTelegram: Sign in with Telegram
+  otherAccount: Sign in to another account by number
+tripChat:
+  title: Chat with driver
+  driver: Driver
+  backAria: Back to the trip
+  open: Trip chat
+  closed: Trip finished — chat closed
+  empty: Write to the driver — for example, clarify the pickup spot.
+  msgAria: Message to the driver
+  toMap: To the map

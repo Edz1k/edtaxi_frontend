@@ -31,27 +31,27 @@ const durationLabel = computed(() => `${Math.round(props.request.duration_min)} 
   -->
   <Teleport to="body">
     <div class="fixed inset-0 z-60 flex items-end bg-black/60 p-4 text-white backdrop-blur-sm">
-      <section class="w-full rounded-3xl bg-secondary-900 p-5 shadow-2xl">
+      <section class="w-full rounded-3xl app-screen p-5 shadow-2xl">
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
-            <p class="text-xs text-main-300 font-900 uppercase">
+            <p class="text-xs app-accent font-900 uppercase">
               Пассажир просит заехать
             </p>
             <h2 class="mt-2 text-3xl font-950">
               +{{ formatFare(request.fee) }}
             </h2>
-            <p class="mt-1 text-xs text-slate-400 font-800">
+            <p class="mt-1 text-xs app-muted font-800">
               доплата за крюк
             </p>
           </div>
 
-          <div class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200">
+          <div class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200 light:text-main-700">
             <span class="i-mdi-map-marker-plus text-7" />
           </div>
         </div>
 
-        <div class="mt-4 rounded-2xl bg-white/6 px-4 py-3">
-          <p class="text-[11px] text-slate-500 font-800 uppercase">
+        <div class="mt-4 rounded-2xl app-card px-4 py-3">
+          <p class="text-[11px] app-faint font-800 uppercase">
             Новая остановка
           </p>
           <p class="mt-1 text-sm font-900">
@@ -61,8 +61,8 @@ const durationLabel = computed(() => `${Math.round(props.request.duration_min)} 
 
         <!-- Весь маршрут после остановки, а не прибавка: так водителю понятнее,
              сколько ещё ехать. -->
-        <div class="mt-3 flex items-center gap-2 text-[13px] text-slate-300 font-800">
-          <span class="i-mdi-map-marker-distance shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+        <div class="mt-3 flex items-center gap-2 text-[13px] text-slate-300 font-800 light:text-slate-600">
+          <span class="i-mdi-map-marker-distance shrink-0 text-4.5 app-accent" aria-hidden="true" />
           <span>Маршрут станет {{ distanceLabel }} · {{ durationLabel }}</span>
         </div>
 

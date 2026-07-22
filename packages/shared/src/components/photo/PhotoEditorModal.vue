@@ -256,7 +256,7 @@ async function confirm() {
   <Teleport to="body">
     <div
       v-if="file"
-      class="fixed inset-0 z-[95] flex flex-col bg-secondary-950/97 text-white backdrop-blur-sm"
+      class="fixed inset-0 z-[95] flex flex-col app-sheet text-white backdrop-blur-sm"
     >
       <!-- Шапка -->
       <div class="flex items-center justify-between px-4 pb-2 pt-[calc(var(--app-safe-area-top,0px)+0.9rem)]">
@@ -265,7 +265,7 @@ async function confirm() {
         </h2>
         <button
           aria-label="Закрыть редактор"
-          class="h-10 w-10 flex items-center justify-center rounded-full bg-white/8 transition active:scale-95"
+          class="h-10 w-10 flex items-center justify-center rounded-full app-chip transition active:scale-95"
           type="button"
           @click="emit('cancel')"
         >
@@ -295,7 +295,7 @@ async function confirm() {
           >
 
           <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center">
-            <span class="i-mdi-loading animate-spin text-8 text-main-300" />
+            <span class="i-mdi-loading animate-spin text-8 app-accent" />
           </div>
 
           <!-- Круглая маска для аватарок: затемняем всё вне круга -->
@@ -325,14 +325,14 @@ async function confirm() {
         <div class="flex items-center gap-3">
           <button
             aria-label="Повернуть на 90 градусов"
-            class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full bg-white/8 transition active:scale-95"
+            class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full app-chip transition active:scale-95"
             type="button"
             @click="rotate"
           >
             <span class="i-mdi-rotate-right text-5" />
           </button>
 
-          <span class="i-mdi-magnify-minus-outline shrink-0 text-4.5 text-slate-400" aria-hidden="true" />
+          <span class="i-mdi-magnify-minus-outline shrink-0 text-4.5 app-muted" aria-hidden="true" />
           <input
             aria-label="Масштаб"
             class="h-1.5 w-full appearance-none rounded-full bg-white/15 accent-main-500"
@@ -343,11 +343,11 @@ async function confirm() {
             :value="zoom"
             @input="setZoom(Number(($event.target as HTMLInputElement).value))"
           >
-          <span class="i-mdi-magnify-plus-outline shrink-0 text-4.5 text-slate-400" aria-hidden="true" />
+          <span class="i-mdi-magnify-plus-outline shrink-0 text-4.5 app-muted" aria-hidden="true" />
 
           <button
             aria-label="Сбросить изменения"
-            class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full bg-white/8 transition active:scale-95"
+            class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full app-chip transition active:scale-95"
             type="button"
             @click="resetView"
           >
@@ -357,7 +357,7 @@ async function confirm() {
 
         <div class="grid grid-cols-2 gap-3">
           <button
-            class="h-13 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+            class="h-13 rounded-2xl app-chip text-sm font-900 transition active:scale-[0.98]"
             type="button"
             @click="emit('cancel')"
           >

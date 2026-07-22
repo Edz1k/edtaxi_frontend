@@ -176,10 +176,10 @@ function toggleFriendOrder() {
 <template>
   <div class="space-y-3">
     <!-- Маршрут -->
-    <div class="flex items-center gap-3 rounded-[1.65rem] bg-white/5 p-3">
+    <div class="flex items-center gap-3 rounded-[1.65rem] app-card p-3">
       <div class="min-w-0 flex-1 space-y-2">
         <p class="flex items-center gap-2 text-sm text-white font-900">
-          <span class="i-mdi-near-me shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+          <span class="i-mdi-near-me shrink-0 text-4.5 app-accent" aria-hidden="true" />
           <span class="truncate">{{ trips.pickup }}</span>
         </p>
         <p
@@ -188,7 +188,7 @@ function toggleFriendOrder() {
           class="flex items-center gap-2 text-sm text-white/80 font-800"
         >
           <span
-            class="h-4.5 w-4.5 flex shrink-0 items-center justify-center rounded-full bg-main-500/22 text-[10px] text-main-200 font-950"
+            class="h-4.5 w-4.5 flex shrink-0 items-center justify-center rounded-full bg-main-500/22 text-[10px] text-main-200 font-950 light:text-main-700"
             aria-hidden="true"
           >
             {{ index + 1 }}
@@ -196,7 +196,7 @@ function toggleFriendOrder() {
           <span class="truncate">{{ stop.address }}</span>
         </p>
         <p class="flex items-center gap-2 text-sm text-white font-900">
-          <span class="i-mdi-flag-checkered shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+          <span class="i-mdi-flag-checkered shrink-0 text-4.5 app-accent" aria-hidden="true" />
           <span class="truncate">{{ trips.destination }}</span>
         </p>
 
@@ -204,7 +204,7 @@ function toggleFriendOrder() {
              новая строка сразу в фокусе (Downbar.addStopFromTariffs). -->
         <button
           v-if="trips.canAddStop"
-          class="flex items-center gap-2 pt-0.5 text-[12px] text-main-300 font-800 transition active:scale-[0.98]"
+          class="flex items-center gap-2 pt-0.5 text-[12px] app-accent font-800 transition active:scale-[0.98]"
           type="button"
           @click="emit('addStop')"
         >
@@ -215,7 +215,7 @@ function toggleFriendOrder() {
 
       <button
         aria-label="Изменить маршрут"
-        class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-white transition active:scale-95 hover:bg-white/12"
+        class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full app-chip text-white transition active:scale-95 hover:bg-white/12"
         type="button"
         @click="emit('editRoute')"
       >
@@ -225,14 +225,14 @@ function toggleFriendOrder() {
 
     <!-- Тарифы: боковая scroll-snap карусель, одиночный выбор -->
     <div>
-      <p class="mb-2 px-1 text-[11px] text-main-300 font-900 uppercase">
+      <p class="mb-2 px-1 text-[11px] app-accent font-900 uppercase">
         Тариф
       </p>
 
       <!-- Табы групп (п.30): рисуем только когда групп больше одной -->
       <div
         v-if="availableGroups.length > 1"
-        class="mb-2 flex gap-1 rounded-2xl bg-white/5 p-1"
+        class="mb-2 flex gap-1 rounded-2xl app-card p-1"
         role="tablist"
         aria-label="Группа тарифов"
       >
@@ -240,7 +240,7 @@ function toggleFriendOrder() {
           v-for="group in availableGroups"
           :key="group"
           class="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[12px] font-900 transition active:scale-[0.98]"
-          :class="activeGroup === group ? 'bg-main-500/20 text-main-200' : 'text-white/60'"
+          :class="activeGroup === group ? 'bg-main-500/20 text-main-200 light:text-main-700' : 'text-white/60'"
           role="tab"
           :aria-selected="activeGroup === group"
           type="button"
@@ -262,7 +262,7 @@ function toggleFriendOrder() {
           class="w-30 flex shrink-0 flex-col snap-center items-center gap-1.5 border rounded-2xl px-3 py-3 transition active:scale-[0.97]"
           :class="isSelected(tariff.category)
             ? 'border-main-400 bg-main-500/16 shadow-[0_14px_34px_rgba(230,173,46,0.18)]'
-            : 'border-white/8 bg-white/5'"
+            : 'border-white/8 app-card'"
           role="radio"
           :aria-checked="isSelected(tariff.category)"
           type="button"
@@ -282,7 +282,7 @@ function toggleFriendOrder() {
           <span
             v-else
             class="h-12 w-12 flex items-center justify-center rounded-2xl transition"
-            :class="isSelected(tariff.category) ? 'bg-main-500/22 text-main-200' : 'bg-white/8 text-white'"
+            :class="isSelected(tariff.category) ? 'bg-main-500/22 text-main-200 light:text-main-700' : 'app-chip text-white'"
           >
             <span :class="TARIFF_META[tariff.category].icon" class="text-6.5" aria-hidden="true" />
           </span>
@@ -291,10 +291,10 @@ function toggleFriendOrder() {
           </span>
           <!-- Бонусы включены: зачёркнутая полная цена + актуальная со скидкой -->
           <template v-if="showBonusPrices && bonusDiscountFor(tariff) > 0">
-            <span class="text-[11px] text-slate-500 leading-3 line-through">
+            <span class="text-[11px] app-faint leading-3 line-through">
               {{ formatFare(tariff) }}
             </span>
-            <span class="text-sm text-main-200 font-950">
+            <span class="text-sm text-main-200 font-950 light:text-main-700">
               {{ discountedFare(tariff) }}
             </span>
           </template>
@@ -304,7 +304,7 @@ function toggleFriendOrder() {
         </button>
       </div>
 
-      <p class="mt-1.5 truncate px-1 text-[11px] text-slate-400 font-700">
+      <p class="mt-1.5 truncate px-1 text-[11px] app-muted font-700">
         {{ TARIFF_META[trips.selectedCategory].caption }}
       </p>
 
@@ -320,7 +320,7 @@ function toggleFriendOrder() {
           Мото-поездка: только 1 пассажир, водитель обязан выдать вам шлем. Поездка не застрахована — вы едете на свой страх и риск.
         </p>
         <button
-          class="w-full flex items-center gap-2 rounded-xl bg-white/6 px-2.5 py-2 text-left transition active:scale-[0.99]"
+          class="w-full flex items-center gap-2 rounded-xl app-card px-2.5 py-2 text-left transition active:scale-[0.99]"
           type="button"
           :aria-pressed="motoConsent"
           @click="motoConsent = !motoConsent"
@@ -340,11 +340,11 @@ function toggleFriendOrder() {
 
     <!-- Пожелания к заказу: платные опции меняют цену (пере-оценка в сторе) -->
     <div>
-      <p class="mb-2 px-1 text-[11px] text-main-300 font-900 uppercase">
+      <p class="mb-2 px-1 text-[11px] app-accent font-900 uppercase">
         Пожелания
       </p>
 
-      <div class="rounded-[1.65rem] bg-white/5 p-2 space-y-1">
+      <div class="rounded-[1.65rem] app-card p-2 space-y-1">
         <!-- Детское кресло -->
         <button
           class="w-full flex items-center gap-3 rounded-[1.25rem] px-2.5 py-2.5 text-left transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
@@ -360,7 +360,7 @@ function toggleFriendOrder() {
             <span v-if="trips.tripOptions.childSeat" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
           <span class="min-w-0 flex-1 text-sm text-white font-800">Детское кресло</span>
-          <span class="shrink-0 text-[12px] text-main-300 font-900">{{ surchargeLabel(surchargeChildSeat) }}</span>
+          <span class="shrink-0 text-[12px] app-accent font-900">{{ surchargeLabel(surchargeChildSeat) }}</span>
         </button>
 
         <!-- С животным -->
@@ -378,7 +378,7 @@ function toggleFriendOrder() {
             <span v-if="trips.tripOptions.pets" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
           <span class="min-w-0 flex-1 text-sm text-white font-800">Поездка с животным</span>
-          <span class="shrink-0 text-[12px] text-main-300 font-900">{{ surchargeLabel(surchargePets) }}</span>
+          <span class="shrink-0 text-[12px] app-accent font-900">{{ surchargeLabel(surchargePets) }}</span>
         </button>
 
         <p v-if="isMotoSelected" class="px-2.5 pb-1 text-[11px] text-amber-300/90 leading-4">
@@ -399,7 +399,7 @@ function toggleFriendOrder() {
             <span v-if="trips.tripOptions.accessible" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
           <span class="min-w-0 flex-1 text-sm text-white font-800">Особые потребности</span>
-          <span class="shrink-0 text-[12px] text-slate-400 font-800">бесплатно</span>
+          <span class="shrink-0 text-[12px] app-muted font-800">бесплатно</span>
         </button>
 
         <!-- Заказ другу: имя и телефон пассажира-получателя -->
@@ -416,14 +416,14 @@ function toggleFriendOrder() {
             <span v-if="isFriendOrder" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
           <span class="min-w-0 flex-1 text-sm text-white font-800">Заказ другу</span>
-          <span class="shrink-0 text-[12px] text-slate-400 font-800">бесплатно</span>
+          <span class="shrink-0 text-[12px] app-muted font-800">бесплатно</span>
         </button>
 
         <div v-if="isFriendOrder" class="px-2.5 pb-1.5 space-y-1.5">
           <input
             :value="trips.tripOptions.friendName"
             aria-label="Имя пассажира"
-            class="h-11 w-full rounded-[1.1rem] bg-white/6 px-3.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:text-slate-400"
+            class="h-11 w-full rounded-[1.1rem] app-card px-3.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:app-muted"
             maxlength="100"
             placeholder="Имя пассажира"
             type="text"
@@ -432,14 +432,14 @@ function toggleFriendOrder() {
           <input
             :value="trips.tripOptions.friendPhone"
             aria-label="Телефон пассажира"
-            class="h-11 w-full rounded-[1.1rem] bg-white/6 px-3.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:text-slate-400"
+            class="h-11 w-full rounded-[1.1rem] app-card px-3.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:app-muted"
             inputmode="tel"
             maxlength="32"
             placeholder="Телефон пассажира"
             type="tel"
             @input="trips.setTripOption('friendPhone', ($event.target as HTMLInputElement).value)"
           >
-          <p class="px-1 text-[11px] text-slate-400 leading-4">
+          <p class="px-1 text-[11px] app-muted leading-4">
             Водитель увидит имя и телефон — он везёт вашего друга, звонки пойдут ему.
           </p>
         </div>
@@ -448,7 +448,7 @@ function toggleFriendOrder() {
         <textarea
           :value="trips.tripComment"
           aria-label="Комментарий водителю"
-          class="min-h-16 w-full resize-none rounded-[1.25rem] bg-white/6 px-3.5 py-2.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:text-slate-400"
+          class="min-h-16 w-full resize-none rounded-[1.25rem] app-card px-3.5 py-2.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:app-muted"
           maxlength="500"
           placeholder="Комментарий водителю: подъезд, домофон, ориентир..."
           rows="2"
@@ -458,15 +458,15 @@ function toggleFriendOrder() {
     </div>
 
     <!-- Способ оплаты -->
-    <div class="flex items-center gap-1 rounded-[1.65rem] bg-white/5 p-1.5">
-      <span class="shrink-0 pl-2 pr-1 text-[11px] text-slate-400 font-800 uppercase">
+    <div class="flex items-center gap-1 rounded-[1.65rem] app-card p-1.5">
+      <span class="shrink-0 pl-2 pr-1 text-[11px] app-muted font-800 uppercase">
         Оплата
       </span>
       <button
         v-for="method in PAYMENT_ORDER"
         :key="method"
         class="h-10 flex flex-1 items-center justify-center gap-1.5 rounded-[1.3rem] text-sm font-900 transition active:scale-[0.98]"
-        :class="trips.paymentMethod === method ? 'bg-white/12 text-white' : 'text-slate-400 hover:text-white'"
+        :class="trips.paymentMethod === method ? 'bg-white/12 text-white' : 'app-muted hover:text-white'"
         :aria-pressed="trips.paymentMethod === method"
         type="button"
         @click="selectMethod(method)"
@@ -509,40 +509,40 @@ function toggleFriendOrder() {
     <!-- Предоплата выбрана: пояснение (бонусы недоступны — сумма фиксируется вперёд) -->
     <p
       v-if="trips.paymentMethod === 'prepaid'"
-      class="flex items-start gap-2 rounded-2xl bg-white/5 px-3 py-2.5 text-[12px] text-slate-300 leading-4"
+      class="flex items-start gap-2 rounded-2xl app-card px-3 py-2.5 text-[12px] text-slate-300 leading-4 light:text-slate-600"
     >
-      <span class="i-mdi-shield-lock-outline mt-0.5 shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+      <span class="i-mdi-shield-lock-outline mt-0.5 shrink-0 text-4.5 app-accent" aria-hidden="true" />
       Вся поездка оплачивается вперёд на защищённой странице Freedom Pay — там доступны Apple Pay, Google Pay и карта. Поиск водителя начнётся после оплаты.
     </p>
 
     <!-- Выбранная карта (способ «Карта»): бренд + последние цифры, тап — выбор карты -->
     <button
       v-if="showCardChip"
-      class="w-full flex items-center gap-3 rounded-2xl bg-white/5 px-3 py-2.5 text-left transition active:scale-[0.99]"
+      class="w-full flex items-center gap-3 rounded-2xl app-card px-3 py-2.5 text-left transition active:scale-[0.99]"
       type="button"
       @click="isCardPickerOpen = true"
     >
-      <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg bg-white/8">
+      <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg app-chip">
         <CardBrandMark :brand="wallet.card?.card_brand" />
       </span>
       <span class="min-w-0 flex-1">
         <span class="block text-sm text-white font-900 tracking-wider">•••• {{ defaultCardTail }}</span>
-        <span class="block text-[11px] text-slate-400 leading-4">Спишется после завершения поездки</span>
+        <span class="block text-[11px] app-muted leading-4">Спишется после завершения поездки</span>
       </span>
-      <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-400" aria-hidden="true" />
+      <span class="i-mdi-chevron-right shrink-0 text-5 app-muted" aria-hidden="true" />
     </button>
 
     <!-- Оплатить часть поездки бонусами (до 50%; с предоплатой недоступно) -->
     <button
       v-if="bonusBalance > 0 && trips.paymentMethod !== 'prepaid'"
       class="w-full flex items-center gap-3 rounded-[1.65rem] p-3 text-left transition active:scale-[0.99]"
-      :class="trips.useBonuses ? 'bg-main-500/16 border border-main-400/40' : 'bg-white/5 border border-transparent'"
+      :class="trips.useBonuses ? 'bg-main-500/16 border border-main-400/40' : 'app-card border border-transparent'"
       type="button"
       @click="trips.useBonuses = !trips.useBonuses"
     >
       <span
         class="h-10 w-10 flex shrink-0 items-center justify-center rounded-2xl"
-        :class="trips.useBonuses ? 'bg-main-500/22 text-main-200' : 'bg-white/8 text-slate-300'"
+        :class="trips.useBonuses ? 'bg-main-500/22 text-main-200 light:text-main-700' : 'app-chip text-slate-300 light:text-slate-600'"
       >
         <span class="i-mdi-star-four-points text-5.5" aria-hidden="true" />
       </span>
@@ -550,7 +550,7 @@ function toggleFriendOrder() {
         <span class="block text-sm text-white font-900">
           Списать бонусы — до 50% поездки
         </span>
-        <span class="block text-[12px] text-slate-400 leading-4">
+        <span class="block text-[12px] app-muted leading-4">
           У вас {{ bonusBalance.toLocaleString('ru-RU') }} бонусов · спишутся при завершении поездки
         </span>
       </span>
@@ -571,11 +571,11 @@ function toggleFriendOrder() {
       class="flex items-start gap-2 rounded-2xl bg-main-500/12 px-3 py-2.5 transition active:scale-[0.99]"
       to="/wallet"
     >
-      <span class="i-mdi-credit-card-plus-outline mt-0.5 shrink-0 text-4.5 text-main-300" aria-hidden="true" />
-      <p class="text-[12px] text-main-100 leading-4">
+      <span class="i-mdi-credit-card-plus-outline mt-0.5 shrink-0 text-4.5 app-accent" aria-hidden="true" />
+      <p class="text-[12px] text-main-100 leading-4 light:text-main-700">
         Карта ещё не привязана — привяжите её в «Кошельке», и поездка спишется с карты автоматически.
       </p>
-      <span class="i-mdi-chevron-right mt-0.5 shrink-0 text-4.5 text-main-300/70" aria-hidden="true" />
+      <span class="app-accent/70 i-mdi-chevron-right mt-0.5 shrink-0 text-4.5" aria-hidden="true" />
     </RouterLink>
 
     <!-- Заказать (мото — только после согласия с рисками) -->

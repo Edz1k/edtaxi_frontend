@@ -8,6 +8,7 @@ import { SAVED_ACCOUNTS_KEY, useAuthStore } from '~/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const accounts = ref<SavedAccount[]>([])
 const canUseTelegram = computed(() => isTelegramWebApp())
@@ -21,7 +22,7 @@ definePage({
 })
 
 useHead({
-  title: 'Выбор аккаунта | Telegram Taxi',
+  title: () => `${t('login.pickAccountTitle')} | Telegram Taxi`,
 })
 
 onMounted(() => {
@@ -60,9 +61,9 @@ function loginWithNewAccount() {
 
 <template>
   <AuthScreen
-    description="Выберите аккаунт, под которым уже входили, или войдите в другой по номеру телефона."
+    :description="t('login.pickAccountLead')"
     icon="i-mdi-account-switch"
-    title="Выбор аккаунта"
+    :title="t('login.pickAccountTitle')"
   >
     <div class="mt-8 space-y-5">
       <AuthError :message="auth.errorMessage" />
@@ -71,10 +72,10 @@ function loginWithNewAccount() {
         <div
           v-for="account in accounts"
           :key="account.id"
-          class="flex items-center gap-4 rounded-3xl bg-white/5 px-4 py-4 transition active:scale-[0.98]"
+          class="flex items-center gap-4 rounded-3xl app-card px-4 py-4 transition active:scale-[0.98]"
         >
           <button class="min-w-0 flex flex-1 items-center gap-4 text-left" type="button" @click="selectAccount(account)">
-            <span class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-white/8 text-main-200">
+            <span class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl app-chip text-main-200 light:text-main-700">
               <span class="i-mdi-account text-7" />
             </span>
 
@@ -82,14 +83,14 @@ function loginWithNewAccount() {
               <span class="block truncate text-lg font-900">
                 {{ savedAccountDisplayName(account) }}
               </span>
-              <span class="mt-0.5 block truncate text-xs text-slate-400 font-600">
+              <span class="mt-0.5 block truncate text-xs app-muted font-600">
                 {{ account.phone }}
               </span>
             </span>
           </button>
 
           <button
-            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-400 transition active:scale-[0.95]"
+            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full app-chip app-muted transition active:scale-[0.95]"
             type="button"
             @click="removeAccount(account)"
           >
@@ -106,15 +107,15 @@ function loginWithNewAccount() {
         @click="loginViaTelegram"
       >
         <span class="i-mdi-send mr-2 text-5" />
-        {{ auth.isLoading ? 'Входим...' : 'Войти через Telegram' }}
+        {{ auth.isLoading ? t('login.loggingIn') : t('login.viaTelegram') }}
       </button>
 
       <button
-        class="h-14 w-full flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-base text-slate-300 font-700 transition active:scale-[0.98]"
+        class="h-14 w-full flex items-center justify-center border app-border rounded-2xl app-card text-base text-slate-300 font-700 transition active:scale-[0.98] light:text-slate-600"
         type="button"
         @click="loginWithNewAccount"
       >
-        Войти в другой аккаунт по номеру
+        {{ t('login.otherAccount') }}
       </button>
     </div>
   </AuthScreen>

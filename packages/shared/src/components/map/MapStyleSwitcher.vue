@@ -18,11 +18,11 @@ function choose(key: MapStyleKey) {
   <div class="pointer-events-auto relative">
     <button
       aria-label="Тема карты"
-      class="h-10 w-10 flex items-center justify-center rounded-full bg-secondary-950/82 text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
+      class="h-10 w-10 flex items-center justify-center rounded-full app-sheet text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
       type="button"
       @click="isOpen = !isOpen"
     >
-      <span class="i-mdi-layers-outline text-5 text-main-300" aria-hidden="true" />
+      <span class="i-mdi-layers-outline text-5 app-accent" aria-hidden="true" />
     </button>
 
     <Transition
@@ -35,13 +35,13 @@ function choose(key: MapStyleKey) {
     >
       <div
         v-if="isOpen"
-        class="absolute right-0 top-12 w-44 origin-top-right overflow-hidden rounded-2xl bg-secondary-950/92 shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+        class="absolute right-0 top-12 w-44 origin-top-right overflow-hidden rounded-2xl app-sheet shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl"
       >
         <button
           v-for="option in options"
           :key="option.key"
           class="w-full flex items-center gap-2.5 px-3.5 py-3 text-left text-sm font-800 transition active:bg-white/10"
-          :class="option.key === currentKey ? 'text-main-300' : 'text-white'"
+          :class="option.key === currentKey ? 'app-accent' : 'text-white'"
           type="button"
           @click="choose(option.key)"
         >

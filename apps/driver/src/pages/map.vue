@@ -407,7 +407,7 @@ async function toggleOnline() {
 </script>
 
 <template>
-  <main class="tg-viewport-screen relative overflow-hidden bg-secondary-900 text-white">
+  <main class="tg-viewport-screen relative overflow-hidden app-screen text-white">
     <LocationGate />
 
     <!-- Город — аккуратной плашкой сверху карты, бонусный бейдж прижат к
@@ -416,9 +416,9 @@ async function toggleOnline() {
       <div class="relative flex justify-center">
         <div
           v-if="city"
-          class="max-w-[68%] flex items-center gap-1.5 truncate rounded-full bg-secondary-950/82 px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+          class="max-w-[68%] flex items-center gap-1.5 truncate rounded-full app-sheet px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
         >
-          <span class="i-mdi-map-marker inline-block shrink-0 align-middle text-3.5 text-main-300" />
+          <span class="i-mdi-map-marker inline-block shrink-0 align-middle text-3.5 app-accent" />
           <span class="truncate">г. {{ city }}</span>
           <WeatherBadge :weather="weather" />
         </div>
@@ -426,10 +426,10 @@ async function toggleOnline() {
         <RouterLink
           v-if="bonusBalance !== null"
           aria-label="Бонусы"
-          class="pointer-events-auto absolute right-0 top-0 flex items-center gap-1 rounded-full bg-secondary-950/82 px-3 py-2 text-xs text-white font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
+          class="pointer-events-auto absolute right-0 top-0 flex items-center gap-1 rounded-full app-sheet px-3 py-2 text-xs text-white font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
           to="/bonus"
         >
-          <span class="i-mdi-star-four-points text-3.5 text-main-300" />
+          <span class="i-mdi-star-four-points text-3.5 app-accent" />
           {{ bonusBalance.toLocaleString('ru-RU') }}
         </RouterLink>
 
@@ -444,7 +444,7 @@ async function toggleOnline() {
           v-if="!driver.hasActiveTrip"
           aria-label="Режим «Домой»"
           class="pointer-events-auto absolute right-0 top-24 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
-          :class="driver.isHomeModeActive ? 'bg-amber-400 text-slate-900' : 'bg-secondary-950/82 text-white'"
+          :class="driver.isHomeModeActive ? 'bg-amber-400 text-slate-900' : 'app-sheet text-white'"
           type="button"
           @click="isHomeSheetOpen = true"
         >
@@ -534,14 +534,14 @@ async function toggleOnline() {
         class="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
         @click.self="parkInvitePrompt = null"
       >
-        <div class="max-w-sm w-full border border-white/10 rounded-3xl bg-secondary-900 p-5 shadow-2xl">
-          <span class="h-12 w-12 flex items-center justify-center rounded-2xl bg-main-500/14 text-main-300">
+        <div class="max-w-sm w-full border app-border rounded-3xl app-screen p-5 shadow-2xl">
+          <span class="h-12 w-12 flex items-center justify-center rounded-2xl bg-main-500/14 app-accent">
             <span class="text-7" :class="parkInvitePrompt.isSwitch ? 'i-mdi-swap-horizontal' : 'i-mdi-account-plus'" />
           </span>
           <h3 class="mt-4 text-lg font-950">
             {{ parkInvitePrompt.isSwitch ? 'Сменить таксопарк?' : 'Присоединиться к таксопарку?' }}
           </h3>
-          <p class="mt-2 text-sm text-slate-400 leading-5">
+          <p class="mt-2 text-sm app-muted leading-5">
             <template v-if="parkInvitePrompt.isSwitch">
               Перейти из парка «{{ parkInvitePrompt.currentParkName || 'текущего' }}» в
               «{{ parkInvitePrompt.parkName }}»? Вы сразу станете водителем нового парка.
@@ -553,7 +553,7 @@ async function toggleOnline() {
 
           <div class="mt-5 flex gap-2">
             <button
-              class="h-12 flex-1 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+              class="h-12 flex-1 rounded-2xl app-chip text-sm font-900 transition active:scale-[0.98]"
               type="button"
               @click="parkInvitePrompt = null"
             >

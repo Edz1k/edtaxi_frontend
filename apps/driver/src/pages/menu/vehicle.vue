@@ -98,8 +98,8 @@ definePage({
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
-    screenSubtitle: 'Назад в меню',
-    screenTitle: 'Автомобиль',
+    screenSubtitle: 'nav.backToMenu',
+    screenTitle: 'titles.vehicle',
   },
 })
 
@@ -231,10 +231,10 @@ async function submitVehicle() {
 </script>
 
 <template>
-  <main class="tg-safe-bottom tg-safe-x h-full overflow-y-auto bg-secondary-900 text-white">
+  <main class="tg-safe-bottom tg-safe-x h-full overflow-y-auto app-screen text-white">
     <section class="mx-auto max-w-sm pb-6 pt-[calc(var(--app-safe-area-top)+6.5rem)]">
       <div class="flex items-center gap-3">
-        <div class="h-13 w-13 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200">
+        <div class="h-13 w-13 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200 light:text-main-700">
           <span :class="isMoto ? 'i-mdi-motorbike' : 'i-mdi-car-info'" class="text-7" />
         </div>
 
@@ -242,7 +242,7 @@ async function submitVehicle() {
           <h1 class="truncate text-2xl font-950">
             {{ isMoto ? 'Мототакси' : 'Автомобиль' }}
           </h1>
-          <p class="mt-1 text-sm text-slate-400 leading-5">
+          <p class="mt-1 text-sm app-muted leading-5">
             <template v-if="isEditing">
               {{ isMoto ? 'Ваш мотоцикл уже добавлен. Можно отредактировать данные.' : 'Ваша машина уже добавлена. Можно отредактировать данные.' }}
             </template>
@@ -259,7 +259,7 @@ async function submitVehicle() {
         <p class="mt-3 text-lg text-white font-900">
           {{ isMoto ? 'Мотоцикл сохранён' : 'Машина сохранена' }}
         </p>
-        <p class="mt-1 text-sm text-slate-400">
+        <p class="mt-1 text-sm app-muted">
           Доступные тарифы:
         </p>
         <div class="mt-3 flex flex-wrap justify-center gap-2">
@@ -288,30 +288,30 @@ async function submitVehicle() {
           type="button"
           @click="setMotoMode(true)"
         >
-          <span class="h-11 w-11 flex shrink-0 items-center justify-center rounded-xl bg-main-500/18 text-main-200">
+          <span class="h-11 w-11 flex shrink-0 items-center justify-center rounded-xl bg-main-500/18 text-main-200 light:text-main-700">
             <span class="i-mdi-motorbike text-6" />
           </span>
           <span class="min-w-0 flex-1">
             <span class="block text-sm text-white font-900">Стать мототакси</span>
-            <span class="mt-0.5 block text-xs text-slate-400 leading-4">Работайте на мотоцикле — быстрые заказы по городу</span>
+            <span class="mt-0.5 block text-xs app-muted leading-4">Работайте на мотоцикле — быстрые заказы по городу</span>
           </span>
-          <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-500" />
+          <span class="i-mdi-chevron-right shrink-0 text-5 app-faint" />
         </button>
 
         <button
           v-else
-          class="w-full flex items-center gap-3 border border-white/10 rounded-2xl bg-white/5 p-4 text-left transition active:scale-[0.98]"
+          class="w-full flex items-center gap-3 border app-border rounded-2xl app-card p-4 text-left transition active:scale-[0.98]"
           type="button"
           @click="setMotoMode(false)"
         >
-          <span class="h-11 w-11 flex shrink-0 items-center justify-center rounded-xl bg-white/8 text-slate-300">
+          <span class="h-11 w-11 flex shrink-0 items-center justify-center rounded-xl app-chip text-slate-300 light:text-slate-600">
             <span class="i-mdi-car text-6" />
           </span>
           <span class="min-w-0 flex-1">
             <span class="block text-sm text-white font-900">У меня автомобиль</span>
-            <span class="mt-0.5 block text-xs text-slate-400 leading-4">Вернуться к добавлению машины</span>
+            <span class="mt-0.5 block text-xs app-muted leading-4">Вернуться к добавлению машины</span>
           </span>
-          <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-500" />
+          <span class="i-mdi-chevron-right shrink-0 text-5 app-faint" />
         </button>
 
         <!-- Инфо для мототакси: страховка и второй шлем обязательны -->
@@ -325,32 +325,32 @@ async function submitVehicle() {
         <!-- Мото: марка и модель свободным текстом, без автокомплита каталога -->
         <div v-if="isMoto" class="grid grid-cols-2 gap-3">
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300 font-600">Марка</span>
-            <input v-model="form.make" autocomplete="off" class="h-13 w-full border border-white/10 rounded-2xl bg-white/5 px-4 text-white font-800 outline-none focus:border-main-400" placeholder="Yamaha">
+            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Марка</span>
+            <input v-model="form.make" autocomplete="off" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" placeholder="Yamaha">
           </label>
 
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300 font-600">Модель</span>
-            <input v-model="form.model" autocomplete="off" class="h-13 w-full border border-white/10 rounded-2xl bg-white/5 px-4 text-white font-800 outline-none focus:border-main-400" placeholder="MT-07">
+            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Модель</span>
+            <input v-model="form.model" autocomplete="off" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" placeholder="MT-07">
           </label>
         </div>
 
         <label v-if="!isMoto" class="relative block">
-          <span class="mb-2 block text-sm text-slate-300 font-600">Марка и модель</span>
+          <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Марка и модель</span>
           <input
             v-model="query"
             autocomplete="off"
-            class="h-13 w-full border border-white/10 rounded-2xl bg-white/5 px-4 text-white font-800 outline-none focus:border-main-400"
+            class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400"
             placeholder="Toyota Camry"
             @blur="isQueryFocused = false"
             @focus="isQueryFocused = true"
           >
 
-          <span v-if="isSearching" class="i-mdi-loading absolute right-4 top-[2.65rem] animate-spin text-5 text-slate-400" />
+          <span v-if="isSearching" class="i-mdi-loading absolute right-4 top-[2.65rem] animate-spin text-5 app-muted" />
 
           <div
             v-if="showSuggestions"
-            class="absolute inset-x-0 top-[calc(100%+0.375rem)] z-30 max-h-64 overflow-y-auto border border-white/10 rounded-2xl bg-secondary-800 shadow-2xl"
+            class="absolute inset-x-0 top-[calc(100%+0.375rem)] z-30 max-h-64 overflow-y-auto border app-border rounded-2xl bg-secondary-800 shadow-2xl"
           >
             <button
               v-for="item in suggestions"
@@ -361,9 +361,9 @@ async function submitVehicle() {
             >
               <span class="min-w-0">
                 <span class="block truncate text-sm text-white font-800">{{ item.make }} {{ item.model }}</span>
-                <span class="block text-xs text-slate-400">{{ yearRangeLabel(item) }}</span>
+                <span class="block text-xs app-muted">{{ yearRangeLabel(item) }}</span>
               </span>
-              <span class="shrink-0 rounded-full bg-main-500/16 px-2.5 py-1 text-[11px] text-main-200 font-800">
+              <span class="shrink-0 rounded-full bg-main-500/16 px-2.5 py-1 text-[11px] text-main-200 font-800 light:text-main-700">
                 {{ classChipLabel(item) }}
               </span>
             </button>
@@ -371,8 +371,8 @@ async function submitVehicle() {
         </label>
 
         <!-- Доступные тарифы по каталогу (для мото не показываем) -->
-        <div v-if="resolveResult && !isMoto" class="rounded-2xl p-4" :class="resolveResult.matched ? 'bg-emerald-500/10' : 'bg-white/5'">
-          <p class="mb-2 text-xs text-slate-300 font-800 uppercase">
+        <div v-if="resolveResult && !isMoto" class="rounded-2xl p-4" :class="resolveResult.matched ? 'bg-emerald-500/10' : 'app-card'">
+          <p class="mb-2 text-xs text-slate-300 font-800 uppercase light:text-slate-600">
             Доступные тарифы
           </p>
           <div class="flex flex-wrap gap-2">
@@ -393,19 +393,19 @@ async function submitVehicle() {
         </div>
 
         <label class="block">
-          <span class="mb-2 block text-sm text-slate-300 font-600">Госномер</span>
-          <input v-model="form.plate_number" class="h-13 w-full border border-white/10 rounded-2xl bg-white/5 px-4 text-white font-800 outline-none focus:border-main-400" placeholder="777 AAA 01">
+          <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Госномер</span>
+          <input v-model="form.plate_number" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" placeholder="777 AAA 01">
         </label>
 
         <div class="grid grid-cols-2 gap-3">
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300 font-600">Год</span>
-            <input v-model.number="form.year" class="h-13 w-full border border-white/10 rounded-2xl bg-white/5 px-4 text-white font-800 outline-none focus:border-main-400" inputmode="numeric" type="number">
+            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Год</span>
+            <input v-model.number="form.year" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" inputmode="numeric" type="number">
           </label>
 
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300 font-600">Цвет</span>
-            <input v-model="form.color" class="h-13 w-full border border-white/10 rounded-2xl bg-white/5 px-4 text-white font-800 outline-none focus:border-main-400" placeholder="Белый">
+            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Цвет</span>
+            <input v-model="form.color" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" placeholder="Белый">
           </label>
         </div>
 

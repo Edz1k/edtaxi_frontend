@@ -355,7 +355,7 @@ onBeforeUnmount(() => {
 
     <div
       v-if="mapError"
-      class="absolute inset-0 flex items-center justify-center bg-secondary-950 px-8 text-center text-sm text-slate-300 font-800"
+      class="absolute inset-0 flex items-center justify-center bg-secondary-950 px-8 text-center text-sm text-slate-300 font-800 light:text-slate-600"
     >
       {{ mapError }}
     </div>

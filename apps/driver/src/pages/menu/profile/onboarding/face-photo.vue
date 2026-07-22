@@ -15,8 +15,8 @@ definePage({
     requiresAuth: true,
     requiredRole: 'driver',
     backTo: '/menu/profile/onboarding',
-    screenSubtitle: 'Назад',
-    screenTitle: 'Фото лица',
+    screenSubtitle: 'nav.back',
+    screenTitle: 'titles.facePhoto',
   },
 })
 
@@ -112,24 +112,24 @@ async function submit() {
 </script>
 
 <template>
-  <main class="tg-safe-bottom tg-safe-x h-full overflow-y-auto bg-secondary-900 text-white">
+  <main class="tg-safe-bottom tg-safe-x h-full overflow-y-auto app-screen text-white">
     <section class="mx-auto max-w-sm pb-6 pt-[calc(var(--app-safe-area-top)+6.5rem)]">
       <div class="flex items-center gap-3">
-        <div class="h-13 w-13 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200">
+        <div class="h-13 w-13 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200 light:text-main-700">
           <span class="i-mdi-face-recognition text-7" />
         </div>
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
             Фото лица
           </h1>
-          <p class="mt-1 text-sm text-slate-400 leading-5">
+          <p class="mt-1 text-sm app-muted leading-5">
             Селфи и документ проверит поддержка — это делается один раз.
           </p>
         </div>
       </div>
 
       <!-- Статус ещё грузится (прямой заход на страницу, не из хаба) -->
-      <div v-if="driver.isLoadingVerification && !driver.verification" class="mt-8 flex items-center gap-3 text-sm text-slate-400">
+      <div v-if="driver.isLoadingVerification && !driver.verification" class="mt-8 flex items-center gap-3 text-sm app-muted">
         <span class="i-mdi-loading animate-spin text-5" />
         Загружаем статус...
       </div>
@@ -162,7 +162,7 @@ async function submit() {
 
         <RouterLink
           to="/menu/profile/onboarding"
-          class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-base text-white font-800 transition active:scale-[0.98]"
+          class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-base text-white font-800 transition active:scale-[0.98]"
         >
           <span class="i-mdi-format-list-checks text-5" />
           К списку проверок
@@ -189,7 +189,7 @@ async function submit() {
             @click="pickSelfie"
           >
             <img v-if="selfiePreview" :src="selfiePreview" class="h-full w-full object-cover" alt="Селфи">
-            <div v-else class="h-full flex flex-col items-center justify-center gap-3 text-slate-400">
+            <div v-else class="h-full flex flex-col items-center justify-center gap-3 app-muted">
               <span class="i-mdi-camera text-14" />
               <span class="px-6 text-center text-sm font-700">Нажмите для фото</span>
             </div>
@@ -201,7 +201,7 @@ async function submit() {
               Изменить
             </div>
           </button>
-          <p class="mt-3 text-center text-xs text-slate-500 leading-5">
+          <p class="mt-3 text-center text-xs app-faint leading-5">
             Лицо хорошо освещено и чётко видно, без очков и головных уборов.
           </p>
         </div>
@@ -218,7 +218,7 @@ async function submit() {
             @click="pickId"
           >
             <img v-if="idPreview" :src="idPreview" class="h-full w-full object-cover" alt="Документ">
-            <div v-else class="h-full flex flex-col items-center justify-center gap-3 text-slate-400">
+            <div v-else class="h-full flex flex-col items-center justify-center gap-3 app-muted">
               <span class="i-mdi-card-account-details-outline text-12" />
               <span class="px-6 text-center text-sm font-700">Фото документа</span>
             </div>
@@ -230,7 +230,7 @@ async function submit() {
               Изменить
             </div>
           </button>
-          <p class="mt-3 text-center text-xs text-slate-500 leading-5">
+          <p class="mt-3 text-center text-xs app-faint leading-5">
             Данные в документе должны читаться, без бликов.
           </p>
         </div>

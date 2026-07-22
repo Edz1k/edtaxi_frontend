@@ -8,19 +8,25 @@ import { usePassengerStore } from '~/stores/passenger'
 const router = useRouter()
 const auth = useAuthStore()
 const passenger = usePassengerStore()
+const { t, locale } = useI18n()
 
 // «Кабинет» намеренно не дублируем пунктом меню — в профиль ведёт тап по имени
 // в шапке выше.
-const menuItems = [
-  { label: 'Акции и бонусы', description: 'Все акции и реферальная программа', icon: 'i-mdi-gift-outline', to: '/bonus' },
-  { label: 'История', description: 'Поездки и оценки', icon: 'i-mdi-clock-outline', to: '/menu/history' },
-  { label: 'Избранные адреса', description: 'Сохранённые места', icon: 'i-mdi-heart-outline', to: '/menu/places' },
-  { label: 'Безопасность', description: 'Вызов 112 и отправка маршрута', icon: 'i-mdi-shield-check-outline', to: '/menu/safety' },
-  { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support' },
-  { label: 'Предложить улучшение', description: 'Идея по развитию сервиса', icon: 'i-mdi-lightbulb-outline', to: '/menu/feedback' },
-  { label: 'Настройки', description: 'Профиль и приложение', icon: 'i-mdi-cog-outline', to: '/menu/settings' },
-  { label: 'О приложении', description: 'Тарифы и о сервисе Telegram Taxi', icon: 'i-mdi-information-outline', to: '/menu/about' },
-]
+const MENU_ITEMS = [
+  { key: 'bonus', icon: 'i-mdi-gift-outline', to: '/bonus' },
+  { key: 'history', icon: 'i-mdi-clock-outline', to: '/menu/history' },
+  { key: 'places', icon: 'i-mdi-heart-outline', to: '/menu/places' },
+  { key: 'safety', icon: 'i-mdi-shield-check-outline', to: '/menu/safety' },
+  { key: 'support', icon: 'i-mdi-headset', to: '/menu/support' },
+  { key: 'feedback', icon: 'i-mdi-lightbulb-outline', to: '/menu/feedback' },
+  { key: 'settings', icon: 'i-mdi-cog-outline', to: '/menu/settings' },
+  { key: 'about', icon: 'i-mdi-information-outline', to: '/menu/about' },
+] as const
+const menuItems = computed(() => MENU_ITEMS.map(item => ({
+  ...item,
+  description: t(`menu.items.${item.key}Desc`),
+  label: t(`menu.items.${item.key}`),
+})))
 
 // Статистик-бар «Нас уже N, вы — №K»: пока не загрузился (или упал) — не рисуем.
 const userStats = ref<null | UserStatsResponse>(null)
@@ -35,7 +41,7 @@ definePage({
 })
 
 useHead({
-  title: 'Меню | Telegram Taxi',
+  title: () => `${t('nav.menu')} | Telegram Taxi`,
 })
 
 async function logout() {
@@ -56,7 +62,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="tg-safe-x tg-menu-home-safe h-full overflow-y-auto bg-secondary-900 text-white">
+  <main class="tg-safe-x tg-menu-home-safe h-full overflow-y-auto app-screen text-white">
     <section class="mx-auto max-w-sm">
       <RouterLink
         class="flex items-center gap-4 rounded-3xl transition active:scale-[0.98]"
@@ -68,18 +74,18 @@ onMounted(async () => {
         />
 
         <div class="min-w-0 flex-1">
-          <p class="text-xs text-main-300 font-900 uppercase">
-            Пассажир
+          <p class="text-xs app-accent font-900 uppercase">
+            {{ t('nav.passenger') }}
           </p>
           <h1 class="mt-1 truncate text-3xl font-950">
             {{ passenger.displayName }}
           </h1>
-          <p class="mt-1 truncate text-sm text-slate-400 font-700">
-            {{ passenger.profile?.phone || 'Профиль загружается' }}
+          <p class="mt-1 truncate text-sm app-muted font-700">
+            {{ passenger.profile?.phone || t('menu.profileLoading') }}
           </p>
         </div>
 
-        <span class="i-mdi-chevron-right shrink-0 text-7 text-slate-500" />
+        <span class="i-mdi-chevron-right shrink-0 text-7 app-faint" />
       </RouterLink>
 
       <!-- Статистик-бар: рост платформы и номер пользователя -->
@@ -87,12 +93,12 @@ onMounted(async () => {
         v-if="userStats"
         class="relative mt-6 overflow-hidden border border-main-500/25 rounded-3xl from-main-500/18 via-white/4 to-transparent bg-gradient-to-br px-4 py-4"
       >
-        <span class="i-mdi-account-group pointer-events-none absolute text-24 text-main-300/12 -right-3 -top-4" aria-hidden="true" />
+        <span class="app-accent/12 i-mdi-account-group pointer-events-none absolute text-24 -right-3 -top-4" aria-hidden="true" />
         <p class="text-sm font-950">
-          Нас уже {{ userStats.total_users.toLocaleString('ru-RU') }}!
+          {{ t('menu.statsTitle', { n: userStats.total_users.toLocaleString(locale) }) }}
         </p>
-        <p class="mt-1 text-xs text-slate-300 font-700 leading-5">
-          Вы — пользователь №{{ userStats.user_number.toLocaleString('ru-RU') }} сервиса Telegram Taxi. Спасибо, что с нами 🚕
+        <p class="mt-1 text-xs text-slate-300 font-700 leading-5 light:text-slate-600">
+          {{ t('menu.statsText', { n: userStats.user_number.toLocaleString(locale) }) }}
         </p>
       </div>
 
@@ -101,9 +107,9 @@ onMounted(async () => {
           v-for="item in menuItems"
           :key="item.to"
           :to="item.to"
-          class="flex items-center gap-4 rounded-3xl bg-white/5 px-4 py-4 text-white transition active:scale-[0.98]"
+          class="flex items-center gap-4 rounded-3xl app-card px-4 py-4 text-white transition active:scale-[0.98]"
         >
-          <span class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-white/8 text-main-200">
+          <span class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl app-chip text-main-200 light:text-main-700">
             <span :class="item.icon" class="text-7" />
           </span>
 
@@ -111,12 +117,12 @@ onMounted(async () => {
             <span class="block text-lg font-900">
               {{ item.label }}
             </span>
-            <span class="mt-0.5 block truncate text-xs text-slate-400 font-600">
+            <span class="mt-0.5 block truncate text-xs app-muted font-600">
               {{ item.description }}
             </span>
           </span>
 
-          <span class="i-mdi-chevron-right text-7 text-slate-500" />
+          <span class="i-mdi-chevron-right text-7 app-faint" />
         </RouterLink>
       </nav>
 
@@ -127,7 +133,7 @@ onMounted(async () => {
         @click="logout"
       >
         <span class="i-mdi-logout mr-2 text-5" />
-        {{ auth.isLoading ? 'Выходим...' : 'Выйти' }}
+        {{ auth.isLoading ? t('menu.loggingOut') : t('menu.logout') }}
       </button>
     </section>
   </main>

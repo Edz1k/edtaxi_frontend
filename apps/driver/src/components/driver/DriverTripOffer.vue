@@ -29,12 +29,12 @@ const perKmLabel = computed(() => {
 <template>
   <Teleport to="body">
     <div class="fixed inset-0 z-60 flex items-end bg-black/60 p-4 text-white backdrop-blur-sm">
-      <section class="w-full rounded-3xl bg-secondary-900 p-5 shadow-2xl">
+      <section class="w-full rounded-3xl app-screen p-5 shadow-2xl">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="flex flex-wrap items-center gap-2 text-xs text-main-300 font-900 uppercase">
+            <p class="flex flex-wrap items-center gap-2 text-xs app-accent font-900 uppercase">
               Новый заказ
-              <span v-if="offer.category" class="rounded-full bg-main-500/18 px-2 py-0.5 text-[11px] text-main-200 normal-case">
+              <span v-if="offer.category" class="rounded-full bg-main-500/18 px-2 py-0.5 text-[11px] text-main-200 normal-case light:text-main-700">
                 {{ categoryLabel(offer.category) }}
               </span>
               <span v-if="perKmLabel" class="rounded-full bg-emerald-500/18 px-2 py-0.5 text-[11px] text-emerald-200 normal-case">
@@ -46,7 +46,7 @@ const perKmLabel = computed(() => {
             </h2>
           </div>
 
-          <div class="h-12 w-12 flex items-center justify-center rounded-2xl bg-main-500/18 text-main-200">
+          <div class="h-12 w-12 flex items-center justify-center rounded-2xl bg-main-500/18 text-main-200 light:text-main-700">
             <span class="i-mdi-timer-sand text-7" />
           </div>
         </div>
@@ -64,7 +64,7 @@ const perKmLabel = computed(() => {
 
           <div class="min-w-0 space-y-4">
             <div>
-              <p class="text-[11px] text-slate-500 font-800 uppercase">
+              <p class="text-[11px] app-faint font-800 uppercase">
                 Посадка
               </p>
               <p class="mt-1 text-sm font-900">
@@ -83,7 +83,7 @@ const perKmLabel = computed(() => {
             </div>
 
             <div>
-              <p class="text-[11px] text-slate-500 font-800 uppercase">
+              <p class="text-[11px] app-faint font-800 uppercase">
                 Куда
               </p>
               <p class="mt-1 text-sm font-900">
@@ -98,7 +98,7 @@ const perKmLabel = computed(() => {
           <span
             v-for="badge in optionBadges"
             :key="badge.label"
-            class="inline-flex items-center gap-1.5 rounded-full bg-main-500/14 px-2.5 py-1 text-[12px] text-main-200 font-800"
+            class="inline-flex items-center gap-1.5 rounded-full bg-main-500/14 px-2.5 py-1 text-[12px] text-main-200 font-800 light:text-main-700"
           >
             <span :class="badge.icon" class="text-4" aria-hidden="true" />
             {{ badge.label }}
@@ -108,9 +108,9 @@ const perKmLabel = computed(() => {
         <!-- Комментарий пассажира -->
         <p
           v-if="offer.comment"
-          class="mt-3 flex items-start gap-2 rounded-2xl bg-white/6 px-3 py-2.5 text-[13px] text-slate-200 leading-4.5"
+          class="mt-3 flex items-start gap-2 rounded-2xl app-card px-3 py-2.5 text-[13px] text-slate-200 leading-4.5"
         >
-          <span class="i-mdi-message-text-outline mt-0.5 shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+          <span class="i-mdi-message-text-outline mt-0.5 shrink-0 text-4.5 app-accent" aria-hidden="true" />
           {{ offer.comment }}
         </p>
 

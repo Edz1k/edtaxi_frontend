@@ -246,7 +246,7 @@ const statusMeta = computed(() => {
   if (tripStep.value) {
     return {
       icon: tripStep.value.icon,
-      iconClass: 'bg-main-500/16 text-main-200',
+      iconClass: 'bg-main-500/16 text-main-200 light:text-main-700',
       pulse: false,
       subtitle: tripStep.value.description,
       title: tripStep.value.title,
@@ -265,7 +265,7 @@ const statusMeta = computed(() => {
 
   return {
     icon: 'i-mdi-steering',
-    iconClass: 'bg-white/7 text-slate-300',
+    iconClass: 'bg-white/7 text-slate-300 light:text-slate-600',
     pulse: false,
     subtitle: 'Выберите тарифы и выходите на заказы',
     title: 'Вы не на линии',
@@ -315,7 +315,7 @@ const peekPill = computed(() => {
   >
     <div
       ref="sheetEl"
-      class="pointer-events-auto mx-auto max-w-sm w-full flex flex-col overflow-hidden rounded-[2rem] bg-secondary-950/82 shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
+      class="pointer-events-auto mx-auto max-w-sm w-full flex flex-col overflow-hidden rounded-[2rem] app-sheet shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
       :style="sheetStyle"
     >
       <!-- Грабер: drag/тап для сворачивания и возврата -->
@@ -352,7 +352,7 @@ const peekPill = computed(() => {
                 <h2 class="truncate text-lg font-950">
                   {{ statusMeta.title }}
                 </h2>
-                <p class="mt-0.5 truncate text-sm text-slate-400">
+                <p class="mt-0.5 truncate text-sm app-muted">
                   {{ statusMeta.subtitle }}
                 </p>
               </div>
@@ -388,7 +388,7 @@ const peekPill = computed(() => {
 
             <!-- Тарифы, по которым водитель принимает заказы -->
             <div v-if="!driver.hasActiveTrip && driver.availableCategories.length" class="mt-4">
-              <p class="mb-2 text-xs text-slate-400 font-800 uppercase">
+              <p class="mb-2 text-xs app-muted font-800 uppercase">
                 Тарифы на линии
               </p>
 
@@ -397,7 +397,7 @@ const peekPill = computed(() => {
                   <span
                     v-for="cat in driver.activeCategories"
                     :key="cat"
-                    class="rounded-full bg-main-500/18 px-3 py-1.5 text-xs text-main-200 font-800"
+                    class="rounded-full bg-main-500/18 px-3 py-1.5 text-xs text-main-200 font-800 light:text-main-700"
                   >
                     {{ categoryLabel(cat) }}
                   </span>
@@ -409,7 +409,7 @@ const peekPill = computed(() => {
                     :key="cat"
                     :disabled="driver.isSavingCategories"
                     class="rounded-full px-3 py-1.5 text-xs font-800 transition active:scale-[0.96] disabled:opacity-60"
-                    :class="driver.activeCategories.includes(cat) ? 'bg-main-500 text-white' : 'bg-white/8 text-slate-400'"
+                    :class="driver.activeCategories.includes(cat) ? 'bg-main-500 text-white' : 'app-chip app-muted'"
                     type="button"
                     @click="driver.toggleCategory(cat)"
                   >
@@ -427,22 +427,22 @@ const peekPill = computed(() => {
                  переехало в Настройки (там карта-превью с подсветкой). -->
             <RouterLink
               v-if="!driver.hasActiveTrip && driver.availableDistricts.length"
-              class="mt-4 flex items-center gap-3 rounded-2xl bg-white/6 px-4 py-3 transition active:scale-[0.99]"
+              class="mt-4 flex items-center gap-3 rounded-2xl app-card px-4 py-3 transition active:scale-[0.99]"
               to="/menu/settings"
             >
-              <span class="i-mdi-map-marker-radius-outline shrink-0 text-5 text-main-300" aria-hidden="true" />
+              <span class="i-mdi-map-marker-radius-outline shrink-0 text-5 app-accent" aria-hidden="true" />
               <span class="min-w-0 flex-1">
-                <span class="block text-xs text-slate-400 font-800 uppercase">Районы заказов</span>
+                <span class="block text-xs app-muted font-800 uppercase">Районы заказов</span>
                 <span class="mt-0.5 block truncate text-sm font-800">
                   {{ activeDistricts.length ? activeDistricts.map(d => d.name).join(', ') : 'Весь город' }}
                 </span>
               </span>
-              <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-500" aria-hidden="true" />
+              <span class="i-mdi-chevron-right shrink-0 text-5 app-faint" aria-hidden="true" />
             </RouterLink>
 
             <div v-if="driver.hasActiveTrip && tripStep" class="mt-4 space-y-2">
               <!-- Маршрут заказа: А / остановки / Б + опции + комментарий -->
-              <div v-if="driver.activeTrip" class="rounded-2xl bg-white/6 px-4 py-3">
+              <div v-if="driver.activeTrip" class="rounded-2xl app-card px-4 py-3">
                 <p class="flex items-center gap-2 text-[13px] font-800">
                   <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
                   <span class="truncate">{{ driver.activeTrip.pickup_address }}</span>
@@ -451,7 +451,7 @@ const peekPill = computed(() => {
                   v-for="(stop, index) in tripStops"
                   :key="`panel-stop-${index}`"
                   class="mt-1.5 flex items-center gap-2 text-[13px] font-800"
-                  :class="index < driver.passedStopCount ? 'text-slate-500 line-through' : 'text-white/80'"
+                  :class="index < driver.passedStopCount ? 'app-faint line-through' : 'text-white/80'"
                 >
                   <span
                     class="h-4 w-4 flex shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-[9px] text-amber-300 font-950"
@@ -470,7 +470,7 @@ const peekPill = computed(() => {
                   <span
                     v-for="badge in tripBadges"
                     :key="badge.label"
-                    class="inline-flex items-center gap-1 rounded-full bg-main-500/14 px-2 py-0.5 text-[11px] text-main-200 font-800"
+                    class="inline-flex items-center gap-1 rounded-full bg-main-500/14 px-2 py-0.5 text-[11px] text-main-200 font-800 light:text-main-700"
                   >
                     <span :class="badge.icon" class="text-3.5" aria-hidden="true" />
                     {{ badge.label }}
@@ -479,9 +479,9 @@ const peekPill = computed(() => {
 
                 <p
                   v-if="driver.activeTrip.comment"
-                  class="mt-2.5 flex items-start gap-1.5 border-t border-white/8 pt-2.5 text-xs text-slate-300 leading-4"
+                  class="mt-2.5 flex items-start gap-1.5 border-t border-white/8 pt-2.5 text-xs text-slate-300 leading-4 light:text-slate-600"
                 >
-                  <span class="i-mdi-message-text-outline mt-0.5 shrink-0 text-3.5 text-main-300" aria-hidden="true" />
+                  <span class="i-mdi-message-text-outline mt-0.5 shrink-0 text-3.5 app-accent" aria-hidden="true" />
                   {{ driver.activeTrip.comment }}
                 </p>
               </div>
@@ -492,7 +492,7 @@ const peekPill = computed(() => {
                 class="rounded-2xl px-4 py-2.5"
                 :class="waitingInfo.accent ? 'bg-amber-500/12' : 'bg-white/7'"
               >
-                <p class="text-xs font-800 leading-5" :class="waitingInfo.accent ? 'text-amber-200' : 'text-slate-300'">
+                <p class="text-xs font-800 leading-5" :class="waitingInfo.accent ? 'text-amber-200' : 'text-slate-300 light:text-slate-600'">
                   <span class="i-mdi-timer-sand mr-1 inline-block align-middle text-4" />
                   {{ waitingInfo.text }}
                 </p>
@@ -518,7 +518,7 @@ const peekPill = computed(() => {
               <!-- Остановка пройдена: навигатор переключается на следующую точку -->
               <button
                 v-if="driver.canAdvanceNavPoint"
-                class="h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.99]"
+                class="h-12 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-sm text-white font-900 transition active:scale-[0.99]"
                 type="button"
                 @click="driver.advanceNavPoint()"
               >
@@ -529,7 +529,7 @@ const peekPill = computed(() => {
               <!-- Навигатор к текущей точке маршрута во внешнем приложении -->
               <button
                 v-if="navTarget"
-                class="h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.99]"
+                class="h-12 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-sm text-white font-900 transition active:scale-[0.99]"
                 type="button"
                 @click="isNavSheetOpen = !isNavSheetOpen"
               >
@@ -538,14 +538,14 @@ const peekPill = computed(() => {
               </button>
               <div v-if="isNavSheetOpen && navApps.length" class="space-y-2">
                 <!-- Точки маршрута: текущая цель подсвечена, пройденные — приглушены -->
-                <div v-if="driver.tripNavPoints.length > 2" class="rounded-2xl bg-white/6 p-2 space-y-1">
+                <div v-if="driver.tripNavPoints.length > 2" class="rounded-2xl app-card p-2 space-y-1">
                   <p
                     v-for="point in driver.tripNavPoints"
                     :key="`${point.kind}-${point.label}`"
                     class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-[13px] font-800"
                     :class="point.state === 'current'
-                      ? 'bg-main-500/16 text-main-100'
-                      : point.state === 'passed' ? 'text-slate-500 line-through' : 'text-slate-300'"
+                      ? 'bg-main-500/16 text-main-100 light:text-main-700'
+                      : point.state === 'passed' ? 'app-faint line-through' : 'text-slate-300 light:text-slate-600'"
                   >
                     <span class="shrink-0 text-[11px] font-950 opacity-70">{{ point.label }}</span>
                     <span class="truncate">{{ point.address }}</span>
@@ -556,18 +556,18 @@ const peekPill = computed(() => {
                   <button
                     v-for="app in navApps"
                     :key="app.label"
-                    class="h-14 flex flex-col items-center justify-center gap-1 rounded-2xl bg-white/6 text-[11px] text-slate-300 font-800 transition active:scale-[0.97]"
+                    class="h-14 flex flex-col items-center justify-center gap-1 rounded-2xl app-card text-[11px] text-slate-300 font-800 transition active:scale-[0.97] light:text-slate-600"
                     type="button"
                     @click="openNavigator(app.url)"
                   >
-                    <span :class="app.icon" class="text-5 text-main-300" aria-hidden="true" />
+                    <span :class="app.icon" class="text-5 app-accent" aria-hidden="true" />
                     {{ app.label }}
                   </button>
                 </div>
               </div>
 
               <RouterLink
-                class="relative h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.99]"
+                class="relative h-12 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-sm text-white font-900 transition active:scale-[0.99]"
                 to="/trip-chat"
               >
                 <span class="i-mdi-message-text text-5" />
@@ -612,7 +612,7 @@ const peekPill = computed(() => {
                  заранее, чем узнать о нём в конце смены. -->
             <p
               v-if="driver.isOnline && driver.liveLocationUntilLabel"
-              class="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400 font-800"
+              class="mt-3 flex items-center justify-center gap-1.5 text-xs app-muted font-800"
             >
               <span class="i-mdi-broadcast text-4 text-emerald-400" aria-hidden="true" />
               Резервная передача геопозиции активна до {{ driver.liveLocationUntilLabel }}
@@ -645,13 +645,13 @@ const peekPill = computed(() => {
 
             <RouterLink
               v-if="!onboarding.hasVehicle"
-              class="mt-3 h-12 flex items-center justify-center rounded-2xl bg-white/8 text-sm text-main-100 font-900"
+              class="mt-3 h-12 flex items-center justify-center rounded-2xl app-chip text-sm text-main-100 font-900 light:text-main-700"
               to="/menu/vehicle"
             >
               Добавить автомобиль
             </RouterLink>
 
-            <p v-if="showRouteLoading" class="mt-3 text-center text-xs text-slate-400 font-800">
+            <p v-if="showRouteLoading" class="mt-3 text-center text-xs app-muted font-800">
               Строим маршрут заказа...
             </p>
           </div>
@@ -669,7 +669,7 @@ const peekPill = computed(() => {
               <span class="absolute inset-0 animate-ping rounded-full bg-emerald-400/60" />
               <span class="absolute inset-0 rounded-full bg-emerald-400" />
             </span>
-            <span v-else :class="peekPill.icon" class="shrink-0 text-5.5 text-main-300" aria-hidden="true" />
+            <span v-else :class="peekPill.icon" class="shrink-0 text-5.5 app-accent" aria-hidden="true" />
             <span class="min-w-0">
               <span class="block truncate text-base font-950 leading-tight">{{ peekPill.title }}</span>
               <span v-if="peekPill.subtitle" class="block truncate text-xs text-white/45 font-800">

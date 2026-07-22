@@ -1,0 +1,170 @@
+nav:
+  menu: Мәзір
+  line: Желі
+  income: Табыс
+  driver: Жүргізуші
+  back: Артқа
+  backToMenu: Мәзірге оралу
+  backToSettings: Баптауларға оралу
+  backToProfile: Профильге оралу
+titles:
+  changePhone: Нөмірді өзгерту
+  dailyCheck: Күнделікті тексеру
+  facePhoto: Бет суреті
+  feedback: Жақсартуды ұсыну
+  history: Сапарлар тарихы
+  onboarding: Фотобақылау
+  parkChat: Таксопаркпен чат
+  parks: Таксопарк
+  profile: Жеке кабинет
+  ratingHistory: Рейтинг тарихы
+  settings: Баптаулар
+  support: Қолдау қызметі
+  vehicle: Автокөлік
+  vehicleDocs: Көлік суреті
+settings:
+  title: Баптаулар
+  appearance:
+    title: Безендіру
+    theme:
+      auto: Telegram-дағыдай
+      dark: Қараңғы
+      light: Ашық
+  language:
+    title: Тіл
+  phone:
+    title: Телефон нөмірі
+    change: Нөмірді өзгерту
+    changeSuffix: өзгерту
+  sound:
+    title: Тапсырыс әуені
+    on: Жаңа тапсырыс кезінде ойналады
+    off: Өшірулі
+  districts:
+    title: Тапсырыс аудандары
+    subtitle: Тапсырыстарды алдымен қай жерден іздейміз
+    wholeCity: Бүкіл қала
+    hint: Таңдалған аудандар картада белгіленеді. Тапсырыстарды алдымен солардан іздейміз; жақын жерде ешкім болмаса, тапсырыс кез келген ауданнан келуі мүмкін.
+    noCity: Аудандар қалаңыз анықталған соң пайда болады — қолданба геолокацияны алуы үшін карта экранын ашыңыз.
+menu:
+  cabinet: Кабинет
+  meta: Рейтинг {rating} · {trips} сапар
+  online: Желіде
+  offline: Офлайн
+  needsVerification: Тексеруді қажет етеді
+  logout: Шығу
+  loggingOut: Шығудамыз...
+  items:
+    bonus: Акциялар мен бонустар
+    bonusDesc: Барлық акциялар, бонустар және рефералдық бағдарлама
+    vehicle: Автокөлік
+    vehicleDesc: Көлік деректері мен тарифі
+    history: Сапарлар тарихы
+    historyDesc: Сіздің тапсырыстарыңыз
+    parks: Таксопарк
+    parksDesc: Кіру, шақыру коды, серіктестік
+    parkChat: Таксопаркпен чат
+    parkChatDesc: Таксопаркпен байланыс
+    support: Қолдау қызметі
+    supportDesc: Көмек және өтініштер
+    feedback: Жақсартуды ұсыну
+    feedbackDesc: Сервисті дамыту идеясы
+feedback:
+  eyebrow: Кері байланыс
+  title: Жақсартуды ұсыну
+  lead: Қолданбада нені жақсарту керегін айтыңыз. Үздік идеяларды енгізіп, бонуспен алғыс айтамыз.
+  thanksTitle: Идея үшін рақмет!
+  thanksText: Әр ұсынысты оқимыз. Енгізсек — бонус саламыз.
+  more: Тағы ұсыну
+  backToMenu: Мәзірге оралу
+  placeholder: 'Мысалы: үй мен жұмыс мекенжайларын сақтау мүмкіндігін қосыңыз…'
+  sending: Жіберудеміз...
+  send: Жіберу
+  toastOkTitle: Рақмет!
+  toastOkText: Ұсынысыңыз жіберілді.
+  toastFail: Ұсынысты жіберу сәтсіз аяқталды. Қайталап көріңіз.
+support:
+  myTickets: Менің өтініштерім
+  new: + Жаңа
+  pickSubject: Өтініш тақырыбын таңдаңыз
+  empty: Әзірге өтініштеріңіз жоқ. Сұрақ қою үшін «Жаңа» түймесін басыңыз.
+  emptyThread: Сұрағыңызды жазыңыз — оператор жақын арада жауап береді.
+  toList: Өтініштер тізіміне
+  closed: Өтініш жабылды
+  operatorOnline: Оператор желіде
+  agent: Техқолдау {name}
+  statusClosed: Жабық
+  statusPending: Растаңыз
+  statusOpen: Ашық
+  resolvedQ: Мәселеңіз шешілді ме?
+  yesResolved: Иә, шешілді
+  no: Жоқ
+  attach: Фото тіркеу
+  msgAria: Қолдау қызметіне хабарлама
+  placeholder: Хабарлама жазыңыз...
+  sendAria: Хабарлама жіберу
+  backAria: Өтініштер тізіміне
+  attachment: Тіркеме
+history:
+  km: '{n} км'
+  loadFail: Сапарлар тарихын жүктеу сәтсіз аяқталды.
+  errTitle: Қате
+  errSupport: Сапар бойынша қолдау қызметін ашу сәтсіз аяқталды.
+  emptyTitle: Әзірге сапарлар жоқ
+  emptyTextDriver: Аяқталған тапсырыстар осында пайда болады.
+  opening: Ашудамыз...
+  tripSupport: Сапар бойынша қолдау
+  loadingMore: Жүктеудеміз...
+  loadMore: Тағы жүктеу
+  thatsAll: Барлық тарих осы
+cats:
+  economy: Эконом
+  comfort: Комфорт
+  business: Бизнес
+  minivan: Минивэн
+  moto: Мото
+trip:
+  completed: Аяқталды
+  cancelled: Бас тартылды
+  inProgress: Жолда
+  assigned: Тағайындалды
+  arriving: Келе жатыр
+  searching: Іздеу
+changePhone:
+  enterPhone: Жаңа нөмірді енгізіңіз — оған растау коды келеді.
+  enterCode: '{phone} нөміріне келген хабардағы кодты енгізіңіз.'
+  sendingCode: Код жіберудеміз...
+  getCode: Код алу
+  verifying: Тексерудеміз...
+  confirm: Нөмірді растау
+  editPhone: Нөмірді өзгерту
+  sending: Жіберудеміз...
+  resend: Кодты қайта жіберу
+  sendFail: Код жіберілмеді. Нөмірді тексеріп, қайталап көріңіз.
+  verifyFail: Кодты растау сәтсіз аяқталды. Қайталап көріңіз.
+  doneTitle: Дайын
+  doneMerged: Нөмір расталды, аккаунттар біріктірілді.
+  doneUpdated: Телефон нөмірі жаңартылды.
+parkChat:
+  openFail: Таксопаркпен чатты ашу сәтсіз аяқталды.
+  closed: Чат жабық
+  subtitle: Парктегі жұмыс туралы сұрақтар
+  close: Чатты жабу
+  closeAria: Чатты жабу
+  joinPark: Паркке кіру
+  empty: Хабарлама жазыңыз — парк иесі оны көреді.
+  msgAria: Таксопаркке хабарлама
+ratingHistory:
+  loadFail: Деректерді жүктеу сәтсіз аяқталды.
+  loading: Тарихты жүктеудеміз...
+  current: Ағымдағы рейтинг
+  avg: Орташа баға
+  ofRatings: '{n} бағадан'
+  noRatings: Бағалар жоқ
+  penalties: Айыппұл оқиғалары
+  noPenalties: Рейтингке айыппұл болған жоқ. Осылай жалғастырыңыз!
+  passengerRatings: Жолаушылар бағалары
+  noRatingsYet: Әзірге бағалар жоқ.
+  complaint: Расталған шағым
+  cancelAfterAccept: Қабылдағаннан кейін бас тарту
+  noShow: Жолаушыға келмеу

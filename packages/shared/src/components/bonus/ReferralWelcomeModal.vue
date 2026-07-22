@@ -35,8 +35,8 @@ function formatBonus(value: number) {
         class="fixed inset-0 z-[85] flex items-end bg-black/65 px-4 pb-[calc(var(--app-safe-area-bottom,0px)+1rem)] backdrop-blur-sm"
         @click.self="emit('close')"
       >
-        <section class="mx-auto max-w-sm w-full rounded-3xl bg-secondary-900 p-6 text-center text-white shadow-2xl shadow-black/30">
-          <div class="mx-auto h-18 w-18 flex items-center justify-center rounded-3xl bg-main-500/16 text-main-300">
+        <section class="mx-auto max-w-sm w-full rounded-3xl app-screen p-6 text-center text-white shadow-2xl shadow-black/30">
+          <div class="mx-auto h-18 w-18 flex items-center justify-center rounded-3xl bg-main-500/16 app-accent">
             <span class="i-mdi-gift-open text-10" aria-hidden="true" />
           </div>
 
@@ -44,14 +44,14 @@ function formatBonus(value: number) {
             +{{ formatBonus(reward) }} бонусов!
           </h2>
 
-          <p class="mt-2 text-sm text-slate-300 font-700 leading-6">
+          <p class="mt-2 text-sm text-slate-300 light:text-slate-600 font-700 leading-6">
             Вы присоединились по ссылке друга{{ inviterName ? ` — ${inviterName}` : '' }}.
             Бонусы уже начислены на ваш счёт.
           </p>
 
-          <div class="mt-4 rounded-2xl bg-white/5 px-4 py-3 text-left">
-            <p class="flex items-start gap-2.5 text-xs text-slate-300 font-700 leading-5">
-              <span class="i-mdi-account-multiple-plus mt-0.5 shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+          <div class="mt-4 rounded-2xl app-card px-4 py-3 text-left">
+            <p class="flex items-start gap-2.5 text-xs text-slate-300 light:text-slate-600 font-700 leading-5">
+              <span class="i-mdi-account-multiple-plus mt-0.5 shrink-0 text-4.5 app-accent" aria-hidden="true" />
               Поделитесь своей ссылкой с друзьями — за каждого, кто присоединится,
               вы получите ещё +{{ formatBonus(ownerReward) }} бонусов.
             </p>
@@ -67,7 +67,7 @@ function formatBonus(value: number) {
           </button>
 
           <button
-            class="mt-2 h-12 w-full rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+            class="mt-2 h-12 w-full rounded-2xl app-chip text-sm font-900 transition active:scale-[0.98]"
             type="button"
             @click="emit('close')"
           >

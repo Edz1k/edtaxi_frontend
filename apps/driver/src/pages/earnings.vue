@@ -134,10 +134,10 @@ function formatDate(value: string) {
 </script>
 
 <template>
-  <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+7.25rem)] pt-[calc(var(--app-safe-area-top)+1.35rem)] text-white">
+  <main class="tg-safe-x h-full overflow-y-auto app-screen pb-[calc(var(--app-safe-area-bottom)+7.25rem)] pt-[calc(var(--app-safe-area-top)+1.35rem)] text-white">
     <section class="mx-auto max-w-sm">
       <header>
-        <p class="text-xs text-main-300 font-900 uppercase">
+        <p class="text-xs app-accent font-900 uppercase">
           Водитель
         </p>
         <h1 class="mt-1 text-3xl font-950">
@@ -145,18 +145,18 @@ function formatDate(value: string) {
         </h1>
       </header>
 
-      <section class="mt-6 border border-main-500/20 rounded-3xl bg-white/6 p-5">
-        <p class="text-xs text-slate-400 font-800 uppercase">
+      <section class="mt-6 border border-main-500/20 rounded-3xl app-card p-5">
+        <p class="text-xs app-muted font-800 uppercase">
           Всего заработано
         </p>
-        <p class="mt-2 text-4xl text-main-200 font-950">
+        <p class="mt-2 text-4xl text-main-200 font-950 light:text-main-700">
           {{ formatMoney(earnings.earnings?.total_earned ?? 0) }}
         </p>
 
         <!-- Разбивка дохода: наличными (получено в руки) и картой/кошельком -->
         <div class="grid grid-cols-2 mt-4 gap-2">
-          <div class="rounded-2xl bg-white/6 px-3 py-2.5">
-            <p class="flex items-center gap-1 text-xs text-slate-400 font-800">
+          <div class="rounded-2xl app-card px-3 py-2.5">
+            <p class="flex items-center gap-1 text-xs app-muted font-800">
               <span class="i-mdi-cash text-4 text-emerald-300" />
               Наличными
             </p>
@@ -164,9 +164,9 @@ function formatDate(value: string) {
               {{ formatMoney(earnings.earnings?.cash_earned ?? 0) }}
             </p>
           </div>
-          <div class="rounded-2xl bg-white/6 px-3 py-2.5">
-            <p class="flex items-center gap-1 text-xs text-slate-400 font-800">
-              <span class="i-mdi-credit-card-outline text-4 text-main-300" />
+          <div class="rounded-2xl app-card px-3 py-2.5">
+            <p class="flex items-center gap-1 text-xs app-muted font-800">
+              <span class="i-mdi-credit-card-outline text-4 app-accent" />
               Картой
             </p>
             <p class="mt-0.5 text-lg font-950">
@@ -177,8 +177,8 @@ function formatDate(value: string) {
       </section>
 
       <div class="grid grid-cols-2 mt-4 gap-3">
-        <article class="rounded-2xl bg-white/5 p-4">
-          <p class="text-xs text-slate-400 font-800">
+        <article class="rounded-2xl app-card p-4">
+          <p class="text-xs app-muted font-800">
             Поездок
           </p>
           <p class="mt-1 text-2xl font-950">
@@ -186,8 +186,8 @@ function formatDate(value: string) {
           </p>
         </article>
 
-        <article class="rounded-2xl bg-white/5 p-4">
-          <p class="text-xs text-slate-400 font-800">
+        <article class="rounded-2xl app-card p-4">
+          <p class="text-xs app-muted font-800">
             Средний чек
           </p>
           <p class="mt-1 text-2xl font-950">
@@ -205,18 +205,18 @@ function formatDate(value: string) {
 
       <button
         :disabled="earnings.isLoadingEarnings"
-        class="mt-4 h-13 w-full rounded-2xl bg-white/8 text-sm font-900 disabled:opacity-60"
+        class="mt-4 h-13 w-full rounded-2xl app-chip text-sm font-900 disabled:opacity-60"
         type="button"
         @click="earnings.loadEarnings()"
       >
         {{ earnings.isLoadingEarnings ? 'Обновляем...' : 'Обновить' }}
       </button>
 
-      <section class="mt-6 border border-main-500/20 rounded-3xl bg-white/6 p-5">
-        <p class="text-xs text-slate-400 font-800 uppercase">
+      <section class="mt-6 border border-main-500/20 rounded-3xl app-card p-5">
+        <p class="text-xs app-muted font-800 uppercase">
           Баланс
         </p>
-        <p class="mt-2 text-4xl text-main-200 font-950">
+        <p class="mt-2 text-4xl text-main-200 font-950 light:text-main-700">
           {{ formatMoney(earnings.wallet?.available_balance ?? 0) }}
         </p>
         <!-- Долг по комиссиям наличных поездок гасится при следующем пополнении.
@@ -229,11 +229,11 @@ function formatDate(value: string) {
           <p v-if="isDebtBlockingOnline" class="mt-0.5 text-xs text-red-300/90 font-700 leading-4">
             Долг превысил {{ formatMoney(maxDebtToGoOnline) }} — выход на линию заблокирован. Пополните баланс, чтобы вернуться на линию (долг спишется автоматически).
           </p>
-          <p v-else class="mt-0.5 text-xs text-slate-400 leading-4">
+          <p v-else class="mt-0.5 text-xs app-muted leading-4">
             Долг пока не мешает выходить на линию, но при превышении {{ formatMoney(maxDebtToGoOnline) }} линия заблокируется. Спишется автоматически при следующем пополнении.
           </p>
         </template>
-        <p v-else class="mt-1 text-sm text-slate-400">
+        <p v-else class="mt-1 text-sm app-muted">
           Выходить на линию можно с любым балансом.
         </p>
 
@@ -241,7 +241,7 @@ function formatDate(value: string) {
           <input
             v-model.number="topUpAmount"
             aria-label="Сумма пополнения"
-            class="h-13 min-w-0 border border-white/10 rounded-2xl bg-secondary-950/70 px-4 text-base text-white outline-none focus:border-main-400"
+            class="h-13 min-w-0 border app-border rounded-2xl app-input-surface px-4 text-base text-white outline-none focus:border-main-400"
             inputmode="numeric"
             min="100"
             name="topup_amount"
@@ -258,11 +258,11 @@ function formatDate(value: string) {
       </section>
 
       <!-- Вывод средств -->
-      <section class="mt-6 border border-main-500/20 rounded-3xl bg-white/6 p-5">
-        <p class="text-xs text-slate-400 font-800 uppercase">
+      <section class="mt-6 border border-main-500/20 rounded-3xl app-card p-5">
+        <p class="text-xs app-muted font-800 uppercase">
           Вывод средств
         </p>
-        <p class="mt-1 text-sm text-slate-400">
+        <p class="mt-1 text-sm app-muted">
           Минимальная сумма — {{ formatMoney(MIN_PAYOUT_AMOUNT) }}. Заявку проверит администратор.
         </p>
 
@@ -275,19 +275,19 @@ function formatDate(value: string) {
         >
           Вывести
         </button>
-        <p v-if="!isPayoutFormOpen && availableBalance < MIN_PAYOUT_AMOUNT" class="mt-2 text-center text-xs text-slate-500 font-700">
+        <p v-if="!isPayoutFormOpen && availableBalance < MIN_PAYOUT_AMOUNT" class="mt-2 text-center text-xs app-faint font-700">
           Недостаточно средств для вывода
         </p>
 
         <form v-if="isPayoutFormOpen" class="mt-4 space-y-3" @submit.prevent="submitPayout">
           <div>
-            <label class="text-xs text-slate-400 font-800 uppercase" for="payout-amount">
+            <label class="text-xs app-muted font-800 uppercase" for="payout-amount">
               Сумма
             </label>
             <input
               id="payout-amount"
               v-model.number="payoutAmount"
-              class="mt-2 h-13 w-full border border-white/10 rounded-2xl bg-secondary-950/70 px-4 text-base text-white outline-none focus:border-main-400"
+              class="mt-2 h-13 w-full border app-border rounded-2xl app-input-surface px-4 text-base text-white outline-none focus:border-main-400"
               inputmode="numeric"
               :max="availableBalance"
               :min="MIN_PAYOUT_AMOUNT"
@@ -297,13 +297,13 @@ function formatDate(value: string) {
           </div>
 
           <div>
-            <label class="text-xs text-slate-400 font-800 uppercase" for="payout-destination">
+            <label class="text-xs app-muted font-800 uppercase" for="payout-destination">
               Реквизиты (карта или IBAN)
             </label>
             <input
               id="payout-destination"
               v-model="payoutDestination"
-              class="mt-2 h-13 w-full border border-white/10 rounded-2xl bg-secondary-950/70 px-4 text-sm text-white outline-none focus:border-main-400"
+              class="mt-2 h-13 w-full border app-border rounded-2xl app-input-surface px-4 text-sm text-white outline-none focus:border-main-400"
               maxlength="200"
               name="payout_destination"
               placeholder="Например, 4400 1234 5678 9012"
@@ -319,7 +319,7 @@ function formatDate(value: string) {
               {{ earnings.isRequestingPayout ? 'Отправляем...' : 'Создать заявку' }}
             </button>
             <button
-              class="h-13 rounded-2xl bg-white/8 px-5 text-sm font-900 transition active:scale-[0.98]"
+              class="h-13 rounded-2xl app-chip px-5 text-sm font-900 transition active:scale-[0.98]"
               type="button"
               @click="isPayoutFormOpen = false"
             >
@@ -331,25 +331,25 @@ function formatDate(value: string) {
 
       <!-- Заявки на вывод -->
       <section v-if="earnings.payouts.length || earnings.isLoadingPayouts" class="mt-6">
-        <h2 class="text-xs text-slate-400 font-800 uppercase">
+        <h2 class="text-xs app-muted font-800 uppercase">
           Заявки на вывод
         </h2>
 
         <div v-if="earnings.isLoadingPayouts && !earnings.payouts.length" class="mt-3 space-y-2">
-          <div v-for="item in 3" :key="item" class="h-16 animate-pulse rounded-2xl bg-white/6" />
+          <div v-for="item in 3" :key="item" class="h-16 animate-pulse rounded-2xl app-card" />
         </div>
 
         <div v-else class="mt-3 space-y-2">
-          <article v-for="payout in earnings.payouts" :key="payout.id" class="rounded-2xl bg-white/5 p-4">
+          <article v-for="payout in earnings.payouts" :key="payout.id" class="rounded-2xl app-card p-4">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <p class="text-lg font-950">
                   {{ formatMoney(payout.amount) }}
                 </p>
-                <p class="mt-0.5 truncate text-xs text-slate-400 font-700">
+                <p class="mt-0.5 truncate text-xs app-muted font-700">
                   {{ payout.destination || 'Реквизиты не указаны' }}
                 </p>
-                <p class="mt-0.5 text-xs text-slate-500 font-700">
+                <p class="mt-0.5 text-xs app-faint font-700">
                   {{ formatDate(payout.created_at) }}
                 </p>
               </div>

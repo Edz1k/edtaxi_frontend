@@ -46,7 +46,7 @@ function formatDistance(m?: null | number) {
        (скролл-область AddressForm или страницы избранного). -->
   <div
     v-if="places.length || isLoading || failed"
-    class="min-w-0 overflow-x-hidden rounded-2xl bg-white/5 p-2 space-y-1"
+    class="min-w-0 overflow-x-hidden rounded-2xl app-card p-2 space-y-1"
   >
     <button
       v-for="place in places"
@@ -57,17 +57,17 @@ function formatDistance(m?: null | number) {
     >
       <span
         class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full"
-        :class="place.isFavorite ? 'bg-main-500/16 text-main-300' : iconColorClass[color]"
+        :class="place.isFavorite ? 'bg-main-500/16 app-accent' : iconColorClass[color]"
       >
         <span :class="getSuggestionIcon(place)" class="text-5" />
       </span>
       <span class="min-w-0 flex-1 overflow-hidden">
         <span class="block truncate text-sm font-800">{{ place.name }}</span>
-        <span class="block truncate text-xs text-slate-400">{{ place.address }}</span>
+        <span class="block truncate text-xs app-muted">{{ place.address }}</span>
       </span>
       <span
         v-if="formatDistance(place.distanceM)"
-        class="shrink-0 text-xs text-slate-400 font-700"
+        class="shrink-0 text-xs app-muted font-700"
       >
         {{ formatDistance(place.distanceM) }}
       </span>
@@ -75,7 +75,7 @@ function formatDistance(m?: null | number) {
 
     <p
       v-if="isLoading && !places.length"
-      class="px-2 py-2 text-xs text-slate-400 font-700"
+      class="px-2 py-2 text-xs app-muted font-700"
     >
       Ищем адрес...
     </p>

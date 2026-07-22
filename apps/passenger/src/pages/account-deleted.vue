@@ -5,6 +5,7 @@ import { useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const toast = useToast()
+const { t } = useI18n()
 
 definePage({
   meta: {
@@ -14,7 +15,7 @@ definePage({
 })
 
 useHead({
-  title: 'Аккаунт удалён | Telegram Taxi',
+  title: () => `${t('deleted.title')} | Telegram Taxi`,
 })
 
 onMounted(() => {
@@ -35,7 +36,7 @@ async function createAgain() {
     await router.replace('/map')
   }
   catch (e: any) {
-    toast.error('Не получилось', e?.message || 'Попробуйте позже или обратитесь в поддержку.')
+    toast.error(t('profile.failTitle'), e?.message || t('profile.deleteFailText'))
   }
   finally {
     isCreating.value = false
@@ -49,16 +50,16 @@ async function signOut() {
 </script>
 
 <template>
-  <main class="tg-safe-x h-full flex flex-col justify-center bg-secondary-900 px-6 text-white">
+  <main class="tg-safe-x h-full flex flex-col justify-center app-screen px-6 text-white">
     <section class="mx-auto max-w-sm w-full">
       <span class="h-14 w-14 flex items-center justify-center rounded-2xl bg-red-500/14 text-red-300">
         <span class="i-mdi-account-off-outline text-8" />
       </span>
       <h1 class="mt-5 text-2xl font-950 leading-tight">
-        Аккаунт удалён
+        {{ t('deleted.title') }}
       </h1>
-      <p class="mt-3 text-sm text-slate-400 leading-6">
-        Вы удалили аккаунт пассажира. Можно создать его заново — рейтинг сохранится.
+      <p class="mt-3 text-sm app-muted leading-6">
+        {{ t('deleted.text') }}
       </p>
 
       <button
@@ -67,14 +68,14 @@ async function signOut() {
         type="button"
         @click="createAgain"
       >
-        {{ isCreating ? 'Создаём...' : 'Создать аккаунт' }}
+        {{ isCreating ? t('deleted.creating') : t('deleted.create') }}
       </button>
       <button
-        class="mt-3 h-12 w-full flex items-center justify-center rounded-2xl bg-white/8 text-sm text-slate-300 font-900 transition active:scale-[0.98]"
+        class="mt-3 h-12 w-full flex items-center justify-center rounded-2xl app-chip text-sm text-slate-300 font-900 transition active:scale-[0.98] light:text-slate-600"
         type="button"
         @click="signOut"
       >
-        Выйти
+        {{ t('menu.logout') }}
       </button>
     </section>
   </main>

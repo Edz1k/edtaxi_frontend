@@ -166,7 +166,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
   <div class="[scrollbar-width:none] overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:hidden space-y-3">
     <header class="flex items-center justify-between gap-3 px-1">
       <div class="min-w-0">
-        <p class="text-[11px] text-main-300 font-900 uppercase">
+        <p class="text-[11px] app-accent font-900 uppercase">
           Маршрут
         </p>
         <h2 class="mt-0.5 truncate text-xl font-950">
@@ -176,7 +176,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
 
       <button
         aria-label="Выбрать точку назначения на карте"
-        class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-white transition active:scale-95"
+        class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full app-chip text-white transition active:scale-95"
         title="Выбрать точку назначения на карте"
         type="button"
         @click="emit('pickFromMap', 'destination')"
@@ -196,7 +196,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
         :ref="el => setRowEl(rowIndex, el)"
         class="min-h-14 flex items-center gap-3 rounded-[1.35rem] px-3.5 transition"
         :class="[
-          dragIndex === rowIndex ? 'bg-white/14 shadow-lg shadow-black/30' : 'bg-white/6 focus-within:bg-white/10',
+          dragIndex === rowIndex ? 'bg-white/14 shadow-lg shadow-black/30' : 'app-card focus-within:bg-white/10',
           isReorderable ? 'touch-none' : '',
           isPressing ? 'select-none [-webkit-touch-callout:none]' : '',
         ]"
@@ -205,17 +205,17 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
       >
         <span
           v-if="row.kind === 'pickup'"
-          class="i-mdi-near-me shrink-0 text-5 text-main-300"
+          class="i-mdi-near-me shrink-0 text-5 app-accent"
           aria-hidden="true"
         />
         <span
           v-else-if="row.kind === 'destination'"
-          class="i-mdi-flag-checkered shrink-0 text-5 text-main-300"
+          class="i-mdi-flag-checkered shrink-0 text-5 app-accent"
           aria-hidden="true"
         />
         <span
           v-else
-          class="h-5 w-5 flex shrink-0 items-center justify-center rounded-full bg-main-500/22 text-[11px] text-main-200 font-950"
+          class="h-5 w-5 flex shrink-0 items-center justify-center rounded-full bg-main-500/22 text-[11px] text-main-200 font-950 light:text-main-700"
           aria-hidden="true"
         >
           {{ row.index + 1 }}
@@ -225,7 +225,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
           :ref="el => setInputEl(row, el)"
           :value="rowValue(row)"
           :aria-label="rowAriaLabel(row)"
-          class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:text-slate-400"
+          class="min-w-0 flex-1 bg-transparent text-sm text-white font-800 outline-none placeholder:app-muted"
           :name="rowName(row)"
           :placeholder="rowPlaceholder(row)"
           type="text"
@@ -312,7 +312,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
       <!-- Добавить остановку (до 3) -->
       <button
         v-if="canAddStop"
-        class="flex items-center gap-2 px-2 py-1 text-[12px] text-main-300 font-800 transition active:scale-[0.98]"
+        class="flex items-center gap-2 px-2 py-1 text-[12px] app-accent font-800 transition active:scale-[0.98]"
         type="button"
         @click="emit('addStop')"
       >
@@ -351,25 +351,25 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
       />
 
       <!-- Частые и недавние адреса из истории поездок — быстрый выбор «Куда» -->
-      <div v-if="showQuickDestinations" class="rounded-[1.65rem] bg-white/5 p-2">
-        <p class="px-2 pb-1 pt-1.5 text-[11px] text-slate-500 font-800 uppercase">
+      <div v-if="showQuickDestinations" class="rounded-[1.65rem] app-card p-2">
+        <p class="px-2 pb-1 pt-1.5 text-[11px] app-faint font-800 uppercase">
           Недавние и частые
         </p>
         <button
           v-for="item in quickDestinations"
           :key="item.place.id"
-          class="w-full flex items-center gap-3 rounded-[1.25rem] px-3 py-2.5 text-left transition active:scale-[0.99] hover:bg-white/6"
+          class="w-full flex items-center gap-3 rounded-[1.25rem] px-3 py-2.5 text-left transition active:scale-[0.99] hover:bg-white/6 light:hover:bg-black/4"
           type="button"
           @click="emit('selectDestination', item.place)"
         >
-          <span class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-main-200">
+          <span class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-main-200 light:text-main-700">
             <span :class="item.times > 2 ? 'i-mdi-star' : 'i-mdi-history'" class="text-4.5" />
           </span>
           <span class="min-w-0 flex-1">
             <span class="block truncate text-sm font-800">{{ item.place.name }}</span>
-            <span class="block truncate text-xs text-slate-500 font-700">{{ item.place.address }}</span>
+            <span class="block truncate text-xs app-faint font-700">{{ item.place.address }}</span>
           </span>
-          <span v-if="item.times > 1" class="shrink-0 text-[11px] text-slate-500 font-800">
+          <span v-if="item.times > 1" class="shrink-0 text-[11px] app-faint font-800">
             ×{{ item.times }}
           </span>
         </button>

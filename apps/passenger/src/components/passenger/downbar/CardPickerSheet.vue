@@ -33,12 +33,12 @@ function goBindNew() {
       class="fixed inset-0 z-60 flex items-end justify-center bg-black/60 backdrop-blur-sm"
       @click.self="emit('close')"
     >
-      <div class="tg-safe-x max-w-sm w-full border border-white/10 rounded-t-[2rem] bg-secondary-900 p-5 pb-[calc(var(--app-safe-area-bottom)+1.25rem)] text-white">
+      <div class="tg-safe-x max-w-sm w-full border app-border rounded-t-[2rem] app-screen p-5 pb-[calc(var(--app-safe-area-bottom)+1.25rem)] text-white">
         <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/25" />
         <h3 class="text-lg font-950">
           Карта для оплаты
         </h3>
-        <p class="mt-1 text-xs text-slate-400 leading-4">
+        <p class="mt-1 text-xs app-muted leading-4">
           Поездка спишется с выбранной карты после завершения.
         </p>
 
@@ -48,11 +48,11 @@ function goBindNew() {
             :key="item.id"
             :disabled="wallet.isMutating"
             class="w-full flex items-center gap-3 border rounded-2xl px-3 py-3 text-left transition active:scale-[0.99] disabled:opacity-60"
-            :class="item.is_default ? 'border-main-400/60 bg-main-500/12' : 'border-white/8 bg-white/5'"
+            :class="item.is_default ? 'border-main-400/60 bg-main-500/12' : 'border-white/8 app-card'"
             type="button"
             @click="choose(item)"
           >
-            <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg bg-white/8">
+            <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg app-chip">
               <CardBrandMark :brand="item.card_brand" />
             </span>
             <span class="min-w-0 flex-1 text-sm font-900 tracking-wider">
@@ -60,14 +60,14 @@ function goBindNew() {
             </span>
             <span
               v-if="item.is_default"
-              class="i-mdi-check-circle shrink-0 text-5 text-main-300"
+              class="i-mdi-check-circle shrink-0 text-5 app-accent"
               aria-label="Основная карта"
             />
           </button>
         </div>
 
         <button
-          class="mt-3 h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+          class="mt-3 h-12 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-sm font-900 transition active:scale-[0.98]"
           type="button"
           @click="goBindNew"
         >

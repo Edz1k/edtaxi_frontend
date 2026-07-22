@@ -54,8 +54,8 @@ definePage({
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
-    screenSubtitle: 'Назад в меню',
-    screenTitle: 'Таксопарк',
+    screenSubtitle: 'nav.backToMenu',
+    screenTitle: 'titles.parks',
   },
 })
 
@@ -260,22 +260,22 @@ async function acceptInvite() {
 </script>
 
 <template>
-  <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)] text-white">
+  <main class="tg-safe-x h-full overflow-y-auto app-screen pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)] text-white">
     <section class="mx-auto max-w-sm">
       <header>
-        <p class="text-xs text-main-300 font-900 uppercase">
+        <p class="text-xs app-accent font-900 uppercase">
           Водитель
         </p>
         <h1 class="mt-1 text-3xl font-950">
           Таксопарк
         </h1>
-        <p class="mt-2 text-sm text-slate-400 leading-5">
+        <p class="mt-2 text-sm app-muted leading-5">
           Для выхода на линию нужно состоять в таксопарке или стать партнёром платформы.
         </p>
       </header>
 
       <div v-if="isLoading" class="mt-6 space-y-2">
-        <div v-for="item in 3" :key="item" class="h-20 animate-pulse rounded-2xl bg-white/6" />
+        <div v-for="item in 3" :key="item" class="h-20 animate-pulse rounded-2xl app-card" />
       </div>
 
       <template v-else>
@@ -299,41 +299,41 @@ async function acceptInvite() {
 
         <!-- Акции моего парка: прогресс считается после кнопки «Участвовать» -->
         <section v-if="hasPark && myPromos.length" class="mt-4">
-          <h2 class="text-xs text-slate-400 font-800 uppercase">
+          <h2 class="text-xs app-muted font-800 uppercase">
             Акции парка
           </h2>
           <div class="mt-2 space-y-2">
             <article
               v-for="promo in myPromos"
               :key="promo.id"
-              class="rounded-2xl bg-white/5 p-4"
+              class="rounded-2xl app-card p-4"
             >
               <div class="flex items-start justify-between gap-2">
                 <p class="min-w-0 text-sm font-950">
                   {{ promo.title }}
                 </p>
-                <span class="shrink-0 text-xs text-main-200 font-900">
+                <span class="shrink-0 text-xs text-main-200 font-900 light:text-main-700">
                   +{{ Math.floor(promo.reward).toLocaleString('ru-RU') }} бонусов
                 </span>
               </div>
-              <p v-if="promo.description" class="mt-1 text-xs text-slate-400 leading-4">
+              <p v-if="promo.description" class="mt-1 text-xs app-muted leading-4">
                 {{ promo.description }}
               </p>
-              <p class="mt-1 text-xs text-slate-500 font-700">
+              <p class="mt-1 text-xs app-faint font-700">
                 {{ promo.target_trips }} заказов · до {{ formatDeadline(promo.ends_at) }}
               </p>
 
               <!-- Участвует: прогресс-бар. Нет: кнопка «Участвовать». -->
               <template v-if="promo.joined">
-                <div class="mt-3 h-2 overflow-hidden rounded-full bg-white/8">
+                <div class="mt-3 h-2 overflow-hidden rounded-full app-chip">
                   <div
                     class="h-full rounded-full bg-main-400 transition-all"
                     :style="{ width: `${promoProgress(promo)}%` }"
                   />
                 </div>
-                <p class="mt-1.5 text-xs text-slate-400 font-800">
+                <p class="mt-1.5 text-xs app-muted font-800">
                   {{ promo.my_trips }} из {{ promo.target_trips }} заказов
-                  <span class="text-slate-500 font-600">· прогресс с момента вступления</span>
+                  <span class="app-faint font-600">· прогресс с момента вступления</span>
                 </p>
               </template>
               <button
@@ -374,17 +374,17 @@ async function acceptInvite() {
         </div>
 
         <!-- Код приглашения: прямое вступление, если владелец парка выдал token -->
-        <form v-if="!hasPark" class="mt-6 rounded-3xl bg-white/5 p-4" @submit.prevent="acceptInvite">
-          <label class="text-xs text-slate-400 font-800 uppercase" for="park-token">
+        <form v-if="!hasPark" class="mt-6 rounded-3xl app-card p-4" @submit.prevent="acceptInvite">
+          <label class="text-xs app-muted font-800 uppercase" for="park-token">
             Код приглашения
           </label>
-          <p class="mt-1 text-xs text-slate-500 leading-4">
+          <p class="mt-1 text-xs app-faint leading-4">
             Если владелец парка выдал вам код, введите его и вступите без заявки.
           </p>
           <input
             id="park-token"
             v-model="inviteToken"
-            class="mt-2 h-13 w-full border border-white/10 rounded-2xl bg-secondary-950/70 px-4 text-sm outline-none focus:border-main-400"
+            class="mt-2 h-13 w-full border app-border rounded-2xl app-input-surface px-4 text-sm outline-none focus:border-main-400"
             placeholder="Введите код"
           >
           <button
@@ -400,7 +400,7 @@ async function acceptInvite() {
              парк». Смена — осознанное действие по кнопке ниже. -->
         <button
           v-if="hasPark && canRequest && !showSwitchList"
-          class="mt-6 h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/6 text-sm text-slate-300 font-900 transition active:scale-[0.98]"
+          class="mt-6 h-12 w-full flex items-center justify-center gap-2 rounded-2xl app-card text-sm text-slate-300 font-900 transition active:scale-[0.98] light:text-slate-600"
           type="button"
           @click="showSwitchList = true"
         >
@@ -412,21 +412,21 @@ async function acceptInvite() {
              нажатия «Сменить таксопарк»). Пока есть активная заявка — список
              прячем, показываем статус выше. -->
         <section v-if="canRequest && (!hasPark || showSwitchList)" class="mt-6">
-          <h2 class="text-xs text-slate-400 font-800 uppercase">
+          <h2 class="text-xs app-muted font-800 uppercase">
             {{ hasPark ? 'Сменить таксопарк' : 'Доступные парки' }}
           </h2>
-          <p v-if="hasPark" class="mt-1 text-xs text-slate-500 leading-4">
+          <p v-if="hasPark" class="mt-1 text-xs app-faint leading-4">
             Выберите новый парк и отправьте заявку — после одобрения вы перейдёте в него из текущего.
           </p>
 
-          <p v-if="!displayedParks.length" class="mt-3 text-sm text-slate-500">
+          <p v-if="!displayedParks.length" class="mt-3 text-sm app-faint">
             {{ hasPark ? 'Других парков для перехода пока нет.' : 'Пока нет парков, открытых для вступления.' }}
           </p>
 
           <div v-else class="mt-3 space-y-2">
-            <article v-for="park in displayedParks" :key="park.id" class="overflow-hidden rounded-2xl bg-white/5">
+            <article v-for="park in displayedParks" :key="park.id" class="overflow-hidden rounded-2xl app-card">
               <button
-                class="w-full p-4 text-left transition active:bg-white/6"
+                class="w-full p-4 text-left transition active:app-card"
                 type="button"
                 @click="toggleDetails(park)"
               >
@@ -435,11 +435,11 @@ async function acceptInvite() {
                     <p class="truncate text-base font-950">
                       {{ park.name }}
                     </p>
-                    <p v-if="park.description" class="line-clamp-2 mt-1 text-xs text-slate-400 leading-4">
+                    <p v-if="park.description" class="line-clamp-2 mt-1 text-xs app-muted leading-4">
                       {{ park.description }}
                     </p>
                   </div>
-                  <span class="shrink-0 rounded-full bg-main-500/14 px-3 py-1.5 text-xs text-main-200 font-900">
+                  <span class="shrink-0 rounded-full bg-main-500/14 px-3 py-1.5 text-xs text-main-200 font-900 light:text-main-700">
                     Комиссия {{ commissionLabel(park.commission_rate) }}
                   </span>
                 </div>
@@ -448,39 +448,39 @@ async function acceptInvite() {
               <!-- Детали парка: описание, телефон, акции, кнопка заявки -->
               <div v-if="expandedParkId === park.id" class="border-t border-white/8 px-4 pb-4 pt-3">
                 <div v-if="isLoadingDetails && !parkDetails[park.id]" class="space-y-2">
-                  <div v-for="item in 2" :key="item" class="h-10 animate-pulse rounded-xl bg-white/6" />
+                  <div v-for="item in 2" :key="item" class="h-10 animate-pulse rounded-xl app-card" />
                 </div>
 
                 <template v-else-if="parkDetails[park.id]">
-                  <p v-if="parkDetails[park.id].description" class="text-sm text-slate-300 leading-5">
+                  <p v-if="parkDetails[park.id].description" class="text-sm text-slate-300 leading-5 light:text-slate-600">
                     {{ parkDetails[park.id].description }}
                   </p>
-                  <p v-if="parkDetails[park.id].phone" class="mt-2 text-xs text-slate-400 font-700">
+                  <p v-if="parkDetails[park.id].phone" class="mt-2 text-xs app-muted font-700">
                     <span class="i-mdi-phone mr-1 inline-block align-middle text-3.5" />
                     {{ parkDetails[park.id].phone }}
                   </p>
 
                   <div v-if="parkDetails[park.id].promotions?.length" class="mt-3 space-y-2">
-                    <p class="text-xs text-slate-400 font-800 uppercase">
+                    <p class="text-xs app-muted font-800 uppercase">
                       Акции парка
                     </p>
                     <div
                       v-for="(promo, index) in parkDetails[park.id].promotions ?? []"
                       :key="index"
-                      class="rounded-xl bg-white/6 px-3 py-2.5"
+                      class="rounded-xl app-card px-3 py-2.5"
                     >
                       <div class="flex items-start justify-between gap-2">
                         <p class="min-w-0 text-sm font-900">
                           {{ promo.title }}
                         </p>
-                        <span class="shrink-0 text-xs text-main-200 font-900">
+                        <span class="shrink-0 text-xs text-main-200 font-900 light:text-main-700">
                           +{{ Math.floor(promo.reward).toLocaleString('ru-RU') }} бонусов
                         </span>
                       </div>
-                      <p v-if="promo.description" class="mt-1 text-xs text-slate-400 leading-4">
+                      <p v-if="promo.description" class="mt-1 text-xs app-muted leading-4">
                         {{ promo.description }}
                       </p>
-                      <p class="mt-1 text-xs text-slate-500 font-700">
+                      <p class="mt-1 text-xs app-faint font-700">
                         {{ promo.target_trips }} заказов · до {{ formatDeadline(promo.ends_at) }}
                       </p>
                     </div>
@@ -511,7 +511,7 @@ async function acceptInvite() {
             <span class="i-mdi-handshake text-6" />
             {{ isApplying ? 'Отправляем...' : (hasPark ? 'Перейти к партнёрству платформы' : 'Стать партнёром платформы') }}
           </button>
-          <p class="mt-2 text-center text-xs text-slate-400 leading-4">
+          <p class="mt-2 text-center text-xs app-muted leading-4">
             Работайте напрямую с платформой — комиссия всего 7%
           </p>
         </section>
@@ -525,14 +525,14 @@ async function acceptInvite() {
         class="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
         @click.self="switchTarget = null"
       >
-        <div class="max-w-sm w-full border border-white/10 rounded-3xl bg-secondary-900 p-5 shadow-2xl">
+        <div class="max-w-sm w-full border app-border rounded-3xl app-screen p-5 shadow-2xl">
           <span class="h-12 w-12 flex items-center justify-center rounded-2xl bg-amber-500/14 text-amber-300">
             <span class="i-mdi-swap-horizontal text-7" />
           </span>
           <h3 class="mt-4 text-lg font-950">
             Сменить таксопарк?
           </h3>
-          <p class="mt-2 text-sm text-slate-400 leading-5">
+          <p class="mt-2 text-sm app-muted leading-5">
             Вы уверены, что хотите уйти из текущего таксопарка и присоединиться к
             «{{ switchTarget.name }}»? Заявку рассмотрит новый парк, а переход
             произойдёт после её одобрения.
@@ -540,7 +540,7 @@ async function acceptInvite() {
 
           <div class="mt-5 flex gap-2">
             <button
-              class="h-12 flex-1 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+              class="h-12 flex-1 rounded-2xl app-chip text-sm font-900 transition active:scale-[0.98]"
               type="button"
               @click="switchTarget = null"
             >

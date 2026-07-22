@@ -19,7 +19,7 @@ const digits = computed<string[]>({
 
 <template>
   <div>
-    <label :id="labelId" class="mb-3 block text-sm text-slate-300 font-600">
+    <label :id="labelId" class="mb-3 block text-sm text-slate-300 font-600 light:text-slate-600">
       Код подтверждения
     </label>
 
@@ -34,7 +34,7 @@ const digits = computed<string[]>({
         v-for="(_, index) in 6"
         :key="index"
         autocomplete="one-time-code"
-        class="h-16 min-w-0 flex flex-1 items-center justify-center border rounded-2xl bg-white/5 text-center text-2xl text-white font-800 outline-none transition focus:border-main-400 focus:bg-main-500/10 placeholder:text-slate-500 focus:ring-2 focus:ring-main-400/40"
+        class="h-16 min-w-0 flex flex-1 items-center justify-center border rounded-2xl app-card text-center text-2xl text-white font-800 outline-none transition focus:border-main-400 focus:bg-main-500/10 placeholder:app-faint focus:ring-2 focus:ring-main-400/40"
         inputmode="numeric"
         :index="index"
         :name="index === 0 ? 'otp' : undefined"

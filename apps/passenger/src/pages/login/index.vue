@@ -12,6 +12,7 @@ import { SAVED_ACCOUNTS_KEY, useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const phoneInput = ref('')
 const otpDeliveryMethod = ref<OtpDeliveryMethod>('whatsapp')
@@ -29,7 +30,7 @@ definePage({
 })
 
 useHead({
-  title: 'Вход | Telegram Taxi',
+  title: () => `${t('login.title')} | Telegram Taxi`,
 })
 
 onMounted(() => {
@@ -58,13 +59,13 @@ async function submitPhone() {
 
 <template>
   <AuthScreen
-    description="Быстрый заказ такси прямо через Telegram. Введите номер телефона, чтобы получить код подтверждения."
+    :description="t('login.lead')"
     icon="i-mdi-taxi"
     title="Telegram Taxi"
   >
     <template v-if="hasSavedAccounts" #before>
       <button
-        class="mb-8 h-11 w-11 flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-slate-300 transition active:scale-[0.96]"
+        class="mb-8 h-11 w-11 flex items-center justify-center border app-border rounded-2xl app-card text-slate-300 transition active:scale-[0.96] light:text-slate-600"
         type="button"
         @click="router.replace('/login/accounts')"
       >
@@ -80,13 +81,13 @@ async function submitPhone() {
       <AuthButton
         :disabled="auth.isLoading || !canSubmit"
         :loading="auth.isLoading"
-        loading-text="Отправляем код..."
-        text="Получить код"
+        :loading-text="t('login.sendingCode')"
+        :text="t('login.getCode')"
       />
     </form>
 
     <template #footer>
-      Продолжая, вы соглашаетесь с условиями сервиса
+      {{ t('login.terms') }}
     </template>
   </AuthScreen>
 </template>

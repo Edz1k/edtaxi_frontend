@@ -21,5 +21,5 @@ const kind = computed(() => {
     <span class="h-3.5 w-3.5 rounded-full bg-red-500/90" />
     <span class="h-3.5 w-3.5 rounded-full bg-amber-400/85 -ml-1.5" />
   </span>
-  <span v-else aria-hidden="true" class="i-mdi-credit-card-outline text-4.5 text-slate-300" />
+  <span v-else aria-hidden="true" class="i-mdi-credit-card-outline text-4.5 text-slate-300 light:text-slate-600" />
 </template>

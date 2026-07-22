@@ -30,8 +30,8 @@ const toastStyles = {
   },
   info: {
     icon: 'i-mdi-information',
-    iconClass: 'bg-main-500/16 text-main-300',
-    rootClass: 'border-main-400/20 bg-secondary-900/94',
+    iconClass: 'bg-main-500/16 app-accent',
+    rootClass: 'border-main-400/20 app-screen/94',
   },
   success: {
     icon: 'i-mdi-check-circle',
@@ -76,13 +76,13 @@ const toastStyles = {
 
         <ToastDescription
           v-if="toast.description"
-          class="mt-1 text-xs text-slate-300 font-700 leading-5"
+          class="mt-1 text-xs text-slate-300 font-700 leading-5 light:text-slate-600"
         >
           {{ toast.description }}
         </ToastDescription>
       </component>
 
-      <ToastClose class="h-9 w-9 flex items-center justify-center rounded-full bg-white/8 text-slate-300 transition active:scale-[0.95]">
+      <ToastClose class="h-9 w-9 flex items-center justify-center rounded-full app-chip text-slate-300 transition active:scale-[0.95] light:text-slate-600">
         <span class="i-mdi-close text-5" />
       </ToastClose>
     </ToastRoot>

@@ -10,7 +10,7 @@ const trips = useTripsStore()
 
 const statusMeta: Record<TripStatus, { className: string, label: string }> = {
   awaiting_payment: {
-    className: 'bg-main-500/12 text-main-300',
+    className: 'bg-main-500/12 app-accent',
     label: 'Ожидание оплаты',
   },
   cancelled: {
@@ -22,11 +22,11 @@ const statusMeta: Record<TripStatus, { className: string, label: string }> = {
     label: 'Завершена',
   },
   driver_arriving: {
-    className: 'bg-main-500/12 text-main-300',
+    className: 'bg-main-500/12 app-accent',
     label: 'Водитель на месте',
   },
   driver_assigned: {
-    className: 'bg-main-500/12 text-main-300',
+    className: 'bg-main-500/12 app-accent',
     label: 'Водитель назначен',
   },
   in_progress: {
@@ -34,7 +34,7 @@ const statusMeta: Record<TripStatus, { className: string, label: string }> = {
     label: 'В пути',
   },
   searching: {
-    className: 'bg-slate-500/14 text-slate-300',
+    className: 'bg-slate-500/14 text-slate-300 light:text-slate-600',
     label: 'Поиск',
   },
 }
@@ -77,16 +77,16 @@ function canComplain(trip: Trip) {
 </script>
 
 <template>
-  <article class="rounded-3xl bg-white/5 p-4 shadow-black/10 shadow-lg">
+  <article class="rounded-3xl app-card p-4 shadow-black/10 shadow-lg">
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
-        <p class="text-xs text-slate-500 font-800">
+        <p class="text-xs app-faint font-800">
           {{ getTripDate(trip) }}
         </p>
         <h2 class="mt-1 truncate text-xl font-950">
           {{ getTripFare(trip) }}
         </h2>
-        <p class="mt-1 text-xs text-slate-400 font-700">
+        <p class="mt-1 text-xs app-muted font-700">
           {{ getTripMeta(trip) }}
         </p>
       </div>
@@ -119,7 +119,7 @@ function canComplain(trip: Trip) {
     <button
       v-if="trip.status === 'completed'"
       :disabled="trips.isRating"
-      class="mt-4 h-11 w-full rounded-2xl bg-main-500/14 text-sm text-main-200 font-900 transition active:scale-[0.98] disabled:opacity-60"
+      class="mt-4 h-11 w-full rounded-2xl bg-main-500/14 text-sm text-main-200 font-900 transition active:scale-[0.98] light:text-main-700 disabled:opacity-60"
       type="button"
       @click="emit('rate', trip)"
     >
@@ -128,7 +128,7 @@ function canComplain(trip: Trip) {
 
     <button
       :disabled="attaching"
-      class="mt-2 h-11 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/6 text-sm text-slate-200 font-900 transition active:scale-[0.98] disabled:opacity-60"
+      class="mt-2 h-11 w-full flex items-center justify-center gap-2 rounded-2xl app-card text-sm text-slate-200 font-900 transition active:scale-[0.98] disabled:opacity-60"
       type="button"
       @click="emit('contactSupport', trip)"
     >

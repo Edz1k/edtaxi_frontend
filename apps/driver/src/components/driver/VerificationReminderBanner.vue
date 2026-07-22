@@ -5,7 +5,7 @@ defineEmits<{ dismiss: [] }>()
 
 <template>
   <section class="tg-safe-x absolute inset-x-0 top-[calc(var(--app-safe-area-top)+0.75rem)] z-30">
-    <div class="mx-auto max-w-sm rounded-3xl bg-secondary-950/90 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+    <div class="mx-auto max-w-sm rounded-3xl app-sheet p-4 shadow-[0_14px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
       <div class="flex items-start gap-3">
         <span class="h-10 w-10 flex shrink-0 items-center justify-center rounded-2xl bg-amber-500/16 text-amber-300">
           <span class="i-mdi-shield-alert text-6" />
@@ -14,13 +14,13 @@ defineEmits<{ dismiss: [] }>()
           <p class="text-sm font-950">
             Пройдите верификацию
           </p>
-          <p class="mt-0.5 text-xs text-slate-400 leading-4">
+          <p class="mt-0.5 text-xs app-muted leading-4">
             Осталось завершить: {{ pendingLabel }}.
           </p>
         </div>
         <button
           aria-label="Скрыть напоминание"
-          class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-400"
+          class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full app-chip app-muted"
           type="button"
           @click="$emit('dismiss')"
         >

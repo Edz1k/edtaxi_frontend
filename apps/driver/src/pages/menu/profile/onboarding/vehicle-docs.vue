@@ -17,8 +17,8 @@ definePage({
     requiresAuth: true,
     requiredRole: 'driver',
     backTo: '/menu/profile/onboarding',
-    screenSubtitle: 'Назад',
-    screenTitle: 'Фото машины',
+    screenSubtitle: 'nav.back',
+    screenTitle: 'titles.vehicleDocs',
   },
 })
 
@@ -247,17 +247,17 @@ async function submit() {
 </script>
 
 <template>
-  <main class="tg-safe-bottom tg-safe-x h-full overflow-y-auto bg-secondary-900 text-white">
+  <main class="tg-safe-bottom tg-safe-x h-full overflow-y-auto app-screen text-white">
     <section class="mx-auto max-w-sm pb-6 pt-[calc(var(--app-safe-area-top)+6.5rem)]">
       <div class="flex items-center gap-3">
-        <div class="h-13 w-13 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200">
+        <div class="h-13 w-13 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200 light:text-main-700">
           <span class="i-mdi-car-key text-7" />
         </div>
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
             {{ pageTitle }}
           </h1>
-          <p class="mt-1 text-sm text-slate-400 leading-5">
+          <p class="mt-1 text-sm app-muted leading-5">
             <template v-if="hasVehicle && driver.requiredPhotoSlots.length">
               Загружено {{ uploadedRequiredCount }} из {{ driver.requiredPhotoSlots.length }} обязательных
             </template>
@@ -303,7 +303,7 @@ async function submit() {
 
         <RouterLink
           to="/menu/profile/onboarding"
-          class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-base text-white font-800 transition active:scale-[0.98]"
+          class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-base text-white font-800 transition active:scale-[0.98]"
         >
           <span class="i-mdi-format-list-checks text-5" />
           К списку проверок
@@ -318,11 +318,11 @@ async function submit() {
         </div>
 
         <!-- Подсказки по качеству фото -->
-        <div class="rounded-2xl bg-white/5 p-4">
-          <p class="mb-2 text-xs text-slate-300 font-800 uppercase">
+        <div class="rounded-2xl app-card p-4">
+          <p class="mb-2 text-xs text-slate-300 font-800 uppercase light:text-slate-600">
             Как фотографировать
           </p>
-          <ul class="text-xs text-slate-400 leading-5 space-y-1.5">
+          <ul class="text-xs app-muted leading-5 space-y-1.5">
             <li class="flex items-start gap-2">
               <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
               Хорошее освещение, без бликов
@@ -342,7 +342,7 @@ async function submit() {
           </ul>
         </div>
 
-        <div v-if="driver.isLoadingPhotos" class="flex items-center gap-3 text-sm text-slate-400">
+        <div v-if="driver.isLoadingPhotos" class="flex items-center gap-3 text-sm app-muted">
           <span class="i-mdi-loading animate-spin text-5" />
           Загружаем фото...
         </div>
@@ -368,10 +368,10 @@ async function submit() {
                   class="h-full w-full object-cover"
                   :alt="meta.label"
                 >
-                <div v-else class="h-full flex flex-col items-center justify-center gap-1.5 px-2 text-center text-slate-400">
+                <div v-else class="h-full flex flex-col items-center justify-center gap-1.5 px-2 text-center app-muted">
                   <span :class="meta.icon" class="text-8" />
                   <span class="text-xs font-700 leading-4">{{ meta.label }}</span>
-                  <span v-if="meta.optional" class="text-[10px] text-slate-500">необязательно</span>
+                  <span v-if="meta.optional" class="text-[10px] app-faint">необязательно</span>
                 </div>
 
                 <!-- Спиннер загрузки -->
@@ -386,7 +386,7 @@ async function submit() {
                   </span>
                   <div class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-black/55 px-2.5 py-1.5 backdrop-blur-sm">
                     <span class="truncate text-[11px] text-white font-700">{{ meta.label }}</span>
-                    <span class="flex items-center gap-1 text-[11px] text-main-200 font-800">
+                    <span class="flex items-center gap-1 text-[11px] text-main-200 font-800 light:text-main-700">
                       <span class="i-mdi-camera-retake text-3.5" />
                       Переснять
                     </span>

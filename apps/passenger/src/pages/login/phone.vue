@@ -13,6 +13,7 @@ import { useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const { shouldShake, shake } = useShakeAnimation()
+const { t } = useI18n()
 
 // share — главный экран с кнопкой «Поделиться номером»;
 // manual — ручной ввод номера; code — подтверждение OTP.
@@ -33,7 +34,7 @@ definePage({
 })
 
 useHead({
-  title: 'Подтверждение номера | Telegram Taxi',
+  title: () => `${t('login.confirmPhoneTitle')} | Telegram Taxi`,
 })
 
 onMounted(() => {
@@ -103,13 +104,13 @@ async function logoutToLogin() {
 
 <template>
   <AuthScreen
-    description="Номер телефона обязателен: он нужен, чтобы водитель и поддержка могли с вами связаться."
+    :description="t('login.phoneRequired')"
     icon="i-mdi-phone-check"
-    title="Подтвердите номер"
+    :title="t('login.confirmPhoneTitle')"
   >
     <template v-if="step !== 'share'" #before>
       <button
-        class="mb-8 h-11 w-11 flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-slate-300 transition active:scale-[0.96]"
+        class="mb-8 h-11 w-11 flex items-center justify-center border app-border rounded-2xl app-card text-slate-300 transition active:scale-[0.96] light:text-slate-600"
         type="button"
         @click="step = step === 'code' ? 'manual' : 'share'"
       >
@@ -128,15 +129,15 @@ async function logoutToLogin() {
         @click="shareTelegramContact()"
       >
         <span class="i-mdi-send mr-2 text-5" />
-        {{ auth.isLoading ? 'Подтверждаем...' : 'Поделиться номером из Telegram' }}
+        {{ auth.isLoading ? t('login.confirming') : t('login.sharePhone') }}
       </button>
 
       <button
-        class="h-14 w-full flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-base text-slate-300 font-700 transition active:scale-[0.98]"
+        class="h-14 w-full flex items-center justify-center border app-border rounded-2xl app-card text-base text-slate-300 font-700 transition active:scale-[0.98] light:text-slate-600"
         type="button"
         @click="step = 'manual'"
       >
-        Ввести номер вручную
+        {{ t('login.manualPhone') }}
       </button>
     </div>
 
@@ -148,8 +149,8 @@ async function logoutToLogin() {
       <AuthButton
         :disabled="auth.isLoading || !canSubmitPhone"
         :loading="auth.isLoading"
-        loading-text="Отправляем код..."
-        text="Получить код"
+        :loading-text="t('login.sendingCode')"
+        :text="t('login.getCode')"
       />
     </form>
 
@@ -161,14 +162,14 @@ async function logoutToLogin() {
         :disabled="auth.isLoading || !canSubmitCode"
         icon="i-mdi-check"
         :loading="auth.isLoading"
-        loading-text="Проверяем код..."
-        text="Подтвердить"
+        :loading-text="t('login.checkingCode')"
+        :text="t('login.confirm')"
       />
     </form>
 
     <template #footer>
-      <button class="text-xs text-slate-500 underline" type="button" @click="logoutToLogin">
-        Выйти и сменить аккаунт
+      <button class="text-xs app-faint underline" type="button" @click="logoutToLogin">
+        {{ t('login.switchAccount') }}
       </button>
     </template>
   </AuthScreen>

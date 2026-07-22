@@ -27,7 +27,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="tg-safe-screen flex items-center justify-center bg-secondary-900 text-white">
+  <main class="tg-safe-screen flex items-center justify-center app-screen text-white">
     <div class="h-10 w-10 animate-spin border-3 border-main-400 border-t-transparent rounded-full" />
   </main>
 </template>

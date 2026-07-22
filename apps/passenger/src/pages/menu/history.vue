@@ -11,6 +11,7 @@ const trips = useTripsStore()
 const support = useSupportStore()
 const router = useRouter()
 const toast = useToast()
+const { t } = useI18n()
 const attachingTripId = ref<string | null>(null)
 
 async function contactSupport(trip: Trip) {
@@ -22,7 +23,7 @@ async function contactSupport(trip: Trip) {
     await router.push('/menu/support')
   }
   catch {
-    toast.error('Ошибка', 'Не удалось открыть поддержку по поездке.')
+    toast.error(t('history.errTitle'), t('history.errSupport'))
   }
   finally {
     attachingTripId.value = null
@@ -40,13 +41,13 @@ definePage({
     layout: 'passenger',
     requiresAuth: true,
     requiredRole: 'passenger',
-    screenSubtitle: 'Назад в меню',
-    screenTitle: 'История поездок',
+    screenSubtitle: 'nav.backToMenu',
+    screenTitle: 'titles.history',
   },
 })
 
 useHead({
-  title: 'История поездок | Telegram Taxi',
+  title: () => `${t('titles.history')} | Telegram Taxi`,
 })
 
 const isInitialLoading = computed(() => trips.isLoadingHistory && !trips.history.length)
@@ -99,26 +100,26 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main ref="scrollRoot" class="tg-safe-x tg-menu-inner-safe h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1.5rem)] text-white">
+  <main ref="scrollRoot" class="tg-safe-x tg-menu-inner-safe h-full overflow-y-auto app-screen pb-[calc(var(--app-safe-area-bottom)+1.5rem)] text-white">
     <section class="mx-auto max-w-sm">
       <header class="flex items-start justify-between gap-4">
         <div class="min-w-0">
-          <p class="text-xs text-main-300 font-900 uppercase">
-            Пассажир
+          <p class="text-xs app-accent font-900 uppercase">
+            {{ t('nav.passenger') }}
           </p>
           <h1 class="mt-1 text-3xl font-950">
-            История поездок
+            {{ t('titles.history') }}
           </h1>
-          <p class="mt-1 text-sm text-slate-400 leading-5">
-            Все ваши заказы и маршруты
+          <p class="mt-1 text-sm app-muted leading-5">
+            {{ t('history.lead') }}
           </p>
         </div>
 
         <button
           :disabled="trips.isLoadingHistory"
-          aria-label="Обновить историю поездок"
-          class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-white transition active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
-          title="Обновить"
+          :aria-label="t('history.refreshAria')"
+          class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full app-chip text-white transition active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
+          :title="t('history.refresh')"
           type="button"
           @click="refreshHistory"
         >
@@ -133,28 +134,28 @@ onBeforeUnmount(() => {
         <div
           v-for="item in 4"
           :key="item"
-          class="h-32 animate-pulse rounded-3xl bg-white/6"
+          class="h-32 animate-pulse rounded-3xl app-card"
         />
       </div>
 
       <section
         v-else-if="isListEmpty"
-        class="mt-10 rounded-3xl bg-white/5 px-5 py-8 text-center"
+        class="mt-10 rounded-3xl app-card px-5 py-8 text-center"
       >
-        <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-main-500/16 text-main-200">
+        <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-main-500/16 text-main-200 light:text-main-700">
           <span class="i-mdi-map-marker-path text-8" />
         </div>
         <h2 class="mt-4 text-xl font-950">
-          Поездок пока нет
+          {{ t('history.emptyTitle') }}
         </h2>
-        <p class="mt-2 text-sm text-slate-400 leading-5">
-          Когда вы закажете первую поездку, она появится здесь.
+        <p class="mt-2 text-sm app-muted leading-5">
+          {{ t('history.emptyText') }}
         </p>
         <RouterLink
           class="mt-5 h-12 inline-flex items-center justify-center rounded-2xl bg-main-500 px-5 text-sm text-white font-900 shadow-[0_12px_30px_rgba(230,173,46,0.28)]"
           to="/map"
         >
-          Заказать такси
+          {{ t('history.orderTaxi') }}
         </RouterLink>
       </section>
 
@@ -172,21 +173,21 @@ onBeforeUnmount(() => {
         <div ref="loadMoreSentinel" class="h-1" />
 
         <div class="py-3 text-center">
-          <p v-if="trips.isLoadingHistory" class="text-sm text-slate-400 font-800">
-            Загружаем ещё...
+          <p v-if="trips.isLoadingHistory" class="text-sm app-muted font-800">
+            {{ t('history.loadingMore') }}
           </p>
 
           <button
             v-else-if="trips.historyHasMore"
-            class="h-11 rounded-2xl bg-white/8 px-5 text-sm text-slate-200 font-900 transition active:scale-[0.98]"
+            class="h-11 rounded-2xl app-chip px-5 text-sm text-slate-200 font-900 transition active:scale-[0.98]"
             type="button"
             @click="loadMoreHistory"
           >
-            Загрузить ещё
+            {{ t('history.loadMore') }}
           </button>
 
-          <p v-else class="text-xs text-slate-500 font-800">
-            Это вся история
+          <p v-else class="text-xs app-faint font-800">
+            {{ t('history.thatsAll') }}
           </p>
         </div>
       </div>

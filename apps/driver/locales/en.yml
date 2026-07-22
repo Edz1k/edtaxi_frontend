@@ -1,0 +1,170 @@
+nav:
+  menu: Menu
+  line: Line
+  income: Income
+  driver: Driver
+  back: Back
+  backToMenu: Back to menu
+  backToSettings: Back to settings
+  backToProfile: Back to profile
+titles:
+  changePhone: Change number
+  dailyCheck: Daily check
+  facePhoto: Face photo
+  feedback: Suggest an improvement
+  history: Trip history
+  onboarding: Photo verification
+  parkChat: Park chat
+  parks: Taxi park
+  profile: My profile
+  ratingHistory: Rating history
+  settings: Settings
+  support: Support
+  vehicle: Vehicle
+  vehicleDocs: Vehicle photos
+settings:
+  title: Settings
+  appearance:
+    title: Appearance
+    theme:
+      auto: Match Telegram
+      dark: Dark
+      light: Light
+  language:
+    title: Language
+  phone:
+    title: Phone number
+    change: Change number
+    changeSuffix: change
+  sound:
+    title: Order melody
+    on: Plays on a new order
+    off: Muted
+  districts:
+    title: Order districts
+    subtitle: Where we look for your orders first
+    wholeCity: Whole city
+    hint: Selected districts are highlighted on the map. We look for orders there first; if no one is nearby, an order may come from any district.
+    noCity: Districts will appear once we detect your city — open the map screen so the app can get your location.
+menu:
+  cabinet: Profile
+  meta: Rating {rating} · {trips} trips
+  online: Online
+  offline: Offline
+  needsVerification: Needs verification
+  logout: Log out
+  loggingOut: Logging out...
+  items:
+    bonus: Promotions & bonuses
+    bonusDesc: All promotions, bonuses and referrals
+    vehicle: Vehicle
+    vehicleDesc: Car details and tariff
+    history: Trip history
+    historyDesc: Your orders
+    parks: Taxi park
+    parksDesc: Joining, invite code, partnership
+    parkChat: Park chat
+    parkChatDesc: Contact your taxi park
+    support: Support
+    supportDesc: Help and tickets
+    feedback: Suggest an improvement
+    feedbackDesc: An idea to improve the service
+feedback:
+  eyebrow: Feedback
+  title: Suggest an improvement
+  lead: Tell us what to improve in the app. We implement the best ideas and thank you with bonuses.
+  thanksTitle: Thanks for the idea!
+  thanksText: We read every suggestion. If we implement it, we’ll credit you bonuses.
+  more: Suggest another
+  backToMenu: Back to menu
+  placeholder: 'For example: add a way to save home and work addresses…'
+  sending: Sending...
+  send: Send
+  toastOkTitle: Thank you!
+  toastOkText: Your suggestion has been sent.
+  toastFail: Failed to send the suggestion. Please try again.
+support:
+  myTickets: My tickets
+  new: + New
+  pickSubject: Choose a subject
+  empty: You have no tickets yet. Tap “New” to ask a question.
+  emptyThread: Write your question — an operator will reply shortly.
+  toList: Back to tickets
+  closed: Ticket closed
+  operatorOnline: Operator online
+  agent: Support {name}
+  statusClosed: Closed
+  statusPending: Confirm
+  statusOpen: Open
+  resolvedQ: Is your problem solved?
+  yesResolved: Yes, solved
+  no: No
+  attach: Attach a photo
+  msgAria: Message to support
+  placeholder: Type a message...
+  sendAria: Send message
+  backAria: Back to tickets
+  attachment: Attachment
+history:
+  km: '{n} km'
+  loadFail: Failed to load trip history.
+  errTitle: Error
+  errSupport: Failed to open support for this trip.
+  emptyTitle: No trips yet
+  emptyTextDriver: Completed orders will appear here.
+  opening: Opening...
+  tripSupport: Trip support
+  loadingMore: Loading...
+  loadMore: Load more
+  thatsAll: That’s the whole history
+cats:
+  economy: Economy
+  comfort: Comfort
+  business: Business
+  minivan: Minivan
+  moto: Moto
+trip:
+  completed: Completed
+  cancelled: Cancelled
+  inProgress: In progress
+  assigned: Assigned
+  arriving: Arriving
+  searching: Searching
+changePhone:
+  enterPhone: Enter your new number — a confirmation code will be sent to it.
+  enterCode: Enter the code from the message sent to {phone}.
+  sendingCode: Sending code...
+  getCode: Get the code
+  verifying: Checking...
+  confirm: Confirm number
+  editPhone: Change number
+  sending: Sending...
+  resend: Send the code again
+  sendFail: Failed to send the code. Check the number and try again.
+  verifyFail: Failed to confirm the code. Please try again.
+  doneTitle: Done
+  doneMerged: Number confirmed, accounts merged.
+  doneUpdated: Phone number updated.
+parkChat:
+  openFail: Failed to open the park chat.
+  closed: Chat closed
+  subtitle: Questions about working in the park
+  close: Close chat
+  closeAria: Close chat
+  joinPark: Join a park
+  empty: Write a message — the park owner will see it.
+  msgAria: Message to the taxi park
+ratingHistory:
+  loadFail: Failed to load data.
+  loading: Loading history...
+  current: Current rating
+  avg: Average score
+  ofRatings: of {n} ratings
+  noRatings: No ratings
+  penalties: Penalty events
+  noPenalties: No rating penalties. Keep it up!
+  passengerRatings: Passenger ratings
+  noRatingsYet: No ratings yet.
+  complaint: Confirmed complaint
+  cancelAfterAccept: Cancel after accepting
+  noShow: No-show to the passenger

@@ -23,11 +23,13 @@
     "pinia": "catalog:frontend",
     "reka-ui": "catalog:frontend",
     "vue": "catalog:frontend",
+    "vue-i18n": "catalog:frontend",
     "vue-router": "catalog:frontend"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:dev",
     "@iconify-json/mdi": "catalog:dev",
+    "@intlify/unplugin-vue-i18n": "catalog:build",
     "@types/node": "catalog:types",
     "@types/nprogress": "catalog:types",
     "@unocss/eslint-config": "catalog:build",

@@ -55,17 +55,17 @@ async function submit() {
       class="fixed inset-0 z-60 flex items-end bg-black/65 px-4 pb-[calc(var(--app-safe-area-bottom)+1rem)]"
       @click.self="emit('close')"
     >
-      <section class="mx-auto max-w-sm w-full rounded-3xl bg-secondary-900 p-5 text-white shadow-2xl shadow-black/30">
+      <section class="mx-auto max-w-sm w-full rounded-3xl app-screen p-5 text-white shadow-2xl shadow-black/30">
         <div class="flex items-center justify-between gap-4">
           <div>
-            <p class="text-xs text-main-300 font-900 uppercase">
+            <p class="text-xs app-accent font-900 uppercase">
               Поездка завершена
             </p>
             <h2 class="mt-1 text-2xl font-950">
               Оцените пассажира
             </h2>
           </div>
-          <button aria-label="Закрыть оценку пассажира" class="h-11 w-11 flex items-center justify-center rounded-full bg-white/8" type="button" @click="emit('close')">
+          <button aria-label="Закрыть оценку пассажира" class="h-11 w-11 flex items-center justify-center rounded-full app-chip" type="button" @click="emit('close')">
             <span class="i-mdi-close text-6" />
           </button>
         </div>
@@ -76,7 +76,7 @@ async function submit() {
             :key="star"
             :aria-label="`Поставить оценку ${star}`"
             class="h-11 w-11 flex items-center justify-center rounded-full transition active:scale-[0.94]"
-            :class="star <= score ? 'text-main-300' : 'text-slate-600'"
+            :class="star <= score ? 'app-accent' : 'text-slate-600'"
             type="button"
             @click="score = star"
           >
@@ -90,8 +90,8 @@ async function submit() {
             :key="tag.value"
             class="h-8 rounded-full px-3 text-xs font-800 transition active:scale-[0.96]"
             :class="tags.includes(tag.value)
-              ? 'bg-main-500/22 text-main-200 border border-main-400/50'
-              : 'bg-white/6 text-slate-300 border border-transparent'"
+              ? 'bg-main-500/22 text-main-200 light:text-main-700 border border-main-400/50'
+              : 'app-card text-slate-300 light:text-slate-600 border border-transparent'"
             type="button"
             @click="toggleTag(tag.value)"
           >
@@ -102,7 +102,7 @@ async function submit() {
         <textarea
           v-model="comment"
           aria-label="Комментарий к оценке пассажира"
-          class="mt-5 min-h-24 w-full resize-none border border-white/10 rounded-2xl bg-white/6 p-4 text-sm outline-none focus:border-main-400"
+          class="mt-5 min-h-24 w-full resize-none border app-border rounded-2xl app-card p-4 text-sm outline-none focus:border-main-400"
           maxlength="500"
           name="passenger_rating_comment"
           placeholder="Комментарий, если хотите"

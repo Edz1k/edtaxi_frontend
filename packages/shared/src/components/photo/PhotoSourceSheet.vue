@@ -47,14 +47,14 @@ function onFilePicked(event: Event) {
         class="fixed inset-0 z-[94] flex items-end bg-black/65 px-4 pb-[calc(var(--app-safe-area-bottom,0px)+1rem)]"
         @click.self="emit('close')"
       >
-        <section class="mx-auto max-w-sm w-full rounded-3xl bg-secondary-900 p-4 text-white shadow-2xl shadow-black/30">
+        <section class="mx-auto max-w-sm w-full rounded-3xl app-screen p-4 text-white shadow-2xl shadow-black/30">
           <div class="flex items-center justify-between gap-3 px-1 pb-3">
             <h2 class="text-base font-950">
               {{ title }}
             </h2>
             <button
               aria-label="Закрыть выбор фото"
-              class="h-9 w-9 flex items-center justify-center rounded-full bg-white/8"
+              class="h-9 w-9 flex items-center justify-center rounded-full app-chip"
               type="button"
               @click="emit('close')"
             >
@@ -64,30 +64,30 @@ function onFilePicked(event: Event) {
 
           <div class="space-y-2">
             <button
-              class="h-14 w-full flex items-center gap-3 rounded-2xl bg-white/6 px-4 text-left transition active:scale-[0.98]"
+              class="h-14 w-full flex items-center gap-3 rounded-2xl app-card px-4 text-left transition active:scale-[0.98]"
               type="button"
               @click="galleryInput?.click()"
             >
-              <span class="h-10 w-10 flex shrink-0 items-center justify-center rounded-xl bg-main-500/16 text-main-300">
+              <span class="h-10 w-10 flex shrink-0 items-center justify-center rounded-xl bg-main-500/16 app-accent">
                 <span class="i-mdi-image-multiple text-5.5" />
               </span>
               <span class="min-w-0">
                 <span class="block text-sm font-900">Выбрать из галереи</span>
-                <span class="block text-xs text-slate-400 font-700">Готовое фото с телефона</span>
+                <span class="block text-xs app-muted font-700">Готовое фото с телефона</span>
               </span>
             </button>
 
             <button
-              class="h-14 w-full flex items-center gap-3 rounded-2xl bg-white/6 px-4 text-left transition active:scale-[0.98]"
+              class="h-14 w-full flex items-center gap-3 rounded-2xl app-card px-4 text-left transition active:scale-[0.98]"
               type="button"
               @click="cameraInput?.click()"
             >
-              <span class="h-10 w-10 flex shrink-0 items-center justify-center rounded-xl bg-main-500/16 text-main-300">
+              <span class="h-10 w-10 flex shrink-0 items-center justify-center rounded-xl bg-main-500/16 app-accent">
                 <span class="i-mdi-camera text-5.5" />
               </span>
               <span class="min-w-0">
                 <span class="block text-sm font-900">Сфотографировать сейчас</span>
-                <span class="block text-xs text-slate-400 font-700">Откроется камера</span>
+                <span class="block text-xs app-muted font-700">Откроется камера</span>
               </span>
             </button>
           </div>

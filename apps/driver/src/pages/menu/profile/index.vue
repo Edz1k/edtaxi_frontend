@@ -22,8 +22,8 @@ definePage({
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
-    screenSubtitle: 'Назад в меню',
-    screenTitle: 'Личный кабинет',
+    screenSubtitle: 'nav.backToMenu',
+    screenTitle: 'titles.profile',
   },
 })
 
@@ -81,8 +81,8 @@ const activityColor = computed(() => {
   if (a >= 70)
     return 'text-emerald-400'
   if (a >= 40)
-    return 'text-main-300'
-  return 'text-slate-500'
+    return 'app-accent'
+  return 'app-faint'
 })
 // r=27 → длина окружности ≈ 169.65
 const activityDash = computed(() => {
@@ -129,9 +129,9 @@ async function confirmDeleteAccount() {
 </script>
 
 <template>
-  <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)]">
+  <main class="tg-safe-x h-full overflow-y-auto app-screen pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)]">
     <section class="mx-auto max-w-sm">
-      <div v-if="isLoading" class="mt-10 flex items-center gap-3 text-sm text-slate-400">
+      <div v-if="isLoading" class="mt-10 flex items-center gap-3 text-sm app-muted">
         <span class="i-mdi-loading animate-spin text-5" />
         Загружаем кабинет...
       </div>
@@ -142,12 +142,12 @@ async function confirmDeleteAccount() {
 
       <template v-else-if="data">
         <!-- Карточка профиля -->
-        <div class="overflow-hidden rounded-3xl bg-white/5">
+        <div class="overflow-hidden rounded-3xl app-card">
           <!-- Аватар + имя -->
           <div class="flex items-center gap-4 px-5 pt-5">
             <div class="relative shrink-0">
               <AvatarRoot
-                class="h-18 w-18 flex items-center justify-center overflow-hidden rounded-[20px] text-main-200"
+                class="h-18 w-18 flex items-center justify-center overflow-hidden rounded-[20px] text-main-200 light:text-main-700"
                 :class="ratingIsGood ? 'ring-2 ring-emerald-400/40 bg-emerald-500/10' : 'ring-2 ring-amber-400/30 bg-amber-500/10'"
               >
                 <AvatarImage
@@ -168,12 +168,12 @@ async function confirmDeleteAccount() {
               <h1 class="truncate text-xl font-950">
                 {{ fullName }}
               </h1>
-              <p class="mt-0.5 truncate text-sm text-slate-500 font-600">
+              <p class="mt-0.5 truncate text-sm app-faint font-600">
                 {{ data.user.phone }}
               </p>
               <span
                 class="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-800"
-                :class="data.driver.is_online ? 'bg-emerald-500/16 text-emerald-300' : 'bg-white/8 text-slate-400'"
+                :class="data.driver.is_online ? 'bg-emerald-500/16 text-emerald-300' : 'app-chip app-muted'"
               >
                 <span class="h-1.5 w-1.5 rounded-full" :class="data.driver.is_online ? 'bg-emerald-400' : 'bg-slate-500'" />
                 {{ data.driver.is_online ? 'На линии' : 'Не в сети' }}
@@ -182,12 +182,12 @@ async function confirmDeleteAccount() {
           </div>
 
           <!-- Разделитель -->
-          <div class="mx-5 mt-5 h-px bg-white/8" />
+          <div class="mx-5 mt-5 h-px app-chip" />
 
           <!-- Блок рейтинга -->
           <div class="flex items-center gap-4 px-5 pb-2 pt-5">
             <div class="min-w-0 flex-1">
-              <p class="text-[10px] text-slate-500 font-900 tracking-wider uppercase">
+              <p class="text-[10px] app-faint font-900 tracking-wider uppercase">
                 Рейтинг водителя
               </p>
               <div class="mt-1 flex items-baseline gap-1.5">
@@ -195,7 +195,7 @@ async function confirmDeleteAccount() {
                   class="text-5xl font-950 leading-none"
                   :class="ratingIsGood ? 'text-emerald-300' : 'text-amber-300'"
                 >{{ data.driver.rating.toFixed(2) }}</span>
-                <span class="text-sm text-slate-500 font-700">/ 5.00</span>
+                <span class="text-sm app-faint font-700">/ 5.00</span>
               </div>
               <div class="mt-2 flex gap-0.5">
                 <span
@@ -223,7 +223,7 @@ async function confirmDeleteAccount() {
                 <span class="text-sm font-950 leading-none" :class="activityColor">
                   {{ activityPercent }}%
                 </span>
-                <span class="mt-0.5 text-[8px] text-slate-500 font-900 tracking-wide uppercase">
+                <span class="mt-0.5 text-[8px] app-faint font-900 tracking-wide uppercase">
                   Актив
                 </span>
               </div>
@@ -231,7 +231,7 @@ async function confirmDeleteAccount() {
           </div>
 
           <!-- Прогресс-бар рейтинга -->
-          <div class="mx-5 mb-5 mt-3 h-1 overflow-hidden rounded-full bg-white/8">
+          <div class="mx-5 mb-5 mt-3 h-1 overflow-hidden rounded-full app-chip">
             <div
               class="h-full rounded-full transition-all duration-700"
               :class="ratingIsGood ? 'bg-emerald-400' : 'bg-amber-400'"
@@ -243,12 +243,12 @@ async function confirmDeleteAccount() {
         <!-- Статистика -->
         <div class="grid grid-cols-2 mt-3 gap-3">
           <!-- Поездки -->
-          <div class="rounded-2xl bg-white/5 px-3 py-4">
-            <span class="i-mdi-steering text-6 text-main-300" />
+          <div class="rounded-2xl app-card px-3 py-4">
+            <span class="i-mdi-steering text-6 app-accent" />
             <p class="mt-2 text-2xl font-950 leading-none">
               {{ data.driver.total_trips }}
             </p>
-            <p class="mt-1 text-[11px] text-slate-500 font-700">
+            <p class="mt-1 text-[11px] app-faint font-700">
               Поездок
             </p>
           </div>
@@ -256,11 +256,11 @@ async function confirmDeleteAccount() {
           <!-- Отмены сегодня -->
           <div
             class="rounded-2xl px-3 py-4 transition"
-            :class="data.driver.cancel_count_today > 0 ? 'bg-red-500/10' : 'bg-white/5'"
+            :class="data.driver.cancel_count_today > 0 ? 'bg-red-500/10' : 'app-card'"
           >
             <span
               class="text-6"
-              :class="data.driver.cancel_count_today > 0 ? 'i-mdi-close-circle text-red-400' : 'i-mdi-close-circle-outline text-slate-500'"
+              :class="data.driver.cancel_count_today > 0 ? 'i-mdi-close-circle text-red-400' : 'i-mdi-close-circle-outline app-faint'"
             />
             <p
               class="mt-2 text-2xl font-950 leading-none"
@@ -270,7 +270,7 @@ async function confirmDeleteAccount() {
             </p>
             <p
               class="mt-1 text-[11px] font-700"
-              :class="data.driver.cancel_count_today > 0 ? 'text-red-400/70' : 'text-slate-500'"
+              :class="data.driver.cancel_count_today > 0 ? 'text-red-400/70' : 'app-faint'"
             >
               Отмен сег.
             </p>
@@ -308,24 +308,24 @@ async function confirmDeleteAccount() {
               {{ verificationOk ? 'Всё в порядке' : 'Требует внимания' }}
             </span>
           </span>
-          <span class="i-mdi-chevron-right text-7 text-slate-500" />
+          <span class="i-mdi-chevron-right text-7 app-faint" />
         </RouterLink>
 
         <!-- Настройки переехали на отдельный экран: шестерёнка в меню. -->
 
         <!-- Машины -->
-        <h2 class="mt-8 text-sm text-main-300 font-900 uppercase">
+        <h2 class="mt-8 text-sm app-accent font-900 uppercase">
           Автомобили
         </h2>
-        <p v-if="!data.vehicles.length" class="mt-2 text-sm text-slate-500">
+        <p v-if="!data.vehicles.length" class="mt-2 text-sm app-faint">
           Машины не добавлены.
         </p>
         <div v-else class="mt-3 space-y-2">
-          <div v-for="v in data.vehicles" :key="v.id" class="rounded-2xl bg-white/5 px-4 py-3">
+          <div v-for="v in data.vehicles" :key="v.id" class="rounded-2xl app-card px-4 py-3">
             <p class="font-900">
-              {{ v.make }} {{ v.model }} <span class="text-slate-500">· {{ v.year }}</span>
+              {{ v.make }} {{ v.model }} <span class="app-faint">· {{ v.year }}</span>
             </p>
-            <p class="mt-0.5 text-sm text-slate-400">
+            <p class="mt-0.5 text-sm app-muted">
               {{ v.plate_number }} · {{ v.color }} · {{ CATEGORY_LABELS[v.category] ?? v.category }}
             </p>
           </div>
@@ -334,19 +334,19 @@ async function confirmDeleteAccount() {
         <!-- Переход в историю рейтинга -->
         <RouterLink
           to="/menu/profile/rating-history"
-          class="mt-3 flex items-center gap-4 rounded-3xl bg-white/5 px-4 py-4 text-white transition active:scale-[0.98]"
+          class="mt-3 flex items-center gap-4 rounded-3xl app-card px-4 py-4 text-white transition active:scale-[0.98]"
         >
-          <span class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl bg-white/8 text-main-300">
+          <span class="h-12 w-12 flex shrink-0 items-center justify-center rounded-2xl app-chip app-accent">
             <span class="i-mdi-chart-timeline-variant text-7" />
           </span>
           <span class="min-w-0 flex-1">
             <span class="block text-lg font-900">История рейтинга</span>
-            <span class="mt-0.5 block truncate text-xs text-slate-400 font-600">
+            <span class="mt-0.5 block truncate text-xs app-muted font-600">
               {{ data.rating_events.length > 0 ? `${data.rating_events.length} штрафных событий` : 'Штрафов не было' }}
               · {{ data.recent_ratings.length > 0 ? `${data.recent_ratings.length} оценок` : 'Оценок нет' }}
             </span>
           </span>
-          <span class="i-mdi-chevron-right text-7 text-slate-500" />
+          <span class="i-mdi-chevron-right text-7 app-faint" />
         </RouterLink>
 
         <!-- Удаление аккаунта — внизу, красным. Мягкое удаление на бэке. -->
@@ -368,19 +368,19 @@ async function confirmDeleteAccount() {
         class="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
         @click.self="showDeleteConfirm = false"
       >
-        <div class="max-w-sm w-full border border-white/10 rounded-3xl bg-secondary-900 p-5 shadow-2xl">
+        <div class="max-w-sm w-full border app-border rounded-3xl app-screen p-5 shadow-2xl">
           <span class="h-12 w-12 flex items-center justify-center rounded-2xl bg-red-500/14 text-red-300">
             <span class="i-mdi-trash-can-outline text-7" />
           </span>
           <h3 class="mt-4 text-lg font-950">
             Удалить аккаунт?
           </h3>
-          <p class="mt-2 text-sm text-slate-400 leading-5">
+          <p class="mt-2 text-sm app-muted leading-5">
             Бонусы сгорят, восстановить аккаунт нельзя. Сначала завершите смену и выведите средства. При следующем входе нужно будет заново указать номер.
           </p>
           <div class="mt-5 flex gap-2">
             <button
-              class="h-12 flex-1 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+              class="h-12 flex-1 rounded-2xl app-chip text-sm font-900 transition active:scale-[0.98]"
               type="button"
               @click="showDeleteConfirm = false"
             >

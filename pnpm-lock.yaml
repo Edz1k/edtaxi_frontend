@@ -245,6 +245,9 @@ importers:
       vue:
         specifier: catalog:frontend
         version: 3.5.39(typescript@5.9.3)
+      vue-i18n:
+        specifier: catalog:frontend
+        version: 11.4.6(vue@3.5.39(typescript@5.9.3))
       vue-router:
         specifier: catalog:frontend
         version: 5.1.0(@vue/compiler-sfc@3.5.39)(esbuild@0.28.1)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.39(typescript@5.9.3)))(rolldown@1.1.4)(rollup@4.62.2)(vite@8.1.3(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue@3.5.39(typescript@5.9.3))
@@ -255,6 +258,9 @@ importers:
       '@iconify-json/mdi':
         specifier: catalog:dev
         version: 1.2.3
+      '@intlify/unplugin-vue-i18n':
+        specifier: catalog:build
+        version: 11.2.4(@vue/compiler-dom@3.5.39)(eslint@10.6.0(jiti@2.7.0))(rollup@4.62.2)(typescript@5.9.3)(vite@8.1.3(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue-i18n@11.4.6(vue@3.5.39(typescript@5.9.3)))(vue@3.5.39(typescript@5.9.3))
       '@types/node':
         specifier: catalog:types
         version: 26.1.0
@@ -354,6 +360,9 @@ importers:
       vue:
         specifier: catalog:frontend
         version: 3.5.39(typescript@5.9.3)
+      vue-i18n:
+        specifier: catalog:frontend
+        version: 11.4.6(vue@3.5.39(typescript@5.9.3))
       vue-router:
         specifier: catalog:frontend
         version: 5.1.0(@vue/compiler-sfc@3.5.39)(esbuild@0.28.1)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.39(typescript@5.9.3)))(rolldown@1.1.4)(rollup@4.62.2)(vite@8.1.3(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue@3.5.39(typescript@5.9.3))
@@ -364,6 +373,9 @@ importers:
       '@iconify-json/mdi':
         specifier: catalog:dev
         version: 1.2.3
+      '@intlify/unplugin-vue-i18n':
+        specifier: catalog:build
+        version: 11.2.4(@vue/compiler-dom@3.5.39)(eslint@10.6.0(jiti@2.7.0))(rollup@4.62.2)(typescript@5.9.3)(vite@8.1.3(@types/node@26.1.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue-i18n@11.4.6(vue@3.5.39(typescript@5.9.3)))(vue@3.5.39(typescript@5.9.3))
       '@types/node':
         specifier: catalog:types
         version: 26.1.0

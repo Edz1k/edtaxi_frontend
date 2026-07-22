@@ -91,13 +91,13 @@ async function onFileSelected(event: Event) {
 </script>
 
 <template>
-  <main class="tg-safe-x tg-safe-screen h-full flex flex-col bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1rem)] pt-[calc(var(--app-safe-area-top)+0.75rem)] text-white">
+  <main class="tg-safe-x tg-safe-screen h-full flex flex-col app-screen pb-[calc(var(--app-safe-area-bottom)+1rem)] pt-[calc(var(--app-safe-area-top)+0.75rem)] text-white">
     <section class="mx-auto max-w-sm min-h-0 w-full flex flex-1 flex-col">
       <!-- Header -->
       <div class="mb-3 flex shrink-0 items-center gap-2">
         <button
           aria-label="Назад к заказу"
-          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 transition active:scale-95"
+          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full app-chip transition active:scale-95"
           type="button"
           @click="router.back()"
         >
@@ -109,7 +109,7 @@ async function onFileSelected(event: Event) {
           </p>
           <div class="flex items-center gap-1.5">
             <span class="h-2 w-2 rounded-full" :class="chatOpen ? 'bg-emerald-400' : 'bg-slate-500'" />
-            <p class="text-xs text-slate-400 font-700">
+            <p class="text-xs app-muted font-700">
               {{ chatOpen ? 'Чат поездки' : 'Поездка завершена — чат закрыт' }}
             </p>
           </div>
@@ -117,16 +117,16 @@ async function onFileSelected(event: Event) {
       </div>
 
       <!-- Messages -->
-      <div ref="messagesEl" class="min-h-0 flex-1 overflow-y-auto rounded-3xl bg-white/5 p-4">
+      <div ref="messagesEl" class="min-h-0 flex-1 overflow-y-auto rounded-3xl app-card p-4">
         <div v-if="tripChat.isLoading && !tripChat.messages.length" class="space-y-3">
           <div v-for="i in 5" :key="i" class="flex" :class="i % 2 === 0 ? 'justify-end' : 'justify-start'">
-            <div class="h-12 animate-pulse rounded-3xl bg-white/8" :class="[i % 2 === 0 ? 'rounded-br-md w-44' : 'rounded-bl-md w-56']" />
+            <div class="h-12 animate-pulse rounded-3xl app-chip" :class="[i % 2 === 0 ? 'rounded-br-md w-44' : 'rounded-bl-md w-56']" />
           </div>
         </div>
 
         <div v-else-if="!tripChat.messages.length" class="h-full min-h-60 flex flex-col items-center justify-center gap-3 text-center">
           <span class="i-mdi-message-text text-16 text-white/10" />
-          <p class="text-sm text-slate-400">
+          <p class="text-sm app-muted">
             Напишите пассажиру — например, уточните, где он находится.
           </p>
         </div>
@@ -158,7 +158,7 @@ async function onFileSelected(event: Event) {
               <p v-if="msg.content" class="text-sm leading-[1.5]" :class="{ 'mt-2': msg.image_url }">
                 {{ msg.content }}
               </p>
-              <p class="mt-1 text-[11px] font-700" :class="isMyMessage(msg.sender_id) ? 'text-right text-white/50' : 'text-slate-500'">
+              <p class="mt-1 text-[11px] font-700" :class="isMyMessage(msg.sender_id) ? 'text-right text-white/50' : 'app-faint'">
                 {{ formatTime(msg.sent_at) }}
               </p>
             </article>
@@ -172,7 +172,7 @@ async function onFileSelected(event: Event) {
         <button
           aria-label="Прикрепить фото"
           :disabled="tripChat.isSending"
-          class="h-13 w-13 flex items-center justify-center rounded-2xl bg-white/8 text-white transition active:scale-[0.97] disabled:opacity-50"
+          class="h-13 w-13 flex items-center justify-center rounded-2xl app-chip text-white transition active:scale-[0.97] disabled:opacity-50"
           type="button"
           @click="triggerPhoto"
         >
@@ -181,7 +181,7 @@ async function onFileSelected(event: Event) {
         <input
           v-model="draft"
           aria-label="Сообщение пассажиру"
-          class="h-13 min-w-0 border border-white/10 rounded-2xl bg-white/6 px-4 text-sm outline-none transition focus:border-main-400/60"
+          class="h-13 min-w-0 border app-border rounded-2xl app-card px-4 text-sm outline-none transition focus:border-main-400/60"
           maxlength="2000"
           name="trip_chat_message"
           placeholder="Напишите сообщение..."

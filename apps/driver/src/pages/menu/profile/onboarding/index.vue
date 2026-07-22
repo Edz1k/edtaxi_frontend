@@ -14,8 +14,8 @@ definePage({
     requiresAuth: true,
     requiredRole: 'driver',
     backTo: '/menu/profile',
-    screenSubtitle: 'Назад в профиль',
-    screenTitle: 'Фотоконтроль',
+    screenSubtitle: 'nav.backToProfile',
+    screenTitle: 'titles.onboarding',
   },
 })
 
@@ -259,7 +259,7 @@ function statusColor(status: ItemStatus) {
     return 'text-amber-400'
   if (status === 'rejected')
     return 'text-red-400'
-  return 'text-slate-500'
+  return 'app-faint'
 }
 
 function itemBg(status: ItemStatus) {
@@ -267,7 +267,7 @@ function itemBg(status: ItemStatus) {
     return 'bg-emerald-500/10'
   if (status === 'rejected')
     return 'bg-red-500/10'
-  return 'bg-white/5'
+  return 'app-card'
 }
 
 function iconBg(status: ItemStatus) {
@@ -277,7 +277,7 @@ function iconBg(status: ItemStatus) {
     return 'bg-red-500/16 text-red-300'
   if (status === 'pending')
     return 'bg-amber-500/16 text-amber-300'
-  return 'bg-white/8 text-main-200'
+  return 'app-chip text-main-200 light:text-main-700'
 }
 
 function blockBadge(status: ItemStatus) {
@@ -287,7 +287,7 @@ function blockBadge(status: ItemStatus) {
     return 'bg-red-500/14 text-red-300'
   if (status === 'pending')
     return 'bg-amber-500/14 text-amber-300'
-  return 'bg-white/8 text-slate-400'
+  return 'app-chip app-muted'
 }
 
 function blockIcon(status: ItemStatus) {
@@ -300,23 +300,23 @@ function blockIcon(status: ItemStatus) {
 </script>
 
 <template>
-  <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)]">
+  <main class="tg-safe-x h-full overflow-y-auto app-screen pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)]">
     <section class="mx-auto max-w-sm">
       <header>
-        <p class="text-xs text-main-300 font-900 uppercase">
+        <p class="text-xs app-accent font-900 uppercase">
           Водитель
         </p>
         <h1 class="mt-1 text-3xl font-950">
           Фотоконтроль
         </h1>
-        <p class="mt-2 text-sm text-slate-400 leading-5">
+        <p class="mt-2 text-sm app-muted leading-5">
           {{ overall === 'action'
             ? 'Пройдите все проверки, чтобы выйти на линию. Если проверка не пройдена — внутри написано, что исправить.'
             : 'Статусы ваших проверок — ниже.' }}
         </p>
       </header>
 
-      <div v-if="driver.isLoadingVerification" class="mt-8 flex items-center gap-3 text-sm text-slate-400">
+      <div v-if="driver.isLoadingVerification" class="mt-8 flex items-center gap-3 text-sm app-muted">
         <span class="i-mdi-loading animate-spin text-5" />
         Загружаем статус...
       </div>
@@ -344,8 +344,8 @@ function blockIcon(status: ItemStatus) {
               </p>
             </div>
           </div>
-          <p class="mt-4 flex items-center gap-2 rounded-2xl bg-black/20 px-3.5 py-2.5 text-xs text-slate-300 font-700 leading-5">
-            <span class="i-mdi-calendar-clock shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+          <p class="mt-4 flex items-center gap-2 rounded-2xl bg-black/20 px-3.5 py-2.5 text-xs text-slate-300 font-700 leading-5 light:text-slate-600">
+            <span class="i-mdi-calendar-clock shrink-0 text-4.5 app-accent" aria-hidden="true" />
             {{ nextCheckLine }}
           </p>
         </div>

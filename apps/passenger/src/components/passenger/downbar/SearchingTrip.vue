@@ -376,14 +376,14 @@ const statusMeta = computed(() => {
       return {
         description: 'Оплатите заказ — и мы сразу начнём поиск водителя.',
         icon: 'i-mdi-credit-card-clock-outline',
-        tone: 'text-main-300',
+        tone: 'app-accent',
         title: 'Ожидание оплаты',
       }
     case 'driver_assigned':
       return {
         description: 'Водитель принял заказ и едет к вам.',
         icon: 'i-mdi-car-clock',
-        tone: 'text-main-300',
+        tone: 'app-accent',
         title: 'Водитель найден',
       }
     case 'driver_arriving':
@@ -397,7 +397,7 @@ const statusMeta = computed(() => {
       return {
         description: 'Поездка началась. Хорошей дороги.',
         icon: 'i-mdi-navigation-variant',
-        tone: 'text-main-300',
+        tone: 'app-accent',
         title: 'Вы в пути',
       }
     case 'completed':
@@ -426,7 +426,7 @@ const statusMeta = computed(() => {
       return {
         description: 'Обычно это занимает меньше минуты',
         icon: 'i-mdi-radar',
-        tone: 'text-main-300',
+        tone: 'app-accent',
         title: 'Ищем водителя',
       }
   }
@@ -546,25 +546,25 @@ async function shareTrip() {
       {{ statusMeta.title }}
     </h2>
 
-    <p class="mt-1 text-sm text-slate-400 font-700">
+    <p class="mt-1 text-sm app-muted font-700">
       {{ statusMeta.description }}
     </p>
 
     <!-- Тикающий таймер поиска -->
-    <div v-if="isSearchingStatus" class="mt-3 inline-flex items-center gap-2 rounded-full bg-white/6 px-4 py-1.5">
-      <span class="i-mdi-timer-outline text-4 text-main-300" aria-hidden="true" />
+    <div v-if="isSearchingStatus" class="mt-3 inline-flex items-center gap-2 rounded-full app-card px-4 py-1.5">
+      <span class="i-mdi-timer-outline text-4 app-accent" aria-hidden="true" />
       <span class="text-sm font-950 tabular-nums">{{ elapsedLabel }}</span>
     </div>
 
     <!-- Живой ETA: водитель едет к вам / до прибытия в точку Б -->
     <div v-else-if="etaChip" class="mt-3 inline-flex items-center gap-2 rounded-full bg-main-500/14 px-4 py-1.5">
-      <span class="i-mdi-clock-fast text-4 text-main-300" aria-hidden="true" />
-      <span class="text-sm text-main-200 font-950 tabular-nums">{{ etaChip }}</span>
+      <span class="i-mdi-clock-fast text-4 app-accent" aria-hidden="true" />
+      <span class="text-sm text-main-200 font-950 tabular-nums light:text-main-700">{{ etaChip }}</span>
     </div>
 
-    <div class="mt-4 rounded-2xl bg-white/5 px-4 py-3 text-left">
+    <div class="mt-4 rounded-2xl app-card px-4 py-3 text-left">
       <p class="flex items-center gap-2 text-sm font-800">
-        <span class="i-mdi-near-me shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+        <span class="i-mdi-near-me shrink-0 text-4.5 app-accent" aria-hidden="true" />
         <span class="truncate">{{ pickup }}</span>
       </p>
       <!-- Промежуточные остановки поездки -->
@@ -574,7 +574,7 @@ async function shareTrip() {
         class="mt-2 flex items-center gap-2 text-sm text-white/80 font-800"
       >
         <span
-          class="h-4.5 w-4.5 flex shrink-0 items-center justify-center rounded-full bg-main-500/22 text-[10px] text-main-200 font-950"
+          class="h-4.5 w-4.5 flex shrink-0 items-center justify-center rounded-full bg-main-500/22 text-[10px] text-main-200 font-950 light:text-main-700"
           aria-hidden="true"
         >
           {{ index + 1 }}
@@ -582,10 +582,10 @@ async function shareTrip() {
         <span class="truncate">{{ stop.address }}</span>
       </p>
       <p class="mt-2 flex items-center gap-2 text-sm font-800">
-        <span class="i-mdi-flag-checkered shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+        <span class="i-mdi-flag-checkered shrink-0 text-4.5 app-accent" aria-hidden="true" />
         <span class="truncate">{{ destination }}</span>
       </p>
-      <p class="mt-2.5 border-t border-white/6 pt-2.5 text-xs text-slate-400 font-700">
+      <p class="mt-2.5 border-t border-white/6 pt-2.5 text-xs app-muted font-700">
         {{ tariffLine }}
       </p>
     </div>
@@ -594,27 +594,27 @@ async function shareTrip() {
     <button
       v-if="canProposeStop"
       type="button"
-      class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/5 px-4 py-3 text-sm font-800 transition active:scale-98"
+      class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl app-card px-4 py-3 text-sm font-800 transition active:scale-98"
       @click="startStopPicker"
     >
-      <span class="i-mdi-map-marker-plus shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+      <span class="i-mdi-map-marker-plus shrink-0 text-4.5 app-accent" aria-hidden="true" />
       <span>Заехать по пути</span>
     </button>
 
     <!-- Заявка отправлена: ждём ответа водителя. Доплату показываем ту, что
          посчитал бэкенд, — ровно её увидит и водитель. -->
     <div v-if="pendingRouteChange" class="mt-3 rounded-2xl bg-main-500/12 px-4 py-3 text-left">
-      <p class="flex items-center gap-2 text-sm text-main-200 font-900">
+      <p class="flex items-center gap-2 text-sm text-main-200 font-900 light:text-main-700">
         <span class="i-mdi-clock-outline shrink-0 text-4.5" aria-hidden="true" />
         <span>Ждём ответа водителя</span>
       </p>
-      <p class="mt-1.5 text-xs text-slate-300 font-700">
+      <p class="mt-1.5 text-xs text-slate-300 font-700 light:text-slate-600">
         Доплата за остановку — {{ formatTenge(pendingRouteChange.fee) }}.
         Если водитель откажется, поездка поедет прежним маршрутом и доплаты не будет.
       </p>
       <button
         type="button"
-        class="mt-2.5 text-xs text-slate-400 font-800 underline underline-offset-2 disabled:opacity-50"
+        class="mt-2.5 text-xs app-muted font-800 underline underline-offset-2 disabled:opacity-50"
         :disabled="trips.isProposingRouteChange"
         @click="cancelStopRequest"
       >
@@ -626,20 +626,20 @@ async function shareTrip() {
     <div
       v-else-if="trips.routeChangeOutcome"
       class="mt-3 flex items-start gap-2 rounded-2xl px-4 py-3 text-left"
-      :class="trips.routeChangeOutcome === 'accepted' ? 'bg-emerald-500/12' : 'bg-white/5'"
+      :class="trips.routeChangeOutcome === 'accepted' ? 'bg-emerald-500/12' : 'app-card'"
     >
       <span
         class="mt-0.5 shrink-0 text-4.5"
         :class="trips.routeChangeOutcome === 'accepted'
           ? 'i-mdi-check-circle text-emerald-300'
-          : 'i-mdi-close-circle text-slate-400'"
+          : 'i-mdi-close-circle app-muted'"
         aria-hidden="true"
       />
       <div class="min-w-0 flex-1">
         <p class="text-sm font-900" :class="trips.routeChangeOutcome === 'accepted' ? 'text-emerald-200' : 'text-slate-200'">
           {{ trips.routeChangeOutcome === 'accepted' ? 'Водитель согласился заехать' : 'Водитель отказался от остановки' }}
         </p>
-        <p class="mt-1 text-xs text-slate-400 font-700">
+        <p class="mt-1 text-xs app-muted font-700">
           {{ trips.routeChangeOutcome === 'accepted'
             ? 'Остановка добавлена в маршрут, доплата уже учтена в стоимости.'
             : 'Маршрут и цена поездки не изменились.' }}
@@ -647,7 +647,7 @@ async function shareTrip() {
       </div>
       <button
         type="button"
-        class="shrink-0 p-1 text-slate-400"
+        class="shrink-0 p-1 app-muted"
         aria-label="Закрыть"
         @click="trips.clearRouteChangeOutcome()"
       >
@@ -656,10 +656,10 @@ async function shareTrip() {
     </div>
 
     <!-- Карточка водителя — показывается после принятия заказа -->
-    <div v-if="driver" class="mt-3 flex items-center gap-3 rounded-2xl bg-white/5 px-3 py-3 text-left">
+    <div v-if="driver" class="mt-3 flex items-center gap-3 rounded-2xl app-card px-3 py-3 text-left">
       <div class="h-14 w-14 flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10">
         <img v-if="driver.avatar_url" :src="mediaUrl(driver.avatar_url)" alt="" class="h-full w-full object-cover">
-        <span v-else class="i-mdi-account text-7 text-slate-400" />
+        <span v-else class="i-mdi-account text-7 app-muted" />
       </div>
 
       <div class="min-w-0 flex-1">
@@ -667,7 +667,7 @@ async function shareTrip() {
           {{ driver.name || 'Водитель' }}
           <span class="shrink-0 text-xs text-amber-300 font-800">★ {{ driver.rating.toFixed(1) }}</span>
         </p>
-        <p v-if="driver.vehicle" class="mt-0.5 truncate text-xs text-slate-400 font-700">
+        <p v-if="driver.vehicle" class="mt-0.5 truncate text-xs app-muted font-700">
           {{ driver.vehicle.make }} {{ driver.vehicle.model }} · {{ driver.vehicle.color }}
         </p>
         <p v-if="driver.vehicle" class="mt-0.5 inline-block rounded-md bg-white/10 px-2 py-0.5 text-xs font-900 tracking-wide">
@@ -681,14 +681,14 @@ async function shareTrip() {
          по-прежнему не показываем. У части парков телефон и БИН не заполнены,
          поэтому каждая строка со своим v-if; у самозанятого водителя объекта
          carrier нет вовсе, и блок не рисуется. -->
-    <div v-if="carrier" class="mt-2 rounded-2xl bg-white/5 px-3 py-3 text-left">
-      <p class="text-[11px] text-slate-500 font-800 uppercase">
+    <div v-if="carrier" class="mt-2 rounded-2xl app-card px-3 py-3 text-left">
+      <p class="text-[11px] app-faint font-800 uppercase">
         Перевозчик
       </p>
       <p class="mt-1 truncate text-sm font-900">
         {{ carrier.name }}
       </p>
-      <p v-if="carrier.bin" class="mt-0.5 text-xs text-slate-400 font-700">
+      <p v-if="carrier.bin" class="mt-0.5 text-xs app-muted font-700">
         БИН {{ carrier.bin }}
       </p>
 
@@ -698,7 +698,7 @@ async function shareTrip() {
            в своей звонилке. -->
       <button
         v-if="carrier.phone"
-        class="mt-2 h-10 w-full flex items-center justify-center gap-2 rounded-xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98]"
+        class="mt-2 h-10 w-full flex items-center justify-center gap-2 rounded-xl app-chip text-sm text-white font-900 transition active:scale-[0.98]"
         type="button"
         @click="copyCarrierPhone(carrier.phone)"
       >
@@ -717,7 +717,7 @@ async function shareTrip() {
     <button
       v-if="isCompleted && driver"
       :disabled="isOpeningLostItem"
-      class="mt-2 h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98] disabled:opacity-60"
+      class="mt-2 h-12 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-sm text-white font-900 transition active:scale-[0.98] disabled:opacity-60"
       type="button"
       @click="reportLostItem"
     >
@@ -729,9 +729,9 @@ async function shareTrip() {
     <div
       v-if="waitingInfo"
       class="mt-3 rounded-2xl px-4 py-3 text-left"
-      :class="waitingInfo.accent ? 'bg-amber-500/12' : 'bg-white/5'"
+      :class="waitingInfo.accent ? 'bg-amber-500/12' : 'app-card'"
     >
-      <p class="text-xs font-800 leading-5" :class="waitingInfo.accent ? 'text-amber-200' : 'text-slate-300'">
+      <p class="text-xs font-800 leading-5" :class="waitingInfo.accent ? 'text-amber-200' : 'text-slate-300 light:text-slate-600'">
         <span class="i-mdi-timer-sand mr-1 inline-block align-middle text-4" />
         {{ waitingInfo.text }}
       </p>
@@ -751,7 +751,7 @@ async function shareTrip() {
       </button>
 
       <button
-        class="relative h-12 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98]"
+        class="relative h-12 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-sm text-white font-900 transition active:scale-[0.98]"
         type="button"
         @click="openChat"
       >
@@ -768,24 +768,24 @@ async function shareTrip() {
 
     <!-- Итог завершённой поездки: время пути, время завершения, стоимость -->
     <div v-if="isCompleted" class="grid grid-cols-3 mt-3 gap-2">
-      <div class="rounded-2xl bg-white/5 px-2 py-2.5">
-        <p class="text-[11px] text-slate-500 font-800">
+      <div class="rounded-2xl app-card px-2 py-2.5">
+        <p class="text-[11px] app-faint font-800">
           Время пути
         </p>
         <p class="mt-1 text-sm font-950">
           {{ tripDurationText ?? '—' }}
         </p>
       </div>
-      <div class="rounded-2xl bg-white/5 px-2 py-2.5">
-        <p class="text-[11px] text-slate-500 font-800">
+      <div class="rounded-2xl app-card px-2 py-2.5">
+        <p class="text-[11px] app-faint font-800">
           Завершена
         </p>
         <p class="mt-1 text-sm font-950">
           {{ completedAtText ?? '—' }}
         </p>
       </div>
-      <div class="rounded-2xl bg-white/5 px-2 py-2.5">
-        <p class="text-[11px] text-slate-500 font-800">
+      <div class="rounded-2xl app-card px-2 py-2.5">
+        <p class="text-[11px] app-faint font-800">
           Стоимость
         </p>
         <p class="mt-1 text-sm font-950">
@@ -795,7 +795,7 @@ async function shareTrip() {
     </div>
 
     <!-- Оценка водителя: форма после завершения, «спасибо» — если уже оценено -->
-    <div v-if="isCompleted && driver" class="mt-3 rounded-2xl bg-white/5 px-4 py-4 text-left">
+    <div v-if="isCompleted && driver" class="mt-3 rounded-2xl app-card px-4 py-4 text-left">
       <template v-if="ratedScore">
         <p class="text-center text-sm font-900">
           Ваша оценка
@@ -805,7 +805,7 @@ async function shareTrip() {
             v-for="star in 5"
             :key="star"
             class="i-mdi-star text-7"
-            :class="star <= ratedScore ? 'text-main-300' : 'text-slate-600'"
+            :class="star <= ratedScore ? 'app-accent' : 'text-slate-600'"
             aria-hidden="true"
           />
         </div>
@@ -824,7 +824,7 @@ async function shareTrip() {
             :key="star"
             :aria-label="`Поставить оценку ${star}`"
             class="h-11 w-11 flex items-center justify-center rounded-full transition active:scale-[0.94]"
-            :class="star <= ratingScore ? 'text-main-300' : 'text-slate-600'"
+            :class="star <= ratingScore ? 'app-accent' : 'text-slate-600'"
             type="button"
             @click="ratingScore = star"
           >
@@ -838,8 +838,8 @@ async function shareTrip() {
             :key="tag.value"
             class="h-8 rounded-full px-3 text-xs font-800 transition active:scale-[0.96]"
             :class="ratingTags.includes(tag.value)
-              ? 'bg-main-500/22 text-main-200 border border-main-400/50'
-              : 'bg-white/6 text-slate-300 border border-transparent'"
+              ? 'bg-main-500/22 text-main-200 light:text-main-700 border border-main-400/50'
+              : 'app-card text-slate-300 light:text-slate-600 border border-transparent'"
             type="button"
             @click="toggleRatingTag(tag.value)"
           >
@@ -849,7 +849,7 @@ async function shareTrip() {
         <textarea
           v-model="ratingComment"
           aria-label="Комментарий к поездке"
-          class="mt-3 min-h-20 w-full resize-none border border-white/10 rounded-2xl bg-white/6 p-3 text-sm outline-none focus:border-main-400"
+          class="mt-3 min-h-20 w-full resize-none border app-border rounded-2xl app-card p-3 text-sm outline-none focus:border-main-400"
           maxlength="500"
           name="trip_rating_comment"
           placeholder="Комментарий к заказу, если хотите"
@@ -866,7 +866,7 @@ async function shareTrip() {
     </div>
 
     <!-- Чаевые водителю: 100/200 ₸ или своя сумма (100-5000) -->
-    <div v-if="isCompleted && driver" class="mt-3 rounded-2xl bg-white/5 px-4 py-4 text-left">
+    <div v-if="isCompleted && driver" class="mt-3 rounded-2xl app-card px-4 py-4 text-left">
       <template v-if="tipSent">
         <p class="text-center text-sm text-emerald-300 font-900">
           Чаевые отправлены 🙌
@@ -879,7 +879,7 @@ async function shareTrip() {
         <div class="grid grid-cols-3 mt-3 gap-2">
           <button
             :disabled="tipPending"
-            class="h-11 rounded-2xl bg-white/8 text-sm font-950 transition active:scale-[0.97] disabled:opacity-60"
+            class="h-11 rounded-2xl app-chip text-sm font-950 transition active:scale-[0.97] disabled:opacity-60"
             type="button"
             @click="sendTip(100)"
           >
@@ -887,7 +887,7 @@ async function shareTrip() {
           </button>
           <button
             :disabled="tipPending"
-            class="h-11 rounded-2xl bg-white/8 text-sm font-950 transition active:scale-[0.97] disabled:opacity-60"
+            class="h-11 rounded-2xl app-chip text-sm font-950 transition active:scale-[0.97] disabled:opacity-60"
             type="button"
             @click="sendTip(200)"
           >
@@ -896,7 +896,7 @@ async function shareTrip() {
           <button
             :disabled="tipPending"
             class="h-11 rounded-2xl text-sm font-950 transition active:scale-[0.97] disabled:opacity-60"
-            :class="customTipVisible ? 'bg-main-500/22 text-main-200' : 'bg-white/8'"
+            :class="customTipVisible ? 'bg-main-500/22 text-main-200 light:text-main-700' : 'app-chip'"
             type="button"
             @click="customTipVisible = !customTipVisible"
           >
@@ -907,7 +907,7 @@ async function shareTrip() {
           <input
             v-model.number="customTipAmount"
             aria-label="Своя сумма чаевых"
-            class="h-11 min-w-0 flex-1 border border-white/10 rounded-2xl bg-white/6 px-3 text-sm outline-none focus:border-main-400"
+            class="h-11 min-w-0 flex-1 border app-border rounded-2xl app-card px-3 text-sm outline-none focus:border-main-400"
             inputmode="numeric"
             max="5000"
             min="100"
@@ -923,7 +923,7 @@ async function shareTrip() {
             {{ tipPending ? '...' : 'Отправить' }}
           </button>
         </div>
-        <p class="mt-2 text-center text-[11px] text-slate-500 leading-4">
+        <p class="mt-2 text-center text-[11px] app-faint leading-4">
           Спишутся с кошелька или привязанной карты и уйдут водителю полностью — без комиссии.
         </p>
       </template>
@@ -931,7 +931,7 @@ async function shareTrip() {
 
     <label
       v-if="isCompleted && !isAlreadyFavorite"
-      class="mt-3 flex cursor-pointer items-center gap-2.5 rounded-2xl bg-white/5 px-3 py-2.5 text-left transition active:scale-[0.99]"
+      class="mt-3 flex cursor-pointer items-center gap-2.5 rounded-2xl app-card px-3 py-2.5 text-left transition active:scale-[0.99]"
     >
       <input
         :checked="isFavoriteSaved"
@@ -940,7 +940,7 @@ async function shareTrip() {
         type="checkbox"
         @change="toggleSaveFavorite"
       >
-      <span class="min-w-0 text-xs text-slate-300 font-700 leading-4">
+      <span class="min-w-0 text-xs text-slate-300 font-700 leading-4 light:text-slate-600">
         {{ isFavoriteSaved ? 'Добавлено в избранное' : 'Добавить это место в избранное' }}
       </span>
     </label>
@@ -948,7 +948,7 @@ async function shareTrip() {
     <button
       v-if="isChatAvailable"
       :disabled="isSharing"
-      class="mt-4 h-11 w-full rounded-2xl bg-white/8 text-sm text-white font-900 transition active:scale-[0.98] disabled:opacity-60"
+      class="mt-4 h-11 w-full rounded-2xl app-chip text-sm text-white font-900 transition active:scale-[0.98] disabled:opacity-60"
       type="button"
       @click="shareTrip()"
     >

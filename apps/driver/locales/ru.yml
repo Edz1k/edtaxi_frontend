@@ -1,0 +1,170 @@
+nav:
+  menu: Меню
+  line: Линия
+  income: Доход
+  driver: Водитель
+  back: Назад
+  backToMenu: Назад в меню
+  backToSettings: Назад в настройки
+  backToProfile: Назад в профиль
+titles:
+  changePhone: Смена номера
+  dailyCheck: Ежедневная проверка
+  facePhoto: Фото лица
+  feedback: Предложить улучшение
+  history: История поездок
+  onboarding: Фотоконтроль
+  parkChat: Чат с парком
+  parks: Таксопарк
+  profile: Личный кабинет
+  ratingHistory: История рейтинга
+  settings: Настройки
+  support: Поддержка
+  vehicle: Автомобиль
+  vehicleDocs: Фото машины
+settings:
+  title: Настройки
+  appearance:
+    title: Оформление
+    theme:
+      auto: Как в Telegram
+      dark: Тёмная
+      light: Светлая
+  language:
+    title: Язык
+  phone:
+    title: Номер телефона
+    change: Изменить номер
+    changeSuffix: изменить
+  sound:
+    title: Мелодия заказа
+    on: Звучит при новом заказе
+    off: Выключена
+  districts:
+    title: Районы заказов
+    subtitle: Где ищем вам заказы в первую очередь
+    wholeCity: Весь город
+    hint: Выбранные районы подсвечиваются на карте. Сначала ищем заказы из них; если рядом никого нет — заказ может прийти из любого района.
+    noCity: Районы появятся, когда определим ваш город — откройте экран карты, чтобы приложение получило геолокацию.
+menu:
+  cabinet: Кабинет
+  meta: Рейтинг {rating} · {trips} поездок
+  online: На линии
+  offline: Офлайн
+  needsVerification: Требует верификации
+  logout: Выйти
+  loggingOut: Выходим...
+  items:
+    bonus: Акции и бонусы
+    bonusDesc: Все акции, бонусы и рефералка
+    vehicle: Автомобиль
+    vehicleDesc: Данные машины и тариф
+    history: История поездок
+    historyDesc: Ваши заказы
+    parks: Таксопарк
+    parksDesc: Вступление, код приглашения, партнёрство
+    parkChat: Чат с парком
+    parkChatDesc: Связь с вашим таксопарком
+    support: Поддержка
+    supportDesc: Помощь и обращения
+    feedback: Предложить улучшение
+    feedbackDesc: Идея по развитию сервиса
+feedback:
+  eyebrow: Обратная связь
+  title: Предложить улучшение
+  lead: Расскажите, что улучшить в приложении. Лучшие идеи мы внедряем и благодарим бонусами.
+  thanksTitle: Спасибо за идею!
+  thanksText: Мы читаем каждое предложение. Если внедрим — начислим бонусы.
+  more: Предложить ещё
+  backToMenu: Вернуться в меню
+  placeholder: 'Например: добавьте возможность сохранить адреса дома и работы…'
+  sending: Отправляем...
+  send: Отправить
+  toastOkTitle: Спасибо!
+  toastOkText: Ваше предложение отправлено.
+  toastFail: Не удалось отправить предложение. Попробуйте ещё раз.
+support:
+  myTickets: Мои обращения
+  new: + Новое
+  pickSubject: Выберите тему обращения
+  empty: У вас пока нет обращений. Нажмите «Новое», чтобы задать вопрос.
+  emptyThread: Напишите вопрос — оператор ответит в ближайшее время.
+  toList: К списку обращений
+  closed: Обращение закрыто
+  operatorOnline: Оператор онлайн
+  agent: Техподдержка {name}
+  statusClosed: Закрыто
+  statusPending: Подтвердите
+  statusOpen: Открыто
+  resolvedQ: Ваша проблема решена?
+  yesResolved: Да, решена
+  no: Нет
+  attach: Прикрепить фото
+  msgAria: Сообщение в поддержку
+  placeholder: Напишите сообщение...
+  sendAria: Отправить сообщение
+  backAria: К списку обращений
+  attachment: Вложение
+history:
+  km: '{n} км'
+  loadFail: Не удалось загрузить историю поездок.
+  errTitle: Ошибка
+  errSupport: Не удалось открыть поддержку по поездке.
+  emptyTitle: Поездок пока нет
+  emptyTextDriver: Завершённые заказы появятся здесь.
+  opening: Открываем...
+  tripSupport: Поддержка по поездке
+  loadingMore: Загружаем...
+  loadMore: Загрузить ещё
+  thatsAll: Это вся история
+cats:
+  economy: Эконом
+  comfort: Комфорт
+  business: Бизнес
+  minivan: Минивэн
+  moto: Мото
+trip:
+  completed: Завершена
+  cancelled: Отменена
+  inProgress: В пути
+  assigned: Назначена
+  arriving: Подача
+  searching: Поиск
+changePhone:
+  enterPhone: Введите новый номер — на него придёт код подтверждения.
+  enterCode: Введите код из сообщения на номер {phone}.
+  sendingCode: Отправляем код...
+  getCode: Получить код
+  verifying: Проверяем...
+  confirm: Подтвердить номер
+  editPhone: Изменить номер
+  sending: Отправляем...
+  resend: Отправить код ещё раз
+  sendFail: Не удалось отправить код. Проверьте номер и попробуйте ещё раз.
+  verifyFail: Не удалось подтвердить код. Попробуйте ещё раз.
+  doneTitle: Готово
+  doneMerged: Номер подтверждён, аккаунты объединены.
+  doneUpdated: Номер телефона обновлён.
+parkChat:
+  openFail: Не удалось открыть чат с таксопарком.
+  closed: Чат закрыт
+  subtitle: Вопросы по работе в парке
+  close: Закрыть чат
+  closeAria: Закрыть чат
+  joinPark: Вступить в парк
+  empty: Напишите сообщение — владелец парка увидит его.
+  msgAria: Сообщение таксопарку
+ratingHistory:
+  loadFail: Не удалось загрузить данные.
+  loading: Загружаем историю...
+  current: Текущий рейтинг
+  avg: Средняя оценка
+  ofRatings: из {n} оценок
+  noRatings: Оценок нет
+  penalties: Штрафные события
+  noPenalties: Штрафов к рейтингу не было. Так держать!
+  passengerRatings: Оценки пассажиров
+  noRatingsYet: Оценок пока нет.
+  complaint: Подтверждённая жалоба
+  cancelAfterAccept: Отмена после принятия
+  noShow: Неявка к пассажиру

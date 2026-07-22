@@ -8,14 +8,14 @@ const inputId = useId()
 
 <template>
   <div>
-    <label :for="inputId" class="mb-2 block text-sm text-slate-300 font-600">
+    <label :for="inputId" class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">
       Номер телефона
     </label>
 
     <div
-      class="h-14 flex items-center overflow-hidden border border-white/10 rounded-2xl bg-white/5 shadow-inner transition focus-within:border-main-400 focus-within:bg-white/8"
+      class="h-14 flex items-center overflow-hidden border app-border rounded-2xl app-card shadow-inner transition focus-within:border-main-400 focus-within:app-chip"
     >
-      <span class="h-full flex items-center gap-2 border-r border-white/10 px-4 text-lg text-white font-700">
+      <span class="h-full flex items-center gap-2 border-r app-border px-4 text-lg text-white font-700">
         🇰🇿 +7
       </span>
 

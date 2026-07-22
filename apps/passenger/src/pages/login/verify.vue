@@ -9,12 +9,13 @@ import { useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const { shouldShake, shake } = useShakeAnimation()
+const { t } = useI18n()
 
 const code = ref('')
 
 const canSubmit = computed(() => code.value.length === 6)
 const deliveryMethodLabel = computed(() =>
-  auth.pendingOtpDeliveryMethod === 'whatsapp' ? 'в WhatsApp' : 'по SMS',
+  auth.pendingOtpDeliveryMethod === 'whatsapp' ? t('login.viaWhatsapp') : t('login.viaSms'),
 )
 
 definePage({
@@ -28,7 +29,7 @@ definePage({
 })
 
 useHead({
-  title: 'Код подтверждения | Telegram Taxi',
+  title: () => `${t('login.codeTitle')} | Telegram Taxi`,
 })
 
 async function submitOtp() {
@@ -51,13 +52,13 @@ function backToPhone() {
 
 <template>
   <AuthScreen
-    :description="`Мы отправили код ${deliveryMethodLabel} на номер ${auth.pendingPhone || '+7'}`"
+    :description="t('login.codeSent', { via: deliveryMethodLabel, phone: auth.pendingPhone || '+7' })"
     icon="i-mdi-shield-key"
-    title="Введите код"
+    :title="t('login.codeTitle')"
   >
     <template #before>
       <button
-        class="mb-8 h-11 w-11 flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-slate-300 transition active:scale-[0.96]"
+        class="mb-8 h-11 w-11 flex items-center justify-center border app-border rounded-2xl app-card text-slate-300 transition active:scale-[0.96] light:text-slate-600"
         type="button"
         @click="backToPhone"
       >
@@ -73,21 +74,21 @@ function backToPhone() {
         :disabled="auth.isLoading || !canSubmit"
         icon="i-mdi-check"
         :loading="auth.isLoading"
-        loading-text="Проверяем код..."
-        text="Войти"
+        :loading-text="t('login.checkingCode')"
+        :text="t('login.signIn')"
       />
 
       <button
-        class="h-14 w-full flex items-center justify-center border border-white/10 rounded-2xl bg-white/5 text-base text-slate-300 font-700 transition active:scale-[0.98]"
+        class="h-14 w-full flex items-center justify-center border app-border rounded-2xl app-card text-base text-slate-300 font-700 transition active:scale-[0.98] light:text-slate-600"
         type="button"
         @click="backToPhone"
       >
-        Изменить номер телефона
+        {{ t('login.changePhone') }}
       </button>
     </form>
 
     <template #footer>
-      Если код не пришел, проверьте номер телефона
+      {{ t('login.codeNotReceived') }}
     </template>
   </AuthScreen>
 </template>

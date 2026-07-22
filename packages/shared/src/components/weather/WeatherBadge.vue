@@ -38,10 +38,10 @@ const tempText = computed(() => {
 <template>
   <span
     v-if="weather"
-    class="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/8 px-2 py-1 text-xs text-white font-800"
+    class="inline-flex shrink-0 items-center gap-1 rounded-full app-chip px-2 py-1 text-xs text-white font-800"
     :title="weather.city"
   >
-    <span :class="icon" class="text-4 text-main-300" aria-hidden="true" />
+    <span :class="icon" class="text-4 app-accent" aria-hidden="true" />
     {{ tempText }}
   </span>
 </template>

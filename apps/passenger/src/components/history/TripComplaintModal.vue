@@ -42,7 +42,7 @@ async function submit() {
         class="fixed inset-0 z-60 flex items-end bg-black/65 px-4 pb-[calc(var(--app-safe-area-bottom)+1rem)]"
         @click.self="emit('close')"
       >
-        <section class="mx-auto max-w-sm w-full rounded-3xl bg-secondary-900 p-5 text-white shadow-2xl shadow-black/30">
+        <section class="mx-auto max-w-sm w-full rounded-3xl app-screen p-5 text-white shadow-2xl shadow-black/30">
           <div class="flex items-center justify-between gap-4">
             <div>
               <p class="text-xs text-red-300 font-900 uppercase">
@@ -52,19 +52,19 @@ async function submit() {
                 Пожаловаться на водителя
               </h2>
             </div>
-            <button aria-label="Закрыть жалобу" class="h-11 w-11 flex items-center justify-center rounded-full bg-white/8" type="button" @click="emit('close')">
+            <button aria-label="Закрыть жалобу" class="h-11 w-11 flex items-center justify-center rounded-full app-chip" type="button" @click="emit('close')">
               <span class="i-mdi-close text-6" />
             </button>
           </div>
 
-          <p class="mt-3 text-sm text-slate-400 leading-5">
+          <p class="mt-3 text-sm app-muted leading-5">
             Опишите, что произошло. Жалобу рассмотрит служба поддержки.
           </p>
 
           <textarea
             v-model="reason"
             aria-label="Причина жалобы"
-            class="mt-4 min-h-28 w-full resize-none border border-white/10 rounded-2xl bg-white/6 p-4 text-sm outline-none focus:border-red-400"
+            class="mt-4 min-h-28 w-full resize-none border app-border rounded-2xl app-card p-4 text-sm outline-none focus:border-red-400"
             maxlength="1000"
             name="complaint_reason"
             placeholder="Например: водитель вёл себя грубо"

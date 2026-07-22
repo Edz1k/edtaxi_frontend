@@ -101,11 +101,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="relative h-40 overflow-hidden rounded-2xl bg-white/5">
+  <div class="relative h-40 overflow-hidden rounded-2xl app-card">
     <div ref="mapContainer" class="h-full w-full" />
     <div
       v-if="mapError"
-      class="absolute inset-0 flex items-center justify-center px-4 text-center text-xs text-slate-400 font-700"
+      class="absolute inset-0 flex items-center justify-center px-4 text-center text-xs app-muted font-700"
     >
       {{ mapError }}
     </div>

@@ -95,10 +95,10 @@ function chooseSuggestion(place: GeoPlace) {
 <template>
   <Teleport to="body">
     <div class="fixed inset-0 z-60 flex items-end bg-black/60 p-4 text-white backdrop-blur-sm" @click.self="emit('close')">
-      <section class="max-h-[80vh] w-full flex flex-col overflow-hidden rounded-3xl bg-secondary-900 p-5 shadow-2xl">
+      <section class="max-h-[80vh] w-full flex flex-col overflow-hidden rounded-3xl app-screen p-5 shadow-2xl">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <p class="text-xs text-main-300 font-900 uppercase">
+            <p class="text-xs app-accent font-900 uppercase">
               Режим «Домой»
             </p>
             <h2 class="mt-1 text-xl font-950">
@@ -107,7 +107,7 @@ function chooseSuggestion(place: GeoPlace) {
           </div>
           <button
             aria-label="Закрыть"
-            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-white transition active:scale-95"
+            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full app-chip text-white transition active:scale-95"
             type="button"
             @click="emit('close')"
           >
@@ -135,7 +135,7 @@ function chooseSuggestion(place: GeoPlace) {
           >
             Выключить режим
           </button>
-          <p class="mt-2 text-center text-[11px] text-slate-500 font-700">
+          <p class="mt-2 text-center text-[11px] app-faint font-700">
             Потраченная активация не возвращается ({{ driver.homeMode?.used_today ?? 0 }} из {{ driver.homeMode?.limit ?? 2 }} за сегодня).
           </p>
         </template>
@@ -145,28 +145,28 @@ function chooseSuggestion(place: GeoPlace) {
           <!-- Сохранённый дом: включение в один тап -->
           <button
             v-if="savedHome"
-            class="mt-4 w-full flex items-center gap-3 rounded-2xl bg-white/6 px-3.5 py-3 text-left transition active:scale-[0.99] disabled:opacity-60"
+            class="mt-4 w-full flex items-center gap-3 rounded-2xl app-card px-3.5 py-3 text-left transition active:scale-[0.99] disabled:opacity-60"
             :disabled="driver.isMutatingHomeMode || (remaining ?? 0) === 0"
             type="button"
             @click="activateAt(savedHome.lat, savedHome.lng, savedHome.address)"
           >
-            <span class="h-10 w-10 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200">
+            <span class="h-10 w-10 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200 light:text-main-700">
               <span class="i-mdi-home text-5.5" aria-hidden="true" />
             </span>
             <span class="min-w-0 flex-1">
               <span class="block truncate text-sm font-900">{{ savedHome.address }}</span>
-              <span class="block text-[11px] text-slate-400">Включить с этим адресом</span>
+              <span class="block text-[11px] app-muted">Включить с этим адресом</span>
             </span>
-            <span class="i-mdi-chevron-right shrink-0 text-5 text-slate-400" aria-hidden="true" />
+            <span class="i-mdi-chevron-right shrink-0 text-5 app-muted" aria-hidden="true" />
           </button>
 
           <!-- Поиск адреса дома -->
-          <div class="mt-3 min-h-13 flex items-center gap-3 rounded-2xl bg-white/6 px-3.5 transition focus-within:bg-white/10">
-            <span class="i-mdi-magnify shrink-0 text-5 text-main-300" aria-hidden="true" />
+          <div class="mt-3 min-h-13 flex items-center gap-3 rounded-2xl app-card px-3.5 transition focus-within:bg-white/10">
+            <span class="i-mdi-magnify shrink-0 text-5 app-accent" aria-hidden="true" />
             <input
               v-model="query"
               aria-label="Адрес дома"
-              class="min-w-0 flex-1 bg-transparent py-3 text-sm text-white font-800 outline-none placeholder:text-slate-400"
+              class="min-w-0 flex-1 bg-transparent py-3 text-sm text-white font-800 outline-none placeholder:app-muted"
               placeholder="Адрес дома"
               type="text"
               @focus="search()"
@@ -183,8 +183,8 @@ function chooseSuggestion(place: GeoPlace) {
             />
           </div>
 
-          <p class="mt-3 flex items-start gap-2 rounded-2xl bg-white/5 px-3 py-2.5 text-[12px] text-slate-300 leading-4">
-            <span class="i-mdi-information-outline mt-0.5 shrink-0 text-4.5 text-main-300" aria-hidden="true" />
+          <p class="mt-3 flex items-start gap-2 rounded-2xl app-card px-3 py-2.5 text-[12px] text-slate-300 leading-4 light:text-slate-600">
+            <span class="i-mdi-information-outline mt-0.5 shrink-0 text-4.5 app-accent" aria-hidden="true" />
             В режиме «Домой» вы получаете только заказы, конечная точка которых — не дальше 5 км от дома. Режим выключится сам через 3 часа или после поездки, завершившейся у дома.
           </p>
 

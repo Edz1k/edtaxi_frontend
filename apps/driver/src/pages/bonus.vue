@@ -133,13 +133,13 @@ async function joinPromo(promo: BonusPromotion) {
 </script>
 
 <template>
-  <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+0.75rem)] text-white">
+  <main class="tg-safe-x h-full overflow-y-auto app-screen pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+0.75rem)] text-white">
     <section class="mx-auto max-w-sm">
       <!-- Header -->
       <div class="mb-4 flex items-center gap-2">
         <button
           aria-label="Назад"
-          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 transition active:scale-95"
+          class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full app-chip transition active:scale-95"
           type="button"
           @click="router.back()"
         >
@@ -149,43 +149,43 @@ async function joinPromo(promo: BonusPromotion) {
           <p class="truncate text-sm font-900">
             Бонусы
           </p>
-          <p class="text-xs text-slate-400 font-700">
+          <p class="text-xs app-muted font-700">
             Программа лояльности Telegram Taxi
           </p>
         </div>
       </div>
 
       <div v-if="isLoading" class="space-y-3">
-        <div class="h-32 animate-pulse rounded-3xl bg-white/6" />
-        <div class="h-44 animate-pulse rounded-3xl bg-white/6" />
-        <div class="h-24 animate-pulse rounded-3xl bg-white/6" />
+        <div class="h-32 animate-pulse rounded-3xl app-card" />
+        <div class="h-44 animate-pulse rounded-3xl app-card" />
+        <div class="h-24 animate-pulse rounded-3xl app-card" />
       </div>
 
       <template v-else-if="overview">
         <!-- Баланс -->
-        <section class="border border-main-500/20 rounded-3xl bg-white/6 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
-          <p class="text-xs text-slate-400 font-800 uppercase">
+        <section class="border border-main-500/20 rounded-3xl app-card p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)]">
+          <p class="text-xs app-muted font-800 uppercase">
             Баланс
           </p>
-          <h1 class="mt-2 text-4xl text-main-200 font-950">
+          <h1 class="mt-2 text-4xl text-main-200 font-950 light:text-main-700">
             {{ formatBonus(overview.balance) }} бонусов
           </h1>
-          <p class="mt-1 text-sm text-slate-400">
+          <p class="mt-1 text-sm app-muted">
             Бонусы платформы — не тенге
           </p>
-          <p class="mt-3 rounded-2xl bg-white/6 px-4 py-2.5 text-xs text-main-100 font-800">
-            <span class="i-mdi-star-four-points mr-1 inline-block align-middle text-3.5 text-main-300" />
+          <p class="mt-3 rounded-2xl app-card px-4 py-2.5 text-xs text-main-100 font-800 light:text-main-700">
+            <span class="i-mdi-star-four-points mr-1 inline-block align-middle text-3.5 app-accent" />
             +{{ formatBonus(overview.milestone_bonus) }} бонусов за каждые {{ overview.milestone_every }} заказов
           </p>
         </section>
 
         <!-- Мой код -->
         <section class="mt-6">
-          <h2 class="text-xs text-slate-400 font-800 uppercase">
+          <h2 class="text-xs app-muted font-800 uppercase">
             Мой код
           </h2>
-          <div class="mt-3 rounded-3xl bg-white/5 p-4">
-            <p class="select-all rounded-2xl bg-secondary-950/70 py-3 text-center text-2xl font-950 tracking-[0.18em] font-mono">
+          <div class="mt-3 rounded-3xl app-card p-4">
+            <p class="select-all rounded-2xl app-input-surface py-3 text-center text-2xl font-950 tracking-[0.18em] font-mono">
               {{ overview.referral_code }}
             </p>
 
@@ -199,7 +199,7 @@ async function joinPromo(promo: BonusPromotion) {
                 Поделиться
               </button>
               <button
-                class="h-12 flex items-center justify-center gap-1.5 rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+                class="h-12 flex items-center justify-center gap-1.5 rounded-2xl app-chip text-sm font-900 transition active:scale-[0.98]"
                 type="button"
                 @click="copyCode"
               >
@@ -208,7 +208,7 @@ async function joinPromo(promo: BonusPromotion) {
               </button>
             </div>
 
-            <p class="mt-3 text-xs text-slate-500 leading-4">
+            <p class="mt-3 text-xs app-faint leading-4">
               Приглашено {{ overview.invited_count }} из {{ inviteLimit }} · за каждого друга +{{ formatBonus(overview.owner_reward) }} бонусов
             </p>
           </div>
@@ -222,14 +222,14 @@ async function joinPromo(promo: BonusPromotion) {
 
         <!-- Ввести код друга -->
         <section v-if="!overview.code_redeemed" class="mt-6">
-          <h2 class="text-xs text-slate-400 font-800 uppercase">
+          <h2 class="text-xs app-muted font-800 uppercase">
             Ввести код друга
           </h2>
           <form class="grid grid-cols-[1fr_auto] mt-3 gap-2" @submit.prevent="redeem">
             <input
               v-model="friendCode"
               aria-label="Код друга"
-              class="h-13 min-w-0 border border-white/10 rounded-2xl bg-white/6 px-4 text-sm uppercase outline-none transition focus:border-main-400/60"
+              class="h-13 min-w-0 border app-border rounded-2xl app-card px-4 text-sm uppercase outline-none transition focus:border-main-400/60"
               maxlength="12"
               name="friend_code"
               placeholder="Например, ED7X4K"
@@ -242,23 +242,23 @@ async function joinPromo(promo: BonusPromotion) {
               {{ isRedeeming ? '...' : 'Применить' }}
             </button>
           </form>
-          <p class="mt-2 text-xs text-slate-500">
+          <p class="mt-2 text-xs app-faint">
             За код друга вы получите +{{ formatBonus(overview.invitee_reward) }} бонусов
           </p>
         </section>
 
         <!-- Акции -->
         <section class="mt-6">
-          <h2 class="text-xs text-slate-400 font-800 uppercase">
+          <h2 class="text-xs app-muted font-800 uppercase">
             Акции
           </h2>
 
-          <p v-if="!promotions.length" class="mt-3 rounded-3xl bg-white/5 p-6 text-center text-sm text-slate-400">
+          <p v-if="!promotions.length" class="mt-3 rounded-3xl app-card p-6 text-center text-sm app-muted">
             Активных акций пока нет — загляните позже.
           </p>
 
           <div v-else class="mt-3 space-y-3">
-            <article v-for="promo in promotions" :key="promo.id" class="rounded-3xl bg-white/5 p-4">
+            <article v-for="promo in promotions" :key="promo.id" class="rounded-3xl app-card p-4">
               <!-- Баннер акции (может отсутствовать) -->
               <img
                 v-if="promo.image_url"
@@ -270,14 +270,14 @@ async function joinPromo(promo: BonusPromotion) {
                 <p class="min-w-0 text-base font-950">
                   {{ promo.title }}
                 </p>
-                <span class="shrink-0 rounded-full bg-main-500/14 px-3 py-1.5 text-xs text-main-200 font-900">
+                <span class="shrink-0 rounded-full bg-main-500/14 px-3 py-1.5 text-xs text-main-200 font-900 light:text-main-700">
                   +{{ formatBonus(promo.reward) }} бонусов
                 </span>
               </div>
-              <p v-if="promo.description" class="mt-1 text-xs text-slate-400 leading-4">
+              <p v-if="promo.description" class="mt-1 text-xs app-muted leading-4">
                 {{ promo.description }}
               </p>
-              <p v-if="promo.message" class="mt-1 text-xs text-slate-300 leading-4">
+              <p v-if="promo.message" class="mt-1 text-xs text-slate-300 leading-4 light:text-slate-600">
                 {{ promo.message }}
               </p>
 
@@ -293,14 +293,14 @@ async function joinPromo(promo: BonusPromotion) {
                 {{ joiningPromoId === promo.id ? 'Подключаем...' : 'Участвовать' }}
               </button>
               <template v-else>
-                <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">
+                <div class="mt-3 h-1.5 overflow-hidden rounded-full app-chip">
                   <div class="h-full rounded-full bg-main-400" :style="{ width: `${promoProgress(promo)}%` }" />
                 </div>
                 <div class="mt-2 flex items-center justify-between text-xs font-700">
-                  <span class="text-slate-400">{{ promo.my_trips }} / {{ promo.target_trips }} заказов</span>
-                  <span class="text-slate-500">до {{ formatDeadline(promo.ends_at) }}</span>
+                  <span class="app-muted">{{ promo.my_trips }} / {{ promo.target_trips }} заказов</span>
+                  <span class="app-faint">до {{ formatDeadline(promo.ends_at) }}</span>
                 </div>
-                <p class="mt-1.5 text-[11px] text-slate-500 leading-4">
+                <p class="mt-1.5 text-[11px] app-faint leading-4">
                   {{ promo.award_mode === 'manual'
                     ? 'Награду получите после завершения акции — её отправит организатор.'
                     : 'Бонусы начислятся автоматически при выполнении условия.' }}
@@ -311,7 +311,7 @@ async function joinPromo(promo: BonusPromotion) {
         </section>
       </template>
 
-      <p v-else class="rounded-3xl bg-white/5 p-6 text-center text-sm text-slate-400">
+      <p v-else class="rounded-3xl app-card p-6 text-center text-sm app-muted">
         Не удалось загрузить бонусы. Потяните вниз или зайдите позже.
       </p>
     </section>

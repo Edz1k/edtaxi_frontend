@@ -1,4 +1,5 @@
 import path from 'node:path'
+import VueI18n from '@intlify/unplugin-vue-i18n/vite'
 import { unheadVueComposablesImports } from '@unhead/vue'
 import Vue from '@vitejs/plugin-vue'
 import Unocss from 'unocss/vite'
@@ -31,6 +32,7 @@ export default defineConfig({
       include: [/\.[jt]sx?$/, /\.vue$/, /\.vue\?vue/],
       imports: [
         'vue',
+        'vue-i18n',
         '@vueuse/core',
         unheadVueComposablesImports,
         VueRouterAutoImports,
@@ -50,6 +52,14 @@ export default defineConfig({
     }),
 
     Unocss(),
+
+    // Словари ru/kk/en лежат в locales/*.yml (как в apps/web); активная локаль
+    // и её сохранение — src/modules/i18n.ts.
+    VueI18n({
+      runtimeOnly: true,
+      compositionOnly: true,
+      include: [path.resolve(__dirname, 'locales/**')],
+    }),
 
     VitePWA({
       registerType: 'autoUpdate',

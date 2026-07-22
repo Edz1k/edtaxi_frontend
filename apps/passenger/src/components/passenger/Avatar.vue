@@ -29,7 +29,7 @@ function getInitials(name: string) {
 
 <template>
   <AvatarRoot
-    class="h-24 w-24 overflow-hidden border border-white/10 rounded-full bg-white/8"
+    class="h-24 w-24 overflow-hidden border app-border rounded-full app-chip"
   >
     <AvatarImage
       :src="src"

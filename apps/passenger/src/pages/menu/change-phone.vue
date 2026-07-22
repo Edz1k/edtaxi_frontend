@@ -12,6 +12,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const passenger = usePassengerStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const step = ref<'code' | 'phone'>('phone')
 const phoneInput = ref('')
@@ -30,13 +31,13 @@ definePage({
     requiresAuth: true,
     requiredRole: 'passenger',
     backTo: '/menu/settings',
-    screenSubtitle: 'Назад в настройки',
-    screenTitle: 'Смена номера',
+    screenSubtitle: 'nav.backToSettings',
+    screenTitle: 'titles.changePhone',
   },
 })
 
 useHead({
-  title: 'Смена номера | Telegram Taxi',
+  title: () => `${t('titles.changePhone')} | Telegram Taxi`,
 })
 
 async function sendCode() {
@@ -50,7 +51,7 @@ async function sendCode() {
     step.value = 'code'
   }
   catch (error) {
-    showErrorToast(error, 'Не удалось отправить код. Проверьте номер и попробуйте ещё раз.')
+    showErrorToast(error, t('changePhone.sendFail'))
   }
   finally {
     isSending.value = false
@@ -69,15 +70,15 @@ async function verifyCode() {
     await auth.restoreSession({ force: true, preferredRole: 'passenger' }).catch(() => {})
     passenger.loadProfile().catch(() => {})
     toast.success(
-      'Готово',
-      response.merged ? 'Номер подтверждён, аккаунты объединены.' : 'Номер телефона обновлён.',
+      t('changePhone.doneTitle'),
+      response.merged ? t('changePhone.doneMerged') : t('changePhone.doneUpdated'),
     )
     await router.push('/menu/settings')
   }
   catch (error) {
     codeShake.value = true
     setTimeout(() => codeShake.value = false, 400)
-    showErrorToast(error, 'Не удалось подтвердить код. Попробуйте ещё раз.')
+    showErrorToast(error, t('changePhone.verifyFail'))
   }
   finally {
     isVerifying.value = false
@@ -91,57 +92,57 @@ function backToPhone() {
 </script>
 
 <template>
-  <main class="tg-safe-x h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)] text-white">
+  <main class="tg-safe-x h-full overflow-y-auto app-screen pb-[calc(var(--app-safe-area-bottom)+1.5rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)] text-white">
     <section class="mx-auto max-w-sm">
       <header>
-        <p class="text-xs text-main-300 font-900 uppercase">
-          Настройки
+        <p class="text-xs app-accent font-900 uppercase">
+          {{ t('titles.settings') }}
         </p>
         <h1 class="mt-1 text-3xl font-950">
-          Смена номера
+          {{ t('titles.changePhone') }}
         </h1>
-        <p class="mt-2 text-sm text-slate-400 leading-5">
+        <p class="mt-2 text-sm app-muted leading-5">
           {{ step === 'phone'
-            ? 'Введите новый номер — на него придёт код подтверждения.'
-            : `Введите код из сообщения на номер ${newPhone}.` }}
+            ? t('changePhone.enterPhone')
+            : t('changePhone.enterCode', { phone: newPhone }) }}
         </p>
       </header>
 
-      <form v-if="step === 'phone'" class="mt-6 rounded-3xl bg-white/5 p-4" @submit.prevent="sendCode">
+      <form v-if="step === 'phone'" class="mt-6 rounded-3xl app-card p-4" @submit.prevent="sendCode">
         <PhoneInput v-model="phoneInput" />
         <button
           :disabled="isSending || !canSendCode"
           class="mt-4 h-13 w-full rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
           type="submit"
         >
-          {{ isSending ? 'Отправляем код...' : 'Получить код' }}
+          {{ isSending ? t('changePhone.sendingCode') : t('changePhone.getCode') }}
         </button>
       </form>
 
-      <form v-else class="mt-6 rounded-3xl bg-white/5 p-4" @submit.prevent="verifyCode">
+      <form v-else class="mt-6 rounded-3xl app-card p-4" @submit.prevent="verifyCode">
         <OtpInput v-model="code" :shake="codeShake" />
         <button
           :disabled="isVerifying || code.length !== 6"
           class="mt-4 h-13 w-full rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
           type="submit"
         >
-          {{ isVerifying ? 'Проверяем...' : 'Подтвердить номер' }}
+          {{ isVerifying ? t('changePhone.verifying') : t('changePhone.confirm') }}
         </button>
         <div class="mt-3 flex items-center justify-between">
           <button
-            class="text-xs text-slate-400 font-800 underline underline-offset-3"
+            class="text-xs app-muted font-800 underline underline-offset-3"
             type="button"
             @click="backToPhone"
           >
-            Изменить номер
+            {{ t('changePhone.editPhone') }}
           </button>
           <button
             :disabled="isSending"
-            class="text-xs text-main-300 font-800 underline underline-offset-3 disabled:opacity-60"
+            class="text-xs app-accent font-800 underline underline-offset-3 disabled:opacity-60"
             type="button"
             @click="sendCode"
           >
-            {{ isSending ? 'Отправляем...' : 'Отправить код ещё раз' }}
+            {{ isSending ? t('changePhone.sending') : t('changePhone.resend') }}
           </button>
         </div>
       </form>

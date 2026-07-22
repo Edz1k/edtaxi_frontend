@@ -13,7 +13,7 @@ defineSlots<{
 </script>
 
 <template>
-  <main class="tg-safe-screen bg-secondary-900 text-white">
+  <main class="tg-safe-screen app-screen text-white">
     <div class="mx-auto max-w-sm min-h-[calc(var(--app-viewport-height)-48px-var(--app-safe-area-top)-var(--app-safe-area-bottom))] flex flex-col justify-between">
       <section class="pt-8">
         <slot name="before" />
@@ -28,7 +28,7 @@ defineSlots<{
           <h1 class="text-3xl font-800 tracking-tight">
             {{ title }}
           </h1>
-          <p class="mt-3 text-sm text-slate-400 leading-6">
+          <p class="mt-3 text-sm app-muted leading-6">
             {{ description }}
           </p>
         </div>
@@ -36,7 +36,7 @@ defineSlots<{
         <slot />
       </section>
 
-      <footer class="pb-2 pt-3 text-center text-xs text-slate-500 leading-5">
+      <footer class="pb-2 pt-3 text-center text-xs app-faint leading-5">
         <slot name="footer" />
       </footer>
     </div>

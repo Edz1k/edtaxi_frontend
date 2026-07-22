@@ -72,7 +72,7 @@ onMounted(loadExisting)
 <template>
   <div class="mt-3">
     <!-- Уже есть заявка на эту модель -->
-    <div v-if="existing" class="rounded-xl bg-white/5 p-3 text-xs leading-5">
+    <div v-if="existing" class="rounded-xl app-card p-3 text-xs leading-5">
       <p v-if="existing.status === 'pending'" class="text-amber-300 font-800">
         Заявка на добавление модели на рассмотрении.
       </p>
@@ -93,7 +93,7 @@ onMounted(loadExisting)
     <template v-else>
       <button
         v-if="!isOpen"
-        class="w-full rounded-xl bg-main-500/16 py-2.5 text-xs text-main-200 font-800 transition active:scale-[0.99]"
+        class="w-full rounded-xl bg-main-500/16 py-2.5 text-xs text-main-200 font-800 transition active:scale-[0.99] light:text-main-700"
         type="button"
         @click="isOpen = true"
       >
@@ -102,17 +102,17 @@ onMounted(loadExisting)
 
       <div v-else class="space-y-3">
         <label class="block">
-          <span class="mb-1.5 block text-xs text-slate-400 font-600">Комментарий (необязательно)</span>
+          <span class="mb-1.5 block text-xs app-muted font-600">Комментарий (необязательно)</span>
           <textarea
             v-model="comment"
-            class="min-h-16 w-full border border-white/10 rounded-xl bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-main-400"
+            class="min-h-16 w-full border app-border rounded-xl app-card px-3 py-2 text-sm text-white outline-none focus:border-main-400"
             maxlength="1000"
             placeholder="Комплектация, поколение, ссылка — что поможет проверить"
           />
         </label>
         <div class="grid grid-cols-2 gap-2">
           <button
-            class="h-11 rounded-xl bg-white/6 text-xs text-slate-300 font-800 transition active:scale-[0.98]"
+            class="h-11 rounded-xl app-card text-xs text-slate-300 font-800 transition active:scale-[0.98] light:text-slate-600"
             type="button"
             @click="isOpen = false"
           >

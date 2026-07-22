@@ -49,17 +49,17 @@ defineExpose({
   <section class="tg-safe-x pointer-events-none absolute inset-x-0 bottom-[calc(var(--app-safe-area-bottom)+5.75rem)] z-30">
     <div
       ref="panelElement"
-      class="pointer-events-auto mx-auto max-h-[calc(var(--app-viewport-height)-var(--app-safe-area-top)-var(--app-safe-area-bottom)-14rem)] max-w-sm overflow-y-auto border border-white/10 rounded-[2rem] bg-secondary-950/86 p-4 text-white shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
+      class="pointer-events-auto mx-auto max-h-[calc(var(--app-viewport-height)-var(--app-safe-area-top)-var(--app-safe-area-bottom)-14rem)] max-w-sm overflow-y-auto border app-border rounded-[2rem] app-sheet p-4 text-white shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
     >
       <div class="flex items-center gap-3">
-        <div class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full bg-main-500/18 text-main-300">
+        <div class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full bg-main-500/18 app-accent">
           <span class="i-mdi-crosshairs-gps text-6" />
         </div>
         <div class="min-w-0 flex-1">
           <h2 class="truncate text-base font-900">
             {{ title }}
           </h2>
-          <p class="mt-0.5 truncate text-xs text-slate-400 font-700">
+          <p class="mt-0.5 truncate text-xs app-muted font-700">
             Передвиньте карту, чтобы пин стоял на нужном месте
           </p>
         </div>
@@ -74,7 +74,7 @@ defineExpose({
 
       <div class="grid grid-cols-[1fr_2fr] mt-4 gap-2">
         <button
-          class="h-13 rounded-[1.35rem] bg-white/8 text-sm text-slate-200 font-900 transition active:scale-[0.98]"
+          class="h-13 rounded-[1.35rem] app-chip text-sm text-slate-200 font-900 transition active:scale-[0.98]"
           type="button"
           @click="emit('cancel')"
         >

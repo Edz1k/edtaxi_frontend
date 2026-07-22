@@ -17,8 +17,8 @@ definePage({
     requiresAuth: true,
     requiredRole: 'driver',
     backTo: '/menu/profile/onboarding',
-    screenSubtitle: 'Назад',
-    screenTitle: 'Ежедневная проверка',
+    screenSubtitle: 'nav.back',
+    screenTitle: 'titles.dailyCheck',
   },
 })
 
@@ -162,17 +162,17 @@ async function submit() {
 </script>
 
 <template>
-  <main class="tg-safe-bottom tg-safe-x h-full overflow-y-auto bg-secondary-900 text-white">
+  <main class="tg-safe-bottom tg-safe-x h-full overflow-y-auto app-screen text-white">
     <section class="mx-auto max-w-sm pb-6 pt-[calc(var(--app-safe-area-top)+6.5rem)]">
       <div class="flex items-center gap-3">
-        <div class="h-13 w-13 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200">
+        <div class="h-13 w-13 flex shrink-0 items-center justify-center rounded-2xl bg-main-500/18 text-main-200 light:text-main-700">
           <span class="i-mdi-calendar-check text-7" />
         </div>
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
             Ежедневная проверка
           </h1>
-          <p class="mt-1 text-sm text-slate-400 leading-5">
+          <p class="mt-1 text-sm app-muted leading-5">
             Каждый день перед выходом на линию отправляйте свежее селфи и фото машины.
           </p>
         </div>
@@ -220,7 +220,7 @@ async function submit() {
 
         <RouterLink
           to="/menu/profile/onboarding"
-          class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-white/8 text-base text-white font-800 transition active:scale-[0.98]"
+          class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-base text-white font-800 transition active:scale-[0.98]"
         >
           <span class="i-mdi-format-list-checks text-5" />
           К списку проверок
@@ -242,21 +242,21 @@ async function submit() {
         </div>
 
         <!-- Памятка (как в Я.Про) -->
-        <div class="rounded-2xl bg-white/5 p-4">
-          <p class="mb-2 text-xs text-slate-300 font-800 uppercase">
+        <div class="rounded-2xl app-card p-4">
+          <p class="mb-2 text-xs text-slate-300 font-800 uppercase light:text-slate-600">
             Чтобы сделать правильное фото
           </p>
-          <ul class="text-xs text-slate-400 leading-5 space-y-1.5">
+          <ul class="text-xs app-muted leading-5 space-y-1.5">
             <li class="flex items-start gap-2">
               <span class="i-mdi-white-balance-sunny mt-0.5 shrink-0 text-3.5 text-amber-300" />
               Найдите место с хорошим освещением
             </li>
             <li class="flex items-start gap-2">
-              <span class="i-mdi-face-mask-outline mt-0.5 shrink-0 text-3.5 text-slate-300" />
+              <span class="i-mdi-face-mask-outline mt-0.5 shrink-0 text-3.5 text-slate-300 light:text-slate-600" />
               Снимите маску и тёмные очки
             </li>
             <li class="flex items-start gap-2">
-              <span class="i-mdi-cellphone mt-0.5 shrink-0 text-3.5 text-main-300" />
+              <span class="i-mdi-cellphone mt-0.5 shrink-0 text-3.5 app-accent" />
               Держите телефон на уровне лица
             </li>
           </ul>
@@ -264,7 +264,7 @@ async function submit() {
 
         <!-- Селфи: живая камера с овалом и автоснимком -->
         <div>
-          <p class="mb-3 text-sm text-slate-300 font-700">
+          <p class="mb-3 text-sm text-slate-300 font-700 light:text-slate-600">
             Ваше селфи
           </p>
           <button
@@ -279,7 +279,7 @@ async function submit() {
               class="h-full w-full object-cover"
               alt="Селфи"
             >
-            <div v-else class="h-full flex flex-col items-center justify-center gap-2 text-slate-400">
+            <div v-else class="h-full flex flex-col items-center justify-center gap-2 app-muted">
               <span class="i-mdi-face-recognition text-12" />
               <span class="px-4 text-center text-xs font-700 leading-4">Поместите лицо в овал — снимок сделается сам</span>
             </div>
@@ -295,7 +295,7 @@ async function submit() {
 
         <!-- Фото машины -->
         <div>
-          <p class="mb-3 text-sm text-slate-300 font-700">
+          <p class="mb-3 text-sm text-slate-300 font-700 light:text-slate-600">
             Фото машины
           </p>
           <button
@@ -310,7 +310,7 @@ async function submit() {
               class="h-full w-full object-cover"
               alt="Фото машины"
             >
-            <div v-else class="h-full flex flex-col items-center justify-center gap-2 text-slate-400">
+            <div v-else class="h-full flex flex-col items-center justify-center gap-2 app-muted">
               <span class="i-mdi-car text-10" />
               <span class="text-sm font-700">Задняя камера</span>
             </div>
@@ -324,7 +324,7 @@ async function submit() {
           </button>
         </div>
 
-        <p class="text-center text-xs text-slate-500 leading-5">
+        <p class="text-center text-xs app-faint leading-5">
           Проверка действует 24 часа с момента одобрения.<br>
           Отправляйте фото прямо перед сменой — заявку нужно успеть рассмотреть.
         </p>

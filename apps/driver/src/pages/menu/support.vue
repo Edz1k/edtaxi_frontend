@@ -6,19 +6,21 @@ import { useAuthStore } from '~/stores/auth'
 import { useSupportStore } from '~/stores/support'
 import { DRIVER_SUPPORT_SUBJECTS, SUPPORT_SUBJECT_LABELS, supportSubjectLabel } from '~/types/support'
 
+const { t, locale } = useI18n()
+
 definePage({
   meta: {
     authRedirect: '/login',
     layout: 'driver',
     requiresAuth: true,
     requiredRole: 'driver',
-    screenSubtitle: 'Назад в меню',
-    screenTitle: 'Поддержка',
+    screenSubtitle: 'nav.backToMenu',
+    screenTitle: 'titles.support',
   },
 })
 
 useHead({
-  title: 'Поддержка | Telegram Taxi',
+  title: () => `${t('titles.support')} | Telegram Taxi Driver`,
 })
 
 const support = useSupportStore()
@@ -53,11 +55,11 @@ function scrollToBottom() {
 }
 
 function formatTime(value: string) {
-  return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+  return new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit' }).format(new Date(value))
 }
 
 function formatDay(value: string) {
-  return new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+  return new Intl.DateTimeFormat(locale.value, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
 }
 
 function isMyMessage(senderId: string) {
@@ -66,10 +68,10 @@ function isMyMessage(senderId: string) {
 
 function statusLabel(room: SupportRoom) {
   if (room.status === 'closed')
-    return 'Закрыто'
+    return t('support.statusClosed')
   if (room.status === 'pending_close')
-    return 'Подтвердите'
-  return 'Открыто'
+    return t('support.statusPending')
+  return t('support.statusOpen')
 }
 
 async function pickCategory(subject: SupportSubject) {
@@ -111,24 +113,24 @@ async function confirmClose(resolved: boolean) {
 const activeRoom = computed(() => support.activeRoom)
 const isClosed = computed(() => activeRoom.value?.status === 'closed')
 const isPendingClose = computed(() => activeRoom.value?.status === 'pending_close')
-const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподдержка ${activeRoom.value.agent_name}` : 'открыто')
+const agentLabel = computed(() => activeRoom.value?.agent_name ? t('support.agent', { name: activeRoom.value.agent_name }) : t('support.statusOpen'))
 </script>
 
 <template>
-  <main class="tg-safe-x h-full flex flex-col bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)] text-white">
+  <main class="tg-safe-x h-full flex flex-col app-screen pb-[calc(var(--app-safe-area-bottom)+1rem)] pt-[calc(var(--app-safe-area-top)+6.5rem)] text-white">
     <section class="mx-auto max-w-sm min-h-0 w-full flex flex-1 flex-col">
       <!-- ===================== СПИСОК ОБРАЩЕНИЙ ===================== -->
       <template v-if="!activeRoom">
         <header class="shrink-0">
           <div class="flex items-center gap-2">
-            <span class="i-mdi-telegram text-5 text-main-300" />
-            <p class="text-xs text-main-300 font-900 uppercase">
+            <span class="i-mdi-telegram text-5 app-accent" />
+            <p class="text-xs app-accent font-900 uppercase">
               Telegram Taxi
             </p>
           </div>
           <div class="mt-1 flex items-center justify-between gap-2">
             <h1 class="text-3xl font-950">
-              Поддержка
+              {{ t('titles.support') }}
             </h1>
             <button
               :disabled="support.isLoading"
@@ -136,21 +138,21 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
               type="button"
               @click="isPicking = !isPicking"
             >
-              + Новое
+              {{ t('support.new') }}
             </button>
           </div>
         </header>
 
-        <div v-if="isPicking" class="mt-4 shrink-0 rounded-2xl bg-white/6 p-3">
-          <p class="mb-2 text-xs text-slate-400 font-800 uppercase">
-            Выберите тему обращения
+        <div v-if="isPicking" class="mt-4 shrink-0 rounded-2xl app-card p-3">
+          <p class="mb-2 text-xs app-muted font-800 uppercase">
+            {{ t('support.pickSubject') }}
           </p>
           <div class="grid grid-cols-2 gap-2">
             <button
               v-for="s in subjects"
               :key="s"
               :disabled="support.isLoading"
-              class="h-11 rounded-xl bg-white/8 text-sm font-800 transition active:scale-[0.97] hover:bg-white/12 disabled:opacity-50"
+              class="h-11 rounded-xl app-chip text-sm font-800 transition active:scale-[0.97] hover:bg-white/12 disabled:opacity-50"
               type="button"
               @click="pickCategory(s)"
             >
@@ -161,18 +163,18 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
 
         <div class="mt-5 min-h-0 flex-1 overflow-y-auto">
           <div v-if="support.isLoading && !support.rooms.length" class="space-y-2">
-            <div v-for="i in 4" :key="i" class="h-16 animate-pulse rounded-2xl bg-white/6" />
+            <div v-for="i in 4" :key="i" class="h-16 animate-pulse rounded-2xl app-card" />
           </div>
 
-          <div v-else-if="!support.rooms.length" class="h-full min-h-60 flex items-center justify-center text-center text-sm text-slate-400">
-            У вас пока нет обращений. Нажмите «Новое», чтобы задать вопрос.
+          <div v-else-if="!support.rooms.length" class="h-full min-h-60 flex items-center justify-center text-center text-sm app-muted">
+            {{ t('support.empty') }}
           </div>
 
           <div v-else class="space-y-2">
             <button
               v-for="room in support.rooms"
               :key="room.id"
-              class="w-full flex items-center gap-3 rounded-2xl bg-white/6 p-3 text-left transition active:scale-[0.99] hover:bg-white/10"
+              class="w-full flex items-center gap-3 rounded-2xl app-card p-3 text-left transition active:scale-[0.99] hover:bg-white/10"
               type="button"
               @click="support.selectRoom(room)"
             >
@@ -184,13 +186,13 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
                 <p class="truncate text-sm font-900">
                   {{ supportSubjectLabel(room.subject) }}
                 </p>
-                <p class="mt-0.5 text-xs text-slate-400">
+                <p class="mt-0.5 text-xs app-muted">
                   {{ formatDay(room.updated_at) }}
                 </p>
               </div>
               <span
                 class="shrink-0 rounded-lg px-2 py-1 text-[11px] font-800"
-                :class="room.status === 'closed' ? 'bg-white/8 text-slate-400' : room.status === 'pending_close' ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/12 text-emerald-300'"
+                :class="room.status === 'closed' ? 'app-chip app-muted' : room.status === 'pending_close' ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/12 text-emerald-300'"
               >
                 {{ statusLabel(room) }}
               </span>
@@ -203,8 +205,8 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
       <template v-else>
         <header class="flex shrink-0 items-center gap-2">
           <button
-            aria-label="К списку обращений"
-            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 transition active:scale-95"
+            :aria-label="t('support.backAria')"
+            class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full app-chip transition active:scale-95"
             type="button"
             @click="support.closeThread()"
           >
@@ -214,8 +216,8 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
             <h1 class="truncate text-xl font-950">
               {{ supportSubjectLabel(activeRoom.subject) }}
             </h1>
-            <p class="text-sm text-slate-400">
-              {{ isClosed ? 'Обращение закрыто' : agentLabel }}
+            <p class="text-sm app-muted">
+              {{ isClosed ? t('support.closed') : agentLabel }}
             </p>
           </div>
         </header>
@@ -223,7 +225,7 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
         <!-- Подтверждение закрытия -->
         <div v-if="isPendingClose" class="mt-4 shrink-0 rounded-2xl bg-amber-500/12 px-4 py-3">
           <p class="text-sm text-amber-200 font-800">
-            Ваша проблема решена?
+            {{ t('support.resolvedQ') }}
           </p>
           <div class="mt-2.5 flex gap-2">
             <button
@@ -232,7 +234,7 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
               type="button"
               @click="confirmClose(true)"
             >
-              Да, решена
+              {{ t('support.yesResolved') }}
             </button>
             <button
               :disabled="support.isSending"
@@ -240,18 +242,18 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
               type="button"
               @click="confirmClose(false)"
             >
-              Нет
+              {{ t('support.no') }}
             </button>
           </div>
         </div>
 
-        <section ref="messagesEl" class="mt-5 min-h-0 flex-1 overflow-y-auto rounded-3xl bg-white/5 p-4">
+        <section ref="messagesEl" class="mt-5 min-h-0 flex-1 overflow-y-auto rounded-3xl app-card p-4">
           <div v-if="support.isLoading && !support.messages.length" class="space-y-3">
-            <div v-for="item in 5" :key="item" class="h-14 animate-pulse rounded-2xl bg-white/6" />
+            <div v-for="item in 5" :key="item" class="h-14 animate-pulse rounded-2xl app-card" />
           </div>
 
-          <div v-else-if="!support.messages.length" class="h-full min-h-60 flex items-center justify-center text-center text-sm text-slate-400">
-            Напишите вопрос, и оператор увидит ваше обращение.
+          <div v-else-if="!support.messages.length" class="h-full min-h-60 flex items-center justify-center text-center text-sm app-muted">
+            {{ t('support.emptyThread') }}
           </div>
 
           <div v-else class="space-y-2">
@@ -263,12 +265,12 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
             >
               <article
                 class="max-w-[80%] rounded-2xl px-3 py-2.5"
-                :class="isMyMessage(message.sender_id) ? 'bg-main-500 text-white' : 'bg-secondary-950/70 text-white'"
+                :class="isMyMessage(message.sender_id) ? 'bg-main-500 text-white' : 'app-input-surface text-white'"
               >
                 <a v-if="message.image_url" :href="mediaUrl(message.image_url)" target="_blank" rel="noopener">
                   <img
                     :src="mediaUrl(message.image_url)"
-                    alt="Вложение"
+                    :alt="t('support.attachment')"
                     class="max-h-60 w-full rounded-xl object-cover"
                     loading="lazy"
                   >
@@ -276,7 +278,7 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
                 <p v-if="message.content" class="text-sm leading-5" :class="{ 'mt-2': message.image_url }">
                   {{ message.content }}
                 </p>
-                <p class="mt-1.5 text-right text-[11px] font-700" :class="isMyMessage(message.sender_id) ? 'text-white/50' : 'text-slate-500'">
+                <p class="mt-1.5 text-right text-[11px] font-700" :class="isMyMessage(message.sender_id) ? 'text-white/50' : 'app-faint'">
                   {{ formatTime(message.sent_at) }}
                 </p>
               </article>
@@ -291,15 +293,15 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
           type="button"
           @click="support.closeThread()"
         >
-          К списку обращений
+          {{ t('support.toList') }}
         </button>
 
         <form v-else class="grid grid-cols-[auto_1fr_auto] mt-3 shrink-0 items-center gap-2" @submit.prevent="send">
           <input ref="fileInput" accept="image/*" class="hidden" type="file" @change="onFileSelected">
           <button
-            aria-label="Прикрепить фото"
+            :aria-label="t('support.attach')"
             :disabled="support.isSending"
-            class="h-13 w-13 flex items-center justify-center rounded-2xl bg-white/8 text-white transition active:scale-[0.97] disabled:opacity-50"
+            class="h-13 w-13 flex items-center justify-center rounded-2xl app-chip text-white transition active:scale-[0.97] disabled:opacity-50"
             type="button"
             @click="triggerPhoto"
           >
@@ -307,14 +309,14 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? `Техподд
           </button>
           <input
             v-model="draft"
-            aria-label="Сообщение в поддержку"
-            class="h-13 min-w-0 border border-white/10 rounded-2xl bg-white/6 px-4 text-sm outline-none focus:border-main-400"
+            :aria-label="t('support.msgAria')"
+            class="h-13 min-w-0 border app-border rounded-2xl app-card px-4 text-sm outline-none focus:border-main-400"
             maxlength="2000"
             name="support_message"
-            placeholder="Сообщение"
+            :placeholder="t('support.placeholder')"
           >
           <button
-            aria-label="Отправить сообщение"
+            :aria-label="t('support.sendAria')"
             :disabled="support.isSending || !draft.trim()"
             class="h-13 w-13 flex items-center justify-center rounded-2xl bg-main-500 text-white transition active:scale-[0.98] disabled:opacity-60"
             type="submit"

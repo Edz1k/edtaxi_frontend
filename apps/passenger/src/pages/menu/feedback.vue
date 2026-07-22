@@ -4,6 +4,7 @@ import { showErrorToast } from '~/api/errors'
 import { useToast } from '~/composables/useToast'
 
 const toast = useToast()
+const { t } = useI18n()
 
 const MAX_LENGTH = 2000
 const message = ref('')
@@ -20,13 +21,13 @@ definePage({
     layout: 'passenger',
     requiredRole: 'passenger',
     requiresAuth: true,
-    screenSubtitle: 'Назад в меню',
-    screenTitle: 'Предложить улучшение',
+    screenSubtitle: 'nav.backToMenu',
+    screenTitle: 'titles.feedback',
   },
 })
 
 useHead({
-  title: 'Предложить улучшение | Telegram Taxi',
+  title: () => `${t('titles.feedback')} | Telegram Taxi`,
 })
 
 async function send() {
@@ -38,10 +39,10 @@ async function send() {
     await submitFeedback(trimmed.value)
     message.value = ''
     isSent.value = true
-    toast.success('Спасибо!', 'Ваше предложение отправлено.')
+    toast.success(t('feedback.toastOkTitle'), t('feedback.toastOkText'))
   }
   catch (error) {
-    showErrorToast(error, 'Не удалось отправить предложение. Попробуйте ещё раз.')
+    showErrorToast(error, t('feedback.toastFail'))
   }
   finally {
     isSending.value = false
@@ -50,27 +51,27 @@ async function send() {
 </script>
 
 <template>
-  <main class="tg-safe-x tg-menu-inner-safe h-full overflow-y-auto bg-secondary-900 pb-[calc(var(--app-safe-area-bottom)+1.5rem)] text-white">
+  <main class="tg-safe-x tg-menu-inner-safe h-full overflow-y-auto app-screen pb-[calc(var(--app-safe-area-bottom)+1.5rem)] text-white">
     <section class="mx-auto max-w-sm">
       <header>
-        <p class="text-xs text-main-300 font-900 uppercase">
-          Обратная связь
+        <p class="text-xs app-accent font-900 uppercase">
+          {{ t('feedback.eyebrow') }}
         </p>
         <h1 class="mt-1 text-3xl font-950">
-          Предложить улучшение
+          {{ t('feedback.title') }}
         </h1>
-        <p class="mt-2 text-sm text-slate-400 leading-5">
-          Расскажите, что улучшить в приложении. Лучшие идеи мы внедряем и благодарим бонусами.
+        <p class="mt-2 text-sm app-muted leading-5">
+          {{ t('feedback.lead') }}
         </p>
       </header>
 
-      <div v-if="isSent" class="mt-6 rounded-3xl bg-white/5 p-6 text-center">
-        <span class="i-mdi-check-circle-outline mx-auto block text-14 text-main-300" />
+      <div v-if="isSent" class="mt-6 rounded-3xl app-card p-6 text-center">
+        <span class="i-mdi-check-circle-outline mx-auto block text-14 app-accent" />
         <p class="mt-3 text-lg font-950">
-          Спасибо за идею!
+          {{ t('feedback.thanksTitle') }}
         </p>
-        <p class="mt-1 text-sm text-slate-400 leading-5">
-          Мы читаем каждое предложение. Если внедрим — начислим бонусы.
+        <p class="mt-1 text-sm app-muted leading-5">
+          {{ t('feedback.thanksText') }}
         </p>
         <div class="mt-5 flex flex-col gap-2">
           <button
@@ -78,26 +79,26 @@ async function send() {
             type="button"
             @click="isSent = false"
           >
-            Предложить ещё
+            {{ t('feedback.more') }}
           </button>
           <RouterLink
-            class="h-13 w-full flex items-center justify-center rounded-2xl bg-white/8 text-sm font-900 transition active:scale-[0.98]"
+            class="h-13 w-full flex items-center justify-center rounded-2xl app-chip text-sm font-900 transition active:scale-[0.98]"
             to="/menu"
           >
-            Вернуться в меню
+            {{ t('feedback.backToMenu') }}
           </RouterLink>
         </div>
       </div>
 
-      <form v-else class="mt-6 rounded-3xl bg-white/5 p-4" @submit.prevent="send">
+      <form v-else class="mt-6 rounded-3xl app-card p-4" @submit.prevent="send">
         <textarea
           v-model="message"
           :maxlength="MAX_LENGTH"
           rows="6"
-          placeholder="Например: добавьте возможность сохранить адреса дома и работы…"
-          class="w-full resize-none rounded-2xl bg-white/6 px-4 py-3 text-sm text-white outline-none transition focus:bg-white/8 placeholder-slate-500"
+          :placeholder="t('feedback.placeholder')"
+          class="w-full resize-none rounded-2xl app-card px-4 py-3 text-sm text-white outline-none transition focus:app-chip placeholder-slate-500"
         />
-        <div class="mt-1 text-right text-xs text-slate-500 font-700">
+        <div class="mt-1 text-right text-xs app-faint font-700">
           {{ trimmed.length }}/{{ MAX_LENGTH }}
         </div>
         <button
@@ -105,7 +106,7 @@ async function send() {
           class="mt-3 h-13 w-full rounded-2xl bg-main-500 text-sm font-950 transition active:scale-[0.98] disabled:opacity-60"
           type="submit"
         >
-          {{ isSending ? 'Отправляем...' : 'Отправить' }}
+          {{ isSending ? t('feedback.sending') : t('feedback.send') }}
         </button>
       </form>
     </section>

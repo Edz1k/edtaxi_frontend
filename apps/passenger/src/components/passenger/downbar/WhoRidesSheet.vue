@@ -52,13 +52,13 @@ function confirmOther() {
       class="fixed inset-0 z-60 flex items-end justify-center bg-black/60 backdrop-blur-sm"
       @click.self="emit('close')"
     >
-      <div class="tg-safe-x max-w-sm w-full border border-white/10 rounded-t-[2rem] bg-secondary-900 p-5 pb-[calc(var(--app-safe-area-bottom)+1.25rem)] text-white">
+      <div class="tg-safe-x max-w-sm w-full border app-border rounded-t-[2rem] app-screen p-5 pb-[calc(var(--app-safe-area-bottom)+1.25rem)] text-white">
         <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/25" />
 
         <h3 class="text-lg font-950">
           Кто поедет?
         </h3>
-        <p class="mt-1 text-xs text-slate-400 leading-4">
+        <p class="mt-1 text-xs app-muted leading-4">
           <template v-if="distanceText">
             Точка подачи в {{ distanceText }} от вас — похоже, машина нужна не вам.
           </template>
@@ -82,13 +82,13 @@ function confirmOther() {
 
           <button
             :disabled="pending"
-            class="h-14 w-full flex items-center gap-3 rounded-2xl bg-white/8 px-4 text-left transition active:scale-[0.98] disabled:opacity-60"
+            class="h-14 w-full flex items-center gap-3 rounded-2xl app-chip px-4 text-left transition active:scale-[0.98] disabled:opacity-60"
             type="button"
             @click="isOtherOpen = true"
           >
-            <span class="i-mdi-account-plus-outline text-6 text-main-200" />
+            <span class="i-mdi-account-plus-outline text-6 text-main-200 light:text-main-700" />
             <span class="text-sm font-950">Поедет другой человек</span>
-            <span class="i-mdi-chevron-right ml-auto text-6 text-slate-500" />
+            <span class="i-mdi-chevron-right ml-auto text-6 app-faint" />
           </button>
         </div>
 
@@ -96,7 +96,7 @@ function confirmOther() {
         <div v-else class="mt-4">
           <!-- Недавние получатели — замена выбору из контактов -->
           <div v-if="recent.length" class="mb-4">
-            <p class="mb-2 text-xs text-slate-400 font-800 uppercase">
+            <p class="mb-2 text-xs app-muted font-800 uppercase">
               Недавние
             </p>
             <div class="flex flex-wrap gap-2">
@@ -104,23 +104,23 @@ function confirmOther() {
                 v-for="rider in recent"
                 :key="rider.phone"
                 :disabled="pending"
-                class="h-9 flex items-center gap-1.5 rounded-full bg-white/8 pl-3 pr-3.5 text-xs font-800 transition active:scale-95 disabled:opacity-60"
+                class="h-9 flex items-center gap-1.5 rounded-full app-chip pl-3 pr-3.5 text-xs font-800 transition active:scale-95 disabled:opacity-60"
                 type="button"
                 @click="emit('other', rider)"
               >
-                <span class="i-mdi-account-circle-outline text-4.5 text-main-200" />
+                <span class="i-mdi-account-circle-outline text-4.5 text-main-200 light:text-main-700" />
                 {{ rider.name || rider.phone }}
               </button>
             </div>
           </div>
 
-          <label class="mb-2 block text-sm text-slate-300 font-600" for="rider-name">
+          <label class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600" for="rider-name">
             Имя пассажира
           </label>
           <input
             id="rider-name"
             v-model="name"
-            class="mb-4 h-14 w-full border border-white/10 rounded-2xl bg-white/5 px-4 text-lg text-white font-700 outline-none transition focus:border-main-400 focus:bg-white/8 placeholder:text-slate-600"
+            class="mb-4 h-14 w-full border app-border rounded-2xl app-card px-4 text-lg text-white font-700 outline-none transition focus:border-main-400 focus:app-chip placeholder:text-slate-600"
             maxlength="100"
             placeholder="Необязательно"
             type="text"
@@ -138,7 +138,7 @@ function confirmOther() {
           </button>
 
           <button
-            class="mt-2 h-11 w-full text-xs text-slate-400 font-800"
+            class="mt-2 h-11 w-full text-xs app-muted font-800"
             type="button"
             @click="isOtherOpen = false"
           >

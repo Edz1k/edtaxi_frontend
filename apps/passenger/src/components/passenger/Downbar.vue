@@ -612,7 +612,7 @@ function onHandleKeydown(event: KeyboardEvent) {
   >
     <div
       ref="sheetEl"
-      class="will-change-[height] pointer-events-auto mx-auto max-w-sm w-full flex flex-col overflow-hidden border border-white/10 rounded-[2rem] bg-secondary-950/82 text-white shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
+      class="will-change-[height] pointer-events-auto mx-auto max-w-sm w-full flex flex-col overflow-hidden border app-border rounded-[2rem] app-sheet text-white shadow-[0_-18px_54px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
       :style="sheetStyle"
     >
       <div
@@ -764,7 +764,7 @@ function onHandleKeydown(event: KeyboardEvent) {
               <span class="absolute inset-0 animate-ping rounded-full bg-main-400/60" />
               <span class="absolute inset-0 rounded-full bg-main-400" />
             </span>
-            <span v-else :class="peekPill.icon" class="shrink-0 text-5.5 text-main-300" aria-hidden="true" />
+            <span v-else :class="peekPill.icon" class="shrink-0 text-5.5 app-accent" aria-hidden="true" />
             <span class="min-w-0">
               <span class="block truncate text-base font-950 leading-tight">{{ peekPill.title }}</span>
               <span v-if="peekPill.subtitle" class="block truncate text-xs text-white/45 font-800 tabular-nums">
