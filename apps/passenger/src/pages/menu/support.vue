@@ -15,6 +15,7 @@ const draft = ref('')
 const messagesEl = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const isPicking = ref(false)
+const isHistoryExpanded = ref(false)
 const welcomedRoomIds = ref(new Set<string>())
 const isWelcomeVisible = ref(false)
 const welcomeSentAt = ref(new Date().toISOString())
@@ -25,6 +26,13 @@ const activeRoom = computed(() => support.activeRoom)
 const hasWelcomeMessage = computed(() => Boolean(activeRoom.value && welcomedRoomIds.value.has(activeRoom.value.id)))
 
 const subjects = PASSENGER_SUPPORT_SUBJECTS
+const subjectIcons: Record<SupportSubject, string> = {
+  account: 'i-mdi-account-circle-outline',
+  other: 'i-mdi-message-question-outline',
+  payment: 'i-mdi-credit-card-outline',
+  trip: 'i-mdi-car-outline',
+  verification: 'i-mdi-shield-account-outline',
+}
 
 definePage({
   meta: {
@@ -192,82 +200,129 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
     <section class="mx-auto max-w-sm min-h-0 w-full flex flex-1 flex-col">
       <!-- ===================== СПИСОК ОБРАЩЕНИЙ ===================== -->
       <template v-if="!activeRoom">
-        <div class="mb-3 flex shrink-0 items-center justify-between gap-2">
-          <p class="text-sm text-slate-300 font-800">
-            Мои обращения
-          </p>
-          <button
-            :disabled="support.isLoading"
-            class="h-9 rounded-xl bg-main-500 px-3 text-xs text-white font-900 transition active:scale-[0.97] disabled:opacity-50"
-            type="button"
-            @click="isPicking = !isPicking"
-          >
-            + Новое
-          </button>
-        </div>
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2">
+          <section class="relative overflow-hidden border border-main-400/15 rounded-[1.8rem] from-main-500/12 via-[#111214] to-[#08090a] bg-gradient-to-br p-5 shadow-[0_18px_55px_rgba(0,0,0,0.32)]">
+            <span class="i-mdi-headset pointer-events-none absolute text-32 text-main-300/[0.045] -right-5 -top-4" aria-hidden="true" />
 
-        <!-- Выбор темы -->
-        <div v-if="isPicking" class="mb-3 shrink-0 rounded-2xl bg-white/6 p-3">
-          <p class="mb-2 text-xs text-slate-400 font-800 uppercase">
-            Выберите тему обращения
-          </p>
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              v-for="s in subjects"
-              :key="s"
-              :disabled="support.isLoading"
-              class="h-11 rounded-xl bg-white/8 text-sm font-800 transition active:scale-[0.97] hover:bg-white/12 disabled:opacity-50"
-              type="button"
-              @click="pickCategory(s)"
-            >
-              {{ SUPPORT_SUBJECT_LABELS[s] }}
-            </button>
-          </div>
-        </div>
+            <div class="relative">
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-main-500/12 px-2.5 py-1 text-[10px] text-main-300 font-850 tracking-wide uppercase">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_7px_rgba(52,211,153,0.8)]" />
+                Поддержка на связи
+              </span>
 
-        <div class="min-h-0 flex-1 overflow-y-auto">
-          <div v-if="support.isLoading && !support.rooms.length" class="space-y-2">
-            <div v-for="i in 4" :key="i" class="h-16 animate-pulse rounded-2xl bg-white/6" />
-          </div>
+              <h1 class="mt-4 text-[26px] text-white font-950 leading-7.5">
+                Чем мы можем помочь?
+              </h1>
+              <p class="mt-2.5 text-[13px] text-slate-400 leading-5">
+                Создайте обращение, выберите подходящую тему и опишите ситуацию в чате. Специалист увидит всю информацию и подключится к диалогу.
+              </p>
 
-          <div
-            v-else-if="!support.rooms.length"
-            class="h-full min-h-60 flex flex-col items-center justify-center gap-3 text-center"
-          >
-            <span class="i-mdi-headset text-16 text-white/10" />
-            <p class="text-sm text-slate-400">
-              У вас пока нет обращений. Нажмите «Новое», чтобы задать вопрос.
-            </p>
-          </div>
-
-          <div v-else class="space-y-2">
-            <button
-              v-for="room in support.rooms"
-              :key="room.id"
-              class="w-full flex items-center gap-3 rounded-2xl bg-white/6 p-3 text-left transition active:scale-[0.99] hover:bg-white/10"
-              type="button"
-              @click="support.selectRoom(room)"
-            >
-              <span
-                class="h-2.5 w-2.5 shrink-0 rounded-full"
-                :class="room.status === 'closed' ? 'bg-slate-500' : room.status === 'pending_close' ? 'bg-amber-400' : 'bg-emerald-400'"
-              />
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-900">
-                  {{ supportSubjectLabel(room.subject) }}
+              <div class="mt-4 space-y-2.5">
+                <p class="flex items-start gap-2.5 text-[12px] text-slate-300 leading-4.5">
+                  <span class="i-mdi-message-text-outline mt-0.5 shrink-0 text-4 text-main-300" aria-hidden="true" />
+                  Напишите детали одним сообщением и при необходимости приложите фотографию.
                 </p>
-                <p class="mt-0.5 text-xs text-slate-400">
-                  {{ formatDay(room.updated_at) }}
+                <p class="flex items-start gap-2.5 text-[12px] text-slate-300 leading-4.5">
+                  <span class="i-mdi-history mt-0.5 shrink-0 text-4 text-main-300" aria-hidden="true" />
+                  Ответы и история переписки сохранятся в этом разделе.
                 </p>
               </div>
-              <span
-                class="shrink-0 rounded-lg px-2 py-1 text-[11px] font-800"
-                :class="room.status === 'closed' ? 'bg-white/8 text-slate-400' : room.status === 'pending_close' ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/12 text-emerald-300'"
+
+              <button
+                :disabled="support.isLoading"
+                class="mt-5 h-12 w-full flex items-center justify-center gap-2 rounded-[1.15rem] from-main-300 to-main-500 bg-gradient-to-r px-4 text-sm text-[#171207] font-950 shadow-[0_12px_28px_rgba(230,173,46,0.18)] transition active:scale-[0.985] disabled:opacity-50"
+                type="button"
+                @click="isPicking = !isPicking"
               >
-                {{ statusLabel(room) }}
-              </span>
-            </button>
+                <span :class="isPicking ? 'i-mdi-close' : 'i-mdi-plus'" class="text-5" aria-hidden="true" />
+                {{ isPicking ? 'Закрыть выбор темы' : 'Новое обращение' }}
+              </button>
+            </div>
+          </section>
+
+          <Transition name="support-compose">
+            <section v-if="isPicking" class="mt-3 border border-white/6 rounded-[1.6rem] bg-[#101214] p-3.5 shadow-[0_15px_40px_rgba(0,0,0,0.24)]">
+              <div class="px-1">
+                <p class="text-sm text-white font-900">
+                  Выберите тему
+                </p>
+                <p class="mt-0.5 text-[11px] text-slate-500">
+                  Так обращение быстрее попадёт к нужному специалисту
+                </p>
+              </div>
+
+              <div class="grid grid-cols-2 mt-3 gap-2">
+                <button
+                  v-for="s in subjects"
+                  :key="s"
+                  :disabled="support.isLoading"
+                  class="min-h-18 flex flex-col items-start justify-between rounded-[1.15rem] bg-white/[0.045] p-3 text-left transition active:scale-[0.97] hover:bg-white/[0.075] disabled:opacity-50"
+                  type="button"
+                  @click="pickCategory(s)"
+                >
+                  <span :class="subjectIcons[s]" class="text-5 text-main-300" aria-hidden="true" />
+                  <span class="mt-2 text-[13px] text-white font-850">{{ SUPPORT_SUBJECT_LABELS[s] }}</span>
+                </button>
+              </div>
+            </section>
+          </Transition>
+
+          <div v-if="support.isLoading && !support.rooms.length" class="mt-5 space-y-2">
+            <div class="h-14 animate-pulse rounded-[1.25rem] bg-white/[0.035]" />
           </div>
+
+          <section v-else-if="support.rooms.length" class="mt-5">
+            <button
+              :aria-expanded="isHistoryExpanded"
+              class="w-full flex items-center gap-3 rounded-[1.35rem] bg-white/[0.025] px-3.5 py-3 text-left transition active:scale-[0.99] hover:bg-white/[0.045]"
+              type="button"
+              @click="isHistoryExpanded = !isHistoryExpanded"
+            >
+              <span class="h-9 w-9 flex shrink-0 items-center justify-center rounded-xl bg-white/5 text-slate-500">
+                <span class="i-mdi-archive-clock-outline text-4.5" aria-hidden="true" />
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-[13px] text-slate-300 font-850">Предыдущие обращения</span>
+                <span class="mt-0.5 block text-[11px] text-slate-600">{{ support.rooms.length }} в истории</span>
+              </span>
+              <span
+                class="i-mdi-chevron-down text-5 text-slate-600 transition-transform duration-300"
+                :class="isHistoryExpanded ? 'rotate-180' : ''"
+                aria-hidden="true"
+              />
+            </button>
+
+            <Transition name="support-history">
+              <div v-if="isHistoryExpanded" class="mt-2 rounded-[1.4rem] bg-white/[0.018] p-2 space-y-1">
+                <button
+                  v-for="room in support.rooms"
+                  :key="room.id"
+                  class="w-full flex items-center gap-2.5 rounded-[1.05rem] px-2.5 py-2.5 text-left transition active:scale-[0.99] hover:bg-white/[0.045]"
+                  type="button"
+                  @click="support.selectRoom(room)"
+                >
+                  <span
+                    class="h-2 w-2 shrink-0 rounded-full"
+                    :class="room.status === 'closed' ? 'bg-slate-600' : room.status === 'pending_close' ? 'bg-amber-400/80' : 'bg-emerald-400/80'"
+                  />
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-[13px] text-slate-300 font-800">{{ supportSubjectLabel(room.subject) }}</span>
+                    <span class="mt-0.5 block text-[10px] text-slate-600">{{ formatDay(room.updated_at) }}</span>
+                  </span>
+                  <span
+                    class="shrink-0 rounded-lg px-2 py-1 text-[9px] font-800"
+                    :class="room.status === 'closed' ? 'bg-white/4 text-slate-600' : room.status === 'pending_close' ? 'bg-amber-500/8 text-amber-300/70' : 'bg-emerald-500/8 text-emerald-300/70'"
+                  >
+                    {{ statusLabel(room) }}
+                  </span>
+                </button>
+              </div>
+            </Transition>
+          </section>
+
+          <p v-else-if="!support.isLoading" class="mt-5 px-4 text-center text-[11px] text-slate-700 leading-4">
+            После первого обращения здесь появится история переписки.
+          </p>
         </div>
       </template>
 
@@ -484,6 +539,23 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.support-compose-enter-active,
+.support-compose-leave-active,
+.support-history-enter-active,
+.support-history-leave-active {
+  transition:
+    opacity 220ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.support-compose-enter-from,
+.support-compose-leave-to,
+.support-history-enter-from,
+.support-history-leave-to {
+  opacity: 0;
+  transform: translateY(-0.5rem) scale(0.985);
+}
+
 @keyframes support-message-in {
   from {
     opacity: 0;
@@ -506,7 +578,11 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
   }
 
   .chat-message-enter-active,
-  .chat-message-move {
+  .chat-message-move,
+  .support-compose-enter-active,
+  .support-compose-leave-active,
+  .support-history-enter-active,
+  .support-history-leave-active {
     transition-duration: 1ms;
   }
 }
