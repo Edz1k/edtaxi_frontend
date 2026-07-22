@@ -168,3 +168,73 @@ ratingHistory:
   complaint: Расталған шағым
   cancelAfterAccept: Қабылдағаннан кейін бас тарту
   noShow: Жолаушыға келмеу
+profile:
+  loading: Кабинетті жүктеудеміз...
+  loadFail: Деректерді жүктеу сәтсіз аяқталды.
+  ratingTitle: Жүргізуші рейтингі
+  activityShort: Актив
+  trips: Сапар
+  cancelsToday: Бүгінгі бас тарту
+  blocked: Аккаунт бұғатталған
+  blockedUntil: '{date} дейін'
+  verification: Тексеру
+  verOk: Бәрі дұрыс
+  verAttention: Назар аударуды қажет етеді
+  vehicles: Автокөліктер
+  noVehicles: Көліктер қосылмаған.
+  penaltyCount: '{n} айыппұл оқиғасы'
+  noPenalties: Айыппұл болған жоқ
+  ratingCount: '{n} баға'
+  deleteAccount: Аккаунтты жою
+  deleteConfirmTitle: Аккаунтты жою керек пе?
+  deleteConfirmTextDriver: Бонустар жанып кетеді, аккаунтты қалпына келтіру мүмкін емес. Алдымен ауысымды аяқтап, қаражатты шығарыңыз. Келесі кіргенде нөмірді қайта енгізу қажет.
+  cancel: Бас тарту
+  deleting: Жоюдамыз...
+  delete: Жою
+  deleteFailTitle: Жою сәтсіз аяқталды
+  deleteFailText: Кейінірек көріңіз немесе қолдау қызметіне жазыңыз.
+parks:
+  lead: Желіге шығу үшін таксопаркте болу немесе платформа серіктесі болу қажет.
+  workingWith: '{name} паркімен сәтті жұмыс істеп жатырсыз'
+  parkCommission: Парк комиссиясы {rate}
+  contactHint: Паркпен «Таксопаркпен чат» бөлімінде байланысуға болады.
+  parkPromos: Парк акциялары
+  promoMeta: '{n} тапсырыс · {date} дейін'
+  promoProgress: '{total} ішінен {done} тапсырыс'
+  sinceJoin: · кіргеннен бергі прогресс
+  joining: Қосудамыз...
+  join: Қатысу
+  joinedPromoTitle: Сіз қатысудасыз!
+  joinedPromoText: Тапсырыстар осы сәттен бастап есептеледі.
+  joinPromoFail: Акцияға қатысу сәтсіз аяқталды.
+  detailsFail: Парк туралы ақпаратты жүктеу сәтсіз аяқталды.
+  requestPendingIn: Өтінім {name} паркіне жіберілді, мақұлдауын күтеміз.
+  switchRequest: Паркті ауыстыру өтінімі
+  newPark: Жаңа таксопарк
+  waiting: Күту
+  inviteCode: Шақыру коды
+  inviteHint: Парк иесі код берсе, оны енгізіп, өтінімсіз кіріңіз.
+  invitePlaceholder: Кодты енгізіңіз
+  checking: Тексерудеміз...
+  joinPark: Қосылу
+  joinedPark: Таксопаркке қосылдыңыз.
+  switchPark: Таксопаркті ауыстыру
+  availableParks: Қолжетімді парктер
+  switchHint: Жаңа паркті таңдап, өтінім жіберіңіз — мақұлданған соң ағымдағыдан оған өтесіз.
+  noOtherParks: Ауысуға басқа парктер әзірге жоқ.
+  noParks: Кіруге ашық парктер әзірге жоқ.
+  commission: Комиссия {rate}
+  sending: Жіберудеміз...
+  sendRequest: Өтінім жіберу
+  requestSentTitle: Өтінім жіберілді
+  switchSentTitle: Ауыстыру өтінімі жіберілді
+  requestSentText: Парк оны қарап, шешім қабылдайды.
+  platformSentText: Біз оны қарап, шешім қабылдаймыз.
+  requestFail: Өтінімді жіберу сәтсіз аяқталды.
+  platformPartnership: платформамен серіктестік
+  switchToPlatform: Платформа серіктестігіне өту
+  becomePartner: Платформа серіктесі болу
+  platformNote: Платформамен тікелей жұмыс істеңіз — комиссия небәрі 7%
+  switchConfirmTitle: Таксопаркті ауыстыру керек пе?
+  switchConfirmText: Ағымдағы таксопарктен кетіп, «{name}» паркіне қосылғыңыз келетініне сенімдісіз бе? Өтінімді жаңа парк қарайды, ауысу мақұлданған соң болады.
+  yesSwitch: Иә, ауыстыру

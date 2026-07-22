@@ -168,3 +168,73 @@ ratingHistory:
   complaint: Подтверждённая жалоба
   cancelAfterAccept: Отмена после принятия
   noShow: Неявка к пассажиру
+profile:
+  loading: Загружаем кабинет...
+  loadFail: Не удалось загрузить данные.
+  ratingTitle: Рейтинг водителя
+  activityShort: Актив
+  trips: Поездок
+  cancelsToday: Отмен сег.
+  blocked: Аккаунт заблокирован
+  blockedUntil: до {date}
+  verification: Верификация
+  verOk: Всё в порядке
+  verAttention: Требует внимания
+  vehicles: Автомобили
+  noVehicles: Машины не добавлены.
+  penaltyCount: '{n} штрафных событий'
+  noPenalties: Штрафов не было
+  ratingCount: '{n} оценок'
+  deleteAccount: Удалить аккаунт
+  deleteConfirmTitle: Удалить аккаунт?
+  deleteConfirmTextDriver: Бонусы сгорят, восстановить аккаунт нельзя. Сначала завершите смену и выведите средства. При следующем входе нужно будет заново указать номер.
+  cancel: Отмена
+  deleting: Удаляем...
+  delete: Удалить
+  deleteFailTitle: Не удалось удалить
+  deleteFailText: Попробуйте позже или обратитесь в поддержку.
+parks:
+  lead: Для выхода на линию нужно состоять в таксопарке или стать партнёром платформы.
+  workingWith: Успешно работаете с парком {name}
+  parkCommission: Комиссия парка составляет {rate}
+  contactHint: Связаться с парком можно в разделе «Чат с парком».
+  parkPromos: Акции парка
+  promoMeta: '{n} заказов · до {date}'
+  promoProgress: '{done} из {total} заказов'
+  sinceJoin: · прогресс с момента вступления
+  joining: Подключаем...
+  join: Участвовать
+  joinedPromoTitle: Вы участвуете!
+  joinedPromoText: Заказы начнут засчитываться с этого момента.
+  joinPromoFail: Не удалось вступить в акцию.
+  detailsFail: Не удалось загрузить информацию о парке.
+  requestPendingIn: Заявка отправлена в {name}, ждём одобрения парка.
+  switchRequest: Заявка на смену парка
+  newPark: Новый таксопарк
+  waiting: Ожидание
+  inviteCode: Код приглашения
+  inviteHint: Если владелец парка выдал вам код, введите его и вступите без заявки.
+  invitePlaceholder: Введите код
+  checking: Проверяем...
+  joinPark: Присоединиться
+  joinedPark: Вы присоединились к таксопарку.
+  switchPark: Сменить таксопарк
+  availableParks: Доступные парки
+  switchHint: Выберите новый парк и отправьте заявку — после одобрения вы перейдёте в него из текущего.
+  noOtherParks: Других парков для перехода пока нет.
+  noParks: Пока нет парков, открытых для вступления.
+  commission: Комиссия {rate}
+  sending: Отправляем...
+  sendRequest: Отправить заявку
+  requestSentTitle: Заявка отправлена
+  switchSentTitle: Заявка на смену отправлена
+  requestSentText: Парк рассмотрит её и примет решение.
+  platformSentText: Мы рассмотрим её и примем решение.
+  requestFail: Не удалось отправить заявку.
+  platformPartnership: партнёрство с платформой
+  switchToPlatform: Перейти к партнёрству платформы
+  becomePartner: Стать партнёром платформы
+  platformNote: Работайте напрямую с платформой — комиссия всего 7%
+  switchConfirmTitle: Сменить таксопарк?
+  switchConfirmText: Вы уверены, что хотите уйти из текущего таксопарка и присоединиться к «{name}»? Заявку рассмотрит новый парк, а переход произойдёт после её одобрения.
+  yesSwitch: Да, сменить

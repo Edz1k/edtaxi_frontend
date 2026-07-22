@@ -168,3 +168,73 @@ ratingHistory:
   complaint: Confirmed complaint
   cancelAfterAccept: Cancel after accepting
   noShow: No-show to the passenger
+profile:
+  loading: Loading profile...
+  loadFail: Failed to load data.
+  ratingTitle: Driver rating
+  activityShort: Activity
+  trips: Trips
+  cancelsToday: Cancels today
+  blocked: Account blocked
+  blockedUntil: until {date}
+  verification: Verification
+  verOk: All good
+  verAttention: Needs attention
+  vehicles: Vehicles
+  noVehicles: No vehicles added.
+  penaltyCount: '{n} penalty events'
+  noPenalties: No penalties
+  ratingCount: '{n} ratings'
+  deleteAccount: Delete account
+  deleteConfirmTitle: Delete account?
+  deleteConfirmTextDriver: Bonuses will be lost and the account cannot be restored. Finish your shift and withdraw funds first. Next time you’ll need to enter your number again.
+  cancel: Cancel
+  deleting: Deleting...
+  delete: Delete
+  deleteFailTitle: Couldn’t delete
+  deleteFailText: Try again later or contact support.
+parks:
+  lead: To go online you need to belong to a taxi park or become a platform partner.
+  workingWith: Working with park {name}
+  parkCommission: Park commission is {rate}
+  contactHint: You can contact the park in the “Park chat” section.
+  parkPromos: Park promotions
+  promoMeta: '{n} orders · until {date}'
+  promoProgress: '{done} of {total} orders'
+  sinceJoin: · progress since joining
+  joining: Joining...
+  join: Participate
+  joinedPromoTitle: You’re in!
+  joinedPromoText: Orders start counting from this moment.
+  joinPromoFail: Failed to join the promotion.
+  detailsFail: Failed to load park info.
+  requestPendingIn: Request sent to {name}, waiting for the park’s approval.
+  switchRequest: Park switch request
+  newPark: New taxi park
+  waiting: Waiting
+  inviteCode: Invite code
+  inviteHint: If the park owner gave you a code, enter it to join without a request.
+  invitePlaceholder: Enter the code
+  checking: Checking...
+  joinPark: Join
+  joinedPark: You’ve joined the taxi park.
+  switchPark: Switch taxi park
+  availableParks: Available parks
+  switchHint: Pick a new park and send a request — after approval you’ll move there from your current one.
+  noOtherParks: No other parks to switch to yet.
+  noParks: No parks open for joining yet.
+  commission: Commission {rate}
+  sending: Sending...
+  sendRequest: Send request
+  requestSentTitle: Request sent
+  switchSentTitle: Switch request sent
+  requestSentText: The park will review it and decide.
+  platformSentText: We’ll review it and decide.
+  requestFail: Failed to send the request.
+  platformPartnership: platform partnership
+  switchToPlatform: Switch to platform partnership
+  becomePartner: Become a platform partner
+  platformNote: Work directly with the platform — only 7% commission
+  switchConfirmTitle: Switch taxi park?
+  switchConfirmText: Are you sure you want to leave your current park and join “{name}”? The new park will review the request; the switch happens after approval.
+  yesSwitch: Yes, switch

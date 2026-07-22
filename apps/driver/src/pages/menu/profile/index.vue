@@ -11,6 +11,7 @@ const onboarding = useDriverOnboardingStore()
 const router = useRouter()
 const auth = useAuthStore()
 const toast = useToast()
+const { t, locale } = useI18n()
 
 const data = ref<DriverOverview | null>(null)
 const isLoading = ref(true)
@@ -28,7 +29,7 @@ definePage({
 })
 
 useHead({
-  title: 'Личный кабинет | Telegram Taxi Driver',
+  title: () => `${t('titles.profile')} | Telegram Taxi Driver`,
 })
 
 onMounted(async () => {
@@ -45,7 +46,7 @@ async function load() {
     data.value = await getDriverOverview()
   }
   catch {
-    errorMessage.value = 'Не удалось загрузить данные.'
+    errorMessage.value = t('profile.loadFail')
   }
   finally {
     isLoading.value = false
@@ -55,7 +56,7 @@ async function load() {
 const fullName = computed(() => {
   const u = data.value?.user
   if (!u)
-    return 'Водитель'
+    return t('nav.driver')
   const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim()
   if (name)
     return name
@@ -91,16 +92,16 @@ const activityDash = computed(() => {
   return `${a * c} ${c}`
 })
 
-const CATEGORY_LABELS: Record<string, string> = {
-  economy: 'Эконом',
-  comfort: 'Комфорт',
-  business: 'Бизнес',
-  minivan: 'Минивэн',
-  moto: 'Мото',
-}
+const CATEGORY_LABELS = computed<Record<string, string>>(() => ({
+  economy: t('cats.economy'),
+  comfort: t('cats.comfort'),
+  business: t('cats.business'),
+  minivan: t('cats.minivan'),
+  moto: t('cats.moto'),
+}))
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', hour: '2-digit', minute: '2-digit', month: 'short' }).format(new Date(value))
+  return new Intl.DateTimeFormat(locale.value, { day: 'numeric', hour: '2-digit', minute: '2-digit', month: 'short' }).format(new Date(value))
 }
 
 // Удаление аккаунта (водительской роли): подтверждение → DELETE /driver/account.
@@ -120,7 +121,7 @@ async function confirmDeleteAccount() {
     await router.replace('/login')
   }
   catch (e: any) {
-    toast.error('Не удалось удалить', e?.message || 'Попробуйте позже или обратитесь в поддержку.')
+    toast.error(t('profile.deleteFailTitle'), e?.message || t('profile.deleteFailText'))
   }
   finally {
     isDeleting.value = false
@@ -133,7 +134,7 @@ async function confirmDeleteAccount() {
     <section class="mx-auto max-w-sm">
       <div v-if="isLoading" class="mt-10 flex items-center gap-3 text-sm app-muted">
         <span class="i-mdi-loading animate-spin text-5" />
-        Загружаем кабинет...
+        {{ t('profile.loading') }}
       </div>
 
       <div v-else-if="errorMessage" class="mt-10 rounded-2xl bg-red-500/10 px-4 py-4 text-sm text-red-300">
@@ -188,7 +189,7 @@ async function confirmDeleteAccount() {
           <div class="flex items-center gap-4 px-5 pb-2 pt-5">
             <div class="min-w-0 flex-1">
               <p class="text-[10px] app-faint font-900 tracking-wider uppercase">
-                Рейтинг водителя
+                {{ t('profile.ratingTitle') }}
               </p>
               <div class="mt-1 flex items-baseline gap-1.5">
                 <span
@@ -224,7 +225,7 @@ async function confirmDeleteAccount() {
                   {{ activityPercent }}%
                 </span>
                 <span class="mt-0.5 text-[8px] app-faint font-900 tracking-wide uppercase">
-                  Актив
+                  {{ t('profile.activityShort') }}
                 </span>
               </div>
             </div>
@@ -249,7 +250,7 @@ async function confirmDeleteAccount() {
               {{ data.driver.total_trips }}
             </p>
             <p class="mt-1 text-[11px] app-faint font-700">
-              Поездок
+              {{ t('profile.trips') }}
             </p>
           </div>
 
@@ -272,7 +273,7 @@ async function confirmDeleteAccount() {
               class="mt-1 text-[11px] font-700"
               :class="data.driver.cancel_count_today > 0 ? 'text-red-400/70' : 'app-faint'"
             >
-              Отмен сег.
+              {{ t('profile.cancelsToday') }}
             </p>
           </div>
         </div>
@@ -282,10 +283,10 @@ async function confirmDeleteAccount() {
           <span class="i-mdi-lock shrink-0 text-5 text-red-400" />
           <div>
             <p class="text-sm text-red-300 font-900">
-              Аккаунт заблокирован
+              {{ t('profile.blocked') }}
             </p>
             <p class="mt-0.5 text-xs text-red-400/70">
-              до {{ formatDate(data.driver.blocked_until) }}
+              {{ t('profile.blockedUntil', { date: formatDate(data.driver.blocked_until) }) }}
             </p>
           </div>
         </div>
@@ -303,9 +304,9 @@ async function confirmDeleteAccount() {
             <span class="i-mdi-shield-check text-7" />
           </span>
           <span class="min-w-0 flex-1">
-            <span class="block text-lg font-900">Верификация</span>
+            <span class="block text-lg font-900">{{ t('profile.verification') }}</span>
             <span class="mt-0.5 block truncate text-xs font-600" :class="verificationOk ? 'text-emerald-400/80' : 'text-amber-400/80'">
-              {{ verificationOk ? 'Всё в порядке' : 'Требует внимания' }}
+              {{ verificationOk ? t('profile.verOk') : t('profile.verAttention') }}
             </span>
           </span>
           <span class="i-mdi-chevron-right text-7 app-faint" />
@@ -315,10 +316,10 @@ async function confirmDeleteAccount() {
 
         <!-- Машины -->
         <h2 class="mt-8 text-sm app-accent font-900 uppercase">
-          Автомобили
+          {{ t('profile.vehicles') }}
         </h2>
         <p v-if="!data.vehicles.length" class="mt-2 text-sm app-faint">
-          Машины не добавлены.
+          {{ t('profile.noVehicles') }}
         </p>
         <div v-else class="mt-3 space-y-2">
           <div v-for="v in data.vehicles" :key="v.id" class="rounded-2xl app-card px-4 py-3">
@@ -340,10 +341,10 @@ async function confirmDeleteAccount() {
             <span class="i-mdi-chart-timeline-variant text-7" />
           </span>
           <span class="min-w-0 flex-1">
-            <span class="block text-lg font-900">История рейтинга</span>
+            <span class="block text-lg font-900">{{ t('titles.ratingHistory') }}</span>
             <span class="mt-0.5 block truncate text-xs app-muted font-600">
-              {{ data.rating_events.length > 0 ? `${data.rating_events.length} штрафных событий` : 'Штрафов не было' }}
-              · {{ data.recent_ratings.length > 0 ? `${data.recent_ratings.length} оценок` : 'Оценок нет' }}
+              {{ data.rating_events.length > 0 ? t('profile.penaltyCount', { n: data.rating_events.length }) : t('profile.noPenalties') }}
+              · {{ data.recent_ratings.length > 0 ? t('profile.ratingCount', { n: data.recent_ratings.length }) : t('ratingHistory.noRatings') }}
             </span>
           </span>
           <span class="i-mdi-chevron-right text-7 app-faint" />
@@ -356,7 +357,7 @@ async function confirmDeleteAccount() {
           @click="showDeleteConfirm = true"
         >
           <span class="i-mdi-trash-can-outline mr-2 text-5" />
-          Удалить аккаунт
+          {{ t('profile.deleteAccount') }}
         </button>
       </template>
     </section>
@@ -373,10 +374,10 @@ async function confirmDeleteAccount() {
             <span class="i-mdi-trash-can-outline text-7" />
           </span>
           <h3 class="mt-4 text-lg font-950">
-            Удалить аккаунт?
+            {{ t('profile.deleteConfirmTitle') }}
           </h3>
           <p class="mt-2 text-sm app-muted leading-5">
-            Бонусы сгорят, восстановить аккаунт нельзя. Сначала завершите смену и выведите средства. При следующем входе нужно будет заново указать номер.
+            {{ t('profile.deleteConfirmTextDriver') }}
           </p>
           <div class="mt-5 flex gap-2">
             <button
@@ -384,7 +385,7 @@ async function confirmDeleteAccount() {
               type="button"
               @click="showDeleteConfirm = false"
             >
-              Отмена
+              {{ t('profile.cancel') }}
             </button>
             <button
               :disabled="isDeleting"
@@ -392,7 +393,7 @@ async function confirmDeleteAccount() {
               type="button"
               @click="confirmDeleteAccount"
             >
-              {{ isDeleting ? 'Удаляем...' : 'Удалить' }}
+              {{ isDeleting ? t('profile.deleting') : t('profile.delete') }}
             </button>
           </div>
         </div>
