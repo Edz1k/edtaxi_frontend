@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { PassengerOverview, PassengerTrip } from '~/types/passenger-overview'
+import type { BonusTransaction, PassengerOverview, PassengerTrip } from '~/types/passenger-overview'
 import { useRoute as useVueRoute } from 'vue-router'
 import { mediaUrl } from '~/api/client'
 import { adminSetPassengerRating } from '~/api/driver'
 import { showErrorToast } from '~/api/errors'
-import { getPassengerOverview } from '~/api/passenger'
+import { getBonusTransactions, getPassengerOverview, grantBonus } from '~/api/passenger'
 import WebPageShell from '~/components/app/WebPageShell.vue'
 import { useToast } from '~/composables/useToast'
 import { useAuthStore } from '~/stores/auth'
@@ -34,7 +34,10 @@ useHead({
   title: 'Кабинет пассажира | Telegram Taxi',
 })
 
-onMounted(load)
+onMounted(() => {
+  load()
+  loadBonusTransactions()
+})
 
 async function load() {
   isLoading.value = true
@@ -113,6 +116,87 @@ async function saveRating() {
     isSavingRating.value = false
   }
 }
+
+// --- Компенсация бонусами ---
+//
+// Потолки продублированы на клиенте только чтобы не гонять заведомо отбойный
+// запрос: источник истины — сервер, он же считает суточный лимит.
+const SUPPORT_GRANT_MAX = 5_000
+const ADMIN_GRANT_MAX = 1_000_000
+
+const bonusTransactions = ref<BonusTransaction[]>([])
+const isGrantOpen = ref(false)
+const isGranting = ref(false)
+const grantForm = reactive({ amount: 1000, reason: '' })
+// grant_id живёт от открытия формы до успеха: повторная отправка той же
+// выдачи (даблклик, ретрай сети) не начислит бонусы дважды.
+let grantId = ''
+
+const maxGrant = computed(() => (isAdmin.value ? ADMIN_GRANT_MAX : SUPPORT_GRANT_MAX))
+const bonusBalance = computed(() => data.value?.user.bonus_balance)
+const canSubmitGrant = computed(() =>
+  Number.isInteger(grantForm.amount)
+  && grantForm.amount >= 1
+  && grantForm.amount <= maxGrant.value
+  && grantForm.reason.trim().length > 0,
+)
+
+async function loadBonusTransactions() {
+  try {
+    const response = await getBonusTransactions(userId.value)
+    bonusTransactions.value = response.transactions
+  }
+  catch {
+    // История вспомогательная: без неё страница работает как раньше.
+    bonusTransactions.value = []
+  }
+}
+
+function openGrant() {
+  grantForm.amount = 1000
+  grantForm.reason = ''
+  grantId = crypto.randomUUID()
+  isGrantOpen.value = true
+}
+
+async function submitGrant() {
+  if (isGranting.value || !canSubmitGrant.value)
+    return
+
+  isGranting.value = true
+  try {
+    const { bonus_balance: balance } = await grantBonus(userId.value, {
+      amount: grantForm.amount,
+      grant_id: grantId,
+      reason: grantForm.reason.trim(),
+    })
+    toast.success('Бонусы начислены', `Баланс пассажира: ${Math.round(balance).toLocaleString('ru-RU')} ₸`)
+    isGrantOpen.value = false
+    await Promise.all([load(), loadBonusTransactions()])
+  }
+  catch (error) {
+    // Серверные лимиты возвращают текст с цифрами — показываем его как есть.
+    showErrorToast(error, 'Не удалось начислить бонусы.')
+  }
+  finally {
+    isGranting.value = false
+  }
+}
+
+const BONUS_KIND_LABELS: Record<string, string> = {
+  driver_milestone: 'Награда за поездки',
+  forfeit: 'Сгорание при удалении',
+  promotion: 'Акция',
+  referral_invitee: 'Рефералка (приглашённый)',
+  referral_owner: 'Рефералка (пригласил)',
+  support_grant: 'Выдача поддержки',
+  trip_discount: 'Оплата поездки бонусами',
+  trip_reward: 'Бонус за поездку',
+}
+
+function bonusKindLabel(kind: string) {
+  return BONUS_KIND_LABELS[kind] ?? kind
+}
 </script>
 
 <template>
@@ -186,6 +270,58 @@ async function saveRating() {
               {{ formatDate(data.user.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) }}
             </p>
           </div>
+
+          <!-- Бонусы: баланс и компенсация. Старый бэкенд поля не отдаёт —
+               тогда плитка показывает прочерк, но выдать бонусы всё равно
+               можно (баланс вернётся в ответе). -->
+          <div class="col-span-2 border border-white/10 rounded-3xl bg-white/8 p-4 backdrop-blur">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-xs text-white/45 font-800 uppercase">
+                  Бонусный баланс
+                </p>
+                <p class="mt-1 text-2xl text-cyan-200 font-950">
+                  {{ bonusBalance == null ? '—' : `${Math.round(bonusBalance).toLocaleString('ru-RU')} ₸` }}
+                </p>
+              </div>
+              <button
+                class="h-10 rounded-2xl bg-cyan-300 px-4 text-sm text-#06142f font-900 transition active:scale-[0.98]"
+                type="button"
+                @click="openGrant"
+              >
+                Выдать бонус
+              </button>
+            </div>
+
+            <div v-if="bonusTransactions.length" class="mt-4 space-y-1.5">
+              <p class="text-xs text-white/40 font-800 uppercase">
+                Последние операции
+              </p>
+              <div
+                v-for="tx in bonusTransactions"
+                :key="tx.id"
+                class="flex items-start justify-between gap-3 border border-white/8 rounded-xl bg-white/5 px-3 py-2"
+              >
+                <div class="min-w-0">
+                  <p class="text-xs text-white/75 font-800">
+                    {{ bonusKindLabel(tx.kind) }}
+                    <span v-if="tx.granted_by" class="text-cyan-200">· вручную</span>
+                  </p>
+                  <p v-if="tx.description" class="mt-0.5 truncate text-xs text-white/45">
+                    {{ tx.description }}
+                  </p>
+                </div>
+                <div class="shrink-0 text-right">
+                  <p class="text-xs font-900" :class="tx.amount < 0 ? 'text-red-300' : 'text-emerald-300'">
+                    {{ tx.amount > 0 ? '+' : '' }}{{ Math.round(tx.amount).toLocaleString('ru-RU') }} ₸
+                  </p>
+                  <p class="mt-0.5 text-[11px] text-white/35">
+                    {{ formatDate(tx.created_at, { day: 'numeric', hour: '2-digit', minute: '2-digit', month: 'short' }) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -254,6 +390,68 @@ async function saveRating() {
               class="h-11 border border-white/12 rounded-2xl bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12"
               type="button"
               @click="isRatingOpen = false"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </Teleport>
+
+    <!-- Модалка выдачи бонусов (компенсация пассажиру) -->
+    <Teleport to="body">
+      <div
+        v-if="isGrantOpen"
+        class="fixed inset-0 z-70 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+        @click.self="isGrantOpen = false"
+      >
+        <form
+          class="max-w-sm w-full border border-white/10 rounded-3xl bg-#071a38 p-5 shadow-2xl"
+          @submit.prevent="submitGrant"
+        >
+          <h3 class="text-lg font-950">
+            Выдать бонусы
+          </h3>
+          <p class="mt-1 text-xs text-white/45">
+            Начисление уйдёт пассажиру и спишется скидкой в следующих поездках.
+          </p>
+
+          <label class="grid mt-4 gap-1.5">
+            <span class="text-xs text-white/42 font-900 uppercase">
+              Сумма, ₸ (до {{ maxGrant.toLocaleString('ru-RU') }})
+            </span>
+            <input
+              v-model.number="grantForm.amount"
+              class="h-11 w-full border border-white/10 rounded-xl bg-white/8 px-4 text-sm outline-none focus:border-cyan-300/40"
+              :max="maxGrant"
+              min="1"
+              step="1"
+              type="number"
+            >
+          </label>
+
+          <label class="grid mt-3 gap-1.5">
+            <span class="text-xs text-white/42 font-900 uppercase">Причина</span>
+            <textarea
+              v-model="grantForm.reason"
+              class="min-h-20 w-full border border-white/10 rounded-xl bg-white/8 px-4 py-3 text-sm outline-none focus:border-cyan-300/40"
+              maxlength="500"
+              placeholder="Например: компенсация за отменённую водителем поездку"
+            />
+          </label>
+
+          <div class="mt-4 flex gap-2">
+            <button
+              :disabled="isGranting || !canSubmitGrant"
+              class="h-11 flex-1 rounded-2xl bg-cyan-300 text-sm text-#06142f font-900 transition active:scale-[0.98] disabled:opacity-50"
+              type="submit"
+            >
+              {{ isGranting ? 'Начисляем...' : 'Начислить' }}
+            </button>
+            <button
+              class="h-11 border border-white/12 rounded-2xl bg-white/8 px-4 text-sm font-900 transition hover:bg-white/12"
+              type="button"
+              @click="isGrantOpen = false"
             >
               Отмена
             </button>

@@ -13,6 +13,9 @@ export interface PassengerOverviewUser {
   is_blocked: boolean
   passenger_rating: number
   created_at: string
+  // Бонусный баланс: поддержке нужен при выдаче компенсации. Опционально —
+  // старый бэкенд поля не отдаёт.
+  bonus_balance?: number
 }
 
 export interface PassengerTrip {
@@ -29,4 +32,19 @@ export interface PassengerTrip {
 export interface PassengerOverview {
   user: PassengerOverviewUser
   recent_trips: PassengerTrip[]
+}
+
+// Одна запись журнала бонусов. granted_by заполнен только у ручных выдач
+// поддержки (kind=support_grant), у автоматических начислений — null.
+export interface BonusTransaction {
+  id: string
+  amount: number
+  kind: string
+  description: string
+  created_at: string
+  granted_by: null | string
+}
+
+export interface BonusTransactionsResponse {
+  transactions: BonusTransaction[]
 }
