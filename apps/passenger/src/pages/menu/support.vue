@@ -202,9 +202,11 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
       <template v-if="!activeRoom">
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2">
           <section class="relative overflow-hidden border border-main-400/15 rounded-[1.8rem] from-main-500/12 via-[#111214] to-[#08090a] bg-gradient-to-br p-5 shadow-[0_18px_55px_rgba(0,0,0,0.32)]">
-            <span class="i-mdi-headset pointer-events-none absolute text-32 text-main-300/[0.045] -right-5 -top-4" aria-hidden="true" />
+            <div class="support-hero-watermark" aria-hidden="true">
+              <span class="i-mdi-headset" />
+            </div>
 
-            <div class="relative">
+            <div class="relative z-1">
               <span class="inline-flex items-center gap-1.5 rounded-full bg-main-500/12 px-2.5 py-1 text-[10px] text-main-300 font-850 tracking-wide uppercase">
                 <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_7px_rgba(52,211,153,0.8)]" />
                 Поддержка на связи
@@ -516,6 +518,31 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
 </template>
 
 <style scoped>
+.support-hero-watermark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform: translateY(-0.15rem);
+}
+
+.support-hero-watermark::before {
+  position: absolute;
+  width: 13rem;
+  height: 13rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(236, 178, 42, 0.08) 0%, rgba(39, 196, 164, 0.025) 42%, transparent 72%);
+  content: '';
+}
+
+.support-hero-watermark span {
+  position: relative;
+  color: rgba(239, 183, 48, 0.085);
+  font-size: 9.5rem;
+  filter: drop-shadow(0 0 1.8rem rgba(41, 200, 166, 0.055));
+}
+
 .support-chat {
   scroll-behavior: smooth;
 }
