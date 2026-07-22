@@ -67,8 +67,8 @@ jobs:
           VITE_WS_URL: wss://ws.telegramtaxi.kz
           VITE_SHARE_URL: https://share.telegramtaxi.kz
           VITE_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
-          VITE_TG_BOT_USERNAME: ${{ matrix.app == 'driver' && 'drivertaximinibot' || 'telegtaxi_bot' }}
-          VITE_TG_DRIVER_BOT_USERNAME: drivertaximinibot
+          VITE_TG_BOT_USERNAME: ${{ matrix.app == 'driver' && 'cityflowdriver_bot' || 'cityflowtaxi_bot' }}
+          VITE_TG_DRIVER_BOT_USERNAME: cityflowdriver_bot
 
   # Аудит зависимостей: блокирует только на critical (must-fix). High/moderate
   # печатаются в логах, но не рушат PR — чтобы неисправимые транзитивные advisory
