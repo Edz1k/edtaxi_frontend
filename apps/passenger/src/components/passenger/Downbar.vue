@@ -33,6 +33,7 @@ const destination = defineModel<string>('destination', { default: '' })
 const pickupPlace = defineModel<GeoPlace | null>('pickupPlace', { default: null })
 const destinationPlace = defineModel<GeoPlace | null>('destinationPlace', { default: null })
 const isLocatingUser = defineModel<boolean>('locatingUser', { default: false })
+const { t } = useI18n()
 
 const {
   clearSuggestions: clearPickupSuggestions,
@@ -372,7 +373,7 @@ async function openPrepay() {
 // После завершения предлагаем заказать ещё одну машину (маршрут уже заполнен),
 // после отмены — просто новую поездку.
 const finishedButtonLabel = computed(() =>
-  trips.activeTrip?.status === 'completed' ? 'Заказать ещё одну машину' : 'Новая поездка',
+  trips.activeTrip?.status === 'completed' ? t('downbar.orderAnother') : t('downbar.newTrip'),
 )
 
 // Кнопка отмены: пока идёт поиск — «Отменить поиск» в один тап; когда водитель
@@ -383,10 +384,10 @@ let cancelArmTimer: number | undefined
 
 const cancelButtonLabel = computed(() => {
   if (trips.isCancelling)
-    return 'Отменяем...'
+    return t('downbar.cancelling')
   if (isCancelArmed.value)
-    return 'Точно отменить? Нажмите ещё раз'
-  return trips.activeTrip?.status === 'searching' ? 'Отменить поиск' : 'Отменить заказ'
+    return t('downbar.cancelConfirm')
+  return trips.activeTrip?.status === 'searching' ? t('downbar.cancelSearch') : t('downbar.cancelOrder')
 })
 
 function disarmCancel() {
@@ -521,22 +522,22 @@ function formatElapsed(total: number) {
 
 const searchPillTitle = computed(() => {
   switch (trips.activeTrip?.status) {
-    case 'awaiting_payment': return 'Ожидание оплаты'
-    case 'driver_assigned': return 'Водитель едет к вам'
-    case 'driver_arriving': return 'Водитель на месте'
-    case 'in_progress': return 'Вы в пути'
-    case 'completed': return 'Поездка завершена'
-    case 'cancelled': return 'Заказ отменён'
-    default: return 'Ищем водителя'
+    case 'awaiting_payment': return t('tripStatus.awaitingPayment')
+    case 'driver_assigned': return t('downbar.driverComing')
+    case 'driver_arriving': return t('tripStatus.driverArriving')
+    case 'in_progress': return t('tripStatus.inProgress')
+    case 'completed': return t('downbar.tripCompleted')
+    case 'cancelled': return t('downbar.orderCancelled')
+    default: return t('downbar.searchingDriver')
   }
 })
 
 const searchPillSubtitle = computed(() => {
   if (trips.activeTrip?.status === 'awaiting_payment')
-    return 'Оплатите заказ, чтобы начать поиск'
+    return t('downbar.payToSearch')
   if (!trips.activeTrip || trips.activeTrip.status === 'searching')
-    return `Поиск идёт ${formatElapsed(trips.searchElapsedSeconds)}`
-  return destination.value ? `До: ${destination.value}` : ''
+    return t('downbar.searchElapsed', { time: formatElapsed(trips.searchElapsedSeconds) })
+  return destination.value ? t('downbar.toDestination', { destination: destination.value }) : ''
 })
 
 // Содержимое пилюли по состоянию: активная поездка — статус с пульсом и
@@ -549,11 +550,11 @@ const peekPill = computed(() => {
       return {
         icon: TARIFF_META[trips.selectedCategory].icon,
         pulse: false,
-        subtitle: destination.value ? `До: ${destination.value}` : '',
+        subtitle: destination.value ? t('downbar.toDestination', { destination: destination.value }) : '',
         title: primaryText.value,
       }
     default:
-      return { icon: 'i-mdi-magnify', pulse: false, subtitle: '', title: 'Куда едем?' }
+      return { icon: 'i-mdi-magnify', pulse: false, subtitle: '', title: t('dest.whereTo') }
   }
 })
 
@@ -617,7 +618,7 @@ function onHandleKeydown(event: KeyboardEvent) {
     >
       <div
         ref="handleEl"
-        aria-label="Потяните, чтобы развернуть или свернуть панель"
+        :aria-label="t('downbar.handleAria')"
         class="shrink-0 cursor-grab touch-none select-none px-3 pb-3 pt-4 active:cursor-grabbing"
         role="button"
         tabindex="0"
@@ -672,7 +673,7 @@ function onHandleKeydown(event: KeyboardEvent) {
                 @click="openPrepay"
               >
                 <span class="i-mdi-credit-card-fast-outline text-5" aria-hidden="true" />
-                {{ isRequestingPrepay ? 'Готовим оплату...' : (isPostpayDue ? 'Оплатить поездку' : 'Оплатить заказ') }}
+                {{ isRequestingPrepay ? t('wallet.preparing') : (isPostpayDue ? t('downbar.payTrip') : t('downbar.payOrder')) }}
               </button>
 
               <button

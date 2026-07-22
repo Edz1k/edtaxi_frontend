@@ -6,7 +6,7 @@ import { shareTripLink } from '~/api/share'
 import { sendTripTip } from '~/api/trips'
 import { useToast } from '~/composables/useToast'
 import { tagsForScore } from '~/constants/ratingTags'
-import { formatFare, TARIFF_META } from '~/constants/tariffs'
+import { formatFare } from '~/constants/tariffs'
 import { usePlacesStore } from '~/stores/places'
 import { useSupportStore } from '~/stores/support'
 import { useTripChatStore } from '~/stores/tripChat'
@@ -26,6 +26,7 @@ const props = defineProps<{
 const isSearchingStatus = computed(() => !props.activeTrip || props.activeTrip.status === 'searching')
 
 const trips = useTripsStore()
+const { locale, t } = useI18n()
 
 // ETA: приоритет — живой eta_sec из WebSocket (бэк считает по скорости
 // водителя); до первого пинга — грубая оценка от последней известной позиции
@@ -65,9 +66,9 @@ const etaChip = computed(() => {
   if (etaMinutes.value == null)
     return null
   if (props.activeTrip?.status === 'driver_assigned')
-    return `Водитель приедет через ~${etaMinutes.value} мин`
+    return t('activeTrip.driverEta', { n: etaMinutes.value })
   if (props.activeTrip?.status === 'in_progress')
-    return `Прибытие через ~${etaMinutes.value} мин`
+    return t('activeTrip.arrivalEta', { n: etaMinutes.value })
   return null
 })
 
@@ -98,7 +99,7 @@ const pendingRouteChange = computed(() => trips.pendingRouteChange)
 // formatFare из constants/tariffs принимает оценку целиком; здесь у нас голая
 // сумма доплаты, поэтому форматируем её отдельно тем же способом.
 function formatTenge(value: number) {
-  return `${Math.round(value).toLocaleString('ru-RU')} ₸`
+  return `${Math.round(value).toLocaleString(locale.value)} ₸`
 }
 
 // Предлагать остановку можно в том же окне, что и писать в чат: водитель уже
@@ -132,7 +133,7 @@ async function sendOnMyWay() {
     return
   isSendingOnMyWay.value = true
   try {
-    await tripChat.sendQuickMessage(trip.id, 'Уже выхожу 🚶')
+    await tripChat.sendQuickMessage(trip.id, t('activeTrip.onMyWayMessage'))
   }
   catch {}
   finally {
@@ -176,7 +177,7 @@ const waitingInfo = computed(() => {
     const ss = String(freeLeftSec % 60).padStart(2, '0')
     return {
       accent: false,
-      text: `Бесплатное ожидание: ещё ${mm}:${ss}. Дальше +${perMinute} ₸ за минуту.`,
+      text: t('activeTrip.freeWaiting', { fee: perMinute, time: `${mm}:${ss}` }),
     }
   }
 
@@ -185,8 +186,8 @@ const waitingInfo = computed(() => {
   return {
     accent: true,
     text: fee > 0
-      ? `Платное ожидание: +${fee.toLocaleString('ru-RU')} ₸ (${paidMinutes} мин по ${perMinute} ₸).`
-      : `Бесплатные ${freeMinutes} мин истекли — дальше +${perMinute} ₸ за минуту.`,
+      ? t('activeTrip.paidWaiting', { fee: fee.toLocaleString(locale.value), minutes: paidMinutes, rate: perMinute })
+      : t('activeTrip.freeWaitingExpired', { fee: perMinute, minutes: freeMinutes }),
   }
 })
 
@@ -207,7 +208,7 @@ async function toggleSaveFavorite(event: Event) {
   if (!checked || !trip || places.isMutating || isFavoriteSaved.value)
     return
 
-  const name = trip.dropoff_address.split(',')[0]?.trim() || 'Избранное место'
+  const name = trip.dropoff_address.split(',')[0]?.trim() || t('activeTrip.favoritePlace')
 
   try {
     await places.add({
@@ -239,12 +240,12 @@ async function reportLostItem() {
   isOpeningLostItem.value = true
   try {
     await support.attachTrip(trip.id, 'passenger', {
-      firstMessage: 'Здравствуйте! Я забыл(а) вещь в машине по этой поездке. Помогите, пожалуйста, связаться с водителем.',
+      firstMessage: t('activeTrip.lostItemMessage'),
     })
     await router.push('/menu/support')
   }
   catch {
-    toast.error('Ошибка', 'Не удалось открыть поддержку по поездке.')
+    toast.error(t('history.errTitle'), t('history.errSupport'))
   }
   finally {
     isOpeningLostItem.value = false
@@ -257,7 +258,7 @@ function formatClock(value: null | string | undefined) {
   const date = new Date(value)
   if (!Number.isFinite(date.getTime()))
     return null
-  return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(date)
+  return new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit' }).format(date)
 }
 
 // Фактическое время пути: completed_at - started_at (после refresh поездки
@@ -273,11 +274,13 @@ const tripDurationText = computed(() => {
 
   const totalMinutes = Math.max(1, Math.round(ms / 60000))
   if (totalMinutes < 60)
-    return `${totalMinutes} мин`
+    return t('activeTrip.minutes', { n: totalMinutes })
 
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
-  return minutes ? `${hours} ч ${minutes} мин` : `${hours} ч`
+  return minutes
+    ? t('activeTrip.hoursMinutes', { hours, minutes })
+    : t('activeTrip.hours', { n: hours })
 })
 
 const completedAtText = computed(() => formatClock(props.activeTrip?.completed_at))
@@ -287,7 +290,7 @@ const finalFareText = computed(() => {
   if (!trip)
     return null
   const fare = trip.final_fare ?? trip.estimated_fare
-  return `${Math.round(fare).toLocaleString('ru-RU')} ₸`
+  return `${Math.round(fare).toLocaleString(locale.value)} ₸`
 })
 
 // Оценка: если поездка уже оценена (my_rating с бэка или только что отправили),
@@ -334,7 +337,7 @@ async function submitTripRating() {
 
   try {
     await trips.submitRating(trip.id, ratingScore.value, ratingComment.value, ratingTags.value)
-    toast.success('Спасибо', 'Оценка отправлена.')
+    toast.success(t('common.thanks'), t('rating.sent'))
   }
   catch {}
 }
@@ -344,7 +347,7 @@ async function sendTip(amount: number) {
   if (!trip || tipPending.value || tipSent.value)
     return
   if (!Number.isFinite(amount) || amount < 100 || amount > 5000) {
-    toast.error('Чаевые', 'Сумма — от 100 до 5000 ₸.')
+    toast.error(t('activeTrip.tips'), t('activeTrip.tipRange'))
     return
   }
 
@@ -352,7 +355,7 @@ async function sendTip(amount: number) {
   try {
     await sendTripTip(trip.id, amount)
     tipSent.value = true
-    toast.success('Спасибо', 'Чаевые отправлены водителю 🙌')
+    toast.success(t('common.thanks'), t('activeTrip.tipSentToast'))
   }
   catch (error) {
     if (error instanceof ApiError && error.status === 409) {
@@ -360,10 +363,10 @@ async function sendTip(amount: number) {
       return
     }
     if (error instanceof ApiError && error.status === 402) {
-      toast.error('Чаевые', 'Не хватает средств: пополните кошелёк или привяжите карту в «Кошельке».')
+      toast.error(t('activeTrip.tips'), t('activeTrip.tipInsufficient'))
       return
     }
-    showErrorToast(error, 'Не удалось отправить чаевые, попробуйте ещё раз.')
+    showErrorToast(error, t('activeTrip.tipFailed'))
   }
   finally {
     tipPending.value = false
@@ -374,60 +377,60 @@ const statusMeta = computed(() => {
   switch (props.activeTrip?.status) {
     case 'awaiting_payment':
       return {
-        description: 'Оплатите заказ — и мы сразу начнём поиск водителя.',
+        description: t('activeTrip.awaitingPaymentText'),
         icon: 'i-mdi-credit-card-clock-outline',
         tone: 'app-accent',
-        title: 'Ожидание оплаты',
+        title: t('tripStatus.awaitingPayment'),
       }
     case 'driver_assigned':
       return {
-        description: 'Водитель принял заказ и едет к вам.',
+        description: t('activeTrip.driverAssignedText'),
         icon: 'i-mdi-car-clock',
         tone: 'app-accent',
-        title: 'Водитель найден',
+        title: t('activeTrip.driverFound'),
       }
     case 'driver_arriving':
       return {
-        description: 'Водитель прибыл к месту посадки.',
+        description: t('activeTrip.driverArrivedText'),
         icon: 'i-mdi-map-marker-check',
         tone: 'text-emerald-300',
-        title: 'Водитель на месте',
+        title: t('tripStatus.driverArriving'),
       }
     case 'in_progress':
       return {
-        description: 'Поездка началась. Хорошей дороги.',
+        description: t('activeTrip.inProgressText'),
         icon: 'i-mdi-navigation-variant',
         tone: 'app-accent',
-        title: 'Вы в пути',
+        title: t('tripStatus.inProgress'),
       }
     case 'completed':
       return {
-        description: 'Поездка завершена. Спасибо, что выбрали нас!',
+        description: t('activeTrip.completedText'),
         icon: 'i-mdi-check-circle',
         tone: 'text-emerald-300',
-        title: 'Вы доехали',
+        title: t('activeTrip.arrived'),
       }
     case 'cancelled':
       if (props.activeTrip?.cancelled_by === 'system_no_drivers') {
         return {
-          description: 'Свободных машин рядом пока нет. Попробуйте заказать ещё раз через пару минут.',
+          description: t('activeTrip.noCarsText'),
           icon: 'i-mdi-car-off',
           tone: 'text-amber-300',
-          title: 'Машин нет',
+          title: t('activeTrip.noCars'),
         }
       }
       return {
-        description: 'Поездка отменена.',
+        description: t('activeTrip.cancelledText'),
         icon: 'i-mdi-close-circle',
         tone: 'text-red-300',
-        title: 'Заказ отменен',
+        title: t('downbar.orderCancelled'),
       }
     default:
       return {
-        description: 'Обычно это занимает меньше минуты',
+        description: t('activeTrip.searchingText'),
         icon: 'i-mdi-radar',
         tone: 'app-accent',
-        title: 'Ищем водителя',
+        title: t('downbar.searchingDriver'),
       }
   }
 })
@@ -437,10 +440,10 @@ const fareText = computed(() => {
     // total_fare — текущий итог с бэка (котировка + доплаты за добавленные
     // остановки): после согласия водителя пассажир видит новую цену сразу.
     const fare = props.activeTrip.total_fare ?? props.activeTrip.estimated_fare
-    return `${Math.round(fare).toLocaleString('ru-RU')} ₸`
+    return `${Math.round(fare).toLocaleString(locale.value)} ₸`
   }
 
-  return props.selectedEstimate ? formatFare(props.selectedEstimate) : 'Цена рассчитана'
+  return props.selectedEstimate ? formatFare(props.selectedEstimate, locale.value) : t('activeTrip.priceCalculated')
 })
 
 const category = computed(() => props.activeTrip?.category ?? props.selectedCategories[0] ?? 'economy')
@@ -454,11 +457,11 @@ const isSearchingAcrossCategories = computed(() => {
 
 const tariffLine = computed(() => {
   if (isSearchingAcrossCategories.value) {
-    const labels = props.selectedCategories.map(cat => TARIFF_META[cat].label).join(' · ')
-    return `Ищем: ${labels}`
+    const labels = props.selectedCategories.map(cat => t(`tariffs.${cat}.label`)).join(' · ')
+    return t('activeTrip.searchingCategories', { labels })
   }
 
-  return `${TARIFF_META[category.value].label} · ${fareText.value}`
+  return `${t(`tariffs.${category.value}.label`)} · ${fareText.value}`
 })
 
 // Водитель показывается, когда заказ принят (бэкенд добавляет объект driver).
@@ -506,7 +509,7 @@ async function shareTrip() {
     const shareUrl = buildShareUrl(share_token)
 
     if (isShareSupported.value) {
-      await share({ title: 'Моя поездка Telegram Taxi', url: shareUrl })
+      await share({ title: t('activeTrip.shareTitle'), url: shareUrl })
     }
     else {
       await copy(shareUrl)
@@ -598,7 +601,7 @@ async function shareTrip() {
       @click="startStopPicker"
     >
       <span class="i-mdi-map-marker-plus shrink-0 text-4.5 app-accent" aria-hidden="true" />
-      <span>Заехать по пути</span>
+      <span>{{ t('activeTrip.addStop') }}</span>
     </button>
 
     <!-- Заявка отправлена: ждём ответа водителя. Доплату показываем ту, что
@@ -606,11 +609,11 @@ async function shareTrip() {
     <div v-if="pendingRouteChange" class="mt-3 rounded-2xl bg-main-500/12 px-4 py-3 text-left">
       <p class="flex items-center gap-2 text-sm text-main-200 font-900 light:text-main-700">
         <span class="i-mdi-clock-outline shrink-0 text-4.5" aria-hidden="true" />
-        <span>Ждём ответа водителя</span>
+        <span>{{ t('activeTrip.waitingDriverAnswer') }}</span>
       </p>
       <p class="mt-1.5 text-xs text-slate-300 font-700 light:text-slate-600">
-        Доплата за остановку — {{ formatTenge(pendingRouteChange.fee) }}.
-        Если водитель откажется, поездка поедет прежним маршрутом и доплаты не будет.
+        {{ t('activeTrip.stopSurcharge', { price: formatTenge(pendingRouteChange.fee) }) }}
+        {{ t('activeTrip.stopDeclineHint') }}
       </p>
       <button
         type="button"
@@ -618,7 +621,7 @@ async function shareTrip() {
         :disabled="trips.isProposingRouteChange"
         @click="cancelStopRequest"
       >
-        Отменить остановку
+        {{ t('activeTrip.cancelStop') }}
       </button>
     </div>
 
@@ -637,18 +640,18 @@ async function shareTrip() {
       />
       <div class="min-w-0 flex-1">
         <p class="text-sm font-900" :class="trips.routeChangeOutcome === 'accepted' ? 'text-emerald-200' : 'text-slate-200'">
-          {{ trips.routeChangeOutcome === 'accepted' ? 'Водитель согласился заехать' : 'Водитель отказался от остановки' }}
+          {{ trips.routeChangeOutcome === 'accepted' ? t('activeTrip.stopAccepted') : t('activeTrip.stopDeclined') }}
         </p>
         <p class="mt-1 text-xs app-muted font-700">
           {{ trips.routeChangeOutcome === 'accepted'
-            ? 'Остановка добавлена в маршрут, доплата уже учтена в стоимости.'
-            : 'Маршрут и цена поездки не изменились.' }}
+            ? t('activeTrip.stopAcceptedHint')
+            : t('activeTrip.stopDeclinedHint') }}
         </p>
       </div>
       <button
         type="button"
         class="shrink-0 p-1 app-muted"
-        aria-label="Закрыть"
+        :aria-label="t('places.closeAria')"
         @click="trips.clearRouteChangeOutcome()"
       >
         <span class="i-mdi-close text-4" aria-hidden="true" />
@@ -664,7 +667,7 @@ async function shareTrip() {
 
       <div class="min-w-0 flex-1">
         <p class="flex items-center gap-1.5 truncate text-sm font-900">
-          {{ driver.name || 'Водитель' }}
+          {{ driver.name || t('tripChat.driver') }}
           <span class="shrink-0 text-xs text-amber-300 font-800">★ {{ driver.rating.toFixed(1) }}</span>
         </p>
         <p v-if="driver.vehicle" class="mt-0.5 truncate text-xs app-muted font-700">
@@ -683,13 +686,13 @@ async function shareTrip() {
          carrier нет вовсе, и блок не рисуется. -->
     <div v-if="carrier" class="mt-2 rounded-2xl app-card px-3 py-3 text-left">
       <p class="text-[11px] app-faint font-800 uppercase">
-        Перевозчик
+        {{ t('activeTrip.carrier') }}
       </p>
       <p class="mt-1 truncate text-sm font-900">
         {{ carrier.name }}
       </p>
       <p v-if="carrier.bin" class="mt-0.5 text-xs app-muted font-700">
-        БИН {{ carrier.bin }}
+        {{ t('activeTrip.bin', { bin: carrier.bin }) }}
       </p>
 
       <!-- Не tel:-ссылка: Telegram-вебвью блокирует такую навигацию, и кнопка
@@ -703,7 +706,7 @@ async function shareTrip() {
         @click="copyCarrierPhone(carrier.phone)"
       >
         <span :class="carrierPhoneCopied ? 'i-mdi-check' : 'i-mdi-content-copy'" class="text-4.5" />
-        {{ carrierPhoneCopied ? 'Номер скопирован' : carrier.phone }}
+        {{ carrierPhoneCopied ? t('activeTrip.phoneCopied') : carrier.phone }}
       </button>
     </div>
 
@@ -722,7 +725,7 @@ async function shareTrip() {
       @click="reportLostItem"
     >
       <span class="i-mdi-bag-suitcase text-5" />
-      {{ isOpeningLostItem ? 'Открываем поддержку...' : 'Забыл вещь в машине' }}
+      {{ isOpeningLostItem ? t('activeTrip.openingSupport') : t('activeTrip.lostItem') }}
     </button>
 
     <!-- Платное ожидание: таймер после прибытия водителя -->
@@ -747,7 +750,7 @@ async function shareTrip() {
         @click="sendOnMyWay"
       >
         <span class="i-mdi-run-fast text-5" />
-        {{ isSendingOnMyWay ? 'Отправляем...' : 'Уже выхожу' }}
+        {{ isSendingOnMyWay ? t('rating.sending') : t('activeTrip.onMyWay') }}
       </button>
 
       <button
@@ -756,7 +759,7 @@ async function shareTrip() {
         @click="openChat"
       >
         <span class="i-mdi-message-text text-5" />
-        Чат с водителем
+        {{ t('tripChat.title') }}
         <span
           v-if="tripChat.unreadCount"
           class="absolute right-3 min-w-5 flex items-center justify-center rounded-full bg-main-500 px-1.5 py-0.5 text-[11px] text-white font-900"
@@ -770,7 +773,7 @@ async function shareTrip() {
     <div v-if="isCompleted" class="grid grid-cols-3 mt-3 gap-2">
       <div class="rounded-2xl app-card px-2 py-2.5">
         <p class="text-[11px] app-faint font-800">
-          Время пути
+          {{ t('activeTrip.travelTime') }}
         </p>
         <p class="mt-1 text-sm font-950">
           {{ tripDurationText ?? '—' }}
@@ -778,7 +781,7 @@ async function shareTrip() {
       </div>
       <div class="rounded-2xl app-card px-2 py-2.5">
         <p class="text-[11px] app-faint font-800">
-          Завершена
+          {{ t('tripStatus.completed') }}
         </p>
         <p class="mt-1 text-sm font-950">
           {{ completedAtText ?? '—' }}
@@ -786,7 +789,7 @@ async function shareTrip() {
       </div>
       <div class="rounded-2xl app-card px-2 py-2.5">
         <p class="text-[11px] app-faint font-800">
-          Стоимость
+          {{ t('activeTrip.cost') }}
         </p>
         <p class="mt-1 text-sm font-950">
           {{ finalFareText ?? '—' }}
@@ -798,7 +801,7 @@ async function shareTrip() {
     <div v-if="isCompleted && driver" class="mt-3 rounded-2xl app-card px-4 py-4 text-left">
       <template v-if="ratedScore">
         <p class="text-center text-sm font-900">
-          Ваша оценка
+          {{ t('activeTrip.yourRating') }}
         </p>
         <div class="mt-2 flex justify-center gap-1">
           <span
@@ -810,19 +813,19 @@ async function shareTrip() {
           />
         </div>
         <p class="mt-2 text-center text-xs text-emerald-300 font-800">
-          Спасибо за оценку!
+          {{ t('activeTrip.ratingThanks') }}
         </p>
       </template>
 
       <template v-else>
         <p class="text-center text-sm font-900">
-          Оцените поездку
+          {{ t('rating.title') }}
         </p>
         <div class="mt-2 flex justify-center gap-1">
           <button
             v-for="star in 5"
             :key="star"
-            :aria-label="`Поставить оценку ${star}`"
+            :aria-label="t('rating.starAria', { n: star })"
             class="h-11 w-11 flex items-center justify-center rounded-full transition active:scale-[0.94]"
             :class="star <= ratingScore ? 'app-accent' : 'text-slate-600'"
             type="button"
@@ -843,16 +846,16 @@ async function shareTrip() {
             type="button"
             @click="toggleRatingTag(tag.value)"
           >
-            {{ tag.label }}
+            {{ t(`ratingTags.${tag.value}`) }}
           </button>
         </div>
         <textarea
           v-model="ratingComment"
-          aria-label="Комментарий к поездке"
+          :aria-label="t('activeTrip.ratingCommentAria')"
           class="mt-3 min-h-20 w-full resize-none border app-border rounded-2xl app-card p-3 text-sm outline-none focus:border-main-400"
           maxlength="500"
           name="trip_rating_comment"
-          placeholder="Комментарий к заказу, если хотите"
+          :placeholder="t('activeTrip.ratingCommentPlaceholder')"
         />
         <button
           :disabled="trips.isRating"
@@ -860,7 +863,7 @@ async function shareTrip() {
           type="button"
           @click="submitTripRating"
         >
-          {{ trips.isRating ? 'Отправляем...' : 'Отправить оценку' }}
+          {{ trips.isRating ? t('rating.sending') : t('rating.submit') }}
         </button>
       </template>
     </div>
@@ -869,12 +872,12 @@ async function shareTrip() {
     <div v-if="isCompleted && driver" class="mt-3 rounded-2xl app-card px-4 py-4 text-left">
       <template v-if="tipSent">
         <p class="text-center text-sm text-emerald-300 font-900">
-          Чаевые отправлены 🙌
+          {{ t('activeTrip.tipSent') }}
         </p>
       </template>
       <template v-else>
         <p class="text-center text-sm font-900">
-          Оставить чаевые водителю
+          {{ t('activeTrip.leaveTip') }}
         </p>
         <div class="grid grid-cols-3 mt-3 gap-2">
           <button
@@ -900,18 +903,18 @@ async function shareTrip() {
             type="button"
             @click="customTipVisible = !customTipVisible"
           >
-            Своя
+            {{ t('activeTrip.customTip') }}
           </button>
         </div>
         <div v-if="customTipVisible" class="mt-2 flex gap-2">
           <input
             v-model.number="customTipAmount"
-            aria-label="Своя сумма чаевых"
+            :aria-label="t('activeTrip.customTipAria')"
             class="h-11 min-w-0 flex-1 border app-border rounded-2xl app-card px-3 text-sm outline-none focus:border-main-400"
             inputmode="numeric"
             max="5000"
             min="100"
-            placeholder="От 100 до 5000 ₸"
+            :placeholder="t('activeTrip.tipPlaceholder')"
             type="number"
           >
           <button
@@ -920,11 +923,11 @@ async function shareTrip() {
             type="button"
             @click="sendTip(Number(customTipAmount))"
           >
-            {{ tipPending ? '...' : 'Отправить' }}
+            {{ tipPending ? '...' : t('activeTrip.send') }}
           </button>
         </div>
         <p class="mt-2 text-center text-[11px] app-faint leading-4">
-          Спишутся с кошелька или привязанной карты и уйдут водителю полностью — без комиссии.
+          {{ t('activeTrip.tipHint') }}
         </p>
       </template>
     </div>
@@ -941,7 +944,7 @@ async function shareTrip() {
         @change="toggleSaveFavorite"
       >
       <span class="min-w-0 text-xs text-slate-300 font-700 leading-4 light:text-slate-600">
-        {{ isFavoriteSaved ? 'Добавлено в избранное' : 'Добавить это место в избранное' }}
+        {{ isFavoriteSaved ? t('activeTrip.favoriteAdded') : t('activeTrip.addFavorite') }}
       </span>
     </label>
 
@@ -952,12 +955,12 @@ async function shareTrip() {
       type="button"
       @click="shareTrip()"
     >
-      <span v-if="shareError" class="text-red-300">Не удалось поделиться</span>
-      <span v-else-if="linkCopied && !isSharing" class="text-emerald-300">Ссылка скопирована</span>
-      <span v-else-if="isSharing">Подготовка ссылки...</span>
+      <span v-if="shareError" class="text-red-300">{{ t('activeTrip.shareFailed') }}</span>
+      <span v-else-if="linkCopied && !isSharing" class="text-emerald-300">{{ t('activeTrip.linkCopied') }}</span>
+      <span v-else-if="isSharing">{{ t('activeTrip.preparingLink') }}</span>
       <span v-else class="flex items-center justify-center gap-2">
         <span class="i-mdi-share-variant text-5" />
-        Поделиться поездкой
+        {{ t('activeTrip.share') }}
       </span>
     </button>
   </div>

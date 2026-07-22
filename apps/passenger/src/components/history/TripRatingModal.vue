@@ -9,6 +9,7 @@ const emit = defineEmits<{ close: [] }>()
 
 const trips = useTripsStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const score = ref(5)
 const comment = ref('')
@@ -40,7 +41,7 @@ async function submit() {
     return
 
   await trips.submitRating(props.trip.id, score.value, comment.value, tags.value)
-  toast.success('Спасибо', 'Оценка отправлена.')
+  toast.success(t('common.thanks'), t('rating.sent'))
   emit('close')
 }
 </script>
@@ -64,13 +65,13 @@ async function submit() {
           <div class="flex items-center justify-between gap-4">
             <div>
               <p class="text-xs app-accent font-900 uppercase">
-                Завершено
+                {{ t('rating.completed') }}
               </p>
               <h2 class="mt-1 text-2xl font-950">
-                Оцените поездку
+                {{ t('rating.title') }}
               </h2>
             </div>
-            <button aria-label="Закрыть оценку поездки" class="h-11 w-11 flex items-center justify-center rounded-full app-chip" type="button" @click="emit('close')">
+            <button :aria-label="t('rating.closeAria')" class="h-11 w-11 flex items-center justify-center rounded-full app-chip" type="button" @click="emit('close')">
               <span class="i-mdi-close text-6" />
             </button>
           </div>
@@ -79,7 +80,7 @@ async function submit() {
             <button
               v-for="star in 5"
               :key="star"
-              :aria-label="`Поставить оценку ${star}`"
+              :aria-label="t('rating.starAria', { n: star })"
               class="h-11 w-11 flex items-center justify-center rounded-full transition active:scale-[0.94]"
               :class="star <= score ? 'app-accent' : 'text-slate-600'"
               type="button"
@@ -100,17 +101,17 @@ async function submit() {
               type="button"
               @click="toggleTag(tag.value)"
             >
-              {{ tag.label }}
+              {{ t(`ratingTags.${tag.value}`) }}
             </button>
           </div>
 
           <textarea
             v-model="comment"
-            aria-label="Комментарий к оценке поездки"
+            :aria-label="t('rating.commentAria')"
             class="mt-5 min-h-24 w-full resize-none border app-border rounded-2xl app-card p-4 text-sm outline-none focus:border-main-400"
             maxlength="500"
             name="rating_comment"
-            placeholder="Комментарий, если хотите"
+            :placeholder="t('rating.commentPlaceholder')"
           />
 
           <button
@@ -119,7 +120,7 @@ async function submit() {
             type="button"
             @click="submit"
           >
-            {{ trips.isRating ? 'Отправляем...' : 'Отправить оценку' }}
+            {{ trips.isRating ? t('rating.sending') : t('rating.submit') }}
           </button>
         </section>
       </div>

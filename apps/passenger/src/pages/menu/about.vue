@@ -87,10 +87,10 @@ const advantages = computed(() => ADV_KEYS.map(key => ({
             </span>
             <span class="min-w-0 flex-1">
               <span class="block text-base font-900">
-                {{ TARIFF_META[category].label }}
+                {{ t(`tariffs.${category}.label`) }}
               </span>
               <span class="mt-0.5 block truncate text-xs app-muted font-600">
-                {{ TARIFF_META[category].caption }}
+                {{ t(`tariffs.${category}.caption`) }}
               </span>
             </span>
           </div>

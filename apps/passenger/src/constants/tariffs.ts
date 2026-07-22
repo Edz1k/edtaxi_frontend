@@ -81,8 +81,8 @@ export const TARIFF_META: Record<VehicleCategory, {
   },
 }
 
-export function formatFare(estimate: EstimateTripResponse) {
-  return `${Math.round(estimate.estimated_fare).toLocaleString('ru-RU')} ₸`
+export function formatFare(estimate: EstimateTripResponse, locale = 'ru-RU') {
+  return `${Math.round(estimate.estimated_fare).toLocaleString(locale)} ₸`
 }
 
 // Способы оплаты для тогла (порядок = порядок в UI). prepaid в тогл не входит —

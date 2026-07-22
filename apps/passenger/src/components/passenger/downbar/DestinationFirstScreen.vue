@@ -18,6 +18,7 @@ const emit = defineEmits<{
   // Быстрый адрес — сразу выбрать назначение (дальше уходим к тарифам).
   selectDestination: [place: GeoPlace]
 }>()
+const { locale, t } = useI18n()
 
 // Действующие акции — компактной лентой на главном экране; тап ведёт на /bonus.
 // Ошибку глотаем: без акций лента просто не показывается.
@@ -40,7 +41,7 @@ onMounted(() => {
         <span class="i-mdi-taxi text-5.5" aria-hidden="true" />
       </span>
       <h2 class="text-xl font-950">
-        Такси
+        {{ t('dest.taxi') }}
       </h2>
     </div>
 
@@ -52,7 +53,7 @@ onMounted(() => {
     >
       <span class="flex items-center gap-2.5">
         <span class="i-mdi-magnify shrink-0 text-5 app-accent" aria-hidden="true" />
-        <span class="text-base font-900">Куда едем?</span>
+        <span class="text-base font-900">{{ t('dest.whereTo') }}</span>
       </span>
       <span class="i-mdi-chevron-right shrink-0 text-5 text-white/40" aria-hidden="true" />
     </button>
@@ -85,7 +86,7 @@ onMounted(() => {
             {{ promo.title }}
           </p>
           <p class="line-clamp-1 mt-0.5 text-xs text-main-200 font-800 light:text-main-700">
-            +{{ promo.reward.toLocaleString('ru-RU') }} бонусов за {{ promo.target_trips }} поездок
+            {{ t('dest.promoLine', { n: promo.reward.toLocaleString(locale), trips: promo.target_trips }) }}
           </p>
         </div>
       </RouterLink>
@@ -121,10 +122,10 @@ onMounted(() => {
         aria-hidden="true"
       />
       <p class="text-sm font-950">
-        Любимые адреса появятся здесь
+        {{ t('dest.favEmpty') }}
       </p>
       <p class="mt-1 max-w-60 text-xs app-muted font-700 leading-5">
-        После первых поездок покажем недавние и частые места — закажете в один тап.
+        {{ t('dest.favEmptyHint') }}
       </p>
       <button
         class="mt-3 h-10 inline-flex items-center gap-2 rounded-full app-chip px-4 text-sm font-900 transition active:scale-[0.97] hover:bg-white/12"
@@ -132,7 +133,7 @@ onMounted(() => {
         @click="emit('pickFromMap', 'destination')"
       >
         <span class="i-mdi-map-marker-radius-outline text-4.5 app-accent" aria-hidden="true" />
-        Выбрать на карте
+        {{ t('dest.pickOnMap') }}
       </button>
     </div>
   </div>

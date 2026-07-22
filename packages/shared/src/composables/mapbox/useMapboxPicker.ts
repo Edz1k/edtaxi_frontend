@@ -9,6 +9,8 @@ import { reverseGeocodePlace } from '../../api/geocoding'
 interface UseMapboxPickerOptions {
   clearRoute: () => void
   getPickerScreenPoint?: () => [number, number] | null
+  getFallbackError?: () => string
+  getPickerTitle?: (mode: MapPickerMode | null) => string
   hasRoute: ComputedRef<boolean>
   hideCurrentMarker: () => void
   map: ShallowRef<Map | undefined>
@@ -24,6 +26,9 @@ export function useMapboxPicker(options: UseMapboxPickerOptions) {
 
   const isPickingLocation = computed(() => Boolean(options.pickerMode.value))
   const pickerTitle = computed(() => {
+    if (options.getPickerTitle)
+      return options.getPickerTitle(options.pickerMode.value)
+
     switch (options.pickerMode.value) {
       case 'pickup': return 'Выберите точку А'
       case 'stop': return 'Выберите остановку'
@@ -131,7 +136,7 @@ export function useMapboxPicker(options: UseMapboxPickerOptions) {
     catch (error) {
       pickerError.value = error instanceof Error
         ? error.message
-        : 'Не удалось определить адрес.'
+        : options.getFallbackError?.() ?? 'Не удалось определить адрес.'
     }
     finally {
       isConfirmingPicker.value = false

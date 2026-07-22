@@ -55,6 +55,7 @@ const emit = defineEmits<{
   'update:pickup': [value: string]
   'update:stop': [index: number, value: string]
 }>()
+const { t } = useI18n()
 
 // Подсказки из истории показываем, пока пользователь не начал вводить адрес и
 // гео-саджест ничего не предлагает — не конкурируем с реальным поиском.
@@ -91,18 +92,18 @@ function rowValue(row: RouteRow): string {
 
 function rowPlaceholder(row: RouteRow): string {
   if (row.kind === 'pickup')
-    return 'Откуда'
+    return t('routeForm.from')
   if (row.kind === 'destination')
-    return 'Куда'
-  return 'Остановка'
+    return t('routeForm.to')
+  return t('routeForm.stop')
 }
 
 function rowAriaLabel(row: RouteRow): string {
   if (row.kind === 'pickup')
-    return 'Адрес отправления'
+    return t('routeForm.pickupAria')
   if (row.kind === 'destination')
-    return 'Адрес назначения'
-  return `Адрес остановки ${row.index + 1}`
+    return t('routeForm.destinationAria')
+  return t('routeForm.stopAria', { n: row.index + 1 })
 }
 
 function rowName(row: RouteRow): string {
@@ -167,17 +168,17 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
     <header class="flex items-center justify-between gap-3 px-1">
       <div class="min-w-0">
         <p class="text-[11px] app-accent font-900 uppercase">
-          Маршрут
+          {{ t('routeForm.route') }}
         </p>
         <h2 class="mt-0.5 truncate text-xl font-950">
-          Куда едем?
+          {{ t('dest.whereTo') }}
         </h2>
       </div>
 
       <button
-        aria-label="Выбрать точку назначения на карте"
+        :aria-label="t('routeForm.pickDestinationAria')"
         class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full app-chip text-white transition active:scale-95"
-        title="Выбрать точку назначения на карте"
+        :title="t('routeForm.pickDestinationAria')"
         type="button"
         @click="emit('pickFromMap', 'destination')"
       >
@@ -237,9 +238,9 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
              кнопки, третья постоянная сжала бы инпут на узких экранах. -->
         <button
           v-if="row.kind !== 'stop' && rowValue(row)"
-          :aria-label="row.kind === 'pickup' ? 'Очистить адрес отправления' : 'Очистить адрес назначения'"
+          :aria-label="row.kind === 'pickup' ? t('routeForm.clearPickupAria') : t('routeForm.clearDestinationAria')"
           class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
-          title="Очистить"
+          :title="t('routeForm.clear')"
           type="button"
           @click="emit('clearPoint', row.kind)"
         >
@@ -249,10 +250,10 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
         <!-- Точка А: геолокация + выбор на карте -->
         <template v-if="row.kind === 'pickup'">
           <button
-            aria-label="Определить мое местоположение"
+            :aria-label="t('routeForm.locateAria')"
             class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="isLocatingUser"
-            title="Моя геопозиция"
+            :title="t('routeForm.myLocation')"
             type="button"
             @click="emit('locateUser')"
           >
@@ -263,9 +264,9 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
           </button>
 
           <button
-            aria-label="Выбрать адрес отправления на карте"
+            :aria-label="t('routeForm.pickPickupAria')"
             class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
-            title="Выбрать на карте"
+            :title="t('dest.pickOnMap')"
             type="button"
             @click="emit('pickFromMap', 'pickup')"
           >
@@ -276,9 +277,9 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
         <!-- Остановка: выбрать на карте и убрать -->
         <template v-else-if="row.kind === 'stop'">
           <button
-            :aria-label="`Выбрать остановку ${row.index + 1} на карте`"
+            :aria-label="t('routeForm.pickStopAria', { n: row.index + 1 })"
             class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
-            title="Выбрать на карте"
+            :title="t('dest.pickOnMap')"
             type="button"
             @click="emit('pickFromMap', 'stop', row.index)"
           >
@@ -286,9 +287,9 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
           </button>
 
           <button
-            :aria-label="`Убрать остановку ${row.index + 1}`"
+            :aria-label="t('routeForm.removeStopAria', { n: row.index + 1 })"
             class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
-            title="Убрать остановку"
+            :title="t('routeForm.removeStop')"
             type="button"
             @click="emit('removeStop', row.index)"
           >
@@ -299,9 +300,9 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
         <!-- Точка Б: выбор на карте -->
         <button
           v-else
-          aria-label="Выбрать адрес назначения на карте"
+          :aria-label="t('routeForm.pickDestinationAria')"
           class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-white transition active:scale-95"
-          title="Выбрать на карте"
+          :title="t('dest.pickOnMap')"
           type="button"
           @click="emit('pickFromMap', 'destination')"
         >
@@ -317,7 +318,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
         @click="emit('addStop')"
       >
         <span class="i-mdi-plus-circle-outline text-4.5" aria-hidden="true" />
-        Добавить остановку
+        {{ t('routeForm.addStop') }}
       </button>
     </div>
 
@@ -353,7 +354,7 @@ const { dragIndex, isPressing, onPointerDown, rowStyle, setRowEl } = useRowReord
       <!-- Частые и недавние адреса из истории поездок — быстрый выбор «Куда» -->
       <div v-if="showQuickDestinations" class="rounded-[1.65rem] app-card p-2">
         <p class="px-2 pb-1 pt-1.5 text-[11px] app-faint font-800 uppercase">
-          Недавние и частые
+          {{ t('routeForm.recentFrequent') }}
         </p>
         <button
           v-for="item in quickDestinations"

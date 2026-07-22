@@ -324,3 +324,258 @@ tripChat:
   empty: Write to the driver — for example, clarify the pickup spot.
   msgAria: Message to the driver
   toMap: To the map
+addr:
+  m: '{n} m'
+  km: '{n} km'
+  searching: Searching for the address...
+  degraded: Address search is temporarily unavailable — try later or pick a point on the map.
+cardPick:
+  title: Card for payment
+  lead: The trip will be charged to the selected card after completion.
+  bindNew: Link a new card
+picker:
+  hint: Move the map so the pin is exactly where you need
+  resolving: Resolving...
+  confirm: Confirm
+  pickupTitle: Choose pickup point A
+  stopTitle: Choose a stop
+  tripStopTitle: Where to stop along the way
+  destinationTitle: Choose destination point B
+  addressError: Couldn’t determine the address.
+dest:
+  taxi: Taxi
+  whereTo: Where to?
+  promoLine: +{n} bonuses for {trips} rides
+  favEmpty: Favorite addresses will appear here
+  favEmptyHint: After your first rides we’ll show recent and frequent places — order in one tap.
+  pickOnMap: Pick on the map
+who:
+  title: Who is riding?
+  farHint: The pickup point is {dist} away from you — looks like the car isn’t for you.
+  notYou: Looks like the car isn’t for you.
+  driverKnows: The driver will know whom to meet.
+  me: I’m riding
+  other: Someone else is riding
+  recent: Recent
+  passengerName: Passenger name
+  optional: Optional
+  passengerPhone: Passenger phone
+  ordering: Ordering...
+  orderFor: Order for them
+common:
+  thanks: Thank you
+map:
+  city: City of {city}
+tripStatus:
+  awaitingPayment: Awaiting payment
+  cancelled: Cancelled
+  completed: Completed
+  driverArriving: Driver has arrived
+  driverAssigned: Driver assigned
+  inProgress: On the way
+  searching: Searching
+tripHistory:
+  noDate: Date not specified
+  minutes: '{n} min'
+  rate: Rate the trip
+  opening: Opening...
+  support: Trip support
+  complain: Report the driver
+rating:
+  completed: Completed
+  title: Rate your trip
+  closeAria: Close trip rating
+  starAria: Give a rating of {n}
+  commentAria: Trip rating comment
+  commentPlaceholder: Add a comment if you wish
+  sending: Sending...
+  submit: Submit rating
+  sent: Rating submitted.
+complaint:
+  sentTitle: Report submitted
+  sentText: We’ll review it and take action.
+  eyebrow: Report
+  title: Report the driver
+  closeAria: Close report
+  lead: Tell us what happened. Our support team will review your report.
+  reasonAria: Reason for report
+  placeholder: 'For example: the driver was rude'
+  sending: Sending...
+  submit: Submit report
+ratingTags:
+  polite: Polite
+  clean_car: Clean car
+  safe_driving: Safe driving
+  good_music: Good music
+  dangerous_driving: Dangerous driving
+  rude: Rude
+  dirty_car: Dirty car
+routeForm:
+  from: From
+  to: To
+  stop: Stop
+  pickupAria: Pickup address
+  destinationAria: Destination address
+  stopAria: Stop {n} address
+  route: Route
+  pickDestinationAria: Pick destination on the map
+  clearPickupAria: Clear pickup address
+  clearDestinationAria: Clear destination address
+  clear: Clear
+  locateAria: Find my location
+  myLocation: My location
+  pickPickupAria: Pick pickup address on the map
+  pickStopAria: Pick stop {n} on the map
+  removeStopAria: Remove stop {n}
+  removeStop: Remove stop
+  addStop: Add a stop
+  recentFrequent: Recent and frequent
+tariffGroups:
+  khan: Khan Taxi
+  moto: Moto
+  taxi: Taxi
+tariffs:
+  business:
+    label: Business
+    caption: Premium cars
+  business_plus:
+    label: Business+
+    caption: Khan Taxi · S-Class
+  comfort:
+    label: Comfort
+    caption: More comfort
+  comfort_plus:
+    label: Comfort+
+    caption: Khan Taxi · higher class
+  economy:
+    label: Economy
+    caption: Fast and affordable
+  minivan:
+    label: Minivan
+    caption: For groups
+  moped:
+    label: Moped
+    caption: Cheaper than moto · 1 passenger
+  moto:
+    label: Moto
+    caption: Fast around town · 1 passenger
+paymentMethods:
+  cash: Cash
+  card: Card
+  prepaid: Prepaid
+tariffStage:
+  free: free
+  editRouteAria: Edit route
+  tariff: Fare
+  groupAria: Fare group
+  choiceAria: Choose a fare
+  motoWarning: 'Moto rides allow only 1 passenger, and the driver must provide a helmet. The trip is not insured — you ride at your own risk.'
+  motoConsent: I understand the risks and agree to ride by moto
+  preferences: Preferences
+  childSeat: Child seat
+  pets: Travelling with a pet
+  motoOptionsUnavailable: Child seats and pets are unavailable on moto rides.
+  accessible: Accessibility needs
+  friendOrder: Order for a friend
+  friendHint: The driver will see the name and phone number because they’re picking up your friend.
+  commentAria: Comment for the driver
+  commentPlaceholder: 'Comment for the driver: entrance, intercom, landmark...'
+  payment: Payment
+  applePayAria: Pay with Apple Pay
+  googlePayAria: Pay with Google Pay
+  prepayHint: The full trip is paid in advance on the secure Freedom Pay page, where Apple Pay, Google Pay, and cards are available. Driver search starts after payment.
+  chargeAfter: Charged after the trip
+  useBonuses: Use bonuses — up to 50% of the trip
+  bonusBalance: You have {n} bonuses · charged after the trip
+  bindCardHint: No card is linked yet — link one in Wallet to have trips charged automatically.
+  confirmRisk: Confirm that you accept the risks
+tripOrder:
+  buildingRoute: Building route...
+  estimating: Calculating fares...
+  creating: Creating order...
+  orderFrom: Order from {price}
+  orderFor: Order for {price}
+  showPrices: Show prices
+  routeFailed: Couldn’t build the route.
+downbar:
+  orderAnother: Order another car
+  newTrip: New trip
+  cancelling: Cancelling...
+  cancelConfirm: Cancel for sure? Tap again
+  cancelSearch: Cancel search
+  cancelOrder: Cancel order
+  driverComing: Driver is coming to you
+  tripCompleted: Trip completed
+  orderCancelled: Order cancelled
+  searchingDriver: Finding a driver
+  payToSearch: Pay for the order to start searching
+  searchElapsed: Searching for {time}
+  toDestination: 'To: {destination}'
+  handleAria: Drag to expand or collapse the panel
+  payTrip: Pay for trip
+  payOrder: Pay for order
+activeTrip:
+  driverEta: Driver arrives in ~{n} min
+  arrivalEta: Arrival in ~{n} min
+  onMyWayMessage: I’m coming out 🚶
+  freeWaiting: 'Free waiting: {time} left. Then +{fee} ₸ per minute.'
+  paidWaiting: 'Paid waiting: +{fee} ₸ ({minutes} min at {rate} ₸).'
+  freeWaitingExpired: The free {minutes} min are over — then +{fee} ₸ per minute.
+  favoritePlace: Favorite place
+  lostItemMessage: Hello! I left an item in the car on this trip. Please help me contact the driver.
+  minutes: '{n} min'
+  hoursMinutes: '{hours} h {minutes} min'
+  hours: '{n} h'
+  tips: Tips
+  tipRange: The amount must be from 100 to 5000 ₸.
+  tipSentToast: Tip sent to the driver 🙌
+  tipInsufficient: Not enough funds. Top up your wallet or link a card in Wallet.
+  tipFailed: Couldn’t send the tip. Please try again.
+  awaitingPaymentText: Pay for the order and we’ll start finding a driver right away.
+  driverAssignedText: The driver accepted your order and is on the way.
+  driverFound: Driver found
+  driverArrivedText: The driver has arrived at the pickup point.
+  inProgressText: Your trip has started. Have a pleasant ride.
+  completedText: Trip completed. Thank you for choosing us!
+  arrived: You’ve arrived
+  noCarsText: No available cars nearby right now. Try again in a few minutes.
+  noCars: No cars available
+  cancelledText: The trip was cancelled.
+  searchingText: This usually takes less than a minute
+  priceCalculated: Price calculated
+  searchingCategories: 'Searching: {labels}'
+  shareTitle: My Telegram Taxi trip
+  addStop: Add a stop on the way
+  waitingDriverAnswer: Waiting for the driver’s response
+  stopSurcharge: Stop surcharge — {price}.
+  stopDeclineHint: If the driver declines, the route stays the same and there is no surcharge.
+  cancelStop: Cancel stop request
+  stopAccepted: Driver agreed to make the stop
+  stopDeclined: Driver declined the stop
+  stopAcceptedHint: The stop was added and the surcharge is included in the price.
+  stopDeclinedHint: The route and trip price have not changed.
+  carrier: Carrier
+  bin: BIN {bin}
+  phoneCopied: Number copied
+  openingSupport: Opening support...
+  lostItem: I left an item in the car
+  onMyWay: I’m coming out
+  travelTime: Travel time
+  cost: Cost
+  yourRating: Your rating
+  ratingThanks: Thank you for your rating!
+  ratingCommentAria: Trip comment
+  ratingCommentPlaceholder: Add a comment about the order if you wish
+  tipSent: Tip sent 🙌
+  leaveTip: Leave a tip for the driver
+  customTip: Custom
+  customTipAria: Custom tip amount
+  tipPlaceholder: From 100 to 5000 ₸
+  send: Send
+  tipHint: It will be charged to your wallet or linked card and sent to the driver in full, with no commission.
+  favoriteAdded: Added to favorites
+  addFavorite: Add this place to favorites
+  shareFailed: Couldn’t share
+  linkCopied: Link copied
+  preparingLink: Preparing link...
+  share: Share trip

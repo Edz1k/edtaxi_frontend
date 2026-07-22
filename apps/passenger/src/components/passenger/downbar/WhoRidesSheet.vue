@@ -18,6 +18,7 @@ const emit = defineEmits<{
   me: []
   other: [rider: RecentRider]
 }>()
+const { locale, t } = useI18n()
 
 const { recent } = useRecentRiders()
 
@@ -34,8 +35,8 @@ const distanceText = computed(() => {
     return ''
 
   return meters >= 1000
-    ? `${(meters / 1000).toFixed(1).replace('.', ',')} км`
-    : `${Math.round(meters / 50) * 50} м`
+    ? t('addr.km', { n: (meters / 1000).toLocaleString(locale.value, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) })
+    : t('addr.m', { n: Math.round(meters / 50) * 50 })
 })
 
 function confirmOther() {
@@ -56,16 +57,16 @@ function confirmOther() {
         <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/25" />
 
         <h3 class="text-lg font-950">
-          Кто поедет?
+          {{ t('who.title') }}
         </h3>
         <p class="mt-1 text-xs app-muted leading-4">
           <template v-if="distanceText">
-            Точка подачи в {{ distanceText }} от вас — похоже, машина нужна не вам.
+            {{ t('who.farHint', { dist: distanceText }) }}
           </template>
           <template v-else>
-            Похоже, машина нужна не вам.
+            {{ t('who.notYou') }}
           </template>
-          Водитель будет знать, кого встречать.
+          {{ t('who.driverKnows') }}
         </p>
 
         <!-- Выбор: я или другой человек -->
@@ -77,7 +78,7 @@ function confirmOther() {
             @click="emit('me')"
           >
             <span class="i-mdi-account text-6" />
-            <span class="text-sm font-950">Я поеду</span>
+            <span class="text-sm font-950">{{ t('who.me') }}</span>
           </button>
 
           <button
@@ -87,7 +88,7 @@ function confirmOther() {
             @click="isOtherOpen = true"
           >
             <span class="i-mdi-account-plus-outline text-6 text-main-200 light:text-main-700" />
-            <span class="text-sm font-950">Поедет другой человек</span>
+            <span class="text-sm font-950">{{ t('who.other') }}</span>
             <span class="i-mdi-chevron-right ml-auto text-6 app-faint" />
           </button>
         </div>
@@ -97,7 +98,7 @@ function confirmOther() {
           <!-- Недавние получатели — замена выбору из контактов -->
           <div v-if="recent.length" class="mb-4">
             <p class="mb-2 text-xs app-muted font-800 uppercase">
-              Недавние
+              {{ t('who.recent') }}
             </p>
             <div class="flex flex-wrap gap-2">
               <button
@@ -115,18 +116,18 @@ function confirmOther() {
           </div>
 
           <label class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600" for="rider-name">
-            Имя пассажира
+            {{ t('who.passengerName') }}
           </label>
           <input
             id="rider-name"
             v-model="name"
             class="mb-4 h-14 w-full border app-border rounded-2xl app-card px-4 text-lg text-white font-700 outline-none transition focus:border-main-400 focus:app-chip placeholder:text-slate-600"
             maxlength="100"
-            placeholder="Необязательно"
+            :placeholder="t('who.optional')"
             type="text"
           >
 
-          <PhoneInput v-model="phoneInput" label="Номер пассажира" />
+          <PhoneInput v-model="phoneInput" :label="t('who.passengerPhone')" />
 
           <button
             :disabled="pending || !canConfirmOther"
@@ -134,7 +135,7 @@ function confirmOther() {
             type="button"
             @click="confirmOther"
           >
-            {{ pending ? 'Заказываем...' : 'Заказать для него' }}
+            {{ pending ? t('who.ordering') : t('who.orderFor') }}
           </button>
 
           <button
@@ -142,7 +143,7 @@ function confirmOther() {
             type="button"
             @click="isOtherOpen = false"
           >
-            Назад
+            {{ t('nav.back') }}
           </button>
         </div>
       </div>

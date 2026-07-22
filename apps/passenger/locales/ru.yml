@@ -324,3 +324,258 @@ tripChat:
   empty: Напишите водителю — например, уточните место посадки.
   msgAria: Сообщение водителю
   toMap: К карте
+addr:
+  m: '{n} м'
+  km: '{n} км'
+  searching: Ищем адрес...
+  degraded: Поиск адресов временно недоступен — попробуйте позже или укажите точку на карте.
+cardPick:
+  title: Карта для оплаты
+  lead: Поездка спишется с выбранной карты после завершения.
+  bindNew: Привязать новую карту
+picker:
+  hint: Передвиньте карту, чтобы пин стоял на нужном месте
+  resolving: Определяем...
+  confirm: Подтвердить
+  pickupTitle: Выберите точку А
+  stopTitle: Выберите остановку
+  tripStopTitle: Куда заехать по пути
+  destinationTitle: Выберите точку Б
+  addressError: Не удалось определить адрес.
+dest:
+  taxi: Такси
+  whereTo: Куда едем?
+  promoLine: +{n} бонусов за {trips} поездок
+  favEmpty: Любимые адреса появятся здесь
+  favEmptyHint: После первых поездок покажем недавние и частые места — закажете в один тап.
+  pickOnMap: Выбрать на карте
+who:
+  title: Кто поедет?
+  farHint: Точка подачи в {dist} от вас — похоже, машина нужна не вам.
+  notYou: Похоже, машина нужна не вам.
+  driverKnows: Водитель будет знать, кого встречать.
+  me: Я поеду
+  other: Поедет другой человек
+  recent: Недавние
+  passengerName: Имя пассажира
+  optional: Необязательно
+  passengerPhone: Номер пассажира
+  ordering: Заказываем...
+  orderFor: Заказать для него
+common:
+  thanks: Спасибо
+map:
+  city: г. {city}
+tripStatus:
+  awaitingPayment: Ожидание оплаты
+  cancelled: Отменена
+  completed: Завершена
+  driverArriving: Водитель на месте
+  driverAssigned: Водитель назначен
+  inProgress: В пути
+  searching: Поиск
+tripHistory:
+  noDate: Дата не указана
+  minutes: '{n} мин'
+  rate: Оценить поездку
+  opening: Открываем...
+  support: Поддержка по поездке
+  complain: Пожаловаться на водителя
+rating:
+  completed: Завершено
+  title: Оцените поездку
+  closeAria: Закрыть оценку поездки
+  starAria: Поставить оценку {n}
+  commentAria: Комментарий к оценке поездки
+  commentPlaceholder: Комментарий, если хотите
+  sending: Отправляем...
+  submit: Отправить оценку
+  sent: Оценка отправлена.
+complaint:
+  sentTitle: Жалоба отправлена
+  sentText: Мы рассмотрим её и примем меры.
+  eyebrow: Жалоба
+  title: Пожаловаться на водителя
+  closeAria: Закрыть жалобу
+  lead: Опишите, что произошло. Жалобу рассмотрит служба поддержки.
+  reasonAria: Причина жалобы
+  placeholder: 'Например: водитель вёл себя грубо'
+  sending: Отправляем...
+  submit: Отправить жалобу
+ratingTags:
+  polite: Вежливый
+  clean_car: Чистый салон
+  safe_driving: Аккуратное вождение
+  good_music: Хорошая музыка
+  dangerous_driving: Опасное вождение
+  rude: Грубость
+  dirty_car: Грязный салон
+routeForm:
+  from: Откуда
+  to: Куда
+  stop: Остановка
+  pickupAria: Адрес отправления
+  destinationAria: Адрес назначения
+  stopAria: Адрес остановки {n}
+  route: Маршрут
+  pickDestinationAria: Выбрать точку назначения на карте
+  clearPickupAria: Очистить адрес отправления
+  clearDestinationAria: Очистить адрес назначения
+  clear: Очистить
+  locateAria: Определить моё местоположение
+  myLocation: Моя геопозиция
+  pickPickupAria: Выбрать адрес отправления на карте
+  pickStopAria: Выбрать остановку {n} на карте
+  removeStopAria: Убрать остановку {n}
+  removeStop: Убрать остановку
+  addStop: Добавить остановку
+  recentFrequent: Недавние и частые
+tariffGroups:
+  khan: Хантакси
+  moto: Мото
+  taxi: Такси
+tariffs:
+  business:
+    label: Бизнес
+    caption: Премиум авто
+  business_plus:
+    label: Бизнес+
+    caption: Хантакси · S-класс
+  comfort:
+    label: Комфорт
+    caption: Больше комфорта
+  comfort_plus:
+    label: Комфорт+
+    caption: Хантакси · выше класс
+  economy:
+    label: Эконом
+    caption: Быстро и выгодно
+  minivan:
+    label: Минивэн
+    caption: Для компании
+  moped:
+    label: Мопед
+    caption: Дешевле мото · 1 пассажир
+  moto:
+    label: Мото
+    caption: Быстро по городу · 1 пассажир
+paymentMethods:
+  cash: Наличные
+  card: Карта
+  prepaid: Предоплата
+tariffStage:
+  free: бесплатно
+  editRouteAria: Изменить маршрут
+  tariff: Тариф
+  groupAria: Группа тарифов
+  choiceAria: Выбор тарифа
+  motoWarning: 'Мото-поездка: только 1 пассажир, водитель обязан выдать вам шлем. Поездка не застрахована — вы едете на свой страх и риск.'
+  motoConsent: Понимаю риски и согласен ехать на мото
+  preferences: Пожелания
+  childSeat: Детское кресло
+  pets: Поездка с животным
+  motoOptionsUnavailable: Кресло и животные недоступны на мототакси.
+  accessible: Особые потребности
+  friendOrder: Заказ другу
+  friendHint: Водитель увидит имя и телефон — он везёт вашего друга, звонки пойдут ему.
+  commentAria: Комментарий водителю
+  commentPlaceholder: 'Комментарий водителю: подъезд, домофон, ориентир...'
+  payment: Оплата
+  applePayAria: Оплатить через Apple Pay
+  googlePayAria: Оплатить через Google Pay
+  prepayHint: Вся поездка оплачивается вперёд на защищённой странице Freedom Pay — там доступны Apple Pay, Google Pay и карта. Поиск водителя начнётся после оплаты.
+  chargeAfter: Спишется после завершения поездки
+  useBonuses: Списать бонусы — до 50% поездки
+  bonusBalance: У вас {n} бонусов · спишутся при завершении поездки
+  bindCardHint: Карта ещё не привязана — привяжите её в «Кошельке», и поездка спишется с карты автоматически.
+  confirmRisk: Подтвердите согласие с рисками
+tripOrder:
+  buildingRoute: Строим маршрут...
+  estimating: Считаем тарифы...
+  creating: Создаём заказ...
+  orderFrom: Заказать от {price}
+  orderFor: Заказать за {price}
+  showPrices: Показать цены
+  routeFailed: Не удалось построить маршрут.
+downbar:
+  orderAnother: Заказать ещё одну машину
+  newTrip: Новая поездка
+  cancelling: Отменяем...
+  cancelConfirm: Точно отменить? Нажмите ещё раз
+  cancelSearch: Отменить поиск
+  cancelOrder: Отменить заказ
+  driverComing: Водитель едет к вам
+  tripCompleted: Поездка завершена
+  orderCancelled: Заказ отменён
+  searchingDriver: Ищем водителя
+  payToSearch: Оплатите заказ, чтобы начать поиск
+  searchElapsed: Поиск идёт {time}
+  toDestination: 'До: {destination}'
+  handleAria: Потяните, чтобы развернуть или свернуть панель
+  payTrip: Оплатить поездку
+  payOrder: Оплатить заказ
+activeTrip:
+  driverEta: Водитель приедет через ~{n} мин
+  arrivalEta: Прибытие через ~{n} мин
+  onMyWayMessage: Уже выхожу 🚶
+  freeWaiting: 'Бесплатное ожидание: ещё {time}. Дальше +{fee} ₸ за минуту.'
+  paidWaiting: 'Платное ожидание: +{fee} ₸ ({minutes} мин по {rate} ₸).'
+  freeWaitingExpired: Бесплатные {minutes} мин истекли — дальше +{fee} ₸ за минуту.
+  favoritePlace: Избранное место
+  lostItemMessage: Здравствуйте! Я забыл(а) вещь в машине по этой поездке. Помогите, пожалуйста, связаться с водителем.
+  minutes: '{n} мин'
+  hoursMinutes: '{hours} ч {minutes} мин'
+  hours: '{n} ч'
+  tips: Чаевые
+  tipRange: Сумма — от 100 до 5000 ₸.
+  tipSentToast: Чаевые отправлены водителю 🙌
+  tipInsufficient: 'Не хватает средств: пополните кошелёк или привяжите карту в «Кошельке».'
+  tipFailed: Не удалось отправить чаевые, попробуйте ещё раз.
+  awaitingPaymentText: Оплатите заказ — и мы сразу начнём поиск водителя.
+  driverAssignedText: Водитель принял заказ и едет к вам.
+  driverFound: Водитель найден
+  driverArrivedText: Водитель прибыл к месту посадки.
+  inProgressText: Поездка началась. Хорошей дороги.
+  completedText: Поездка завершена. Спасибо, что выбрали нас!
+  arrived: Вы доехали
+  noCarsText: Свободных машин рядом пока нет. Попробуйте заказать ещё раз через пару минут.
+  noCars: Машин нет
+  cancelledText: Поездка отменена.
+  searchingText: Обычно это занимает меньше минуты
+  priceCalculated: Цена рассчитана
+  searchingCategories: 'Ищем: {labels}'
+  shareTitle: Моя поездка Telegram Taxi
+  addStop: Заехать по пути
+  waitingDriverAnswer: Ждём ответа водителя
+  stopSurcharge: Доплата за остановку — {price}.
+  stopDeclineHint: Если водитель откажется, поездка поедет прежним маршрутом и доплаты не будет.
+  cancelStop: Отменить остановку
+  stopAccepted: Водитель согласился заехать
+  stopDeclined: Водитель отказался от остановки
+  stopAcceptedHint: Остановка добавлена в маршрут, доплата уже учтена в стоимости.
+  stopDeclinedHint: Маршрут и цена поездки не изменились.
+  carrier: Перевозчик
+  bin: БИН {bin}
+  phoneCopied: Номер скопирован
+  openingSupport: Открываем поддержку...
+  lostItem: Забыл вещь в машине
+  onMyWay: Уже выхожу
+  travelTime: Время пути
+  cost: Стоимость
+  yourRating: Ваша оценка
+  ratingThanks: Спасибо за оценку!
+  ratingCommentAria: Комментарий к поездке
+  ratingCommentPlaceholder: Комментарий к заказу, если хотите
+  tipSent: Чаевые отправлены 🙌
+  leaveTip: Оставить чаевые водителю
+  customTip: Своя
+  customTipAria: Своя сумма чаевых
+  tipPlaceholder: От 100 до 5000 ₸
+  send: Отправить
+  tipHint: Спишутся с кошелька или привязанной карты и уйдут водителю полностью — без комиссии.
+  favoriteAdded: Добавлено в избранное
+  addFavorite: Добавить это место в избранное
+  shareFailed: Не удалось поделиться
+  linkCopied: Ссылка скопирована
+  preparingLink: Подготовка ссылки...
+  share: Поделиться поездкой

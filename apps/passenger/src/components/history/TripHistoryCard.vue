@@ -1,49 +1,50 @@
 <script setup lang="ts">
 import type { Trip, TripStatus } from '~/types/trips'
-import { formatFare, TARIFF_META } from '~/constants/tariffs'
+import { formatFare } from '~/constants/tariffs'
 import { useTripsStore } from '~/stores/trips'
 
 defineProps<{ trip: Trip, attaching?: boolean }>()
 const emit = defineEmits<{ rate: [trip: Trip], complain: [trip: Trip], contactSupport: [trip: Trip] }>()
 
 const trips = useTripsStore()
+const { locale, t } = useI18n()
 
-const statusMeta: Record<TripStatus, { className: string, label: string }> = {
+const statusMeta = computed<Record<TripStatus, { className: string, label: string }>>(() => ({
   awaiting_payment: {
     className: 'bg-main-500/12 app-accent',
-    label: 'Ожидание оплаты',
+    label: t('tripStatus.awaitingPayment'),
   },
   cancelled: {
     className: 'bg-red-500/12 text-red-300',
-    label: 'Отменена',
+    label: t('tripStatus.cancelled'),
   },
   completed: {
     className: 'bg-emerald-500/12 text-emerald-300',
-    label: 'Завершена',
+    label: t('tripStatus.completed'),
   },
   driver_arriving: {
     className: 'bg-main-500/12 app-accent',
-    label: 'Водитель на месте',
+    label: t('tripStatus.driverArriving'),
   },
   driver_assigned: {
     className: 'bg-main-500/12 app-accent',
-    label: 'Водитель назначен',
+    label: t('tripStatus.driverAssigned'),
   },
   in_progress: {
     className: 'bg-amber-500/12 text-amber-300',
-    label: 'В пути',
+    label: t('tripStatus.inProgress'),
   },
   searching: {
     className: 'bg-slate-500/14 text-slate-300 light:text-slate-600',
-    label: 'Поиск',
+    label: t('tripStatus.searching'),
   },
-}
+}))
 
 function getTripDate(trip: Trip) {
   if (!trip.created_at)
-    return 'Дата не указана'
+    return t('tripHistory.noDate')
 
-  return new Intl.DateTimeFormat('ru-RU', {
+  return new Intl.DateTimeFormat(locale.value, {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
@@ -58,13 +59,15 @@ function getTripFare(trip: Trip) {
     duration_min: trip.duration_min,
     estimated_fare: trip.final_fare ?? trip.estimated_fare,
     surge_multiplier: trip.surge_multiplier,
-  })
+  }, locale.value)
 }
 
 function getTripMeta(trip: Trip) {
-  const distance = `${trip.distance_km.toFixed(1)} км`
-  const duration = `${Math.round(trip.duration_min)} мин`
-  const tariff = TARIFF_META[trip.category].label
+  const distance = t('addr.km', {
+    n: trip.distance_km.toLocaleString(locale.value, { maximumFractionDigits: 1, minimumFractionDigits: 1 }),
+  })
+  const duration = t('tripHistory.minutes', { n: Math.round(trip.duration_min) })
+  const tariff = t(`tariffs.${trip.category}.label`)
 
   return `${tariff} · ${distance} · ${duration}`
 }
@@ -123,7 +126,7 @@ function canComplain(trip: Trip) {
       type="button"
       @click="emit('rate', trip)"
     >
-      Оценить поездку
+      {{ t('tripHistory.rate') }}
     </button>
 
     <button
@@ -133,7 +136,7 @@ function canComplain(trip: Trip) {
       @click="emit('contactSupport', trip)"
     >
       <span class="i-mdi-headset text-5" />
-      {{ attaching ? 'Открываем...' : 'Поддержка по поездке' }}
+      {{ attaching ? t('tripHistory.opening') : t('tripHistory.support') }}
     </button>
 
     <button
@@ -144,7 +147,7 @@ function canComplain(trip: Trip) {
       @click="emit('complain', trip)"
     >
       <span class="i-mdi-alert-circle-outline text-5" />
-      Пожаловаться на водителя
+      {{ t('tripHistory.complain') }}
     </button>
   </article>
 </template>

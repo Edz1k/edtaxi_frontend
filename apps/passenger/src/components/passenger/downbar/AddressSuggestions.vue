@@ -13,6 +13,7 @@ defineProps<{
 const emit = defineEmits<{
   select: [place: GeoPlace]
 }>()
+const { locale, t } = useI18n()
 
 // Цвет кружка-иконки подсказки: точка А — изумрудный, остановки — янтарный,
 // точка Б — красный.
@@ -34,10 +35,10 @@ function formatDistance(m?: null | number) {
   if (m == null)
     return ''
   if (m < 1000)
-    return `${m} м`
+    return t('addr.m', { n: m })
   if (m < 10_000)
-    return `${(m / 1000).toFixed(1).replace('.', ',')} км`
-  return `${Math.round(m / 1000)} км`
+    return t('addr.km', { n: (m / 1000).toLocaleString(locale.value, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) })
+  return t('addr.km', { n: Math.round(m / 1000) })
 }
 </script>
 
@@ -77,14 +78,14 @@ function formatDistance(m?: null | number) {
       v-if="isLoading && !places.length"
       class="px-2 py-2 text-xs app-muted font-700"
     >
-      Ищем адрес...
+      {{ t('addr.searching') }}
     </p>
 
     <p
       v-else-if="failed && !places.length"
       class="px-2 py-2 text-xs text-amber-300/80 font-700 leading-4"
     >
-      Поиск адресов временно недоступен — попробуйте позже или укажите точку на карте.
+      {{ t('addr.degraded') }}
     </p>
   </div>
 </template>

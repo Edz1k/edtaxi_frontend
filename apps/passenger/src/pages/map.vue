@@ -22,6 +22,7 @@ const auth = useAuthStore()
 const passenger = usePassengerStore()
 const trips = useTripsStore()
 const places = usePlacesStore()
+const { locale, t } = useI18n()
 
 // Шторка заказа: касание карты приопускает её (collapseToMap), чтобы карту
 // можно было рассмотреть и подвигать, не борясь со шторкой.
@@ -60,7 +61,7 @@ const { weather } = useWeather(liveCoordinates)
 const locationLine = computed(() => {
   const parts: string[] = []
   if (city.value)
-    parts.push(`г. ${city.value}`)
+    parts.push(t('map.city', { city: city.value }))
   if (trips.pickup)
     parts.push(trips.pickup)
   return parts.join(' · ')
@@ -235,12 +236,12 @@ async function setPickupFromCurrentLocation() {
 
         <RouterLink
           v-if="bonusBalance !== null"
-          aria-label="Бонусы"
+          :aria-label="t('bonus.title')"
           class="pointer-events-auto absolute right-0 top-0 flex items-center gap-1 rounded-full app-sheet px-3 py-2 text-xs text-white font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
           to="/bonus"
         >
           <span class="i-mdi-star-four-points text-3.5 app-accent" />
-          {{ bonusBalance.toLocaleString('ru-RU') }}
+          {{ bonusBalance.toLocaleString(locale) }}
         </RouterLink>
 
         <!-- Тема карты: схема / спутник / ночная -->

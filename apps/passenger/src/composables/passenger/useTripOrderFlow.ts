@@ -25,6 +25,7 @@ const PICKUP_MISMATCH_METERS = 500
 
 export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
   const trips = useTripsStore()
+  const { locale, t } = useI18n()
   const { remember: rememberRider } = useRecentRiders()
   const isSubmittingRoute = ref(false)
 
@@ -75,21 +76,21 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
   const selectedEstimate = computed(() => trips.cheapestSelectedEstimate)
   const primaryText = computed(() => {
     if (isResolvingRoute.value)
-      return 'Строим маршрут...'
+      return t('tripOrder.buildingRoute')
 
     if (trips.isEstimating)
-      return 'Считаем тарифы...'
+      return t('tripOrder.estimating')
 
     if (trips.isCreating)
-      return 'Создаем заказ...'
+      return t('tripOrder.creating')
 
     if (selectedEstimate.value) {
       return trips.selectedCategories.length > 1
-        ? `Заказать от ${formatFare(selectedEstimate.value)}`
-        : `Заказать за ${formatFare(selectedEstimate.value)}`
+        ? t('tripOrder.orderFrom', { price: formatFare(selectedEstimate.value, locale.value) })
+        : t('tripOrder.orderFor', { price: formatFare(selectedEstimate.value, locale.value) })
     }
 
-    return 'Показать цены'
+    return t('tripOrder.showPrices')
   })
 
   watch([options.pickup, options.destination], () => {
@@ -151,7 +152,7 @@ export function useTripOrderFlow(options: UseTripOrderFlowOptions) {
       await trips.orderTrip(payload)
     }
     catch (error) {
-      trips.errorMessage = showErrorToast(error, 'Не удалось построить маршрут.')
+      trips.errorMessage = showErrorToast(error, t('tripOrder.routeFailed'))
     }
     finally {
       await nextTick()

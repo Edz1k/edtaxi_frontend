@@ -6,6 +6,7 @@ import { useWalletStore } from '~/stores/wallet'
 // Шит выбора карты для оплаты поездки: тап по карте делает её основной
 // (с неё спишется поездка), «Привязать новую» уводит в Кошелёк.
 const emit = defineEmits<{ close: [] }>()
+const { t } = useI18n()
 
 const wallet = useWalletStore()
 const router = useRouter()
@@ -36,10 +37,10 @@ function goBindNew() {
       <div class="tg-safe-x max-w-sm w-full border app-border rounded-t-[2rem] app-screen p-5 pb-[calc(var(--app-safe-area-bottom)+1.25rem)] text-white">
         <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/25" />
         <h3 class="text-lg font-950">
-          Карта для оплаты
+          {{ t('cardPick.title') }}
         </h3>
         <p class="mt-1 text-xs app-muted leading-4">
-          Поездка спишется с выбранной карты после завершения.
+          {{ t('cardPick.lead') }}
         </p>
 
         <div class="mt-4 space-y-2">
@@ -61,7 +62,7 @@ function goBindNew() {
             <span
               v-if="item.is_default"
               class="i-mdi-check-circle shrink-0 text-5 app-accent"
-              aria-label="Основная карта"
+              :aria-label="t('wallet.mainCard')"
             />
           </button>
         </div>
@@ -72,7 +73,7 @@ function goBindNew() {
           @click="goBindNew"
         >
           <span class="i-mdi-credit-card-plus-outline text-5" />
-          Привязать новую карту
+          {{ t('cardPick.bindNew') }}
         </button>
       </div>
     </div>

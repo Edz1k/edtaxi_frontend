@@ -8,6 +8,7 @@ const emit = defineEmits<{ close: [] }>()
 
 const trips = useTripsStore()
 const toast = useToast()
+const { t } = useI18n()
 
 const reason = ref('')
 
@@ -22,7 +23,7 @@ async function submit() {
     return
 
   await trips.submitComplaint(props.trip.id, reason.value.trim())
-  toast.success('Жалоба отправлена', 'Мы рассмотрим её и примем меры.')
+  toast.success(t('complaint.sentTitle'), t('complaint.sentText'))
   emit('close')
 }
 </script>
@@ -46,28 +47,28 @@ async function submit() {
           <div class="flex items-center justify-between gap-4">
             <div>
               <p class="text-xs text-red-300 font-900 uppercase">
-                Жалоба
+                {{ t('complaint.eyebrow') }}
               </p>
               <h2 class="mt-1 text-2xl font-950">
-                Пожаловаться на водителя
+                {{ t('complaint.title') }}
               </h2>
             </div>
-            <button aria-label="Закрыть жалобу" class="h-11 w-11 flex items-center justify-center rounded-full app-chip" type="button" @click="emit('close')">
+            <button :aria-label="t('complaint.closeAria')" class="h-11 w-11 flex items-center justify-center rounded-full app-chip" type="button" @click="emit('close')">
               <span class="i-mdi-close text-6" />
             </button>
           </div>
 
           <p class="mt-3 text-sm app-muted leading-5">
-            Опишите, что произошло. Жалобу рассмотрит служба поддержки.
+            {{ t('complaint.lead') }}
           </p>
 
           <textarea
             v-model="reason"
-            aria-label="Причина жалобы"
+            :aria-label="t('complaint.reasonAria')"
             class="mt-4 min-h-28 w-full resize-none border app-border rounded-2xl app-card p-4 text-sm outline-none focus:border-red-400"
             maxlength="1000"
             name="complaint_reason"
-            placeholder="Например: водитель вёл себя грубо"
+            :placeholder="t('complaint.placeholder')"
           />
 
           <button
@@ -76,7 +77,7 @@ async function submit() {
             type="button"
             @click="submit"
           >
-            {{ trips.isFilingComplaint ? 'Отправляем...' : 'Отправить жалобу' }}
+            {{ trips.isFilingComplaint ? t('complaint.sending') : t('complaint.submit') }}
           </button>
         </section>
       </div>

@@ -324,3 +324,258 @@ tripChat:
   empty: Жүргізушіге жазыңыз — мысалы, отыру орнын нақтылаңыз.
   msgAria: Жүргізушіге хабарлама
   toMap: Картаға
+addr:
+  m: '{n} м'
+  km: '{n} км'
+  searching: Мекенжай іздеудеміз...
+  degraded: Мекенжай іздеу уақытша қолжетімсіз — кейінірек көріңіз немесе картадан нүкте көрсетіңіз.
+cardPick:
+  title: Төлем картасы
+  lead: Сапар аяқталған соң таңдалған картадан шешіледі.
+  bindNew: Жаңа карта байлау
+picker:
+  hint: Пин керек жерде тұруы үшін картаны жылжытыңыз
+  resolving: Анықтаудамыз...
+  confirm: Растау
+  pickupTitle: А нүктесін таңдаңыз
+  stopTitle: Аялдаманы таңдаңыз
+  tripStopTitle: Жолай қайда соғу керек
+  destinationTitle: Б нүктесін таңдаңыз
+  addressError: Мекенжайды анықтау мүмкін болмады.
+dest:
+  taxi: Такси
+  whereTo: Қайда барамыз?
+  promoLine: '{trips} сапар үшін +{n} бонус'
+  favEmpty: Сүйікті мекенжайлар осында пайда болады
+  favEmptyHint: Алғашқы сапарлардан кейін жиі және соңғы орындарды көрсетеміз — бір рет басып тапсырыс бересіз.
+  pickOnMap: Картадан таңдау
+who:
+  title: Кім барады?
+  farHint: Отырғызу нүктесі сізден {dist} қашықтықта — көлік сізге емес сияқты.
+  notYou: Көлік сізге емес сияқты.
+  driverKnows: Жүргізуші кімді күтетінін біледі.
+  me: Мен барамын
+  other: Басқа адам барады
+  recent: Соңғылары
+  passengerName: Жолаушы аты
+  optional: Міндетті емес
+  passengerPhone: Жолаушы нөмірі
+  ordering: Тапсырыс берудеміз...
+  orderFor: Ол үшін тапсырыс беру
+common:
+  thanks: Рақмет
+map:
+  city: '{city} қ.'
+tripStatus:
+  awaitingPayment: Төлем күтілуде
+  cancelled: Болдырылмады
+  completed: Аяқталды
+  driverArriving: Жүргізуші келді
+  driverAssigned: Жүргізуші тағайындалды
+  inProgress: Жолда
+  searching: Іздеу
+tripHistory:
+  noDate: Күні көрсетілмеген
+  minutes: '{n} мин'
+  rate: Сапарды бағалау
+  opening: Ашылуда...
+  support: Сапар бойынша қолдау
+  complain: Жүргізушіге шағымдану
+rating:
+  completed: Аяқталды
+  title: Сапарды бағалаңыз
+  closeAria: Сапар бағасын жабу
+  starAria: '{n} баға қою'
+  commentAria: Сапар бағасына пікір
+  commentPlaceholder: Қаласаңыз, пікір қалдырыңыз
+  sending: Жіберілуде...
+  submit: Бағаны жіберу
+  sent: Баға жіберілді.
+complaint:
+  sentTitle: Шағым жіберілді
+  sentText: Біз оны қарап, шара қолданамыз.
+  eyebrow: Шағым
+  title: Жүргізушіге шағымдану
+  closeAria: Шағымды жабу
+  lead: Не болғанын сипаттаңыз. Шағымды қолдау қызметі қарайды.
+  reasonAria: Шағым себебі
+  placeholder: 'Мысалы: жүргізуші дөрекі сөйледі'
+  sending: Жіберілуде...
+  submit: Шағымды жіберу
+ratingTags:
+  polite: Әдепті
+  clean_car: Салоны таза
+  safe_driving: Ұқыпты жүргізу
+  good_music: Жақсы музыка
+  dangerous_driving: Қауіпті жүргізу
+  rude: Дөрекілік
+  dirty_car: Салоны лас
+routeForm:
+  from: Қайдан
+  to: Қайда
+  stop: Аялдама
+  pickupAria: Отырғызу мекенжайы
+  destinationAria: Бару мекенжайы
+  stopAria: '{n}-аялдама мекенжайы'
+  route: Бағыт
+  pickDestinationAria: Бару нүктесін картадан таңдау
+  clearPickupAria: Отырғызу мекенжайын тазалау
+  clearDestinationAria: Бару мекенжайын тазалау
+  clear: Тазалау
+  locateAria: Менің орналасқан жерімді анықтау
+  myLocation: Менің геопозициям
+  pickPickupAria: Отырғызу мекенжайын картадан таңдау
+  pickStopAria: '{n}-аялдаманы картадан таңдау'
+  removeStopAria: '{n}-аялдаманы алып тастау'
+  removeStop: Аялдаманы алып тастау
+  addStop: Аялдама қосу
+  recentFrequent: Соңғы және жиі баратын
+tariffGroups:
+  khan: Хантакси
+  moto: Мото
+  taxi: Такси
+tariffs:
+  business:
+    label: Бизнес
+    caption: Премиум көлік
+  business_plus:
+    label: Бизнес+
+    caption: Хантакси · S-класс
+  comfort:
+    label: Комфорт
+    caption: Көбірек жайлылық
+  comfort_plus:
+    label: Комфорт+
+    caption: Хантакси · жоғары класс
+  economy:
+    label: Эконом
+    caption: Жылдам әрі тиімді
+  minivan:
+    label: Минивэн
+    caption: Компанияға арналған
+  moped:
+    label: Мопед
+    caption: Мотодан арзан · 1 жолаушы
+  moto:
+    label: Мото
+    caption: Қалада жылдам · 1 жолаушы
+paymentMethods:
+  cash: Қолма-қол
+  card: Карта
+  prepaid: Алдын ала төлем
+tariffStage:
+  free: тегін
+  editRouteAria: Бағытты өзгерту
+  tariff: Тариф
+  groupAria: Тарифтер тобы
+  choiceAria: Тариф таңдау
+  motoWarning: 'Мото-сапарға тек 1 жолаушы мінеді, жүргізуші сізге дулыға беруге міндетті. Сапар сақтандырылмаған — өз тәуекеліңізбен жүресіз.'
+  motoConsent: Тәуекелдерді түсінемін және мотомен жүруге келісемін
+  preferences: Қалаулар
+  childSeat: Балалар орындығы
+  pets: Жануармен сапар
+  motoOptionsUnavailable: Балалар орындығы мен жануарлар мототаксиде қолжетімсіз.
+  accessible: Арнайы қажеттіліктер
+  friendOrder: Досыма тапсырыс
+  friendHint: Жүргізуші аты мен телефон нөмірін көреді — ол сіздің досыңызды алып кетеді.
+  commentAria: Жүргізушіге пікір
+  commentPlaceholder: 'Жүргізушіге пікір: кіреберіс, домофон, бағдар...'
+  payment: Төлем
+  applePayAria: Apple Pay арқылы төлеу
+  googlePayAria: Google Pay арқылы төлеу
+  prepayHint: Сапар толықтай қорғалған Freedom Pay бетінде алдын ала төленеді. Онда Apple Pay, Google Pay және карта қолжетімді. Жүргізуші іздеу төлемнен кейін басталады.
+  chargeAfter: Сапар аяқталғаннан кейін шешіледі
+  useBonuses: Бонустарды пайдалану — сапардың 50%-на дейін
+  bonusBalance: Сізде {n} бонус · сапар аяқталғанда шешіледі
+  bindCardHint: Карта әлі байланбаған — сапар ақысы автоматты шешілуі үшін оны «Әмиянда» байлаңыз.
+  confirmRisk: Тәуекелдерге келісімді растаңыз
+tripOrder:
+  buildingRoute: Бағыт құрылуда...
+  estimating: Тарифтер есептелуде...
+  creating: Тапсырыс құрылуда...
+  orderFrom: '{price}-ден тапсырыс беру'
+  orderFor: '{price}-ге тапсырыс беру'
+  showPrices: Бағаларды көрсету
+  routeFailed: Бағытты құру мүмкін болмады.
+downbar:
+  orderAnother: Тағы бір көлікке тапсырыс беру
+  newTrip: Жаңа сапар
+  cancelling: Болдырылуда...
+  cancelConfirm: Болдырмау керек пе? Тағы басыңыз
+  cancelSearch: Іздеуді тоқтату
+  cancelOrder: Тапсырысты болдырмау
+  driverComing: Жүргізуші сізге келе жатыр
+  tripCompleted: Сапар аяқталды
+  orderCancelled: Тапсырыс болдырылмады
+  searchingDriver: Жүргізуші іздеудеміз
+  payToSearch: Іздеуді бастау үшін тапсырысты төлеңіз
+  searchElapsed: Іздеу жүріп жатыр {time}
+  toDestination: 'Дейін: {destination}'
+  handleAria: Панельді жаю немесе жинау үшін тартыңыз
+  payTrip: Сапарды төлеу
+  payOrder: Тапсырысты төлеу
+activeTrip:
+  driverEta: Жүргізуші ~{n} мин кейін келеді
+  arrivalEta: ~{n} мин кейін жетесіз
+  onMyWayMessage: Шығып келемін 🚶
+  freeWaiting: 'Тегін күту: тағы {time}. Одан кейін минутына +{fee} ₸.'
+  paidWaiting: 'Ақылы күту: +{fee} ₸ ({minutes} мин, минутына {rate} ₸).'
+  freeWaitingExpired: Тегін {minutes} мин аяқталды — одан кейін минутына +{fee} ₸.
+  favoritePlace: Таңдаулы орын
+  lostItemMessage: Сәлеметсіз бе! Осы сапарда көлікте затымды ұмытып кеттім. Жүргізушімен байланысуға көмектесіңізші.
+  minutes: '{n} мин'
+  hoursMinutes: '{hours} сағ {minutes} мин'
+  hours: '{n} сағ'
+  tips: Шайпұл
+  tipRange: Сома 100-ден 5000 ₸-ге дейін болуы керек.
+  tipSentToast: Шайпұл жүргізушіге жіберілді 🙌
+  tipInsufficient: Қаражат жеткіліксіз. Әмиянды толтырыңыз немесе карта байлаңыз.
+  tipFailed: Шайпұл жіберілмеді, қайталап көріңіз.
+  awaitingPaymentText: Тапсырысты төлеңіз — жүргізушіні бірден іздей бастаймыз.
+  driverAssignedText: Жүргізуші тапсырысты қабылдап, сізге келе жатыр.
+  driverFound: Жүргізуші табылды
+  driverArrivedText: Жүргізуші отырғызу орнына келді.
+  inProgressText: Сапар басталды. Жолыңыз болсын.
+  completedText: Сапар аяқталды. Бізді таңдағаныңызға рақмет!
+  arrived: Сіз жеттіңіз
+  noCarsText: Жақын жерде бос көлік жоқ. Бірнеше минуттан кейін қайталап көріңіз.
+  noCars: Көлік жоқ
+  cancelledText: Сапар болдырылмады.
+  searchingText: Әдетте бұл бір минуттан аз уақыт алады
+  priceCalculated: Баға есептелді
+  searchingCategories: 'Іздеудеміз: {labels}'
+  shareTitle: Менің Telegram Taxi сапарым
+  addStop: Жолай аялдама қосу
+  waitingDriverAnswer: Жүргізушінің жауабын күтудеміз
+  stopSurcharge: Аялдама үшін қосымша төлем — {price}.
+  stopDeclineHint: Жүргізуші бас тартса, бағыт өзгермейді және қосымша төлем болмайды.
+  cancelStop: Аялдаманы болдырмау
+  stopAccepted: Жүргізуші аялдауға келісті
+  stopDeclined: Жүргізуші аялдамадан бас тартты
+  stopAcceptedHint: Аялдама бағытқа қосылды, қосымша төлем бағаға енгізілді.
+  stopDeclinedHint: Бағыт пен сапар бағасы өзгерген жоқ.
+  carrier: Тасымалдаушы
+  bin: БСН {bin}
+  phoneCopied: Нөмір көшірілді
+  openingSupport: Қолдау қызметі ашылуда...
+  lostItem: Көлікте затымды ұмыттым
+  onMyWay: Шығып келемін
+  travelTime: Жол уақыты
+  cost: Құны
+  yourRating: Сіздің бағаңыз
+  ratingThanks: Бағаңызға рақмет!
+  ratingCommentAria: Сапарға пікір
+  ratingCommentPlaceholder: Қаласаңыз, тапсырысқа пікір қалдырыңыз
+  tipSent: Шайпұл жіберілді 🙌
+  leaveTip: Жүргізушіге шайпұл қалдыру
+  customTip: Басқа
+  customTipAria: Шайпұл сомасы
+  tipPlaceholder: 100-ден 5000 ₸-ге дейін
+  send: Жіберу
+  tipHint: Әмияннан немесе байланған картадан шешіліп, комиссиясыз толықтай жүргізушіге жіберіледі.
+  favoriteAdded: Таңдаулыға қосылды
+  addFavorite: Бұл орынды таңдаулыға қосу
+  shareFailed: Бөлісу мүмкін болмады
+  linkCopied: Сілтеме көшірілді
+  preparingLink: Сілтеме дайындалуда...
+  share: Сапармен бөлісу

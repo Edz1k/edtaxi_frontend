@@ -14,6 +14,7 @@ const emit = defineEmits<{
   cancel: []
   confirm: []
 }>()
+const { t } = useI18n()
 
 const panelElement = ref<HTMLElement | null>(null)
 
@@ -60,7 +61,7 @@ defineExpose({
             {{ title }}
           </h2>
           <p class="mt-0.5 truncate text-xs app-muted font-700">
-            Передвиньте карту, чтобы пин стоял на нужном месте
+            {{ t('picker.hint') }}
           </p>
         </div>
       </div>
@@ -78,7 +79,7 @@ defineExpose({
           type="button"
           @click="emit('cancel')"
         >
-          Отмена
+          {{ t('profile.cancel') }}
         </button>
 
         <button
@@ -87,7 +88,7 @@ defineExpose({
           type="button"
           @click="emit('confirm')"
         >
-          {{ isConfirming ? 'Определяем...' : 'Подтвердить' }}
+          {{ isConfirming ? t('picker.resolving') : t('picker.confirm') }}
         </button>
       </div>
     </div>

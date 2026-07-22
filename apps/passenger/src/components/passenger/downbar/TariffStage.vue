@@ -20,6 +20,7 @@ const emit = defineEmits<{
 
 const trips = useTripsStore()
 const wallet = useWalletStore()
+const { locale, t } = useI18n()
 
 // Картинки тарифов из ~/assets/tariffs (economy.png, comfort.png, ...).
 // Имя файла = категория. Файла нет → фолбэк на иконку TARIFF_META.
@@ -58,7 +59,7 @@ function bonusDiscountFor(estimate: EstimateTripResponse) {
 }
 
 function discountedFare(estimate: EstimateTripResponse) {
-  return `${Math.max(0, Math.round(estimate.estimated_fare - bonusDiscountFor(estimate))).toLocaleString('ru-RU')} ₸`
+  return `${Math.max(0, Math.round(estimate.estimated_fare - bonusDiscountFor(estimate))).toLocaleString(locale.value)} ₸`
 }
 
 const showBonusPrices = computed(() => trips.useBonuses && bonusBalance.value > 0 && trips.paymentMethod !== 'prepaid')
@@ -158,7 +159,15 @@ const surchargeChildSeat = computed(() => trips.tariffEstimates[0]?.surcharge_ch
 const surchargePets = computed(() => trips.tariffEstimates[0]?.surcharge_pets ?? 0)
 
 function surchargeLabel(amount: number) {
-  return amount > 0 ? `+${amount.toLocaleString('ru-RU')} ₸` : 'бесплатно'
+  return amount > 0 ? `+${amount.toLocaleString(locale.value)} ₸` : t('tariffStage.free')
+}
+
+function tariffLabel(category: VehicleCategory) {
+  return t(`tariffs.${category}.label`)
+}
+
+function tariffCaption(category: VehicleCategory) {
+  return t(`tariffs.${category}.caption`)
 }
 
 // «Заказ другу»: имя и телефон пассажира-получателя (водитель их увидит).
@@ -209,12 +218,12 @@ function toggleFriendOrder() {
           @click="emit('addStop')"
         >
           <span class="i-mdi-plus-circle-outline text-4.5" aria-hidden="true" />
-          Добавить остановку
+          {{ t('routeForm.addStop') }}
         </button>
       </div>
 
       <button
-        aria-label="Изменить маршрут"
+        :aria-label="t('tariffStage.editRouteAria')"
         class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full app-chip text-white transition active:scale-95 hover:bg-white/12"
         type="button"
         @click="emit('editRoute')"
@@ -226,7 +235,7 @@ function toggleFriendOrder() {
     <!-- Тарифы: боковая scroll-snap карусель, одиночный выбор -->
     <div>
       <p class="mb-2 px-1 text-[11px] app-accent font-900 uppercase">
-        Тариф
+        {{ t('tariffStage.tariff') }}
       </p>
 
       <!-- Табы групп (п.30): рисуем только когда групп больше одной -->
@@ -234,7 +243,7 @@ function toggleFriendOrder() {
         v-if="availableGroups.length > 1"
         class="mb-2 flex gap-1 rounded-2xl app-card p-1"
         role="tablist"
-        aria-label="Группа тарифов"
+        :aria-label="t('tariffStage.groupAria')"
       >
         <button
           v-for="group in availableGroups"
@@ -247,14 +256,14 @@ function toggleFriendOrder() {
           @click="selectGroup(group)"
         >
           <span :class="GROUP_META[group].icon" class="text-4.5" aria-hidden="true" />
-          {{ GROUP_META[group].label }}
+          {{ t(`tariffGroups.${group}`) }}
         </button>
       </div>
 
       <div
         class="[scrollbar-width:none] flex snap-x snap-mandatory gap-2 overflow-x-auto px-3 pb-1 -mx-3 [&::-webkit-scrollbar]:hidden"
         role="radiogroup"
-        aria-label="Выбор тарифа"
+        :aria-label="t('tariffStage.choiceAria')"
       >
         <button
           v-for="tariff in visibleTariffs"
@@ -274,7 +283,7 @@ function toggleFriendOrder() {
           >
             <img
               :src="imageByCategory[tariff.category]"
-              :alt="TARIFF_META[tariff.category].label"
+              :alt="tariffLabel(tariff.category)"
               class="max-h-full max-w-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.35)]"
               draggable="false"
             >
@@ -287,25 +296,25 @@ function toggleFriendOrder() {
             <span :class="TARIFF_META[tariff.category].icon" class="text-6.5" aria-hidden="true" />
           </span>
           <span class="text-sm text-white font-900">
-            {{ TARIFF_META[tariff.category].label }}
+            {{ tariffLabel(tariff.category) }}
           </span>
           <!-- Бонусы включены: зачёркнутая полная цена + актуальная со скидкой -->
           <template v-if="showBonusPrices && bonusDiscountFor(tariff) > 0">
             <span class="text-[11px] app-faint leading-3 line-through">
-              {{ formatFare(tariff) }}
+              {{ formatFare(tariff, locale) }}
             </span>
             <span class="text-sm text-main-200 font-950 light:text-main-700">
               {{ discountedFare(tariff) }}
             </span>
           </template>
           <span v-else class="text-sm text-white font-950">
-            {{ formatFare(tariff) }}
+            {{ formatFare(tariff, locale) }}
           </span>
         </button>
       </div>
 
       <p class="mt-1.5 truncate px-1 text-[11px] app-muted font-700">
-        {{ TARIFF_META[trips.selectedCategory].caption }}
+        {{ tariffCaption(trips.selectedCategory) }}
       </p>
 
       <!-- Мототакси: предупреждение о рисках + обязательное согласие.
@@ -317,7 +326,7 @@ function toggleFriendOrder() {
       >
         <p class="flex items-start gap-2 text-[12px] text-amber-200 leading-4">
           <span class="i-mdi-alert-outline mt-0.5 shrink-0 text-4.5 text-amber-300" aria-hidden="true" />
-          Мото-поездка: только 1 пассажир, водитель обязан выдать вам шлем. Поездка не застрахована — вы едете на свой страх и риск.
+          {{ t('tariffStage.motoWarning') }}
         </p>
         <button
           class="w-full flex items-center gap-2 rounded-xl app-card px-2.5 py-2 text-left transition active:scale-[0.99]"
@@ -332,7 +341,7 @@ function toggleFriendOrder() {
             <span v-if="motoConsent" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
           <span class="text-[12px] text-amber-100 font-800 leading-4">
-            Понимаю риски и согласен ехать на мото
+            {{ t('tariffStage.motoConsent') }}
           </span>
         </button>
       </div>
@@ -341,7 +350,7 @@ function toggleFriendOrder() {
     <!-- Пожелания к заказу: платные опции меняют цену (пере-оценка в сторе) -->
     <div>
       <p class="mb-2 px-1 text-[11px] app-accent font-900 uppercase">
-        Пожелания
+        {{ t('tariffStage.preferences') }}
       </p>
 
       <div class="rounded-[1.65rem] app-card p-2 space-y-1">
@@ -359,7 +368,7 @@ function toggleFriendOrder() {
           >
             <span v-if="trips.tripOptions.childSeat" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
-          <span class="min-w-0 flex-1 text-sm text-white font-800">Детское кресло</span>
+          <span class="min-w-0 flex-1 text-sm text-white font-800">{{ t('tariffStage.childSeat') }}</span>
           <span class="shrink-0 text-[12px] app-accent font-900">{{ surchargeLabel(surchargeChildSeat) }}</span>
         </button>
 
@@ -377,12 +386,12 @@ function toggleFriendOrder() {
           >
             <span v-if="trips.tripOptions.pets" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
-          <span class="min-w-0 flex-1 text-sm text-white font-800">Поездка с животным</span>
+          <span class="min-w-0 flex-1 text-sm text-white font-800">{{ t('tariffStage.pets') }}</span>
           <span class="shrink-0 text-[12px] app-accent font-900">{{ surchargeLabel(surchargePets) }}</span>
         </button>
 
         <p v-if="isMotoSelected" class="px-2.5 pb-1 text-[11px] text-amber-300/90 leading-4">
-          Кресло и животные недоступны на мототакси.
+          {{ t('tariffStage.motoOptionsUnavailable') }}
         </p>
 
         <!-- Особые потребности (бесплатно) -->
@@ -398,8 +407,8 @@ function toggleFriendOrder() {
           >
             <span v-if="trips.tripOptions.accessible" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
-          <span class="min-w-0 flex-1 text-sm text-white font-800">Особые потребности</span>
-          <span class="shrink-0 text-[12px] app-muted font-800">бесплатно</span>
+          <span class="min-w-0 flex-1 text-sm text-white font-800">{{ t('tariffStage.accessible') }}</span>
+          <span class="shrink-0 text-[12px] app-muted font-800">{{ t('tariffStage.free') }}</span>
         </button>
 
         <!-- Заказ другу: имя и телефон пассажира-получателя -->
@@ -415,42 +424,42 @@ function toggleFriendOrder() {
           >
             <span v-if="isFriendOrder" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
-          <span class="min-w-0 flex-1 text-sm text-white font-800">Заказ другу</span>
-          <span class="shrink-0 text-[12px] app-muted font-800">бесплатно</span>
+          <span class="min-w-0 flex-1 text-sm text-white font-800">{{ t('tariffStage.friendOrder') }}</span>
+          <span class="shrink-0 text-[12px] app-muted font-800">{{ t('tariffStage.free') }}</span>
         </button>
 
         <div v-if="isFriendOrder" class="px-2.5 pb-1.5 space-y-1.5">
           <input
             :value="trips.tripOptions.friendName"
-            aria-label="Имя пассажира"
+            :aria-label="t('who.passengerName')"
             class="h-11 w-full rounded-[1.1rem] app-card px-3.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:app-muted"
             maxlength="100"
-            placeholder="Имя пассажира"
+            :placeholder="t('who.passengerName')"
             type="text"
             @input="trips.setTripOption('friendName', ($event.target as HTMLInputElement).value)"
           >
           <input
             :value="trips.tripOptions.friendPhone"
-            aria-label="Телефон пассажира"
+            :aria-label="t('who.passengerPhone')"
             class="h-11 w-full rounded-[1.1rem] app-card px-3.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:app-muted"
             inputmode="tel"
             maxlength="32"
-            placeholder="Телефон пассажира"
+            :placeholder="t('who.passengerPhone')"
             type="tel"
             @input="trips.setTripOption('friendPhone', ($event.target as HTMLInputElement).value)"
           >
           <p class="px-1 text-[11px] app-muted leading-4">
-            Водитель увидит имя и телефон — он везёт вашего друга, звонки пойдут ему.
+            {{ t('tariffStage.friendHint') }}
           </p>
         </div>
 
         <!-- Комментарий водителю -->
         <textarea
           :value="trips.tripComment"
-          aria-label="Комментарий водителю"
+          :aria-label="t('tariffStage.commentAria')"
           class="min-h-16 w-full resize-none rounded-[1.25rem] app-card px-3.5 py-2.5 text-sm text-white font-800 outline-none transition focus:bg-white/10 placeholder:app-muted"
           maxlength="500"
-          placeholder="Комментарий водителю: подъезд, домофон, ориентир..."
+          :placeholder="t('tariffStage.commentPlaceholder')"
           rows="2"
           @input="trips.setTripComment(($event.target as HTMLTextAreaElement).value)"
         />
@@ -460,7 +469,7 @@ function toggleFriendOrder() {
     <!-- Способ оплаты -->
     <div class="flex items-center gap-1 rounded-[1.65rem] app-card p-1.5">
       <span class="shrink-0 pl-2 pr-1 text-[11px] app-muted font-800 uppercase">
-        Оплата
+        {{ t('tariffStage.payment') }}
       </span>
       <button
         v-for="method in PAYMENT_ORDER"
@@ -472,14 +481,14 @@ function toggleFriendOrder() {
         @click="selectMethod(method)"
       >
         <span :class="PAYMENT_META[method].icon" class="text-4.5" aria-hidden="true" />
-        {{ PAYMENT_META[method].label }}
+        {{ t(`paymentMethods.${method}`) }}
       </button>
     </div>
 
     <!-- Предоплата через Apple Pay / Google Pay: оплата вперёд на странице FreedomPay -->
     <div class="grid grid-cols-2 gap-2">
       <button
-        aria-label="Оплатить через Apple Pay"
+        :aria-label="t('tariffStage.applePayAria')"
         :aria-pressed="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'apple'"
         class="h-11 flex items-center justify-center gap-1 border rounded-[1.3rem] bg-black text-sm text-white font-900 transition active:scale-[0.98]"
         :class="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'apple'
@@ -492,7 +501,7 @@ function toggleFriendOrder() {
         Pay
       </button>
       <button
-        aria-label="Оплатить через Google Pay"
+        :aria-label="t('tariffStage.googlePayAria')"
         :aria-pressed="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'google'"
         class="h-11 flex items-center justify-center gap-1.5 border rounded-[1.3rem] bg-white text-sm text-slate-800 font-900 transition active:scale-[0.98]"
         :class="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'google'
@@ -512,7 +521,7 @@ function toggleFriendOrder() {
       class="flex items-start gap-2 rounded-2xl app-card px-3 py-2.5 text-[12px] text-slate-300 leading-4 light:text-slate-600"
     >
       <span class="i-mdi-shield-lock-outline mt-0.5 shrink-0 text-4.5 app-accent" aria-hidden="true" />
-      Вся поездка оплачивается вперёд на защищённой странице Freedom Pay — там доступны Apple Pay, Google Pay и карта. Поиск водителя начнётся после оплаты.
+      {{ t('tariffStage.prepayHint') }}
     </p>
 
     <!-- Выбранная карта (способ «Карта»): бренд + последние цифры, тап — выбор карты -->
@@ -527,7 +536,7 @@ function toggleFriendOrder() {
       </span>
       <span class="min-w-0 flex-1">
         <span class="block text-sm text-white font-900 tracking-wider">•••• {{ defaultCardTail }}</span>
-        <span class="block text-[11px] app-muted leading-4">Спишется после завершения поездки</span>
+        <span class="block text-[11px] app-muted leading-4">{{ t('tariffStage.chargeAfter') }}</span>
       </span>
       <span class="i-mdi-chevron-right shrink-0 text-5 app-muted" aria-hidden="true" />
     </button>
@@ -548,10 +557,10 @@ function toggleFriendOrder() {
       </span>
       <span class="min-w-0 flex-1">
         <span class="block text-sm text-white font-900">
-          Списать бонусы — до 50% поездки
+          {{ t('tariffStage.useBonuses') }}
         </span>
         <span class="block text-[12px] app-muted leading-4">
-          У вас {{ bonusBalance.toLocaleString('ru-RU') }} бонусов · спишутся при завершении поездки
+          {{ t('tariffStage.bonusBalance', { n: bonusBalance.toLocaleString(locale) }) }}
         </span>
       </span>
       <span
@@ -573,7 +582,7 @@ function toggleFriendOrder() {
     >
       <span class="i-mdi-credit-card-plus-outline mt-0.5 shrink-0 text-4.5 app-accent" aria-hidden="true" />
       <p class="text-[12px] text-main-100 leading-4 light:text-main-700">
-        Карта ещё не привязана — привяжите её в «Кошельке», и поездка спишется с карты автоматически.
+        {{ t('tariffStage.bindCardHint') }}
       </p>
       <span class="app-accent/70 i-mdi-chevron-right mt-0.5 shrink-0 text-4.5" aria-hidden="true" />
     </RouterLink>
@@ -585,7 +594,7 @@ function toggleFriendOrder() {
       type="button"
       @click="emit('order')"
     >
-      {{ needsMotoConsent ? 'Подтвердите согласие с рисками' : primaryText }}
+      {{ needsMotoConsent ? t('tariffStage.confirmRisk') : primaryText }}
     </button>
 
     <CardPickerSheet v-if="isCardPickerOpen" @close="isCardPickerOpen = false" />

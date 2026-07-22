@@ -59,6 +59,7 @@ const emit = defineEmits<{
   ready: []
   selectFavorite: [place: GeoPlace]
 }>()
+const { t } = useI18n()
 
 const mapContainer = ref<HTMLElement | null>(null)
 const mapPicker = ref<PassengerMapPickerExpose | null>(null)
@@ -109,6 +110,15 @@ const {
   pickerTitle,
 } = useMapboxPicker({
   clearRoute,
+  getFallbackError: () => t('picker.addressError'),
+  getPickerTitle: (mode) => {
+    switch (mode) {
+      case 'pickup': return t('picker.pickupTitle')
+      case 'stop': return t('picker.stopTitle')
+      case 'trip-stop': return t('picker.tripStopTitle')
+      default: return t('picker.destinationTitle')
+    }
+  },
   getPickerScreenPoint: () => pickerScreenPoint.value,
   hasRoute,
   hideCurrentMarker,
