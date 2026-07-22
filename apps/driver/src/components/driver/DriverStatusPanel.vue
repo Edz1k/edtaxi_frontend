@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserLocation'
 import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
 import { useBottomSheet } from '@edtaxi/shared/composables/useBottomSheet'
 import { useDriverStore } from '~/stores/driver'
@@ -15,6 +16,8 @@ const props = defineProps<{
   onlineBlockTarget: 'daily-check' | 'park' | 'verification'
   showRouteLoading: boolean
   isLocationGranted: boolean
+  // Своя геопозиция — для подсказки «подъедьте ближе» на кнопке этапа.
+  driverCoordinates?: null | UserCoordinates
 }>()
 const emit = defineEmits<{ primaryAction: [], toggleOnline: [] }>()
 
@@ -170,6 +173,65 @@ const tripStep = computed(() => {
     icon: 'i-mdi-flag-checkered',
     title: 'Поездка идет',
   }
+})
+
+// --- Гео-проверка кнопки этапа ---
+//
+// «Я на месте» включает пассажиру платное ожидание, «Завершить» закрывает
+// поездку — сервер проверяет, что водитель действительно у точки, и отвечает
+// 409, если нет. Здесь та же проверка на клиенте: не чтобы защитить (источник
+// истины — сервер), а чтобы водитель не жал кнопку впустую и видел, сколько
+// осталось доехать.
+//
+// Режим и радиусы приходят с сервера (профиль): в warn сервер пропускает
+// действие, поэтому и кнопку НЕ блокируем — иначе клиент запрещал бы то, что
+// бэкенд разрешает.
+function distanceMeters(from: { lat: number, lng: number }, to: { lat: number, lng: number }) {
+  const toRad = Math.PI / 180
+  const dLat = (to.lat - from.lat) * toRad
+  const dLng = (to.lng - from.lng) * toRad
+  const meanLat = ((from.lat + to.lat) / 2) * toRad
+  const earthRadiusM = 6_371_000
+  return Math.hypot(dLat, dLng * Math.cos(meanLat)) * earthRadiusM
+}
+
+const geoGateCheck = computed(() => {
+  const gate = driver.geoGate
+  const trip = driver.activeTrip
+  const here = props.driverCoordinates
+  const step = driver.activeTripStep
+
+  // Проверяем только два действия; «Начать поездку» не гейтится — пассажир
+  // уже в машине, и водитель мог отъехать от точки подачи.
+  const target = step === 'to_pickup'
+    ? { lat: trip?.pickup_lat, lng: trip?.pickup_lng, radius: gate?.arrival_radius_m }
+    : step === 'in_progress'
+      ? { lat: trip?.dropoff_lat, lng: trip?.dropoff_lng, radius: gate?.completion_radius_m }
+      : null
+
+  if (gate?.mode !== 'enforce' || !here || !target?.radius
+    || typeof target.lat !== 'number' || typeof target.lng !== 'number') {
+    return null
+  }
+
+  const distance = distanceMeters(here, { lat: target.lat, lng: target.lng })
+  if (distance <= target.radius)
+    return null
+
+  return { distance: Math.round(distance) }
+})
+
+const isPrimaryActionBlocked = computed(() => Boolean(geoGateCheck.value))
+
+const geoGateHint = computed(() => {
+  const check = geoGateCheck.value
+  if (!check)
+    return ''
+
+  const km = check.distance >= 1000
+    ? `${(check.distance / 1000).toFixed(1)} км`
+    : `${check.distance} м`
+  return `Подъедьте ближе к точке — сейчас до неё ~${km}`
 })
 
 // Шапка панели: одно человеческое состояние вместо тех-карточек
@@ -431,13 +493,21 @@ const peekPill = computed(() => {
               </div>
 
               <button
-                class="h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-main-500 text-sm font-950 shadow-[0_12px_30px_rgba(230,173,46,0.28)] transition active:scale-[0.99]"
+                :disabled="isPrimaryActionBlocked"
+                class="h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-main-500 text-sm font-950 shadow-[0_12px_30px_rgba(230,173,46,0.28)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 type="button"
                 @click="emit('primaryAction')"
               >
                 <span :class="tripStep.icon" class="text-6" />
                 {{ tripStep.action }}
               </button>
+
+              <!-- Почему кнопка недоступна: без этой строки водитель видел бы
+                   просто серую кнопку и не понимал, что делать. -->
+              <p v-if="geoGateHint" class="text-center text-xs text-amber-200 font-800 leading-4">
+                <span class="i-mdi-map-marker-distance mr-1 inline-block align-middle text-4" />
+                {{ geoGateHint }}
+              </p>
 
               <!-- Остановка пройдена: навигатор переключается на следующую точку -->
               <button
