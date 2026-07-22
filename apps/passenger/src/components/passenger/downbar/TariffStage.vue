@@ -21,6 +21,19 @@ const emit = defineEmits<{
 const trips = useTripsStore()
 const wallet = useWalletStore()
 
+// Картинки тарифов из ~/assets/tariffs (economy.png, comfort.png, ...).
+// Имя файла = категория. Файла нет → фолбэк на иконку TARIFF_META.
+const tariffImages = import.meta.glob<string>(
+  '~/assets/tariffs/*.{png,webp,jpg,jpeg,svg}',
+  { eager: true, import: 'default', query: '?url' },
+)
+const imageByCategory = Object.fromEntries(
+  Object.entries(tariffImages).map(([path, url]) => [
+    path.split('/').pop()!.replace(/\.\w+$/, ''),
+    url,
+  ]),
+) as Partial<Record<VehicleCategory, string>>
+
 // Есть ли привязанная карта — для подсказки при выборе оплаты картой.
 // Заказ не блокируем: бэкенд при отсутствии карты сам откатится на
 // баланс кошелька / наличные при завершении поездки.
@@ -246,7 +259,7 @@ function toggleFriendOrder() {
         <button
           v-for="tariff in visibleTariffs"
           :key="tariff.category"
-          class="w-27 flex shrink-0 flex-col snap-center items-center gap-1.5 border rounded-2xl px-3 py-3 transition active:scale-[0.97]"
+          class="w-30 flex shrink-0 flex-col snap-center items-center gap-1.5 border rounded-2xl px-3 py-3 transition active:scale-[0.97]"
           :class="isSelected(tariff.category)
             ? 'border-main-400 bg-main-500/16 shadow-[0_14px_34px_rgba(230,173,46,0.18)]'
             : 'border-white/8 bg-white/5'"
@@ -255,7 +268,19 @@ function toggleFriendOrder() {
           type="button"
           @click="trips.selectCategory(tariff.category)"
         >
+          <div
+            v-if="imageByCategory[tariff.category]"
+            class="h-18 w-full flex items-center justify-center"
+          >
+            <img
+              :src="imageByCategory[tariff.category]"
+              :alt="TARIFF_META[tariff.category].label"
+              class="max-h-full max-w-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.35)]"
+              draggable="false"
+            >
+          </div>
           <span
+            v-else
             class="h-12 w-12 flex items-center justify-center rounded-2xl transition"
             :class="isSelected(tariff.category) ? 'bg-main-500/22 text-main-200' : 'bg-white/8 text-white'"
           >
