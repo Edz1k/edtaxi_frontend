@@ -923,11 +923,12 @@ export const useTripsStore = defineStore('trips', () => {
         ...payload,
         // Legacy-поле для старого сервера: самый дешёвый из выбранных тарифов.
         category: selectedCategory.value,
-        // Предоплата фиксирует сумму до завершения: одна категория, без бонусов.
+        // Предоплата фиксирует сумму до завершения, поэтому отправляем одну
+        // категорию; бонусы бэкенд учитывает до формирования payment_url.
         categories: isPrepaid ? [selectedCategory.value] : [...selectedCategories.value],
         // card — списание с привязанной карты при завершении поездки.
         payment_method: paymentMethod.value,
-        use_bonuses: isPrepaid ? false : useBonuses.value,
+        use_bonuses: useBonuses.value,
         // Остановки, пожелания и комментарий — из черновика стора.
         stops: confirmedStops.value.length ? confirmedStops.value : undefined,
         options: wireTripOptions(),

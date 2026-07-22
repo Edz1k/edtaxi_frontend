@@ -760,18 +760,15 @@ function onHandleKeydown(event: KeyboardEvent) {
           <div class="pointer-events-auto flex items-stretch gap-2">
             <button
               :aria-label="`Способ оплаты: ${paymentButtonLabel}`"
-              class="h-13 w-18 flex shrink-0 flex-col items-center justify-center rounded-[1.35rem] bg-white/9 px-1 text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)] transition active:scale-[0.98]"
+              class="h-13 w-13 flex shrink-0 items-center justify-center border border-white/9 rounded-[1.2rem] bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.24)] transition active:scale-[0.96] active:bg-white/14"
               type="button"
               @click="isPaymentSheetOpen = true"
             >
-              <span v-if="trips.paymentMethod === 'cash'" class="i-mdi-cash text-5.5 text-emerald-300" aria-hidden="true" />
-              <span v-else-if="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'apple'" class="i-mdi-apple text-5.5" aria-hidden="true" />
-              <span v-else-if="trips.paymentMethod === 'prepaid'" class="i-mdi-google text-5 text-blue-300" aria-hidden="true" />
-              <span v-else class="h-5 w-9 flex items-center justify-center" aria-hidden="true">
+              <span v-if="trips.paymentMethod === 'cash'" class="i-mdi-cash text-7 text-emerald-300 drop-shadow-[0_3px_8px_rgba(110,231,183,0.2)]" aria-hidden="true" />
+              <span v-else-if="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'apple'" class="i-mdi-apple text-7 drop-shadow-[0_3px_8px_rgba(255,255,255,0.18)]" aria-hidden="true" />
+              <span v-else-if="trips.paymentMethod === 'prepaid'" class="i-mdi-google text-6.5 text-blue-300 drop-shadow-[0_3px_8px_rgba(147,197,253,0.2)]" aria-hidden="true" />
+              <span v-else class="h-7 w-10 flex scale-125 items-center justify-center" aria-hidden="true">
                 <CardBrandMark :brand="wallet.card?.card_brand" />
-              </span>
-              <span class="mt-0.5 max-w-full truncate text-[9px] text-white/65 font-800 leading-3">
-                {{ paymentButtonLabel }}
               </span>
             </button>
 
@@ -786,17 +783,14 @@ function onHandleKeydown(event: KeyboardEvent) {
 
             <button
               :aria-label="preferenceCount ? `Пожелания: выбрано ${preferenceCount}` : 'Пожелания к поездке'"
-              class="relative h-13 w-18 flex shrink-0 flex-col items-center justify-center rounded-[1.35rem] bg-white/9 px-1 text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)] transition active:scale-[0.98]"
+              class="relative h-13 w-13 flex shrink-0 items-center justify-center border border-main-400/18 rounded-[1.2rem] bg-main-500/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.24)] transition active:scale-[0.96] active:bg-main-500/16"
               type="button"
               @click="isPreferencesOpen = true"
             >
-              <span class="i-mdi-tune-variant text-5.5 text-main-300" aria-hidden="true" />
-              <span class="mt-0.5 max-w-full truncate text-[9px] text-white/65 font-800 leading-3">
-                Пожелания
-              </span>
+              <span class="i-mdi-tune-variant text-7 text-main-300 drop-shadow-[0_3px_8px_rgba(250,191,38,0.28)]" aria-hidden="true" />
               <span
                 v-if="preferenceCount"
-                class="absolute right-1.5 top-1 h-4.5 min-w-4.5 flex items-center justify-center rounded-full bg-main-500 px-1 text-[9px] text-white font-950 shadow-[0_3px_10px_rgba(230,173,46,0.4)]"
+                class="absolute right-0.5 top-0.5 h-4.5 min-w-4.5 flex items-center justify-center border border-secondary-950 rounded-full bg-main-500 px-1 text-[9px] text-white font-950 shadow-[0_3px_10px_rgba(230,173,46,0.45)]"
               >
                 {{ preferenceCount }}
               </span>

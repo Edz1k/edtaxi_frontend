@@ -48,7 +48,7 @@ function discountedFare(estimate: EstimateTripResponse) {
   return `${Math.max(0, Math.round(estimate.estimated_fare - bonusDiscountFor(estimate))).toLocaleString('ru-RU')} ₸`
 }
 
-const showBonusPrices = computed(() => trips.useBonuses && bonusBalance.value > 0 && trips.paymentMethod !== 'prepaid')
+const showBonusPrices = computed(() => trips.useBonuses && bonusBalance.value > 0)
 
 // Тарифы в каноничном порядке (стор наполняет по мере оценки).
 const tariffs = computed(() =>
@@ -266,9 +266,9 @@ function isSelected(category: VehicleCategory) {
       </div>
     </div>
 
-    <!-- Оплатить часть поездки бонусами (до 50%; с предоплатой недоступно) -->
+    <!-- Оплатить часть поездки бонусами (до 50%) при любом способе оплаты. -->
     <button
-      v-if="bonusBalance > 0 && trips.paymentMethod !== 'prepaid'"
+      v-if="bonusBalance > 0"
       class="w-full flex items-center gap-3 rounded-[1.65rem] p-3 text-left transition active:scale-[0.99]"
       :class="trips.useBonuses ? 'bg-main-500/16 border border-main-400/40' : 'bg-white/5 border border-transparent'"
       type="button"
@@ -285,7 +285,8 @@ function isSelected(category: VehicleCategory) {
           Списать бонусы — до 50% поездки
         </span>
         <span class="block text-[12px] text-slate-400 leading-4">
-          У вас {{ bonusBalance.toLocaleString('ru-RU') }} бонусов · спишутся при завершении поездки
+          У вас {{ bonusBalance.toLocaleString('ru-RU') }} бонусов ·
+          {{ trips.paymentMethod === 'prepaid' ? 'учтутся при предоплате' : 'спишутся при завершении поездки' }}
         </span>
       </span>
       <span

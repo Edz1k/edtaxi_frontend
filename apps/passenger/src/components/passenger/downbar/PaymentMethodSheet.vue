@@ -16,7 +16,9 @@ const toast = useToast()
 const titleRef = ref<HTMLElement>()
 const paymentUrl = ref('')
 const bindAmount = ref(10)
+const isVisible = ref(false)
 let previousBodyOverflow = ''
+let isClosing = false
 let bindOutcomeShown = false
 let bindVerifyToken = 0
 let bindStartIds = new Set<string>()
@@ -30,7 +32,7 @@ function tailOf(pan?: null | string) {
 function selectPayment(method: 'cash' | 'prepaid', source: 'apple' | 'google' | null = null) {
   trips.setPrepaySource(source)
   trips.setPaymentMethod(method)
-  emit('close')
+  requestClose()
 }
 
 async function chooseCard(item: PaymentCard) {
@@ -41,7 +43,7 @@ async function chooseCard(item: PaymentCard) {
   }
   trips.setPrepaySource(null)
   trips.setPaymentMethod('card')
-  emit('close')
+  requestClose()
 }
 
 function stopPaymentPolling() {
@@ -71,7 +73,7 @@ async function finishBindSuccess(item: PaymentCard) {
   trips.setPrepaySource(null)
   trips.setPaymentMethod('card')
   toast.success('Карта привязана', `Для поездки выбрана карта ••${tailOf(item.card_pan)}.`)
-  emit('close')
+  requestClose()
 }
 
 async function refreshBoundCards() {
@@ -142,7 +144,14 @@ async function startBindCard() {
 
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && !paymentUrl.value)
-    emit('close')
+    requestClose()
+}
+
+function requestClose() {
+  if (isClosing)
+    return
+  isClosing = true
+  isVisible.value = false
 }
 
 onMounted(() => {
@@ -150,7 +159,10 @@ onMounted(() => {
   document.body.style.overflow = 'hidden'
   document.addEventListener('keydown', onKeydown)
   wallet.loadCard()
-  nextTick(() => titleRef.value?.focus())
+  nextTick(() => {
+    isVisible.value = true
+    titleRef.value?.focus()
+  })
 })
 
 onBeforeUnmount(() => {
@@ -163,138 +175,141 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <div
-      class="fixed inset-0 z-60 flex items-end justify-center bg-black/65 backdrop-blur-sm"
-      @click.self="emit('close')"
-    >
-      <section
-        aria-labelledby="payment-method-title"
-        aria-modal="true"
-        class="tg-safe-x max-h-[88dvh] max-w-sm w-full flex flex-col overflow-hidden border border-white/10 rounded-t-[2rem] bg-secondary-900 text-white shadow-[0_-20px_60px_rgba(0,0,0,0.45)]"
-        role="dialog"
+    <Transition name="bottom-sheet" @after-leave="emit('close')">
+      <div
+        v-if="isVisible"
+        class="fixed inset-0 z-60 flex items-end justify-center bg-black/65 backdrop-blur-sm"
+        @click.self="requestClose"
       >
-        <div class="shrink-0 px-5 pb-3 pt-3">
-          <div class="mx-auto mb-3 h-1.5 w-12 rounded-full bg-white/25" />
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <h2
-                id="payment-method-title"
-                ref="titleRef"
-                class="text-lg text-white font-950 outline-none"
-                tabindex="-1"
+        <section
+          aria-labelledby="payment-method-title"
+          aria-modal="true"
+          class="bottom-sheet-panel tg-safe-x max-h-[88dvh] max-w-sm w-full flex flex-col overflow-hidden border border-white/10 rounded-t-[2rem] bg-secondary-900 text-white shadow-[0_-20px_60px_rgba(0,0,0,0.45)]"
+          role="dialog"
+        >
+          <div class="shrink-0 px-5 pb-3 pt-3">
+            <div class="mx-auto mb-3 h-1.5 w-12 rounded-full bg-white/25" />
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <h2
+                  id="payment-method-title"
+                  ref="titleRef"
+                  class="text-lg text-white font-950 outline-none"
+                  tabindex="-1"
+                >
+                  Способ оплаты
+                </h2>
+                <p class="mt-0.5 text-xs text-slate-400">
+                  Выберите, как оплатить эту поездку
+                </p>
+              </div>
+              <button
+                aria-label="Закрыть способы оплаты"
+                class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-300 transition active:scale-95"
+                type="button"
+                @click="requestClose"
               >
-                Способ оплаты
-              </h2>
-              <p class="mt-0.5 text-xs text-slate-400">
-                Выберите, как оплатить эту поездку
-              </p>
+                <span class="i-mdi-close text-5" aria-hidden="true" />
+              </button>
             </div>
-            <button
-              aria-label="Закрыть способы оплаты"
-              class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-300 transition active:scale-95"
-              type="button"
-              @click="emit('close')"
-            >
-              <span class="i-mdi-close text-5" aria-hidden="true" />
-            </button>
           </div>
-        </div>
 
-        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(var(--app-safe-area-bottom)+1rem)]">
-          <p class="mb-2 px-1 text-[11px] text-slate-500 font-900 uppercase">
-            Оплата после поездки
-          </p>
-          <div class="rounded-[1.5rem] bg-white/5 p-2 space-y-1">
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(var(--app-safe-area-bottom)+1rem)]">
+            <p class="mb-2 px-1 text-[11px] text-slate-500 font-900 uppercase">
+              Оплата после поездки
+            </p>
+            <div class="rounded-[1.5rem] bg-white/5 p-2 space-y-1">
+              <button
+                v-for="item in wallet.cards"
+                :key="item.id"
+                :disabled="wallet.isMutating"
+                class="w-full flex items-center gap-3 rounded-[1.15rem] px-2.5 py-2.5 text-left transition active:scale-[0.99] disabled:opacity-55"
+                type="button"
+                @click="chooseCard(item)"
+              >
+                <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg bg-white/8">
+                  <CardBrandMark :brand="item.card_brand" />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-sm text-white font-900 tracking-wider">•••• {{ tailOf(item.card_pan) }}</span>
+                  <span class="block text-[11px] text-slate-500 leading-4">Спишется после поездки</span>
+                </span>
+                <span
+                  v-if="trips.paymentMethod === 'card' && item.is_default"
+                  class="i-mdi-check-circle shrink-0 text-5.5 text-main-300"
+                  aria-label="Выбрано"
+                />
+              </button>
+
+              <button
+                class="w-full flex items-center gap-3 rounded-[1.15rem] px-2.5 py-2.5 text-left transition active:scale-[0.99]"
+                type="button"
+                @click="selectPayment('cash')"
+              >
+                <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg bg-white/8 text-emerald-300">
+                  <span class="i-mdi-cash text-6" aria-hidden="true" />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-sm text-white font-900">Наличные</span>
+                  <span class="block text-[11px] text-slate-500 leading-4">Оплата водителю</span>
+                </span>
+                <span
+                  v-if="trips.paymentMethod === 'cash'"
+                  class="i-mdi-check-circle shrink-0 text-5.5 text-main-300"
+                  aria-label="Выбрано"
+                />
+              </button>
+            </div>
+
             <button
-              v-for="item in wallet.cards"
-              :key="item.id"
               :disabled="wallet.isMutating"
-              class="w-full flex items-center gap-3 rounded-[1.15rem] px-2.5 py-2.5 text-left transition active:scale-[0.99] disabled:opacity-55"
+              class="mt-2 h-12 w-full flex items-center justify-center gap-2 rounded-[1.25rem] bg-white/7 text-sm text-white font-900 transition active:scale-[0.99] disabled:opacity-55"
               type="button"
-              @click="chooseCard(item)"
+              @click="startBindCard"
             >
-              <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg bg-white/8">
-                <CardBrandMark :brand="item.card_brand" />
-              </span>
-              <span class="min-w-0 flex-1">
-                <span class="block text-sm text-white font-900 tracking-wider">•••• {{ tailOf(item.card_pan) }}</span>
-                <span class="block text-[11px] text-slate-500 leading-4">Спишется после поездки</span>
-              </span>
-              <span
-                v-if="trips.paymentMethod === 'card' && item.is_default"
-                class="i-mdi-check-circle shrink-0 text-5.5 text-main-300"
-                aria-label="Выбрано"
-              />
+              <span class="i-mdi-credit-card-plus-outline text-5" aria-hidden="true" />
+              {{ wallet.isMutating ? 'Открываем FreedomPay…' : 'Добавить новую карту' }}
             </button>
+            <p class="mt-1.5 px-2 text-center text-[10px] text-slate-500 leading-4">
+              Для проверки карты спишем {{ bindAmount }} ₸ — сумма поступит в ваш кошелёк
+            </p>
 
-            <button
-              class="w-full flex items-center gap-3 rounded-[1.15rem] px-2.5 py-2.5 text-left transition active:scale-[0.99]"
-              type="button"
-              @click="selectPayment('cash')"
-            >
-              <span class="h-9 w-12 flex shrink-0 items-center justify-center rounded-lg bg-white/8 text-emerald-300">
-                <span class="i-mdi-cash text-6" aria-hidden="true" />
-              </span>
-              <span class="min-w-0 flex-1">
-                <span class="block text-sm text-white font-900">Наличные</span>
-                <span class="block text-[11px] text-slate-500 leading-4">Оплата водителю</span>
-              </span>
-              <span
-                v-if="trips.paymentMethod === 'cash'"
-                class="i-mdi-check-circle shrink-0 text-5.5 text-main-300"
-                aria-label="Выбрано"
-              />
-            </button>
+            <p class="mb-2 mt-4 px-1 text-[11px] text-slate-500 font-900 uppercase">
+              Оплата до поездки
+            </p>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                class="h-16 flex items-center justify-center gap-2 border rounded-[1.25rem] bg-black text-sm text-white font-900 transition active:scale-[0.99]"
+                :class="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'apple' ? 'border-main-400' : 'border-white/10'"
+                type="button"
+                @click="selectPayment('prepaid', 'apple')"
+              >
+                <span class="i-mdi-apple text-6" aria-hidden="true" />
+                <span>
+                  <span class="block">Pay</span>
+                  <span class="block text-[9px] text-white/50 font-700">предоплата</span>
+                </span>
+              </button>
+              <button
+                class="h-16 flex items-center justify-center gap-2 border rounded-[1.25rem] bg-white text-sm text-slate-800 font-900 transition active:scale-[0.99]"
+                :class="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'google' ? 'border-main-400' : 'border-white/10'"
+                type="button"
+                @click="selectPayment('prepaid', 'google')"
+              >
+                <span class="i-mdi-google text-5.5" aria-hidden="true" />
+                <span>
+                  <span class="block">Pay</span>
+                  <span class="block text-[9px] text-slate-500 font-700">предоплата</span>
+                </span>
+              </button>
+            </div>
+            <p class="mt-2 px-2 text-[10px] text-slate-500 leading-4">
+              При предоплате поиск водителя начнётся после подтверждения платежа.
+            </p>
           </div>
-
-          <button
-            :disabled="wallet.isMutating"
-            class="mt-2 h-12 w-full flex items-center justify-center gap-2 rounded-[1.25rem] bg-white/7 text-sm text-white font-900 transition active:scale-[0.99] disabled:opacity-55"
-            type="button"
-            @click="startBindCard"
-          >
-            <span class="i-mdi-credit-card-plus-outline text-5" aria-hidden="true" />
-            {{ wallet.isMutating ? 'Открываем FreedomPay…' : 'Добавить новую карту' }}
-          </button>
-          <p class="mt-1.5 px-2 text-center text-[10px] text-slate-500 leading-4">
-            Для проверки карты спишем {{ bindAmount }} ₸ — сумма поступит в ваш кошелёк
-          </p>
-
-          <p class="mb-2 mt-4 px-1 text-[11px] text-slate-500 font-900 uppercase">
-            Оплата до поездки
-          </p>
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              class="h-16 flex items-center justify-center gap-2 border rounded-[1.25rem] bg-black text-sm text-white font-900 transition active:scale-[0.99]"
-              :class="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'apple' ? 'border-main-400' : 'border-white/10'"
-              type="button"
-              @click="selectPayment('prepaid', 'apple')"
-            >
-              <span class="i-mdi-apple text-6" aria-hidden="true" />
-              <span>
-                <span class="block">Pay</span>
-                <span class="block text-[9px] text-white/50 font-700">предоплата</span>
-              </span>
-            </button>
-            <button
-              class="h-16 flex items-center justify-center gap-2 border rounded-[1.25rem] bg-white text-sm text-slate-800 font-900 transition active:scale-[0.99]"
-              :class="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'google' ? 'border-main-400' : 'border-white/10'"
-              type="button"
-              @click="selectPayment('prepaid', 'google')"
-            >
-              <span class="i-mdi-google text-5.5" aria-hidden="true" />
-              <span>
-                <span class="block">Pay</span>
-                <span class="block text-[9px] text-slate-500 font-700">предоплата</span>
-              </span>
-            </button>
-          </div>
-          <p class="mt-2 px-2 text-[10px] text-slate-500 leading-4">
-            При предоплате поиск водителя начнётся после подтверждения платежа.
-          </p>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </Transition>
   </Teleport>
 
   <PaymentFrameModal
@@ -304,3 +319,37 @@ onBeforeUnmount(() => {
     @result="handlePaymentResult"
   />
 </template>
+
+<style scoped>
+.bottom-sheet-enter-active,
+.bottom-sheet-leave-active {
+  transition: opacity 220ms ease;
+}
+
+.bottom-sheet-enter-active .bottom-sheet-panel,
+.bottom-sheet-leave-active .bottom-sheet-panel {
+  transition:
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease;
+}
+
+.bottom-sheet-enter-from,
+.bottom-sheet-leave-to {
+  opacity: 0;
+}
+
+.bottom-sheet-enter-from .bottom-sheet-panel,
+.bottom-sheet-leave-to .bottom-sheet-panel {
+  opacity: 0.65;
+  transform: translateY(2rem) scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-sheet-enter-active,
+  .bottom-sheet-leave-active,
+  .bottom-sheet-enter-active .bottom-sheet-panel,
+  .bottom-sheet-leave-active .bottom-sheet-panel {
+    transition-duration: 1ms;
+  }
+}
+</style>
