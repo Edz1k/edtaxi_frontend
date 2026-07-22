@@ -51,8 +51,11 @@ jobs:
               echo "env_name=production"
               echo "ws_url=wss://ws.telegramtaxi.kz"
               echo "share_url=https://share.telegramtaxi.kz"
-              echo "tg_pass_bot=telegtaxi_bot"
-              echo "tg_driver_bot=drivertaximinibot"
+              # Боевые боты. Старые (telegtaxi_bot / drivertaximinibot) —
+              # тестовые: диплинки, рефералки и кнопка «открыть чат с ботом»
+              # уводили водителя в бота, где нет ни вебхука, ни мини-аппа.
+              echo "tg_pass_bot=cityflowtaxi_bot"
+              echo "tg_driver_bot=cityflowdriver_bot"
               echo "smoke_hosts=telegramtaxi.kz passenger.telegramtaxi.kz driver.telegramtaxi.kz share.telegramtaxi.kz"
             } >> "$GITHUB_OUTPUT"
           else
