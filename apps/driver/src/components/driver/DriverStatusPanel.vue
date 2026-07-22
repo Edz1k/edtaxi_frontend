@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { UserCoordinates } from '@edtaxi/shared/composables/mapbox/useUserLocation'
-import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
+import type { OnlineBlockTarget } from '~/utils/onlineBlock'
+import { openExternalLink, openTelegramChat } from '@edtaxi/shared/composables/auth/telegram'
 import { useBottomSheet } from '@edtaxi/shared/composables/useBottomSheet'
+import { TG_BOT_USERNAME } from '~/constants/telegram'
 import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { useTripChatStore } from '~/stores/tripChat'
@@ -13,7 +15,7 @@ const props = defineProps<{
   onlineBlockMessage: string
   // Куда вести водителя из баннера-блокировки. Явный признак, а не разбор
   // текста ошибки: любая переформулировка сообщения ломала бы маршрутизацию.
-  onlineBlockTarget: 'daily-check' | 'park' | 'verification'
+  onlineBlockTarget: OnlineBlockTarget
   showRouteLoading: boolean
   isLocationGranted: boolean
   // Своя геопозиция — для подсказки «подъедьте ближе» на кнопке этапа.
@@ -55,11 +57,14 @@ function onHandleKeydown(event: KeyboardEvent) {
 
 // Разные причины блокировки решаются на разных экранах: парк выбирают в списке
 // парков, просроченный фотоконтроль проходят заново на его собственном экране.
-const ONLINE_BLOCK_LINKS = {
+// Трансляция геопозиции — единственная причина, которая закрывается не на
+// экране апы, а в чате с ботом: у неё вместо маршрута кнопка выхода в Telegram.
+const ONLINE_BLOCK_LINKS: Record<OnlineBlockTarget, { label: string, to?: string }> = {
   'daily-check': { label: 'Пройти фотоконтроль', to: '/menu/profile/onboarding/daily-check' },
+  'live-location': { label: 'Открыть чат с ботом' },
   'park': { label: 'Выбрать таксопарк', to: '/menu/parks' },
   'verification': { label: 'Пройти верификацию', to: '/menu/profile/onboarding' },
-} as const
+}
 
 const onlineBlockLink = computed(() => ONLINE_BLOCK_LINKS[props.onlineBlockTarget])
 
@@ -600,17 +605,41 @@ const peekPill = computed(() => {
               {{ driver.isRestoringActiveTrip ? 'Восстанавливаем...' : driver.isChangingStatus ? 'Обновляем...' : driver.isOnline ? 'Уйти с линии' : 'Выйти на линию' }}
             </button>
 
+            <!-- Пока трансляция жива, водитель виден диспетчеру даже со
+                 свёрнутым приложением. Показываем, когда она погаснет: за 20
+                 минут до этого бот пришлёт напоминание, но лучше видеть срок
+                 заранее, чем узнать о нём в конце смены. -->
+            <p
+              v-if="driver.isOnline && driver.liveLocationUntilLabel"
+              class="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400 font-800"
+            >
+              <span class="i-mdi-broadcast text-4 text-emerald-400" aria-hidden="true" />
+              Резервная передача геопозиции активна до {{ driver.liveLocationUntilLabel }}
+            </p>
+
             <!-- Причина отказа в выходе на линию (403 с бэка) -->
             <div v-if="onlineBlockMessage && !driver.isOnline" class="mt-3 rounded-2xl bg-amber-500/12 px-4 py-3">
               <p class="text-sm text-amber-200 font-800">
                 {{ onlineBlockMessage }}
               </p>
+              <p v-if="onlineBlockTarget === 'live-location'" class="mt-1.5 text-xs text-amber-200/80 font-700">
+                В чате нажмите скрепку → «Геопозиция» → «Транслировать» и выберите 8 часов.
+              </p>
               <RouterLink
+                v-if="onlineBlockLink.to"
                 class="mt-2.5 h-10 flex items-center justify-center rounded-xl bg-amber-400 text-sm text-#06142f font-900 transition active:scale-[0.98]"
                 :to="onlineBlockLink.to"
               >
                 {{ onlineBlockLink.label }}
               </RouterLink>
+              <button
+                v-else
+                class="mt-2.5 h-10 w-full flex items-center justify-center rounded-xl bg-amber-400 text-sm text-#06142f font-900 transition active:scale-[0.98]"
+                type="button"
+                @click="openTelegramChat(TG_BOT_USERNAME)"
+              >
+                {{ onlineBlockLink.label }}
+              </button>
             </div>
 
             <RouterLink

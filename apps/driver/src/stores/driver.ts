@@ -294,6 +294,25 @@ export const useDriverStore = defineStore('driver', () => {
   // считаем выключенным (кнопки не блокируем).
   const geoGate = computed(() => profile.value?.geo_gate ?? null)
 
+  // Трансляция геопозиции в боте: статус приходит с профилем и обновляется
+  // вместе с ним (в т.ч. при каждом выходе на линию). Нет поля — старый
+  // бэкенд, статус не показываем вовсе.
+  const liveLocation = computed(() => profile.value?.live_location ?? null)
+
+  // «до 18:40» — во сколько погаснет трансляция. Пустая строка, если её нет
+  // или срок неизвестен: подпись просто не рисуется.
+  const liveLocationUntilLabel = computed(() => {
+    const until = liveLocation.value?.until
+    if (!liveLocation.value?.active || !until)
+      return ''
+
+    const at = new Date(until)
+    if (Number.isNaN(at.getTime()))
+      return ''
+
+    return at.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+  })
+
   // loadCategories подтягивает available/active тарифы водителя.
   // Ошибка не показывается тостом: без данных чипы тарифов просто скрыты.
   async function loadCategories() {
@@ -851,6 +870,8 @@ export const useDriverStore = defineStore('driver', () => {
     availableCategories,
     canAdvanceNavPoint,
     geoGate,
+    liveLocation,
+    liveLocationUntilLabel,
     cancelTrip,
     currentNavPoint,
     clearDriverState,
