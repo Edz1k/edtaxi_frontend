@@ -238,3 +238,140 @@ parks:
   switchConfirmTitle: Switch taxi park?
   switchConfirmText: Are you sure you want to leave your current park and join “{name}”? The new park will review the request; the switch happens after approval.
   yesSwitch: Yes, switch
+vehicle:
+  motoTitle: Moto taxi
+  carExists: Your car is already added. You can edit the details.
+  motoExists: Your motorcycle is already added. You can edit the details.
+  addCar: Add a car to go online and receive orders.
+  addMoto: Add a motorcycle to go online and receive orders.
+  carSaved: Car saved
+  motoSaved: Motorcycle saved
+  availableTariffs: Available tariffs
+  done: Done
+  becomeMoto: Become a moto taxi
+  becomeMotoHint: Work on a motorcycle — fast city orders
+  haveCar: I have a car
+  backToCar: Back to adding a car
+  motoRules: Moto taxi requires insurance and a second helmet for the passenger. Only one passenger allowed.
+  make: Make
+  model: Model
+  makeModel: Make and model
+  notInCatalog: Model not found in the catalog — only Economy will be available.
+  plate: Plate number
+  year: Year
+  color: Color
+  colorPlaceholder: White
+  saving: Saving...
+  save: Save
+  continue: Continue
+  tillNow: now
+  upTo: up to {cat}
+onb:
+  seenAs: 'Passengers see you as: {name}'
+  identity: Identity verification
+  identityDesc: Selfie and ID for review
+  selfie: Selfie
+  idDoc: ID document
+  car: Car
+  carPhotos: Car photo check
+  carPhotosDesc: Body and interior photos
+  docs: Documents photo check
+  docsDesc: Registration, VIN and insurance
+  dailyDesc: Selfie and car photo before a shift
+  heroOkTitle: Verification passed
+  heroOkText: All checks passed — you can go online.
+  heroPendingTitle: Under review
+  heroPendingText: We’re reviewing your uploads. It usually doesn’t take long — we’ll let you know.
+  dailyOkUntil: Daily photo check passed. Valid until {until}.
+  dailyOk: Daily photo check passed.
+  dailyPending: Daily photo check under review.
+  dailyExpired: Your check wasn’t reviewed in time — please resubmit the photos.
+  dailyDo: Pass the daily photo check before every shift.
+  passed: Passed
+  inReview: Under review
+  failed: Not passed
+  leadAction: Pass all checks to go online. If a check failed, the details inside explain what to fix.
+  leadStatuses: Your check statuses are below.
+  loading: Loading status...
+face:
+  lead: Support will review your selfie and ID — this is done once.
+  okTitle: Identity verified
+  okText: Selfie and ID confirmed — no need to upload again.
+  pendingTitle: Photos under review
+  pendingText: We’re reviewing your selfie and ID. It usually doesn’t take long — we’ll let you know.
+  toChecks: Back to checks
+  tapForPhoto: Tap for a photo
+  change: Change
+  selfieHint: Face well lit and clearly visible, no glasses or headwear.
+  docTitle: ID card or passport
+  docPhoto: Document photo
+  docHint: The document details must be readable, no glare.
+  submit: Submit for review
+  fitSelfie: Adjust the selfie
+  fitDoc: Adjust the document photo
+daily:
+  lead: Every day before going online, send a fresh selfie and a car photo.
+  needVehicle: Add and verify a vehicle first.
+  addVehicle: Add a vehicle
+  pendingTitle: Check under review
+  okTitle: Check passed
+  pendingText: We’re reviewing your selfie and car photo. It usually doesn’t take long.
+  okUntil: Photo check passed — you can go online. Valid until {until}, then a new check is needed.
+  okText: Daily photo check passed — you can go online.
+  expired: Your submission wasn’t reviewed in time and expired. Resubmit the photos — checks run on fresh shots.
+  tipsTitle: How to take a proper photo
+  tipLight: Find a well-lit spot
+  tipMask: Remove mask and dark glasses
+  tipLevel: Hold the phone at face level
+  yourSelfie: Your selfie
+  ovalHint: Fit your face into the oval — the shot is taken automatically
+  retake: Retake
+  carPhoto: Car photo
+  rearCamera: Rear camera
+  validity: The check is valid for 24 hours from approval.
+  sendBeforeShift: Send photos right before your shift — the submission must be reviewed in time.
+  submit: Submit the check
+  fitCarPhoto: Adjust the car photo
+vdocs:
+  docsTitle: Vehicle documents
+  carPhotos: Car photos
+  motoPhotos: Motorcycle photos
+  sentTitle: Sent for review
+  sentText: We’ll review the photos and let you know.
+  uploadedOf: '{done} of {total} required uploaded'
+  uploadDocs: Upload the vehicle documents for review.
+  uploadAll: Upload car photos and documents for review.
+  needVehicle: First add a car in the “Vehicle” section.
+  carOk: Car photos verified
+  motoOk: Motorcycle photos verified
+  okText: Photo check passed — no need to upload again.
+  howTo: How to shoot
+  tipLight: Good lighting, no glare
+  tipWholeCar: The whole car in the frame
+  tipWholeMoto: The whole motorcycle in the frame
+  tipReadable: Plate and VIN clearly readable
+  tipClean: No unrelated objects in the frame
+  loading: Loading photos...
+  optional: optional
+  addPhoto: Add a photo
+  fitPhoto: Adjust the photo
+slots:
+  secBody: Car body
+  secInterior: Interior
+  secTrunk: Trunk
+  secDocs: Documents
+  secMoto: Motorcycle
+  secGear: Gear
+  front: Front
+  back: Back
+  left: Left side
+  right: Right side
+  frontSeats: Front seats
+  backSeats: Back row seats
+  dashboard: Dashboard (with odometer)
+  trunk: Trunk
+  regFront: Registration (front side)
+  regBack: Registration (back side)
+  insurance: Insurance policy
+  vin: VIN number
+  secondHelmet: Second helmet for the passenger

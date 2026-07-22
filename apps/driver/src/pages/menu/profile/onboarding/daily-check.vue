@@ -9,6 +9,7 @@ import { dailyCheckState, validUntilLabel } from '~/utils/dailyCheck'
 
 const router = useRouter()
 const driver = useDriverOnboardingStore()
+const { t } = useI18n()
 
 definePage({
   meta: {
@@ -23,7 +24,7 @@ definePage({
 })
 
 useHead({
-  title: 'Ежедневная проверка | Telegram Taxi Driver',
+  title: () => `${t('titles.dailyCheck')} | Telegram Taxi Driver`,
 })
 
 const selfieFile = ref<File | null>(null)
@@ -170,23 +171,23 @@ async function submit() {
         </div>
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
-            Ежедневная проверка
+            {{ t('titles.dailyCheck') }}
           </h1>
           <p class="mt-1 text-sm app-muted leading-5">
-            Каждый день перед выходом на линию отправляйте свежее селфи и фото машины.
+            {{ t('daily.lead') }}
           </p>
         </div>
       </div>
 
       <div v-if="!hasVehicle" class="mt-8 rounded-3xl bg-amber-500/12 p-5">
         <p class="text-sm text-amber-300 font-700">
-          Сначала добавьте и верифицируйте автомобиль.
+          {{ t('daily.needVehicle') }}
         </p>
         <RouterLink
           class="mt-3 block text-sm text-amber-300 font-900 underline"
           to="/menu/vehicle"
         >
-          Добавить машину
+          {{ t('daily.addVehicle') }}
         </RouterLink>
       </div>
 
@@ -205,14 +206,14 @@ async function submit() {
             </span>
             <div class="min-w-0">
               <h2 class="text-xl font-950" :class="dailyPending ? 'text-amber-100' : 'text-emerald-100'">
-                {{ dailyPending ? 'Проверка на проверке' : 'Проверка пройдена' }}
+                {{ dailyPending ? t('daily.pendingTitle') : t('daily.okTitle') }}
               </h2>
               <p class="mt-0.5 text-sm leading-5" :class="dailyPending ? 'text-amber-300/85' : 'text-emerald-300/85'">
                 {{ dailyPending
-                  ? 'Мы проверяем ваше селфи и фото машины. Обычно это занимает недолго.'
+                  ? t('daily.pendingText')
                   : dailyValidUntil
-                    ? `Фотоконтроль пройден — можно на линию. Действует до ${dailyValidUntil}, после этого нужна новая проверка.`
-                    : 'Ежедневный фотоконтроль пройден — можно на линию.' }}
+                    ? t('daily.okUntil', { until: dailyValidUntil })
+                    : t('daily.okText') }}
               </p>
             </div>
           </div>
@@ -223,7 +224,7 @@ async function submit() {
           class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-base text-white font-800 transition active:scale-[0.98]"
         >
           <span class="i-mdi-format-list-checks text-5" />
-          К списку проверок
+          {{ t('face.toChecks') }}
         </RouterLink>
       </template>
 
@@ -232,7 +233,7 @@ async function submit() {
              отказа — водитель ничего не сделал не так. -->
         <div v-if="dailyExpired" class="flex items-start gap-3 rounded-2xl bg-amber-500/10 px-4 py-3 text-sm text-amber-200 leading-5">
           <span class="i-mdi-timer-sand-complete shrink-0 text-5 text-amber-400" />
-          <span>Заявку не успели рассмотреть, и её срок истёк. Отправьте фото заново — так проверка идёт по свежим снимкам.</span>
+          <span>{{ t('daily.expired') }}</span>
         </div>
 
         <!-- Причина отказа поддержки — что исправить перед повторной отправкой -->
@@ -244,20 +245,20 @@ async function submit() {
         <!-- Памятка (как в Я.Про) -->
         <div class="rounded-2xl app-card p-4">
           <p class="mb-2 text-xs text-slate-300 font-800 uppercase light:text-slate-600">
-            Чтобы сделать правильное фото
+            {{ t('daily.tipsTitle') }}
           </p>
           <ul class="text-xs app-muted leading-5 space-y-1.5">
             <li class="flex items-start gap-2">
               <span class="i-mdi-white-balance-sunny mt-0.5 shrink-0 text-3.5 text-amber-300" />
-              Найдите место с хорошим освещением
+              {{ t('daily.tipLight') }}
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-face-mask-outline mt-0.5 shrink-0 text-3.5 text-slate-300 light:text-slate-600" />
-              Снимите маску и тёмные очки
+              {{ t('daily.tipMask') }}
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-cellphone mt-0.5 shrink-0 text-3.5 app-accent" />
-              Держите телефон на уровне лица
+              {{ t('daily.tipLevel') }}
             </li>
           </ul>
         </div>
@@ -265,7 +266,7 @@ async function submit() {
         <!-- Селфи: живая камера с овалом и автоснимком -->
         <div>
           <p class="mb-3 text-sm text-slate-300 font-700 light:text-slate-600">
-            Ваше селфи
+            {{ t('daily.yourSelfie') }}
           </p>
           <button
             class="relative mx-auto block h-52 w-52 overflow-hidden border-2 rounded-full border-dashed transition active:scale-[0.98]"
@@ -277,18 +278,18 @@ async function submit() {
               v-if="selfiePreview"
               :src="selfiePreview"
               class="h-full w-full object-cover"
-              alt="Селфи"
+              :alt="t('onb.selfie')"
             >
             <div v-else class="h-full flex flex-col items-center justify-center gap-2 app-muted">
               <span class="i-mdi-face-recognition text-12" />
-              <span class="px-4 text-center text-xs font-700 leading-4">Поместите лицо в овал — снимок сделается сам</span>
+              <span class="px-4 text-center text-xs font-700 leading-4">{{ t('daily.ovalHint') }}</span>
             </div>
             <div
               v-if="selfiePreview"
               class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/50 py-2 text-xs text-white font-700 backdrop-blur-sm"
             >
               <span class="i-mdi-camera-retake text-3.5" />
-              Переснять
+              {{ t('daily.retake') }}
             </div>
           </button>
         </div>
@@ -296,7 +297,7 @@ async function submit() {
         <!-- Фото машины -->
         <div>
           <p class="mb-3 text-sm text-slate-300 font-700 light:text-slate-600">
-            Фото машины
+            {{ t('daily.carPhoto') }}
           </p>
           <button
             class="relative h-44 w-full overflow-hidden border-2 rounded-3xl border-dashed transition active:scale-[0.98]"
@@ -308,33 +309,33 @@ async function submit() {
               v-if="vehiclePhotoPreview"
               :src="vehiclePhotoPreview"
               class="h-full w-full object-cover"
-              alt="Фото машины"
+              :alt="t('daily.carPhoto')"
             >
             <div v-else class="h-full flex flex-col items-center justify-center gap-2 app-muted">
               <span class="i-mdi-car text-10" />
-              <span class="text-sm font-700">Задняя камера</span>
+              <span class="text-sm font-700">{{ t('daily.rearCamera') }}</span>
             </div>
             <div
               v-if="vehiclePhotoPreview"
               class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/50 py-2 text-sm text-white font-700 backdrop-blur-sm"
             >
               <span class="i-mdi-camera-retake text-4" />
-              Переснять
+              {{ t('daily.retake') }}
             </div>
           </button>
         </div>
 
         <p class="text-center text-xs app-faint leading-5">
-          Проверка действует 24 часа с момента одобрения.<br>
-          Отправляйте фото прямо перед сменой — заявку нужно успеть рассмотреть.
+          {{ t('daily.validity') }}<br>
+          {{ t('daily.sendBeforeShift') }}
         </p>
 
         <AuthButton
           :disabled="driver.isLoading || !canSubmit"
           icon="i-mdi-send"
           :loading="driver.isLoading"
-          loading-text="Отправляем..."
-          text="Отправить проверку"
+          :loading-text="t('parks.sending')"
+          :text="t('daily.submit')"
           @click="submit"
         />
       </div>
@@ -352,7 +353,7 @@ async function submit() {
       :aspect="4 / 3"
       :file="vehicleEditorFile"
       :output-size="1600"
-      title="Подгоните фото машины"
+      :title="t('daily.fitCarPhoto')"
       @cancel="vehicleEditorFile = null"
       @done="onVehicleEditorDone"
     />

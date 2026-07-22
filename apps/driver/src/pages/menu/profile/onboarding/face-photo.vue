@@ -7,6 +7,7 @@ import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
 const router = useRouter()
 const driver = useDriverOnboardingStore()
+const { t } = useI18n()
 
 definePage({
   meta: {
@@ -21,7 +22,7 @@ definePage({
 })
 
 useHead({
-  title: 'Фото лица | Telegram Taxi Driver',
+  title: () => `${t('titles.facePhoto')} | Telegram Taxi Driver`,
 })
 
 // Статус проверки лица определяет вид экрана: если уже одобрено/на проверке —
@@ -57,8 +58,8 @@ const isSourceOpen = ref(false)
 const editorFile = ref<File | null>(null)
 
 const editorProps = computed(() => pickTarget.value === 'selfie'
-  ? { aspect: 1, cameraFacing: 'user' as const, round: true, title: 'Подгоните селфи' }
-  : { aspect: 1.58, cameraFacing: 'environment' as const, round: false, title: 'Подгоните фото документа' })
+  ? { aspect: 1, cameraFacing: 'user' as const, round: true, title: t('face.fitSelfie') }
+  : { aspect: 1.58, cameraFacing: 'environment' as const, round: false, title: t('face.fitDoc') })
 
 function pickSelfie() {
   pickTarget.value = 'selfie'
@@ -120,10 +121,10 @@ async function submit() {
         </div>
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
-            Фото лица
+            {{ t('titles.facePhoto') }}
           </h1>
           <p class="mt-1 text-sm app-muted leading-5">
-            Селфи и документ проверит поддержка — это делается один раз.
+            {{ t('face.lead') }}
           </p>
         </div>
       </div>
@@ -131,7 +132,7 @@ async function submit() {
       <!-- Статус ещё грузится (прямой заход на страницу, не из хаба) -->
       <div v-if="driver.isLoadingVerification && !driver.verification" class="mt-8 flex items-center gap-3 text-sm app-muted">
         <span class="i-mdi-loading animate-spin text-5" />
-        Загружаем статус...
+        {{ t('onb.loading') }}
       </div>
 
       <!-- Уже отправлено — одобрено или на проверке: показываем статус, а не форму -->
@@ -149,12 +150,12 @@ async function submit() {
             </span>
             <div class="min-w-0">
               <h2 class="text-xl font-950" :class="faceStatus === 'approved' ? 'text-emerald-100' : 'text-amber-100'">
-                {{ faceStatus === 'approved' ? 'Идентификация пройдена' : 'Фото на проверке' }}
+                {{ faceStatus === 'approved' ? t('face.okTitle') : t('face.pendingTitle') }}
               </h2>
               <p class="mt-0.5 text-sm leading-5" :class="faceStatus === 'approved' ? 'text-emerald-300/85' : 'text-amber-300/85'">
                 {{ faceStatus === 'approved'
-                  ? 'Селфи и документ подтверждены — повторная загрузка не нужна.'
-                  : 'Мы проверяем ваши селфи и документ. Обычно это занимает недолго — сообщим о результате.' }}
+                  ? t('face.okText')
+                  : t('face.pendingText') }}
               </p>
             </div>
           </div>
@@ -165,7 +166,7 @@ async function submit() {
           class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-base text-white font-800 transition active:scale-[0.98]"
         >
           <span class="i-mdi-format-list-checks text-5" />
-          К списку проверок
+          {{ t('face.toChecks') }}
         </RouterLink>
       </template>
 
@@ -180,7 +181,7 @@ async function submit() {
         <!-- Селфи -->
         <div class="mt-8">
           <p class="mb-3 text-sm text-white font-800">
-            1. Селфи
+            1. {{ t('onb.selfie') }}
           </p>
           <button
             class="relative mx-auto block h-56 w-56 overflow-hidden border-2 rounded-full border-dashed transition active:scale-[0.98]"
@@ -188,10 +189,10 @@ async function submit() {
             type="button"
             @click="pickSelfie"
           >
-            <img v-if="selfiePreview" :src="selfiePreview" class="h-full w-full object-cover" alt="Селфи">
+            <img v-if="selfiePreview" :src="selfiePreview" class="h-full w-full object-cover" :alt="t('onb.selfie')">
             <div v-else class="h-full flex flex-col items-center justify-center gap-3 app-muted">
               <span class="i-mdi-camera text-14" />
-              <span class="px-6 text-center text-sm font-700">Нажмите для фото</span>
+              <span class="px-6 text-center text-sm font-700">{{ t('face.tapForPhoto') }}</span>
             </div>
             <div
               v-if="selfiePreview"
@@ -202,14 +203,14 @@ async function submit() {
             </div>
           </button>
           <p class="mt-3 text-center text-xs app-faint leading-5">
-            Лицо хорошо освещено и чётко видно, без очков и головных уборов.
+            {{ t('face.selfieHint') }}
           </p>
         </div>
 
         <!-- Документ -->
         <div class="mt-8">
           <p class="mb-3 text-sm text-white font-800">
-            2. Удостоверение или паспорт
+            2. {{ t('face.docTitle') }}
           </p>
           <button
             class="relative block h-44 w-full overflow-hidden border-2 rounded-3xl border-dashed transition active:scale-[0.98]"
@@ -217,10 +218,10 @@ async function submit() {
             type="button"
             @click="pickId"
           >
-            <img v-if="idPreview" :src="idPreview" class="h-full w-full object-cover" alt="Документ">
+            <img v-if="idPreview" :src="idPreview" class="h-full w-full object-cover" :alt="t('onb.idDoc')">
             <div v-else class="h-full flex flex-col items-center justify-center gap-3 app-muted">
               <span class="i-mdi-card-account-details-outline text-12" />
-              <span class="px-6 text-center text-sm font-700">Фото документа</span>
+              <span class="px-6 text-center text-sm font-700">{{ t('face.docPhoto') }}</span>
             </div>
             <div
               v-if="idPreview"
@@ -231,7 +232,7 @@ async function submit() {
             </div>
           </button>
           <p class="mt-3 text-center text-xs app-faint leading-5">
-            Данные в документе должны читаться, без бликов.
+            {{ t('face.docHint') }}
           </p>
         </div>
 
@@ -240,8 +241,8 @@ async function submit() {
           :disabled="driver.isLoading || !selfieFile || !idFile"
           icon="i-mdi-upload"
           :loading="driver.isLoading"
-          loading-text="Отправляем..."
-          text="Отправить на проверку"
+          :loading-text="t('parks.sending')"
+          :text="t('face.submit')"
           @click="submit"
         />
       </template>
@@ -249,7 +250,7 @@ async function submit() {
       <PhotoSourceSheet
         :camera-facing="editorProps.cameraFacing"
         :open="isSourceOpen"
-        :title="pickTarget === 'selfie' ? 'Селфи' : 'Фото документа'"
+        :title="pickTarget === 'selfie' ? t('onb.selfie') : t('face.docPhoto')"
         @close="isSourceOpen = false"
         @selected="onSourceSelected"
       />

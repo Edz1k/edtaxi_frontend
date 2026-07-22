@@ -9,6 +9,7 @@ import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 
 const router = useRouter()
 const driver = useDriverOnboardingStore()
+const { t } = useI18n()
 
 definePage({
   meta: {
@@ -23,7 +24,7 @@ definePage({
 })
 
 useHead({
-  title: 'Фото машины | Telegram Taxi Driver',
+  title: () => `${t('titles.vehicleDocs')} | Telegram Taxi Driver`,
 })
 
 interface SlotMeta {
@@ -45,45 +46,45 @@ interface SlotGroup {
 
 const CAR_SLOT_GROUPS: SlotGroup[] = [
   {
-    title: 'Кузов автомобиля',
+    title: t('slots.secBody'),
     kind: 'car',
     slots: [
-      { slot: 'exterior_front', label: 'Спереди', icon: 'i-mdi-car', capture: 'environment' },
-      { slot: 'exterior_back', label: 'Сзади', icon: 'i-mdi-car-back', capture: 'environment' },
-      { slot: 'exterior_left', label: 'Левый бок', icon: 'i-mdi-car-side', capture: 'environment' },
-      { slot: 'exterior_right', label: 'Правый бок', icon: 'i-mdi-car-side', capture: 'environment' },
+      { slot: 'exterior_front', label: t('slots.front'), icon: 'i-mdi-car', capture: 'environment' },
+      { slot: 'exterior_back', label: t('slots.back'), icon: 'i-mdi-car-back', capture: 'environment' },
+      { slot: 'exterior_left', label: t('slots.left'), icon: 'i-mdi-car-side', capture: 'environment' },
+      { slot: 'exterior_right', label: t('slots.right'), icon: 'i-mdi-car-side', capture: 'environment' },
     ],
   },
   {
-    title: 'Салон',
+    title: t('slots.secInterior'),
     kind: 'car',
     slots: [
-      { slot: 'interior_front', label: 'Передние сиденья', icon: 'i-mdi-car-seat', capture: 'environment' },
-      { slot: 'interior_back', label: 'Задний ряд сидений', icon: 'i-mdi-seat', capture: 'environment' },
-      { slot: 'dashboard', label: 'Панель приборов (с одометром)', icon: 'i-mdi-speedometer', capture: 'environment' },
+      { slot: 'interior_front', label: t('slots.frontSeats'), icon: 'i-mdi-car-seat', capture: 'environment' },
+      { slot: 'interior_back', label: t('slots.backSeats'), icon: 'i-mdi-seat', capture: 'environment' },
+      { slot: 'dashboard', label: t('slots.dashboard'), icon: 'i-mdi-speedometer', capture: 'environment' },
     ],
   },
   {
-    title: 'Багажник',
+    title: t('slots.secTrunk'),
     kind: 'car',
     slots: [
-      { slot: 'trunk', label: 'Багажник', icon: 'i-mdi-bag-suitcase', capture: 'environment' },
+      { slot: 'trunk', label: t('slots.trunk'), icon: 'i-mdi-bag-suitcase', capture: 'environment' },
     ],
   },
   {
-    title: 'Документы',
+    title: t('slots.secDocs'),
     kind: 'docs',
     slots: [
-      { slot: 'doc_registration_front', label: 'Техпаспорт (лицевая сторона)', icon: 'i-mdi-file-document', capture: null },
-      { slot: 'doc_registration_back', label: 'Техпаспорт (обратная сторона)', icon: 'i-mdi-file-document-outline', capture: null },
-      { slot: 'doc_insurance', label: 'Страховой полис', icon: 'i-mdi-shield-check', capture: null, optional: true },
+      { slot: 'doc_registration_front', label: t('slots.regFront'), icon: 'i-mdi-file-document', capture: null },
+      { slot: 'doc_registration_back', label: t('slots.regBack'), icon: 'i-mdi-file-document-outline', capture: null },
+      { slot: 'doc_insurance', label: t('slots.insurance'), icon: 'i-mdi-shield-check', capture: null, optional: true },
     ],
   },
   {
     title: 'VIN',
     kind: 'docs',
     slots: [
-      { slot: 'vin', label: 'VIN-номер', icon: 'i-mdi-barcode-scan', capture: 'environment', optional: true },
+      { slot: 'vin', label: t('slots.vin'), icon: 'i-mdi-barcode-scan', capture: 'environment', optional: true },
     ],
   },
 ]
@@ -92,36 +93,36 @@ const CAR_SLOT_GROUPS: SlotGroup[] = [
 // обязательна, плюс фото второго шлема для пассажира.
 const MOTO_SLOT_GROUPS: SlotGroup[] = [
   {
-    title: 'Мотоцикл',
+    title: t('slots.secMoto'),
     kind: 'car',
     slots: [
-      { slot: 'exterior_front', label: 'Спереди', icon: 'i-mdi-motorbike', capture: 'environment' },
-      { slot: 'exterior_back', label: 'Сзади', icon: 'i-mdi-motorbike', capture: 'environment' },
-      { slot: 'exterior_left', label: 'Левый бок', icon: 'i-mdi-motorbike', capture: 'environment' },
-      { slot: 'exterior_right', label: 'Правый бок', icon: 'i-mdi-motorbike', capture: 'environment' },
+      { slot: 'exterior_front', label: t('slots.front'), icon: 'i-mdi-motorbike', capture: 'environment' },
+      { slot: 'exterior_back', label: t('slots.back'), icon: 'i-mdi-motorbike', capture: 'environment' },
+      { slot: 'exterior_left', label: t('slots.left'), icon: 'i-mdi-motorbike', capture: 'environment' },
+      { slot: 'exterior_right', label: t('slots.right'), icon: 'i-mdi-motorbike', capture: 'environment' },
     ],
   },
   {
-    title: 'Экипировка',
+    title: t('slots.secGear'),
     kind: 'car',
     slots: [
-      { slot: 'moto_second_helmet', label: 'Второй шлем для пассажира', icon: 'i-mdi-racing-helmet', capture: 'environment' },
+      { slot: 'moto_second_helmet', label: t('slots.secondHelmet'), icon: 'i-mdi-racing-helmet', capture: 'environment' },
     ],
   },
   {
-    title: 'Документы',
+    title: t('slots.secDocs'),
     kind: 'docs',
     slots: [
-      { slot: 'doc_registration_front', label: 'Техпаспорт (лицевая сторона)', icon: 'i-mdi-file-document', capture: null },
-      { slot: 'doc_registration_back', label: 'Техпаспорт (обратная сторона)', icon: 'i-mdi-file-document-outline', capture: null },
-      { slot: 'doc_insurance', label: 'Страховой полис', icon: 'i-mdi-shield-check', capture: null },
+      { slot: 'doc_registration_front', label: t('slots.regFront'), icon: 'i-mdi-file-document', capture: null },
+      { slot: 'doc_registration_back', label: t('slots.regBack'), icon: 'i-mdi-file-document-outline', capture: null },
+      { slot: 'doc_insurance', label: t('slots.insurance'), icon: 'i-mdi-shield-check', capture: null },
     ],
   },
   {
     title: 'VIN',
     kind: 'docs',
     slots: [
-      { slot: 'vin', label: 'VIN-номер', icon: 'i-mdi-barcode-scan', capture: 'environment', optional: true },
+      { slot: 'vin', label: t('slots.vin'), icon: 'i-mdi-barcode-scan', capture: 'environment', optional: true },
     ],
   },
 ]
@@ -151,10 +152,10 @@ const section = computed<'all' | 'car' | 'docs'>(() => {
 
 const pageTitle = computed(() => {
   if (section.value === 'docs')
-    return 'Документы машины'
+    return t('vdocs.docsTitle')
   if (section.value === 'car')
-    return isMoto.value ? 'Фото мотоцикла' : 'Фото машины'
-  return isMoto.value ? 'Фото мотоцикла' : 'Фото машины'
+    return isMoto.value ? t('vdocs.motoPhotos') : t('vdocs.carPhotos')
+  return isMoto.value ? t('vdocs.motoPhotos') : t('vdocs.carPhotos')
 })
 
 const slotGroups = computed(() => {
@@ -239,7 +240,7 @@ async function submit() {
 
   try {
     await driver.doSubmitVehiclePhotos(vehicleId.value)
-    useToast().success('Отправлено на проверку', 'Мы проверим фото и сообщим о результате.')
+    useToast().success(t('vdocs.sentTitle'), t('vdocs.sentText'))
     await router.replace('/menu/profile/onboarding')
   }
   catch {}
@@ -259,13 +260,13 @@ async function submit() {
           </h1>
           <p class="mt-1 text-sm app-muted leading-5">
             <template v-if="hasVehicle && driver.requiredPhotoSlots.length">
-              Загружено {{ uploadedRequiredCount }} из {{ driver.requiredPhotoSlots.length }} обязательных
+              {{ t('vdocs.uploadedOf', { done: uploadedRequiredCount, total: driver.requiredPhotoSlots.length }) }}
             </template>
             <template v-else-if="section === 'docs'">
-              Загрузите документы машины для проверки.
+              {{ t('vdocs.uploadDocs') }}
             </template>
             <template v-else>
-              Загрузите фото автомобиля и документы для проверки.
+              {{ t('vdocs.uploadAll') }}
             </template>
           </p>
         </div>
@@ -273,13 +274,13 @@ async function submit() {
 
       <div v-if="!hasVehicle" class="mt-8 rounded-3xl bg-amber-500/12 p-5">
         <p class="text-sm text-amber-300 font-700">
-          Сначала добавьте автомобиль в разделе «Автомобиль».
+          {{ t('vdocs.needVehicle') }}
         </p>
         <RouterLink
           class="mt-3 block text-sm text-amber-300 font-900 underline"
           to="/menu/vehicle"
         >
-          Добавить машину
+          {{ t('daily.addVehicle') }}
         </RouterLink>
       </div>
 
@@ -292,10 +293,10 @@ async function submit() {
             </span>
             <div class="min-w-0">
               <h2 class="text-xl text-emerald-100 font-950">
-                {{ isMoto ? 'Фото мотоцикла проверены' : 'Фото машины проверены' }}
+                {{ isMoto ? t('vdocs.motoOk') : t('vdocs.carOk') }}
               </h2>
               <p class="mt-0.5 text-sm text-emerald-300/85 leading-5">
-                Фотоконтроль пройден — повторная загрузка не нужна.
+                {{ t('vdocs.okText') }}
               </p>
             </div>
           </div>
@@ -306,7 +307,7 @@ async function submit() {
           class="mt-8 h-14 w-full flex items-center justify-center gap-2 rounded-2xl app-chip text-base text-white font-800 transition active:scale-[0.98]"
         >
           <span class="i-mdi-format-list-checks text-5" />
-          К списку проверок
+          {{ t('face.toChecks') }}
         </RouterLink>
       </template>
 
@@ -320,31 +321,31 @@ async function submit() {
         <!-- Подсказки по качеству фото -->
         <div class="rounded-2xl app-card p-4">
           <p class="mb-2 text-xs text-slate-300 font-800 uppercase light:text-slate-600">
-            Как фотографировать
+            {{ t('vdocs.howTo') }}
           </p>
           <ul class="text-xs app-muted leading-5 space-y-1.5">
             <li class="flex items-start gap-2">
               <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
-              Хорошее освещение, без бликов
+              {{ t('vdocs.tipLight') }}
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
-              {{ isMoto ? 'Мотоцикл в кадре целиком' : 'Автомобиль в кадре целиком' }}
+              {{ isMoto ? t('vdocs.tipWholeMoto') : t('vdocs.tipWholeCar') }}
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
-              Номер и VIN хорошо читаются
+              {{ t('vdocs.tipReadable') }}
             </li>
             <li class="flex items-start gap-2">
               <span class="i-mdi-check mt-0.5 shrink-0 text-3.5 text-emerald-400" />
-              Без посторонних предметов в кадре
+              {{ t('vdocs.tipClean') }}
             </li>
           </ul>
         </div>
 
         <div v-if="driver.isLoadingPhotos" class="flex items-center gap-3 text-sm app-muted">
           <span class="i-mdi-loading animate-spin text-5" />
-          Загружаем фото...
+          {{ t('vdocs.loading') }}
         </div>
 
         <template v-else>
@@ -371,7 +372,7 @@ async function submit() {
                 <div v-else class="h-full flex flex-col items-center justify-center gap-1.5 px-2 text-center app-muted">
                   <span :class="meta.icon" class="text-8" />
                   <span class="text-xs font-700 leading-4">{{ meta.label }}</span>
-                  <span v-if="meta.optional" class="text-[10px] app-faint">необязательно</span>
+                  <span v-if="meta.optional" class="text-[10px] app-faint">{{ t('vdocs.optional') }}</span>
                 </div>
 
                 <!-- Спиннер загрузки -->
@@ -388,7 +389,7 @@ async function submit() {
                     <span class="truncate text-[11px] text-white font-700">{{ meta.label }}</span>
                     <span class="flex items-center gap-1 text-[11px] text-main-200 font-800 light:text-main-700">
                       <span class="i-mdi-camera-retake text-3.5" />
-                      Переснять
+                      {{ t('daily.retake') }}
                     </span>
                   </div>
                 </template>
@@ -401,8 +402,8 @@ async function submit() {
           :disabled="driver.isSubmittingPhotos || !driver.canSubmitPhotos"
           icon="i-mdi-upload"
           :loading="driver.isSubmittingPhotos"
-          loading-text="Отправляем..."
-          text="Отправить на проверку"
+          :loading-text="t('parks.sending')"
+          :text="t('face.submit')"
           @click="submit"
         />
       </div>
@@ -410,7 +411,7 @@ async function submit() {
       <PhotoSourceSheet
         camera-facing="environment"
         :open="isSourceOpen"
-        :title="pendingSlot?.label ?? 'Добавить фото'"
+        :title="pendingSlot?.label ?? t('vdocs.addPhoto')"
         @close="isSourceOpen = false"
         @selected="onSourceSelected"
       />
@@ -418,7 +419,7 @@ async function submit() {
         :aspect="editorAspect"
         :file="editorFile"
         :output-size="1600"
-        :title="pendingSlot?.label ?? 'Подгоните фото'"
+        :title="pendingSlot?.label ?? t('vdocs.fitPhoto')"
         @cancel="editorFile = null"
         @done="onEditorDone"
       />

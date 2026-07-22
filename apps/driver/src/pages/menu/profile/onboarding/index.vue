@@ -6,6 +6,7 @@ import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { dailyCheckState, validUntilLabel } from '~/utils/dailyCheck'
 
 const driver = useDriverOnboardingStore()
+const { t } = useI18n()
 
 definePage({
   meta: {
@@ -20,7 +21,7 @@ definePage({
 })
 
 useHead({
-  title: 'Фотоконтроль | Telegram Taxi Driver',
+  title: () => `${t('titles.onboarding')} | Telegram Taxi Driver`,
 })
 
 onMounted(async () => {
@@ -82,7 +83,7 @@ const verifiedName = computed<null | string>(() => {
   if (!v || v.face_status !== 'approved')
     return null
   const name = `${v.verified_first_name ?? ''} ${v.verified_last_name ?? ''}`.trim()
-  return name ? `Пассажиры видят вас как: ${name}` : null
+  return name ? t('onb.seenAs', { name }) : null
 })
 
 // «Основная» машина для фотоконтроля: активная, иначе первая.
@@ -140,23 +141,23 @@ const items = computed<OnboardingItem[]>(() => {
 
   return [
     {
-      label: 'Идентификация личности',
-      description: statusDescription(faceStatus.value, 'Селфи и удостоверение для проверки'),
+      label: t('onb.identity'),
+      description: statusDescription(faceStatus.value, t('onb.identityDesc')),
       icon: 'i-mdi-face-recognition',
       to: '/menu/profile/onboarding/face-photo',
       status: faceStatus.value,
       blocks: v && v.face_status !== 'none'
         ? [
-            { label: 'Селфи', status: checkToStatus(v.face_selfie_check) },
-            { label: 'Удостоверение', status: checkToStatus(v.face_doc_check) },
+            { label: t('onb.selfie'), status: checkToStatus(v.face_selfie_check) },
+            { label: t('onb.idDoc'), status: checkToStatus(v.face_doc_check) },
           ]
         : undefined,
       reason: faceStatus.value === 'rejected' ? v?.face_rejection_reason : null,
       note: verifiedName.value,
     },
     {
-      label: 'Фотоконтроль машины',
-      description: statusDescription(vehiclePhotosStatus.value, 'Фото кузова и салона'),
+      label: t('onb.carPhotos'),
+      description: statusDescription(vehiclePhotosStatus.value, t('onb.carPhotosDesc')),
       icon: 'i-mdi-car-outline',
       // section=car — внутри только фото машины, без документов.
       to: '/menu/profile/onboarding/vehicle-docs?section=car',
@@ -164,8 +165,8 @@ const items = computed<OnboardingItem[]>(() => {
       reason: vehiclePhotosStatus.value === 'rejected' ? vehicle?.rejection_reason : null,
     },
     {
-      label: 'Фотоконтроль документов',
-      description: statusDescription(vehicleDocsStatus.value, 'Техпаспорт, VIN и страховка'),
+      label: t('onb.docs'),
+      description: statusDescription(vehicleDocsStatus.value, t('onb.docsDesc')),
       icon: 'i-mdi-card-account-details-outline',
       // section=docs — внутри только документы (техпаспорт/VIN/страховка).
       to: '/menu/profile/onboarding/vehicle-docs?section=docs',
@@ -173,15 +174,15 @@ const items = computed<OnboardingItem[]>(() => {
       reason: vehicleDocsStatus.value === 'rejected' ? vehicle?.rejection_reason : null,
     },
     {
-      label: 'Ежедневная проверка',
-      description: statusDescription(dailyStatus.value, 'Селфи и фото машины перед сменой'),
+      label: t('titles.dailyCheck'),
+      description: statusDescription(dailyStatus.value, t('onb.dailyDesc')),
       icon: 'i-mdi-calendar-check',
       to: '/menu/profile/onboarding/daily-check',
       status: dailyStatus.value,
       blocks: latestDaily && dailyStatus.value !== 'missing' && !v?.daily_check_valid
         ? [
-            { label: 'Селфи', status: checkToStatus(latestDaily.selfie_check) },
-            { label: 'Машина', status: checkToStatus(latestDaily.vehicle_check) },
+            { label: t('onb.selfie'), status: checkToStatus(latestDaily.selfie_check) },
+            { label: t('onb.car'), status: checkToStatus(latestDaily.vehicle_check) },
           ]
         : undefined,
       reason: dailyStatus.value === 'rejected' ? latestDaily?.rejection_reason : null,
@@ -205,15 +206,15 @@ const hero = computed(() => {
   if (overall.value === 'approved') {
     return {
       icon: 'i-mdi-shield-check',
-      text: 'Все проверки успешно пройдены — можно выходить на линию.',
-      title: 'Верификация пройдена',
+      text: t('onb.heroOkText'),
+      title: t('onb.heroOkTitle'),
       tone: 'emerald' as const,
     }
   }
   return {
     icon: 'i-mdi-shield-sync',
-    text: 'Мы проверяем загруженные данные. Обычно это занимает недолго — сообщим о результате.',
-    title: 'Данные на проверке',
+    text: t('onb.heroPendingText'),
+    title: t('onb.heroPendingTitle'),
     tone: 'amber' as const,
   }
 })
@@ -222,23 +223,23 @@ const hero = computed(() => {
 const nextCheckLine = computed(() => {
   if (dailyStatus.value === 'ok') {
     return dailyValidUntilLabel.value
-      ? `Ежедневный фотоконтроль пройден. Действует до ${dailyValidUntilLabel.value}.`
-      : 'Ежедневный фотоконтроль пройден.'
+      ? t('onb.dailyOkUntil', { until: dailyValidUntilLabel.value })
+      : t('onb.dailyOk')
   }
   if (dailyStatus.value === 'pending')
-    return 'Ежедневный фотоконтроль на проверке.'
+    return t('onb.dailyPending')
   if (driver.verification?.latest_daily_check?.status === 'expired')
-    return 'Заявку на фотоконтроль не успели рассмотреть — отправьте фото заново.'
-  return 'Проходите ежедневный фотоконтроль перед каждой сменой.'
+    return t('onb.dailyExpired')
+  return t('onb.dailyDo')
 })
 
 function statusDescription(status: ItemStatus, fallback: string) {
   if (status === 'ok')
-    return 'Пройдено'
+    return t('onb.passed')
   if (status === 'pending')
-    return 'На проверке'
+    return t('onb.inReview')
   if (status === 'rejected')
-    return 'Не пройдено'
+    return t('onb.failed')
   return fallback
 }
 
@@ -304,21 +305,21 @@ function blockIcon(status: ItemStatus) {
     <section class="mx-auto max-w-sm">
       <header>
         <p class="text-xs app-accent font-900 uppercase">
-          Водитель
+          {{ t('nav.driver') }}
         </p>
         <h1 class="mt-1 text-3xl font-950">
-          Фотоконтроль
+          {{ t('titles.onboarding') }}
         </h1>
         <p class="mt-2 text-sm app-muted leading-5">
           {{ overall === 'action'
-            ? 'Пройдите все проверки, чтобы выйти на линию. Если проверка не пройдена — внутри написано, что исправить.'
-            : 'Статусы ваших проверок — ниже.' }}
+            ? t('onb.leadAction')
+            : t('onb.leadStatuses') }}
         </p>
       </header>
 
       <div v-if="driver.isLoadingVerification" class="mt-8 flex items-center gap-3 text-sm app-muted">
         <span class="i-mdi-loading animate-spin text-5" />
-        Загружаем статус...
+        {{ t('onb.loading') }}
       </div>
 
       <template v-else>

@@ -9,6 +9,7 @@ import { categoryLabel, sortCategories } from '~/utils/vehicleCategories'
 
 const router = useRouter()
 const driver = useDriverOnboardingStore()
+const { t } = useI18n()
 
 const currentYear = new Date().getFullYear()
 
@@ -104,7 +105,7 @@ definePage({
 })
 
 useHead({
-  title: 'Автомобиль | Telegram Taxi Driver',
+  title: () => `${t('titles.vehicle')} | Telegram Taxi Driver`,
 })
 
 onMounted(async () => {
@@ -114,16 +115,16 @@ onMounted(async () => {
 })
 
 function yearRangeLabel(item: CatalogCarItem) {
-  return `${item.year_from}–${item.year_to ?? 'н.в.'}`
+  return `${item.year_from}–${item.year_to ?? t('vehicle.tillNow')}`
 }
 
 function classChipLabel(item: CatalogCarItem) {
   if (item.max_class && item.is_minivan)
-    return `${categoryLabel(item.max_class)} + Минивэн`
+    return `${categoryLabel(item.max_class)} + ${t('cats.minivan')}`
   if (item.is_minivan)
-    return 'Минивэн'
+    return t('cats.minivan')
   if (item.max_class)
-    return `до ${categoryLabel(item.max_class)}`
+    return t('vehicle.upTo', { cat: categoryLabel(item.max_class) })
   return '—'
 }
 
@@ -240,14 +241,14 @@ async function submitVehicle() {
 
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-2xl font-950">
-            {{ isMoto ? 'Мототакси' : 'Автомобиль' }}
+            {{ isMoto ? t('vehicle.motoTitle') : t('titles.vehicle') }}
           </h1>
           <p class="mt-1 text-sm app-muted leading-5">
             <template v-if="isEditing">
-              {{ isMoto ? 'Ваш мотоцикл уже добавлен. Можно отредактировать данные.' : 'Ваша машина уже добавлена. Можно отредактировать данные.' }}
+              {{ isMoto ? t('vehicle.motoExists') : t('vehicle.carExists') }}
             </template>
             <template v-else>
-              {{ isMoto ? 'Добавьте мотоцикл, чтобы выйти на линию и получать заказы.' : 'Добавьте машину, чтобы выйти на линию и получать заказы.' }}
+              {{ isMoto ? t('vehicle.addMoto') : t('vehicle.addCar') }}
             </template>
           </p>
         </div>
@@ -257,10 +258,10 @@ async function submitVehicle() {
       <div v-if="savedCategories" class="mt-8 rounded-3xl bg-emerald-500/10 p-6 text-center">
         <span class="i-mdi-check-circle mx-auto block text-12 text-emerald-400" />
         <p class="mt-3 text-lg text-white font-900">
-          {{ isMoto ? 'Мотоцикл сохранён' : 'Машина сохранена' }}
+          {{ isMoto ? t('vehicle.motoSaved') : t('vehicle.carSaved') }}
         </p>
         <p class="mt-1 text-sm app-muted">
-          Доступные тарифы:
+          {{ t('vehicle.availableTariffs') }}:
         </p>
         <div class="mt-3 flex flex-wrap justify-center gap-2">
           <span
@@ -275,7 +276,7 @@ async function submitVehicle() {
         <AuthButton
           class="mt-6"
           icon="i-mdi-arrow-right"
-          text="Готово"
+          :text="t('vehicle.done')"
           @click="router.replace('/map')"
         />
       </div>
@@ -292,8 +293,8 @@ async function submitVehicle() {
             <span class="i-mdi-motorbike text-6" />
           </span>
           <span class="min-w-0 flex-1">
-            <span class="block text-sm text-white font-900">Стать мототакси</span>
-            <span class="mt-0.5 block text-xs app-muted leading-4">Работайте на мотоцикле — быстрые заказы по городу</span>
+            <span class="block text-sm text-white font-900">{{ t('vehicle.becomeMoto') }}</span>
+            <span class="mt-0.5 block text-xs app-muted leading-4">{{ t('vehicle.becomeMotoHint') }}</span>
           </span>
           <span class="i-mdi-chevron-right shrink-0 text-5 app-faint" />
         </button>
@@ -308,8 +309,8 @@ async function submitVehicle() {
             <span class="i-mdi-car text-6" />
           </span>
           <span class="min-w-0 flex-1">
-            <span class="block text-sm text-white font-900">У меня автомобиль</span>
-            <span class="mt-0.5 block text-xs app-muted leading-4">Вернуться к добавлению машины</span>
+            <span class="block text-sm text-white font-900">{{ t('vehicle.haveCar') }}</span>
+            <span class="mt-0.5 block text-xs app-muted leading-4">{{ t('vehicle.backToCar') }}</span>
           </span>
           <span class="i-mdi-chevron-right shrink-0 text-5 app-faint" />
         </button>
@@ -318,25 +319,25 @@ async function submitVehicle() {
         <div v-if="isMoto" class="rounded-2xl bg-amber-500/12 p-4">
           <p class="flex items-start gap-2 text-xs text-amber-300 leading-5">
             <span class="i-mdi-shield-alert mt-0.5 shrink-0 text-4" />
-            Для мототакси обязательны страховка и второй шлем для пассажира. Перевозка только одного пассажира.
+            {{ t('vehicle.motoRules') }}
           </p>
         </div>
 
         <!-- Мото: марка и модель свободным текстом, без автокомплита каталога -->
         <div v-if="isMoto" class="grid grid-cols-2 gap-3">
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Марка</span>
+            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">{{ t('vehicle.make') }}</span>
             <input v-model="form.make" autocomplete="off" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" placeholder="Yamaha">
           </label>
 
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Модель</span>
+            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">{{ t('vehicle.model') }}</span>
             <input v-model="form.model" autocomplete="off" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" placeholder="MT-07">
           </label>
         </div>
 
         <label v-if="!isMoto" class="relative block">
-          <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Марка и модель</span>
+          <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">{{ t('vehicle.makeModel') }}</span>
           <input
             v-model="query"
             autocomplete="off"
@@ -373,7 +374,7 @@ async function submitVehicle() {
         <!-- Доступные тарифы по каталогу (для мото не показываем) -->
         <div v-if="resolveResult && !isMoto" class="rounded-2xl p-4" :class="resolveResult.matched ? 'bg-emerald-500/10' : 'app-card'">
           <p class="mb-2 text-xs text-slate-300 font-800 uppercase light:text-slate-600">
-            Доступные тарифы
+            {{ t('vehicle.availableTariffs') }}
           </p>
           <div class="flex flex-wrap gap-2">
             <span
@@ -386,26 +387,26 @@ async function submitVehicle() {
           </div>
           <template v-if="!resolveResult.matched">
             <p class="mt-3 text-xs text-amber-300 leading-5">
-              Модель не найдена в каталоге — будет доступен только Эконом.
+              {{ t('vehicle.notInCatalog') }}
             </p>
             <CatalogRequestBlock :make="form.make" :model="form.model" :year="form.year" />
           </template>
         </div>
 
         <label class="block">
-          <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Госномер</span>
+          <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">{{ t('vehicle.plate') }}</span>
           <input v-model="form.plate_number" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" placeholder="777 AAA 01">
         </label>
 
         <div class="grid grid-cols-2 gap-3">
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Год</span>
+            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">{{ t('vehicle.year') }}</span>
             <input v-model.number="form.year" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" inputmode="numeric" type="number">
           </label>
 
           <label class="block">
-            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">Цвет</span>
-            <input v-model="form.color" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" placeholder="Белый">
+            <span class="mb-2 block text-sm text-slate-300 font-600 light:text-slate-600">{{ t('vehicle.color') }}</span>
+            <input v-model="form.color" class="h-13 w-full border app-border rounded-2xl app-card px-4 text-white font-800 outline-none focus:border-main-400" :placeholder="t('vehicle.colorPlaceholder')">
           </label>
         </div>
 
@@ -413,8 +414,8 @@ async function submitVehicle() {
           :disabled="driver.isLoading || !canSubmit"
           icon="i-mdi-check"
           :loading="driver.isLoading"
-          loading-text="Сохраняем..."
-          :text="isEditing ? 'Сохранить' : 'Продолжить'"
+          :loading-text="t('vehicle.saving')"
+          :text="isEditing ? t('vehicle.save') : t('vehicle.continue')"
         />
       </form>
     </section>
