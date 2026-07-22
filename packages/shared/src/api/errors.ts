@@ -8,6 +8,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   'already belongs to a park': 'Водитель уже состоит в таксопарке.',
   'balance topped up': 'Баланс пополнен.',
   'cannot redeem your own referral code': 'Свой собственный код применить нельзя — поделитесь им с другом.',
+  'cash commission debt exceeds the limit to go online': 'Долг по наличным поездкам превысил 1000 ₸. Пополните баланс, чтобы выйти на линию.',
   'complaint already resolved': 'Жалоба уже рассмотрена.',
   'complaint not found': 'Жалоба не найдена.',
   'driver account not found or not authorized': 'Аккаунт водителя не найден. Обратитесь к администратору.',

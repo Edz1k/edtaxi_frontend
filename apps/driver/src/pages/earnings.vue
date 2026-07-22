@@ -4,7 +4,7 @@ import EarningsChart from '~/components/driver/EarningsChart.vue'
 import PaymentFrameModal from '~/components/PaymentFrameModal.vue'
 import { useToast } from '~/composables/useToast'
 import { useDriverEarningsStore } from '~/stores/driverEarnings'
-import { MIN_PAYOUT_AMOUNT } from '~/types/driver'
+import { DEFAULT_MAX_DEBT_TO_GO_ONLINE, MIN_PAYOUT_AMOUNT } from '~/types/driver'
 
 const earnings = useDriverEarningsStore()
 const toast = useToast()
@@ -78,6 +78,14 @@ async function submitTopUp() {
 }
 
 const availableBalance = computed(() => earnings.wallet?.available_balance ?? 0)
+const debtBalance = computed(() => earnings.wallet?.debt_balance ?? 0)
+
+// Порог долга берём с сервера (max_debt_to_go_online); фолбэк — локальная
+// константа для старого бэкенда. Долг СТРОГО выше порога блокирует линию.
+const maxDebtToGoOnline = computed(() =>
+  earnings.wallet?.max_debt_to_go_online ?? DEFAULT_MAX_DEBT_TO_GO_ONLINE,
+)
+const isDebtBlockingOnline = computed(() => debtBalance.value > maxDebtToGoOnline.value)
 
 const canRequestPayout = computed(() =>
   payoutAmount.value >= MIN_PAYOUT_AMOUNT
@@ -211,14 +219,18 @@ function formatDate(value: string) {
         <p class="mt-2 text-4xl text-main-200 font-950">
           {{ formatMoney(earnings.wallet?.available_balance ?? 0) }}
         </p>
-        <!-- Долг не блокирует работу: комиссии наличных поездок копятся и
-             автоматически списываются при следующем пополнении. -->
-        <template v-if="earnings.wallet && earnings.wallet.debt_balance > 0">
+        <!-- Долг по комиссиям наличных поездок гасится при следующем пополнении.
+             Пока он в пределах порога — не мешает работать; как только превышает
+             (max_debt_to_go_online) — выход на линию блокируется до пополнения. -->
+        <template v-if="earnings.wallet && debtBalance > 0">
           <p class="mt-1 text-sm text-red-300">
-            Долг по наличным поездкам: {{ formatMoney(earnings.wallet.debt_balance) }}
+            Долг по наличным поездкам: {{ formatMoney(debtBalance) }}
           </p>
-          <p class="mt-0.5 text-xs text-slate-400 leading-4">
-            Долг не мешает выходить на линию — спишется автоматически при следующем пополнении (это будет видно в истории).
+          <p v-if="isDebtBlockingOnline" class="mt-0.5 text-xs text-red-300/90 font-700 leading-4">
+            Долг превысил {{ formatMoney(maxDebtToGoOnline) }} — выход на линию заблокирован. Пополните баланс, чтобы вернуться на линию (долг спишется автоматически).
+          </p>
+          <p v-else class="mt-0.5 text-xs text-slate-400 leading-4">
+            Долг пока не мешает выходить на линию, но при превышении {{ formatMoney(maxDebtToGoOnline) }} линия заблокируется. Спишется автоматически при следующем пополнении.
           </p>
         </template>
         <p v-else class="mt-1 text-sm text-slate-400">
