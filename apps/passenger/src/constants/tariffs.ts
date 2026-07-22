@@ -1,4 +1,4 @@
-import type { CategoryGroup, EstimateTripResponse, PaymentMethod, VehicleCategory } from '~/types/trips'
+import type { CategoryGroup, EstimateTripResponse, VehicleCategory } from '~/types/trips'
 
 // Канонический порядок тарифов в интерфейсе (от дешёвого к дорогому внутри
 // групп: мото → такси → хантакси) — используется для сортировки выбора.
@@ -83,14 +83,4 @@ export const TARIFF_META: Record<VehicleCategory, {
 
 export function formatFare(estimate: EstimateTripResponse) {
   return `${Math.round(estimate.estimated_fare).toLocaleString('ru-RU')} ₸`
-}
-
-// Способы оплаты для тогла (порядок = порядок в UI). prepaid в тогл не входит —
-// его выбирают отдельные кнопки Apple Pay / Google Pay под ним.
-export const PAYMENT_ORDER: PaymentMethod[] = ['cash', 'card']
-
-export const PAYMENT_META: Record<PaymentMethod, { icon: string, label: string }> = {
-  cash: { icon: 'i-mdi-cash', label: 'Наличные' },
-  card: { icon: 'i-mdi-credit-card-outline', label: 'Карта' },
-  prepaid: { icon: 'i-mdi-flash-outline', label: 'Предоплата' },
 }
