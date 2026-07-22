@@ -280,6 +280,20 @@ export const useDriverStore = defineStore('driver', () => {
     }
   }
 
+  // refreshProfile перечитывает профиль (в т.ч. настройки гео-проверки).
+  // Тихий: ошибка не должна мешать водителю выйти на линию.
+  async function refreshProfile() {
+    const fresh = await createDriverProfile()
+    profile.value = fresh
+    isOnline.value = fresh.is_online
+    isAvailable.value = fresh.is_available
+    return fresh
+  }
+
+  // Настройки гео-проверки с сервера; нет профиля или старый бэкенд — гейт
+  // считаем выключенным (кнопки не блокируем).
+  const geoGate = computed(() => profile.value?.geo_gate ?? null)
+
   // loadCategories подтягивает available/active тарифы водителя.
   // Ошибка не показывается тостом: без данных чипы тарифов просто скрыты.
   async function loadCategories() {
@@ -430,6 +444,11 @@ export const useDriverStore = defineStore('driver', () => {
     try {
       const status = await updateDriverStatus({ is_online: nextOnline })
       applyStatus(status)
+      // Выход на линию — единственный регулярный момент, когда можно освежить
+      // серверные настройки (режим и радиусы гео-проверки). Иначе смена режима
+      // доехала бы до водителя только после перезапуска приложения.
+      if (nextOnline)
+        refreshProfile().catch(() => {})
       return status
     }
     catch (error) {
@@ -831,6 +850,7 @@ export const useDriverStore = defineStore('driver', () => {
     applyTripStatus,
     availableCategories,
     canAdvanceNavPoint,
+    geoGate,
     cancelTrip,
     currentNavPoint,
     clearDriverState,

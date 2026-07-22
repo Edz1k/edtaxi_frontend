@@ -3,6 +3,7 @@ import type { GeoPlace, RouteCoordinate } from '@edtaxi/shared/types/geocoding'
 import type { MapPickerMode } from '@edtaxi/shared/types/map'
 import type { CreateTripPayload, EstimateTripPayload, EstimateTripResponse, PaymentMethod, Trip, TripFlowState, TripOptions, TripRouteChange, TripStop, VehicleCategory } from '~/types/trips'
 import type { PassengerDriverLocation } from '~/types/websocket'
+import { getDrivingRouteVia } from '@edtaxi/shared/api/geocoding'
 import { useLocationAccess } from '@edtaxi/shared/composables/location/useLocationAccess'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ApiError } from '~/api/client'
@@ -249,13 +250,21 @@ export const useTripsStore = defineStore('trips', () => {
   // для самостоятельной отмены пассажиром: сразу возвращаем форму заказа.
   function finishActiveTrip(trip: Trip, options: { keepOnScreen?: boolean } = {}) {
     history.value = [trip, ...history.value.filter(item => item.id !== trip.id)]
-    syncRouteDraftFromTrip(trip)
 
     if (options.keepOnScreen === false) {
+      // Пассажир сам отменил заказ — возвращаем ЧИСТУЮ форму (решение
+      // владельца). syncRouteDraftFromTrip здесь не зовём: он бы заполнил
+      // адреса из отменённой поездки, и clearOrderForm пришлось бы вычищать
+      // их следом.
       clearEstimate()
       resetActiveTrip()
+      clearOrderForm()
       return
     }
+
+    // Экран завершённой поездки: адреса нужны карте (пины А/Б) и экрану
+    // оценки, поэтому черновик из поездки восстанавливаем.
+    syncRouteDraftFromTrip(trip)
 
     activeTrip.value = trip
     driverLocation.value = null
@@ -294,6 +303,9 @@ export const useTripsStore = defineStore('trips', () => {
     activeTrip.value = trip
     history.value = [trip, ...history.value.filter(item => item.id !== trip.id)]
     syncRouteDraftFromTrip(trip)
+    // Единственная точка, через которую поездка попадает в стор (restore,
+    // поллинг, WS, принятая остановка) — поэтому линию тянем отсюда.
+    refreshTripRoute().catch(() => {})
 
     if (trip.status !== 'searching') {
       stopSearchTimer()
@@ -753,6 +765,72 @@ export const useTripsStore = defineStore('trips', () => {
     routeCoordinates.value = coordinates
   }
 
+  // --- Маршрут ИДУЩЕЙ поездки ---
+  //
+  // Линию на карте рисует routeCoordinates, а заполнял его до сих пор только
+  // планировщик заказа. Для уже существующей поездки геометрию не запрашивал
+  // никто, поэтому:
+  //   - перезапуск мини-аппа в поездке → карта без маршрута и без пинов А/Б;
+  //   - водитель согласился заехать по пути → остановка появлялась маркером,
+  //     но линия оставалась старой («маршрут не менялся, пока мы ехали»).
+  //
+  // activeRouteKey держит поездку и её остановки: пока они те же, повторно в
+  // /route не ходим (клиентского кэша нет, а каждый промах серверного — платный
+  // запрос к провайдеру). hasRealRoute отличает настоящую геометрию от
+  // прямолинейного фолбэка: с фолбэком продолжаем пробовать на следующих
+  // обновлениях поездки.
+  let activeRouteKey: null | string = null
+  let hasRealRoute = false
+
+  function tripRoutePoints(trip: Trip) {
+    return [
+      { lat: trip.pickup_lat, lng: trip.pickup_lng },
+      ...(trip.stops ?? []).map(stop => ({ lat: stop.lat, lng: stop.lng })),
+      { lat: trip.dropoff_lat, lng: trip.dropoff_lng },
+    ]
+  }
+
+  function tripRouteKey(trip: Trip) {
+    const stopsKey = (trip.stops ?? []).map(stop => `${stop.lat},${stop.lng}`).join(';')
+    return `${trip.id}|${stopsKey}`
+  }
+
+  async function refreshTripRoute() {
+    const trip = activeTrip.value
+    if (!trip || isTerminalTripStatus(trip.status))
+      return
+
+    const key = tripRouteKey(trip)
+    if (key === activeRouteKey && hasRealRoute)
+      return
+
+    const points = tripRoutePoints(trip)
+    activeRouteKey = key
+
+    try {
+      const route = await getDrivingRouteVia(points)
+      if (route.geometry.length >= 2) {
+        routeCoordinates.value = route.geometry
+        hasRealRoute = true
+        return
+      }
+    }
+    catch {}
+
+    // Провайдер не ответил — рисуем прямую через все точки: это заведомо
+    // грубо, но лучше пустой карты, и вместе с линией появляются пины А/Б
+    // (MapView рисует их только при наличии маршрута).
+    hasRealRoute = false
+    routeCoordinates.value = points.map(point => [point.lng, point.lat] as RouteCoordinate)
+  }
+
+  // Заказ только что создан: планировщик уже получил ровно эту геометрию —
+  // отмечаем её как актуальную, чтобы не запрашивать маршрут повторно.
+  function markRouteAsFetched(trip: Trip) {
+    activeRouteKey = tripRouteKey(trip)
+    hasRealRoute = routeCoordinates.value.length >= 2
+  }
+
   function setPickupPlace(place: GeoPlace | null) {
     pickupPlace.value = place
 
@@ -859,6 +937,10 @@ export const useTripsStore = defineStore('trips', () => {
       // из созданной поездки (syncActiveTrip → syncRouteDraftFromTrip).
       tripOptions.value = emptyTripOptions()
       tripComment.value = ''
+      // Геометрия этого маршрута уже в сторе — её только что построил
+      // планировщик. Отмечаем ДО syncActiveTrip, иначе тот сходит в /route
+      // за тем же самым.
+      markRouteAsFetched(trip)
       syncActiveTrip(trip)
 
       if (isPrepaid && trip.payment_url) {
@@ -927,8 +1009,8 @@ export const useTripsStore = defineStore('trips', () => {
 
     try {
       await cancelTrip(activeTrip.value.id)
-      // Свою отмену пассажир не разглядывает — сразу назад к форме заказа
-      // (маршрут остаётся заполненным, можно заказать заново в один тап).
+      // Свою отмену пассажир не разглядывает — сразу назад к ЧИСТОЙ форме
+      // заказа (адреса чистит finishActiveTrip в ветке keepOnScreen=false).
       finishActiveTrip({
         ...activeTrip.value,
         status: 'cancelled',
@@ -1052,8 +1134,30 @@ export const useTripsStore = defineStore('trips', () => {
     pendingRouteChange.value = null
     routeChangeOutcome.value = null
     routeChangeBaseStops.value = 0
+    // Геометрия следующей поездки будет своя.
+    activeRouteKey = null
+    hasRealRoute = false
     stopSearchTimer()
     stopActiveTripPolling()
+  }
+
+  // clearOrderForm — очистить форму заказа (А, Б, остановки и черновик в
+  // localStorage). Отдельно от resetActiveTrip: тот дёргается и на пути
+  // восстановления (restoreActiveTrip → нет активной поездки), а там форма
+  // может быть уже набрана пассажиром — снести её было бы обидно.
+  //
+  // Порядок важен: сначала поля, потом (после отработки вотчера-персиста)
+  // сам черновик. Вотчер пропускает запись, пока есть activeTrip, а после
+  // завершения поездки оживает — и без ожидания перезаписал бы черновик
+  // старыми адресами.
+  async function clearOrderForm() {
+    pickup.value = ''
+    destination.value = ''
+    pickupPlace.value = null
+    destinationPlace.value = null
+    stops.value = []
+    await nextTick()
+    clearRouteDraft()
   }
 
   function resetTripState() {
@@ -1125,6 +1229,7 @@ export const useTripsStore = defineStore('trips', () => {
     cancelMapPicker,
     cheapestSelectedEstimate,
     clearEstimate,
+    clearOrderForm,
     expandOnReturn,
     requestExpandSearch,
     confirmMapPicker,

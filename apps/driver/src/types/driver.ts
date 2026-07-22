@@ -153,6 +153,17 @@ export interface DailyCheck {
   created_at: string
 }
 
+// Гео-проверка «Я на месте»/«Завершить» на сервере. Режим И радиусы приходят
+// с бэкенда: калибровка после наблюдений не должна требовать релиза апы.
+//   off     — не проверяет;
+//   warn    — логирует дистанции, действие пропускает (кнопку НЕ блокируем);
+//   enforce — блокирует (409).
+export interface DriverGeoGate {
+  mode: 'enforce' | 'off' | 'warn'
+  arrival_radius_m: number
+  completion_radius_m: number
+}
+
 export interface DriverProfile {
   id: string
   is_available: boolean
@@ -160,6 +171,8 @@ export interface DriverProfile {
   rating: number
   total_trips: number
   user_id: string
+  // Нет у старого бэкенда — тогда гейт считается выключенным.
+  geo_gate?: DriverGeoGate
 }
 
 export interface DriverStatusResponse {

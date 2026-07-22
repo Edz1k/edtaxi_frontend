@@ -475,6 +475,7 @@ async function toggleOnline() {
 
     <DriverStatusPanel
       ref="statusPanelRef"
+      :driver-coordinates="liveCoordinates"
       :is-location-granted="isLocationGranted"
       :online-block-message="onlineBlockMessage"
       :online-block-target="onlineBlockTarget"
