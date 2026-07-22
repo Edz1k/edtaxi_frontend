@@ -13,11 +13,11 @@ const passenger = usePassengerStore()
 // в шапке выше.
 const menuItems = [
   { label: 'Акции и бонусы', description: 'Все акции и реферальная программа', icon: 'i-mdi-gift-outline', to: '/bonus' },
-  { label: 'История', description: 'Поездки и оценки', icon: 'i-mdi-clock-outline', to: '/menu/history' },
   { label: 'Избранные адреса', description: 'Сохранённые места', icon: 'i-mdi-heart-outline', to: '/menu/places' },
+  { label: 'История', description: 'Поездки и оценки', icon: 'i-mdi-clock-outline', to: '/menu/history' },
   { label: 'Безопасность', description: 'Вызов 112 и отправка маршрута', icon: 'i-mdi-shield-check-outline', to: '/menu/safety' },
-  { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support' },
   { label: 'Предложить улучшение', description: 'Идея по развитию сервиса', icon: 'i-mdi-lightbulb-outline', to: '/menu/feedback' },
+  { label: 'Поддержка', description: 'Помощь и обращения', icon: 'i-mdi-headset', to: '/menu/support' },
   { label: 'Настройки', description: 'Профиль и приложение', icon: 'i-mdi-cog-outline', to: '/menu/settings' },
   { label: 'О приложении', description: 'Тарифы и о сервисе Telegram Taxi', icon: 'i-mdi-information-outline', to: '/menu/about' },
 ]
