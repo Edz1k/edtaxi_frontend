@@ -122,12 +122,12 @@ const preferenceCount = computed(() => [
 
 const paymentButtonLabel = computed(() => {
   if (trips.paymentMethod === 'cash')
-    return 'Наличные'
+    return t('paySheet.cash')
   if (trips.paymentMethod === 'prepaid')
     return trips.prepaySource === 'apple' ? 'Apple Pay' : 'Google Pay'
   const digits = (wallet.card?.card_pan ?? '').replace(/\D/g, '')
   const tail = digits.slice(-4)
-  return tail ? `••${tail}` : 'Карта'
+  return tail ? `••${tail}` : t('downbar.card')
 })
 
 onMounted(() => {
@@ -760,7 +760,7 @@ function onHandleKeydown(event: KeyboardEvent) {
         >
           <div class="pointer-events-auto flex items-stretch gap-2">
             <button
-              :aria-label="`Способ оплаты: ${paymentButtonLabel}`"
+              :aria-label="t('downbar.payMethodAria', { method: paymentButtonLabel })"
               class="h-13 w-13 flex shrink-0 items-center justify-center border border-white/9 rounded-[1.2rem] bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.24)] transition active:scale-[0.96] active:bg-white/14"
               type="button"
               @click="isPaymentSheetOpen = true"
@@ -779,11 +779,11 @@ function onHandleKeydown(event: KeyboardEvent) {
               type="button"
               @click="submitTrip"
             >
-              {{ needsMotoConsent ? 'Подтвердите согласие с рисками' : primaryText }}
+              {{ needsMotoConsent ? t('downbar.confirmRisks') : primaryText }}
             </button>
 
             <button
-              :aria-label="preferenceCount ? `Пожелания: выбрано ${preferenceCount}` : 'Пожелания к поездке'"
+              :aria-label="preferenceCount ? t('downbar.prefsCountAria', { n: preferenceCount }) : t('prefSheet.title')"
               class="relative h-13 w-13 flex shrink-0 items-center justify-center border border-main-400/18 rounded-[1.2rem] bg-main-500/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.24)] transition active:scale-[0.96] active:bg-main-500/16"
               type="button"
               @click="isPreferencesOpen = true"

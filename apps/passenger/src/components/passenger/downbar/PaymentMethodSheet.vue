@@ -10,6 +10,8 @@ const emit = defineEmits<{
   close: []
 }>()
 
+const { t } = useI18n()
+
 const trips = useTripsStore()
 const wallet = useWalletStore()
 const toast = useToast()
@@ -72,7 +74,7 @@ async function finishBindSuccess(item: PaymentCard) {
 
   trips.setPrepaySource(null)
   trips.setPaymentMethod('card')
-  toast.success('Карта привязана', `Для поездки выбрана карта ••${tailOf(item.card_pan)}.`)
+  toast.success(t('paySheet.cardBoundTitle'), t('paySheet.cardBoundText', { tail: tailOf(item.card_pan) }))
   requestClose()
 }
 
@@ -106,8 +108,8 @@ async function verifyBindCompleted() {
   bindOutcomeShown = true
   stopPaymentPolling()
   toast.error(
-    'Карта не привязалась',
-    'Платёж прошёл, но FreedomPay не прислал данные карты. Проверочная сумма будет учтена в кошельке.',
+    t('paySheet.bindFailTitle'),
+    t('paySheet.bindFailText'),
   )
 }
 
@@ -119,7 +121,7 @@ function handlePaymentResult(status: 'failure' | 'success') {
   if (!bindOutcomeShown) {
     bindOutcomeShown = true
     stopPaymentPolling()
-    toast.error('Оплата не прошла', 'Карта не привязана — попробуйте ещё раз.')
+    toast.error(t('paySheet.payFailTitle'), t('paySheet.payFailText'))
   }
 }
 
@@ -197,14 +199,14 @@ onBeforeUnmount(() => {
                   class="text-lg text-white font-950 outline-none"
                   tabindex="-1"
                 >
-                  Способ оплаты
+                  {{ t('paySheet.title') }}
                 </h2>
                 <p class="mt-0.5 text-xs text-slate-400">
-                  Выберите, как оплатить эту поездку
+                  {{ t('paySheet.lead') }}
                 </p>
               </div>
               <button
-                aria-label="Закрыть способы оплаты"
+                :aria-label="t('paySheet.closeAria')"
                 class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-300 transition active:scale-95"
                 type="button"
                 @click="requestClose"
@@ -216,7 +218,7 @@ onBeforeUnmount(() => {
 
           <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(var(--app-safe-area-bottom)+1rem)]">
             <p class="mb-2 px-1 text-[11px] text-slate-500 font-900 uppercase">
-              Оплата после поездки
+              {{ t('paySheet.postpay') }}
             </p>
             <div class="rounded-[1.5rem] bg-white/5 p-2 space-y-1">
               <button
@@ -232,12 +234,12 @@ onBeforeUnmount(() => {
                 </span>
                 <span class="min-w-0 flex-1">
                   <span class="block text-sm text-white font-900 tracking-wider">•••• {{ tailOf(item.card_pan) }}</span>
-                  <span class="block text-[11px] text-slate-500 leading-4">Спишется после поездки</span>
+                  <span class="block text-[11px] app-faint leading-4">{{ t('paySheet.chargeAfter') }}</span>
                 </span>
                 <span
                   v-if="trips.paymentMethod === 'card' && item.is_default"
                   class="i-mdi-check-circle shrink-0 text-5.5 text-main-300"
-                  aria-label="Выбрано"
+                  :aria-label="t('paySheet.selected')"
                 />
               </button>
 
@@ -250,13 +252,13 @@ onBeforeUnmount(() => {
                   <span class="i-mdi-cash text-6" aria-hidden="true" />
                 </span>
                 <span class="min-w-0 flex-1">
-                  <span class="block text-sm text-white font-900">Наличные</span>
-                  <span class="block text-[11px] text-slate-500 leading-4">Оплата водителю</span>
+                  <span class="block text-sm text-white font-900">{{ t('paySheet.cash') }}</span>
+                  <span class="block text-[11px] app-faint leading-4">{{ t('paySheet.cashHint') }}</span>
                 </span>
                 <span
                   v-if="trips.paymentMethod === 'cash'"
                   class="i-mdi-check-circle shrink-0 text-5.5 text-main-300"
-                  aria-label="Выбрано"
+                  :aria-label="t('paySheet.selected')"
                 />
               </button>
             </div>
@@ -268,14 +270,14 @@ onBeforeUnmount(() => {
               @click="startBindCard"
             >
               <span class="i-mdi-credit-card-plus-outline text-5" aria-hidden="true" />
-              {{ wallet.isMutating ? 'Открываем FreedomPay…' : 'Добавить новую карту' }}
+              {{ wallet.isMutating ? t('paySheet.openingFreedom') : t('paySheet.addCard') }}
             </button>
             <p class="mt-1.5 px-2 text-center text-[10px] text-slate-500 leading-4">
-              Для проверки карты спишем {{ bindAmount }} ₸ — сумма поступит в ваш кошелёк
+              {{ t('paySheet.bindNote', { amount: bindAmount }) }}
             </p>
 
             <p class="mb-2 mt-4 px-1 text-[11px] text-slate-500 font-900 uppercase">
-              Оплата до поездки
+              {{ t('paySheet.prepay') }}
             </p>
             <div class="grid grid-cols-2 gap-2">
               <button
@@ -287,7 +289,7 @@ onBeforeUnmount(() => {
                 <span class="i-mdi-apple text-6" aria-hidden="true" />
                 <span>
                   <span class="block">Pay</span>
-                  <span class="block text-[9px] text-white/50 font-700">предоплата</span>
+                  <span class="block text-[9px] text-white/50 font-700">{{ t('paySheet.prepayShort') }}</span>
                 </span>
               </button>
               <button
@@ -299,12 +301,12 @@ onBeforeUnmount(() => {
                 <span class="i-mdi-google text-5.5" aria-hidden="true" />
                 <span>
                   <span class="block">Pay</span>
-                  <span class="block text-[9px] text-slate-500 font-700">предоплата</span>
+                  <span class="block text-[9px] app-faint font-700">{{ t('paySheet.prepayShort') }}</span>
                 </span>
               </button>
             </div>
             <p class="mt-2 px-2 text-[10px] text-slate-500 leading-4">
-              При предоплате поиск водителя начнётся после подтверждения платежа.
+              {{ t('paySheet.prepayNote') }}
             </p>
           </div>
         </section>

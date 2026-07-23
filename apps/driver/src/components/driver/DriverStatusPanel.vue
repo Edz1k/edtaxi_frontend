@@ -399,7 +399,7 @@ const peekPill = computed(() => {
                     :key="cat"
                     class="rounded-full bg-main-500/18 px-3 py-1.5 text-xs text-main-200 font-800 light:text-main-700"
                   >
-                    {{ t(`cats.`) }}
+                    {{ t(`cats.${cat}`) }}
                   </span>
                 </template>
 
@@ -413,7 +413,7 @@ const peekPill = computed(() => {
                     type="button"
                     @click="driver.toggleCategory(cat)"
                   >
-                    {{ t(`cats.`) }}
+                    {{ t(`cats.${cat}`) }}
                   </button>
                 </template>
               </div>

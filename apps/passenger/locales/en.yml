@@ -90,6 +90,22 @@ feedback:
   toastOkText: Your suggestion has been sent.
   toastFail: Failed to send the suggestion. Please try again.
 support:
+  online: Support is online
+  howHelp: How can we help?
+  intro: Create a ticket, pick a relevant subject and describe the situation in the chat. A specialist will see all the details and join the conversation.
+  tip1: Write the details in one message and attach a photo if needed.
+  tip2: Replies and the message history are saved in this section.
+  closePick: Close subject picker
+  newTicket: New ticket
+  chooseSubject: Choose a subject
+  chooseSubjectHint: This routes your ticket to the right specialist faster
+  previousTickets: Previous tickets
+  inHistory: '{n} in history'
+  emptyHistory: After your first ticket, the message history will appear here.
+  greetingNamed: 'Hello, {name}! Please tell us what happened. We’ll look into it carefully and try to help as soon as possible.'
+  greeting: Hello! Please tell us what happened. We’ll look into it carefully and try to help as soon as possible.
+  yesRaw: yes
+  noRaw: No, the problem is not solved
   myTickets: My tickets
   new: + New
   pickSubject: Choose a subject
@@ -507,6 +523,10 @@ tripOrder:
   showPrices: Show prices
   routeFailed: Couldn’t build the route.
 downbar:
+  card: Card
+  payMethodAria: 'Payment method: {method}'
+  confirmRisks: Confirm you accept the risks
+  prefsCountAria: 'Preferences: {n} selected'
   orderAnother: Order another car
   newTrip: New trip
   cancelling: Cancelling...
@@ -612,3 +632,114 @@ payFrame:
   title: Payment
   closeAria: Close payment
   iframeTitle: Card payment
+paySheet:
+  title: Payment method
+  lead: Choose how to pay for this trip
+  closeAria: Close payment methods
+  postpay: Pay after the trip
+  chargeAfter: Charged after the trip
+  selected: Selected
+  cash: Cash
+  cashHint: Pay the driver
+  openingFreedom: Opening FreedomPay…
+  addCard: Add a new card
+  bindNote: To verify the card we’ll charge {amount} ₸ — it goes to your wallet
+  prepay: Pay before the trip
+  prepayShort: prepayment
+  prepayNote: With prepayment, the driver search starts after the payment is confirmed.
+  cardBoundTitle: Card linked
+  cardBoundText: Card ••{tail} selected for the trip.
+  bindFailTitle: Card not linked
+  bindFailText: The payment went through, but FreedomPay didn’t send the card data. The verification amount will be credited to your wallet.
+  payFailTitle: Payment failed
+  payFailText: The card was not linked — please try again.
+prefSheet:
+  title: Trip preferences
+  lead: Select everything the driver should keep in mind
+  closeAria: Close preferences
+  childSeat: Child seat
+  pets: Trip with a pet
+  motoUnavailable: Child seat and trips with a pet aren’t available on moto taxi.
+  accessible: Special needs
+  friendOrder: Order for someone else
+  nameAria: Passenger name
+  namePlaceholder: Passenger name
+  phoneAria: Passenger phone
+  phonePlaceholder: Passenger phone
+  friendHint: The driver will see the passenger’s name and phone.
+  comment: Comment for the driver
+  commentPlaceholder: Entrance, intercom, landmark...
+  done: Done
+supportSubject:
+  payment: Payment
+  trip: Trip
+  account: Account
+  verification: Verification
+  other: Other
+tariffInfo:
+  aboutTariff: About the tariff
+  passengers: Passengers
+  luggage: Luggage
+  vehicleExample: Example vehicle
+  vehicleExamples: Example vehicles
+  modelNoteMoto: The exact model depends on the transport available nearby.
+  modelNote: The exact model depends on the cars available nearby.
+  closeAria: 'Close {name} tariff info'
+  motoAlt: Moto tariff motorcycle
+  carAlt: '{name} tariff car'
+  selected: '{name} selected'
+  details:
+    moto:
+      description: A fast way to get around the city for light trips.
+      passengers: 1 passenger
+      luggage: Small bag
+      vehicles: City motorcycle or maxi-scooter
+      features:
+        - Fast trips across the city and between districts
+        - Protective helmet for the passenger
+        - The tariff is designed for a single passenger
+        - Availability depends on weather and road conditions
+      luggageNote: Moto is not suitable for suitcases or large luggage. Bring only a small bag or backpack.
+    economy:
+      description: Fast and affordable for everyday city trips.
+      passengers: Up to 4 people
+      luggage: Up to 2 suitcases
+      vehicles: Hyundai Accent, Kia Rio, Volkswagen Polo
+      features:
+        - Standard passenger car
+        - Air conditioning
+        - Trips across the city and between districts
+        - For one, a couple or a small group
+    comfort:
+      description: More space and comfort for longer trips.
+      passengers: Up to 4 people
+      luggage: Up to 3 suitcases
+      vehicles: Toyota Camry, Hyundai Sonata, Kia K5
+      features:
+        - Spacious cabin
+        - Air conditioning or climate control
+        - Higher-class cars
+        - For the airport, station and business meetings
+    business:
+      description: Premium cars and a higher level of service.
+      passengers: Up to 4 people
+      luggage: Up to 3 large suitcases
+      vehicles: Mercedes-Benz E-Class, BMW 5, Audi A6
+      features:
+        - Premium spacious cabin
+        - Climate control
+        - Driver in business attire
+        - Help with loading luggage
+        - For meetings, transfers and events
+    minivan:
+      description: For large groups, family trips and transfers with luggage.
+      passengers: Up to 6–7 people
+      luggage: Up to 5–6 suitcases
+      vehicles: Hyundai Staria, Mercedes-Benz V-Class, Volkswagen Multivan
+      features:
+        - Spacious passenger cabin
+        - Separate space for luggage
+        - Air conditioning or climate control
+        - Help with loading luggage
+        - For the airport, travel and transfers
+      luggageNote: Luggage capacity depends on the number of passengers and the size of the suitcases. If you have a lot of items, mention it when placing the order.

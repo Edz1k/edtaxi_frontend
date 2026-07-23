@@ -5,7 +5,7 @@ import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
 import { useAuthStore } from '~/stores/auth'
 import { usePassengerStore } from '~/stores/passenger'
 import { useSupportStore } from '~/stores/support'
-import { PASSENGER_SUPPORT_SUBJECTS, SUPPORT_SUBJECT_LABELS, supportSubjectLabel } from '~/types/support'
+import { PASSENGER_SUPPORT_SUBJECTS } from '~/types/support'
 
 const support = useSupportStore()
 const auth = useAuthStore()
@@ -26,6 +26,7 @@ const activeRoom = computed(() => support.activeRoom)
 const hasWelcomeMessage = computed(() => Boolean(activeRoom.value && welcomedRoomIds.value.has(activeRoom.value.id)))
 
 const subjects = PASSENGER_SUPPORT_SUBJECTS
+const { t } = useI18n()
 const subjectIcons: Record<SupportSubject, string> = {
   account: 'i-mdi-account-circle-outline',
   other: 'i-mdi-message-question-outline',
@@ -40,13 +41,13 @@ definePage({
     layout: 'passenger',
     requiresAuth: true,
     requiredRole: 'passenger',
-    screenSubtitle: 'Назад в меню',
-    screenTitle: 'Поддержка',
+    screenSubtitle: 'nav.backToMenu',
+    screenTitle: 'titles.support',
   },
 })
 
 useHead({
-  title: 'Поддержка | Telegram Taxi',
+  title: () => `${t('titles.support')} | Telegram Taxi`,
 })
 
 onMounted(async () => {
@@ -139,10 +140,10 @@ function isMyMessage(senderId: string) {
 
 function statusLabel(room: SupportRoom) {
   if (room.status === 'closed')
-    return 'Закрыто'
+    return t('support.statusClosed')
   if (room.status === 'pending_close')
-    return 'Подтвердите'
-  return 'Открыто'
+    return t('support.statusPending')
+  return t('support.statusOpen')
 }
 
 async function pickCategory(subject: SupportSubject) {
@@ -179,18 +180,18 @@ async function onFileSelected(event: Event) {
 async function confirmClose(resolved: boolean) {
   if (support.isSending)
     return
-  await support.sendMessage(resolved ? 'да' : 'Нет, проблема не решена')
+  await support.sendMessage(resolved ? t('support.yesRaw') : t('support.noRaw'))
   scrollToBottom()
 }
 
 const isClosed = computed(() => activeRoom.value?.status === 'closed')
 const isPendingClose = computed(() => activeRoom.value?.status === 'pending_close')
-const agentLabel = computed(() => activeRoom.value?.agent_name ? `Оператор ${activeRoom.value.agent_name}` : 'Поддержка на связи')
+const agentLabel = computed(() => activeRoom.value?.agent_name ? t('support.agent', { name: activeRoom.value.agent_name }) : t('support.online'))
 const showWelcomeMessage = computed(() => hasWelcomeMessage.value && isWelcomeVisible.value)
 const passengerFirstName = computed(() => passenger.profile?.first_name?.trim() || '')
 const welcomeMessage = computed(() => passengerFirstName.value
-  ? `Здравствуйте, ${passengerFirstName.value}! Расскажите, пожалуйста, что произошло. Мы внимательно разберёмся и постараемся помочь как можно скорее.`
-  : 'Здравствуйте! Расскажите, пожалуйста, что произошло. Мы внимательно разберёмся и постараемся помочь как можно скорее.')
+  ? t('support.greetingNamed', { name: passengerFirstName.value })
+  : t('support.greeting'))
 
 watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { immediate: true, flush: 'post' })
 </script>
@@ -209,24 +210,24 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
             <div class="relative z-1">
               <span class="inline-flex items-center gap-1.5 rounded-full bg-main-500/12 px-2.5 py-1 text-[10px] text-main-300 font-850 tracking-wide uppercase">
                 <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_7px_rgba(52,211,153,0.8)]" />
-                Поддержка на связи
+                {{ t('support.online') }}
               </span>
 
               <h1 class="mt-4 text-[26px] text-white font-950 leading-7.5">
-                Чем мы можем помочь?
+                {{ t('support.howHelp') }}
               </h1>
               <p class="mt-2.5 text-[13px] text-slate-400 leading-5">
-                Создайте обращение, выберите подходящую тему и опишите ситуацию в чате. Специалист увидит всю информацию и подключится к диалогу.
+                {{ t('support.intro') }}
               </p>
 
               <div class="mt-4 space-y-2.5">
                 <p class="flex items-start gap-2.5 text-[12px] text-slate-300 leading-4.5">
                   <span class="i-mdi-message-text-outline mt-0.5 shrink-0 text-4 text-main-300" aria-hidden="true" />
-                  Напишите детали одним сообщением и при необходимости приложите фотографию.
+                  {{ t('support.tip1') }}
                 </p>
                 <p class="flex items-start gap-2.5 text-[12px] text-slate-300 leading-4.5">
                   <span class="i-mdi-history mt-0.5 shrink-0 text-4 text-main-300" aria-hidden="true" />
-                  Ответы и история переписки сохранятся в этом разделе.
+                  {{ t('support.tip2') }}
                 </p>
               </div>
 
@@ -237,7 +238,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
                 @click="isPicking = !isPicking"
               >
                 <span :class="isPicking ? 'i-mdi-close' : 'i-mdi-plus'" class="text-5" aria-hidden="true" />
-                {{ isPicking ? 'Закрыть выбор темы' : 'Новое обращение' }}
+                {{ isPicking ? t('support.closePick') : t('support.newTicket') }}
               </button>
             </div>
           </section>
@@ -246,10 +247,10 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
             <section v-if="isPicking" class="mt-3 border border-white/6 rounded-[1.6rem] bg-[#101214] p-3.5 shadow-[0_15px_40px_rgba(0,0,0,0.24)]">
               <div class="px-1">
                 <p class="text-sm text-white font-900">
-                  Выберите тему
+                  {{ t('support.chooseSubject') }}
                 </p>
                 <p class="mt-0.5 text-[11px] text-slate-500">
-                  Так обращение быстрее попадёт к нужному специалисту
+                  {{ t('support.chooseSubjectHint') }}
                 </p>
               </div>
 
@@ -263,7 +264,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
                   @click="pickCategory(s)"
                 >
                   <span :class="subjectIcons[s]" class="text-5 text-main-300" aria-hidden="true" />
-                  <span class="mt-2 text-[13px] text-white font-850">{{ SUPPORT_SUBJECT_LABELS[s] }}</span>
+                  <span class="mt-2 text-[13px] text-white font-850">{{ t(`supportSubject.${s}`) }}</span>
                 </button>
               </div>
             </section>
@@ -284,8 +285,8 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
                 <span class="i-mdi-archive-clock-outline text-4.5" aria-hidden="true" />
               </span>
               <span class="min-w-0 flex-1">
-                <span class="block text-[13px] text-slate-300 font-850">Предыдущие обращения</span>
-                <span class="mt-0.5 block text-[11px] text-slate-600">{{ support.rooms.length }} в истории</span>
+                <span class="block text-[13px] text-slate-300 font-850 light:text-slate-600">{{ t('support.previousTickets') }}</span>
+                <span class="mt-0.5 block text-[11px] app-faint">{{ t('support.inHistory', { n: support.rooms.length }) }}</span>
               </span>
               <span
                 class="i-mdi-chevron-down text-5 text-slate-600 transition-transform duration-300"
@@ -308,7 +309,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
                     :class="room.status === 'closed' ? 'bg-slate-600' : room.status === 'pending_close' ? 'bg-amber-400/80' : 'bg-emerald-400/80'"
                   />
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate text-[13px] text-slate-300 font-800">{{ supportSubjectLabel(room.subject) }}</span>
+                    <span class="block truncate text-[13px] text-slate-300 font-800">{{ t(`supportSubject.${room.subject}`) }}</span>
                     <span class="mt-0.5 block text-[10px] text-slate-600">{{ formatDay(room.updated_at) }}</span>
                   </span>
                   <span
@@ -323,7 +324,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
           </section>
 
           <p v-else-if="!support.isLoading" class="mt-5 px-4 text-center text-[11px] text-slate-700 leading-4">
-            После первого обращения здесь появится история переписки.
+            {{ t('support.emptyHistory') }}
           </p>
         </div>
       </template>
@@ -333,7 +334,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
         <!-- Header -->
         <div class="mb-3 flex shrink-0 items-center gap-3 px-1">
           <button
-            aria-label="К списку обращений"
+            :aria-label="t('support.backAria')"
             class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-white/7 text-slate-200 transition active:scale-95"
             type="button"
             @click="support.closeThread()"
@@ -350,19 +351,19 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
             <div class="flex items-center gap-1.5">
               <span class="h-2 w-2 rounded-full shadow-[0_0_8px_currentColor]" :class="isClosed ? 'bg-slate-500 text-slate-500' : 'bg-emerald-400 text-emerald-400'" />
               <p class="truncate text-xs text-slate-400 font-700">
-                {{ isClosed ? 'Обращение закрыто' : agentLabel }}
+                {{ isClosed ? t('support.closed') : agentLabel }}
               </p>
             </div>
           </div>
           <span class="max-w-22 truncate rounded-full bg-white/6 px-2.5 py-1 text-[10px] text-slate-400 font-800">
-            {{ supportSubjectLabel(activeRoom.subject) }}
+            {{ t(`supportSubject.${activeRoom.subject}`) }}
           </span>
         </div>
 
         <!-- Подтверждение закрытия -->
         <div v-if="isPendingClose" class="mb-3 shrink-0 rounded-2xl bg-amber-500/12 px-4 py-3">
           <p class="text-sm text-amber-200 font-800">
-            Ваша проблема решена?
+            {{ t('support.resolvedQ') }}
           </p>
           <div class="mt-2.5 flex gap-2">
             <button
@@ -371,7 +372,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
               type="button"
               @click="confirmClose(true)"
             >
-              Да, решена
+              {{ t('support.yesResolved') }}
             </button>
             <button
               :disabled="support.isSending"
@@ -379,7 +380,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
               type="button"
               @click="confirmClose(false)"
             >
-              Нет
+              {{ t('support.no') }}
             </button>
           </div>
         </div>
@@ -418,7 +419,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
             <div v-if="!hasWelcomeMessage && !support.messages.length" class="h-full min-h-60 flex flex-col items-center justify-center gap-3 text-center">
               <span class="i-mdi-headset text-16 text-white/8" />
               <p class="max-w-60 text-sm text-slate-500 leading-5">
-                Напишите вопрос — поддержка ответит в ближайшее время.
+                {{ t('support.emptyThread') }}
               </p>
             </div>
 
@@ -449,7 +450,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
                   >
                     <img
                       :src="mediaUrl(msg.image_url)"
-                      alt="Вложение"
+                      :alt="t('support.attachment')"
                       class="max-h-60 w-full rounded-[1rem] object-cover"
                       loading="lazy"
                     >
@@ -477,14 +478,14 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
           type="button"
           @click="support.closeThread()"
         >
-          К списку обращений
+          {{ t('support.toList') }}
         </button>
 
         <!-- Input -->
         <form v-else class="grid grid-cols-[auto_1fr_auto] mt-3 shrink-0 items-center gap-2" @submit.prevent="send">
           <input ref="fileInput" accept="image/*" class="hidden" type="file" @change="onFileSelected">
           <button
-            aria-label="Прикрепить фото"
+            :aria-label="t('support.attach')"
             :disabled="support.isSending"
             class="h-12 w-12 flex items-center justify-center rounded-full bg-[#15171a] text-slate-300 transition active:scale-[0.94] disabled:opacity-50"
             type="button"
@@ -495,16 +496,16 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
           <div class="h-12 min-w-0 flex items-center border border-white/8 rounded-full bg-[#111316] px-4 transition focus-within:border-main-400/50 focus-within:bg-[#15171a]">
             <input
               v-model="draft"
-              aria-label="Сообщение в поддержку"
+              :aria-label="t('support.msgAria')"
               class="min-w-0 w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
               maxlength="2000"
               name="support_message"
-              placeholder="Сообщение..."
+              :placeholder="t('support.placeholder')"
               @keydown.enter.exact.prevent="send"
             >
           </div>
           <button
-            aria-label="Отправить сообщение"
+            :aria-label="t('support.sendAria')"
             :disabled="!draft.trim() || support.isSending"
             class="h-12 w-12 flex items-center justify-center rounded-full from-main-300 to-main-500 bg-gradient-to-br text-[#171207] shadow-[0_8px_22px_rgba(230,173,46,0.18)] transition active:scale-[0.94] disabled:opacity-35 disabled:shadow-none"
             type="submit"

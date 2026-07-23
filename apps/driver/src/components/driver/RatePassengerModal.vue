@@ -96,7 +96,7 @@ async function submit() {
             type="button"
             @click="toggleTag(tag.value)"
           >
-            {{ t(`ratingTags.`) }}
+            {{ t(`ratingTags.${tag.value}`) }}
           </button>
         </div>
 

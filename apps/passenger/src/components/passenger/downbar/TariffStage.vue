@@ -193,7 +193,7 @@ function selectOrShowInfo(category: VehicleCategory) {
           @click="selectGroup(group)"
         >
           <span :class="GROUP_META[group].icon" class="text-4.5" aria-hidden="true" />
-          {{ t(`tariffGroups.`) }}
+          {{ t(`tariffGroups.${group}`) }}
         </button>
       </div>
 
@@ -212,8 +212,8 @@ function selectOrShowInfo(category: VehicleCategory) {
           role="radio"
           :aria-checked="isSelected(tariff.category)"
           :aria-label="isSelected(tariff.category)
-            ? t('tariffStage.selectedAria', { name: t(`tariffs..label`) })
-            : t('tariffStage.selectAria', { name: t(`tariffs..label`) })"
+            ? t('tariffStage.selectedAria', { name: t(`tariffs.${tariff.category}.label`) })
+            : t('tariffStage.selectAria', { name: t(`tariffs.${tariff.category}.label`) })"
           type="button"
           @click="selectOrShowInfo(tariff.category)"
         >
@@ -230,7 +230,7 @@ function selectOrShowInfo(category: VehicleCategory) {
           >
             <img
               :src="imageByCategory[tariff.category]"
-              :alt="t(`tariffs..label`)"
+              :alt="t(`tariffs.${tariff.category}.label`)"
               class="max-h-full max-w-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.35)]"
               draggable="false"
             >
@@ -243,7 +243,7 @@ function selectOrShowInfo(category: VehicleCategory) {
             <span :class="TARIFF_META[tariff.category].icon" class="text-6.5" aria-hidden="true" />
           </span>
           <span class="text-sm text-white font-900">
-            {{ t(`tariffs..label`) }}
+            {{ t(`tariffs.${tariff.category}.label`) }}
           </span>
           <!-- Бонусы включены: зачёркнутая полная цена + актуальная со скидкой -->
           <template v-if="showBonusPrices && bonusDiscountFor(tariff) > 0">
@@ -261,7 +261,7 @@ function selectOrShowInfo(category: VehicleCategory) {
       </div>
 
       <p class="mt-1.5 truncate px-1 text-[11px] text-slate-400 font-700">
-        {{ t(`tariffs..caption`) }}
+        {{ t(`tariffs.${trips.selectedCategory}.caption`) }}
       </p>
 
       <!-- Мототакси: предупреждение о рисках + обязательное согласие.
