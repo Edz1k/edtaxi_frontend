@@ -107,6 +107,8 @@ support:
   sendAria: Send message
   backAria: Back to tickets
   attachment: Attachment
+  yesRaw: yes
+  noRaw: No, the problem is not solved
 history:
   km: '{n} km'
   loadFail: Failed to load trip history.
@@ -670,3 +672,10 @@ earnBar:
   period: Period
   earnings: Earnings
   trips: Trips
+supportSubject:
+  payment: Payment
+  trip: Trip
+  account: Account
+  verification: Verification
+  other: Other
+  fallback: Ticket

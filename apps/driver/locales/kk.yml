@@ -107,6 +107,8 @@ support:
   sendAria: Хабарлама жіберу
   backAria: Өтініштер тізіміне
   attachment: Тіркеме
+  yesRaw: иә
+  noRaw: Жоқ, мәселе шешілмеді
 history:
   km: '{n} км'
   loadFail: Сапарлар тарихын жүктеу сәтсіз аяқталды.
@@ -670,3 +672,10 @@ earnBar:
   period: Кезең
   earnings: Табыс
   trips: Сапарлар
+supportSubject:
+  payment: Төлем
+  trip: Сапар
+  account: Аккаунт
+  verification: Тексеру
+  other: Басқа
+  fallback: Өтініш

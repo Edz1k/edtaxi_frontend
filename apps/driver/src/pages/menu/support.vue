@@ -4,7 +4,7 @@ import { mediaUrl } from '~/api/client'
 import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
 import { useAuthStore } from '~/stores/auth'
 import { useSupportStore } from '~/stores/support'
-import { DRIVER_SUPPORT_SUBJECTS, SUPPORT_SUBJECT_LABELS, supportSubjectLabel } from '~/types/support'
+import { DRIVER_SUPPORT_SUBJECTS, isSupportSubject } from '~/types/support'
 
 const { t, locale } = useI18n()
 
@@ -74,6 +74,10 @@ function statusLabel(room: SupportRoom) {
   return t('support.statusOpen')
 }
 
+function subjectLabel(subject?: null | string) {
+  return isSupportSubject(subject) ? t(`supportSubject.${subject}`) : t('supportSubject.fallback')
+}
+
 async function pickCategory(subject: SupportSubject) {
   isPicking.value = false
   await support.openRoom(subject, 'driver').catch(() => {})
@@ -106,7 +110,7 @@ async function onFileSelected(event: Event) {
 async function confirmClose(resolved: boolean) {
   if (support.isSending)
     return
-  await support.sendMessage(resolved ? 'да' : 'Нет, проблема не решена')
+  await support.sendMessage(resolved ? t('support.yesRaw') : t('support.noRaw'))
   scrollToBottom()
 }
 
@@ -156,7 +160,7 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? t('support.agen
               type="button"
               @click="pickCategory(s)"
             >
-              {{ SUPPORT_SUBJECT_LABELS[s] }}
+              {{ t(`supportSubject.${s}`) }}
             </button>
           </div>
         </div>
@@ -184,7 +188,7 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? t('support.agen
               />
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-900">
-                  {{ supportSubjectLabel(room.subject) }}
+                  {{ subjectLabel(room.subject) }}
                 </p>
                 <p class="mt-0.5 text-xs app-muted">
                   {{ formatDay(room.updated_at) }}
@@ -214,7 +218,7 @@ const agentLabel = computed(() => activeRoom.value?.agent_name ? t('support.agen
           </button>
           <div class="min-w-0 flex-1">
             <h1 class="truncate text-xl font-950">
-              {{ supportSubjectLabel(activeRoom.subject) }}
+              {{ subjectLabel(activeRoom.subject) }}
             </h1>
             <p class="text-sm app-muted">
               {{ isClosed ? t('support.closed') : agentLabel }}

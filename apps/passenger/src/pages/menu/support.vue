@@ -5,7 +5,7 @@ import { useNotificationsSocket } from '~/composables/useNotificationsSocket'
 import { useAuthStore } from '~/stores/auth'
 import { usePassengerStore } from '~/stores/passenger'
 import { useSupportStore } from '~/stores/support'
-import { PASSENGER_SUPPORT_SUBJECTS } from '~/types/support'
+import { isSupportSubject, PASSENGER_SUPPORT_SUBJECTS } from '~/types/support'
 
 const support = useSupportStore()
 const auth = useAuthStore()
@@ -144,6 +144,10 @@ function statusLabel(room: SupportRoom) {
   if (room.status === 'pending_close')
     return t('support.statusPending')
   return t('support.statusOpen')
+}
+
+function subjectLabel(subject?: null | string) {
+  return isSupportSubject(subject) ? t(`supportSubject.${subject}`) : t('supportSubject.fallback')
 }
 
 async function pickCategory(subject: SupportSubject) {
@@ -309,7 +313,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
                     :class="room.status === 'closed' ? 'bg-slate-600' : room.status === 'pending_close' ? 'bg-amber-400/80' : 'bg-emerald-400/80'"
                   />
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate text-[13px] text-slate-300 font-800">{{ t(`supportSubject.${room.subject}`) }}</span>
+                    <span class="block truncate text-[13px] text-slate-300 font-800">{{ subjectLabel(room.subject) }}</span>
                     <span class="mt-0.5 block text-[10px] text-slate-600">{{ formatDay(room.updated_at) }}</span>
                   </span>
                   <span
@@ -356,7 +360,7 @@ watch([() => activeRoom.value?.id, hasWelcomeMessage], scheduleWelcomeReveal, { 
             </div>
           </div>
           <span class="max-w-22 truncate rounded-full bg-white/6 px-2.5 py-1 text-[10px] text-slate-400 font-800">
-            {{ t(`supportSubject.${activeRoom.subject}`) }}
+            {{ subjectLabel(activeRoom.subject) }}
           </span>
         </div>
 

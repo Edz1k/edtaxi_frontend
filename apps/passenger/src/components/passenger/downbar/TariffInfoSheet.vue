@@ -5,7 +5,7 @@ import comfortDetailImage from '~/assets/tariffs/details/comfort.png'
 import economyDetailImage from '~/assets/tariffs/details/economy.png'
 import minivanDetailImage from '~/assets/tariffs/details/minivan.png'
 import motoDetailImage from '~/assets/tariffs/details/moto.png'
-import { formatFare, TARIFF_META } from '~/constants/tariffs'
+import { formatFare } from '~/constants/tariffs'
 
 const props = defineProps<{
   category: VehicleCategory
@@ -110,14 +110,14 @@ onBeforeUnmount(() => {
                   class="text-xl text-white font-950 outline-none"
                   tabindex="-1"
                 >
-                  {{ TARIFF_META[category].label }}
+                  {{ t(`tariffs.${category}.label`) }}
                 </h2>
                 <p class="mt-1 text-sm text-slate-400 leading-5">
                   {{ details.description }}
                 </p>
               </div>
               <button
-                :aria-label="t('tariffInfo.closeAria', { name: TARIFF_META[category].label })"
+                :aria-label="t('tariffInfo.closeAria', { name: t(`tariffs.${category}.label`) })"
                 class="h-9 w-9 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-300 transition active:scale-95"
                 type="button"
                 @click="requestClose"
@@ -136,7 +136,7 @@ onBeforeUnmount(() => {
               <div class="absolute inset-x-12 bottom-3 h-3 rounded-full bg-black/30 blur-lg" />
               <img
                 :src="detailImageByCategory[category]"
-                :alt="isMoto ? t('tariffInfo.motoAlt') : t('tariffInfo.carAlt', { name: TARIFF_META[category].label })"
+                :alt="isMoto ? t('tariffInfo.motoAlt') : t('tariffInfo.carAlt', { name: t(`tariffs.${category}.label`) })"
                 class="relative max-h-full max-w-full object-contain drop-shadow-[0_12px_14px_rgba(0,0,0,0.3)]"
                 draggable="false"
               >
@@ -202,7 +202,7 @@ onBeforeUnmount(() => {
               type="button"
               @click="requestClose"
             >
-              <span>{{ t('tariffInfo.selected', { name: TARIFF_META[category].label }) }}</span>
+              <span>{{ t('tariffInfo.selected', { name: t(`tariffs.${category}.label`) }) }}</span>
               <span class="text-white/75">·</span>
               <span>{{ formatFare(estimate) }}</span>
             </button>

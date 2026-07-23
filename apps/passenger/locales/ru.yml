@@ -671,6 +671,7 @@ prefSheet:
   commentPlaceholder: Подъезд, домофон, ориентир...
   done: Готово
 supportSubject:
+  fallback: Обращение
   payment: Оплата
   trip: Поездка
   account: Аккаунт

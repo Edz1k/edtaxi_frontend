@@ -671,6 +671,7 @@ prefSheet:
   commentPlaceholder: Кіреберіс, домофон, бағдар...
   done: Дайын
 supportSubject:
+  fallback: Өтініш
   payment: Төлем
   trip: Сапар
   account: Аккаунт

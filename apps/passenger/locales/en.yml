@@ -671,6 +671,7 @@ prefSheet:
   commentPlaceholder: Entrance, intercom, landmark...
   done: Done
 supportSubject:
+  fallback: Ticket
   payment: Payment
   trip: Trip
   account: Account

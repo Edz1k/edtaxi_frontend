@@ -107,6 +107,8 @@ support:
   sendAria: Отправить сообщение
   backAria: К списку обращений
   attachment: Вложение
+  yesRaw: да
+  noRaw: Нет, проблема не решена
 history:
   km: '{n} км'
   loadFail: Не удалось загрузить историю поездок.
@@ -670,3 +672,10 @@ earnBar:
   period: Период
   earnings: Заработок
   trips: Поездки
+supportSubject:
+  payment: Оплата
+  trip: Поездка
+  account: Аккаунт
+  verification: Верификация
+  other: Другое
+  fallback: Обращение

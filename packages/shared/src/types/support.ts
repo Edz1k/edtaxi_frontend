@@ -5,18 +5,11 @@ export type SupportRoomStatus = 'closed' | 'open' | 'pending_close'
 // (entity.AllowedChatSubjects).
 export type SupportSubject = 'account' | 'other' | 'payment' | 'trip' | 'verification'
 
-export const SUPPORT_SUBJECT_LABELS: Record<SupportSubject, string> = {
-  payment: 'Оплата',
-  trip: 'Поездка',
-  account: 'Аккаунт',
-  verification: 'Верификация',
-  other: 'Другое',
-}
+export const SUPPORT_SUBJECTS: SupportSubject[] = ['payment', 'trip', 'account', 'verification', 'other']
 
-export function supportSubjectLabel(subject?: null | string): string {
-  if (subject && subject in SUPPORT_SUBJECT_LABELS)
-    return SUPPORT_SUBJECT_LABELS[subject as SupportSubject]
-  return 'Обращение'
+/** Подписи тем живут в словарях (`supportSubject.*`) — здесь только валидация ключа. */
+export function isSupportSubject(subject?: null | string): subject is SupportSubject {
+  return Boolean(subject) && SUPPORT_SUBJECTS.includes(subject as SupportSubject)
 }
 
 export interface SupportRoom {
