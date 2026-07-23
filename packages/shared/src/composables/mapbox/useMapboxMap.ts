@@ -16,11 +16,11 @@ const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined
 // бизнес — чёрный седан, мото — мотоцикл и т.д. Набор SVG одинаковый во всех
 // приложениях (passenger/driver/share кладут его в /public/car-markers).
 const CAR_MARKER_ASSETS: Record<string, string> = {
-  business: '/car-markers/business.svg',
-  comfort: '/car-markers/comfort.svg',
-  economy: '/car-markers/economy.svg',
-  minivan: '/car-markers/minivan.svg',
-  moto: '/car-markers/moto.svg',
+  business: '/car-markers/business.png',
+  comfort: '/car-markers/comfort.png',
+  economy: '/car-markers/economy.png',
+  minivan: '/car-markers/minivan.png',
+  moto: '/car-markers/moto.png',
 }
 
 function carMarkerAsset(category?: null | string) {
@@ -350,6 +350,11 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
   function createCarMarkerElement(category?: null | string) {
     const element = document.createElement('div')
     const image = document.createElement('img')
+    let markerSize = { height: '64px', width: '30px' }
+    if (category === 'minivan')
+      markerSize = { height: '72px', width: '36px' }
+    else if (category === 'moto')
+      markerSize = { height: '64px', width: '40px' }
 
     image.src = carMarkerAsset(category)
     image.alt = ''
@@ -357,18 +362,18 @@ export function useMapboxMap(mapContainer: Ref<HTMLElement | null>) {
 
     assignStyles(image, {
       display: 'block',
-      height: '64px',
+      height: markerSize.height,
       objectFit: 'contain',
       pointerEvents: 'none',
       userSelect: 'none',
-      width: '30px',
+      width: markerSize.width,
     })
 
     assignStyles(element, {
       filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.45))',
-      height: '64px',
+      height: markerSize.height,
       pointerEvents: 'none',
-      width: '30px',
+      width: markerSize.width,
       zIndex: '7',
     })
 

@@ -6,16 +6,20 @@ import type { QuickDestination } from '~/components/passenger/downbar/AddressFor
 import type { SheetSnap } from '~/composables/passenger/useBottomSheet'
 import { openExternalLink } from '@edtaxi/shared/composables/auth/telegram'
 import { getDestinationSuggestions } from '~/api/trips'
+import CardBrandMark from '~/components/CardBrandMark.vue'
 import AddressForm from '~/components/passenger/downbar/AddressForm.vue'
 import DestinationFirstScreen from '~/components/passenger/downbar/DestinationFirstScreen.vue'
+import PaymentMethodSheet from '~/components/passenger/downbar/PaymentMethodSheet.vue'
 import SearchingTrip from '~/components/passenger/downbar/SearchingTrip.vue'
 import TariffStage from '~/components/passenger/downbar/TariffStage.vue'
+import TripPreferencesSheet from '~/components/passenger/downbar/TripPreferencesSheet.vue'
 import WhoRidesSheet from '~/components/passenger/downbar/WhoRidesSheet.vue'
 import PaymentFrameModal from '~/components/PaymentFrameModal.vue'
 import { useAddressSearch } from '~/composables/passenger/useAddressSearch'
 import { useBottomSheet } from '~/composables/passenger/useBottomSheet'
 import { useTripOrderFlow } from '~/composables/passenger/useTripOrderFlow'
-import { TARIFF_META } from '~/constants/tariffs'
+import { isMotoCategory, TARIFF_META } from '~/constants/tariffs'
+import { useWalletStore } from '~/stores/wallet'
 
 const props = withDefaults(defineProps<{
   // Реальная геопозиция с карты: сравниваем её с точкой А, чтобы понять, что
@@ -86,6 +90,49 @@ const {
   pickup,
   pickupPlace,
   userCoordinates: toRef(props, 'userCoordinates'),
+})
+
+// Кнопка заказа закреплена снаружи прокрутки, поэтому согласие для мототакси
+// живёт на уровне всей шторки и управляет её disabled-состоянием.
+const motoConsent = ref(false)
+const needsMotoConsent = computed(() => isMotoCategory(trips.selectedCategory) && !motoConsent.value)
+const wallet = useWalletStore()
+const isPaymentSheetOpen = ref(false)
+const isPreferencesOpen = ref(false)
+const isFriendOrder = ref(Boolean(trips.tripOptions.friendName || trips.tripOptions.friendPhone))
+const isMotoSelected = computed(() => trips.selectedCategories.some(isMotoCategory))
+const surchargeChildSeat = computed(() => trips.tariffEstimates[0]?.surcharge_child_seat ?? 0)
+const surchargePets = computed(() => trips.tariffEstimates[0]?.surcharge_pets ?? 0)
+
+function setFriendOrder(value: boolean) {
+  isFriendOrder.value = value
+  if (!value) {
+    trips.setTripOption('friendName', '')
+    trips.setTripOption('friendPhone', '')
+  }
+}
+
+const preferenceCount = computed(() => [
+  trips.tripOptions.childSeat,
+  trips.tripOptions.pets,
+  trips.tripOptions.accessible,
+  isFriendOrder.value,
+  Boolean(trips.tripComment.trim()),
+].filter(Boolean).length)
+
+const paymentButtonLabel = computed(() => {
+  if (trips.paymentMethod === 'cash')
+    return 'Наличные'
+  if (trips.paymentMethod === 'prepaid')
+    return trips.prepaySource === 'apple' ? 'Apple Pay' : 'Google Pay'
+  const digits = (wallet.card?.card_pan ?? '').replace(/\D/g, '')
+  const tail = digits.slice(-4)
+  return tail ? `••${tail}` : 'Карта'
+})
+
+onMounted(() => {
+  if (!wallet.isCardLoaded)
+    wallet.loadCard()
 })
 
 // Промежуточные остановки (до 3): фиксированные слоты со своими инстансами
@@ -632,15 +679,20 @@ function onHandleKeydown(event: KeyboardEvent) {
              поэтому скролла нет; auto — страховка для маленьких экранов, когда
              шторка упирается в максимум. Скроллбар скрыт всегда. -->
         <div class="[scrollbar-width:none] h-full overflow-y-auto px-3 pb-3 [&::-webkit-scrollbar]:hidden">
-          <div ref="contentEl" :class="{ invisible: isAddressSearchOpen || isPeekPillVisible }">
+          <div
+            ref="contentEl"
+            :class="{
+              'invisible': isAddressSearchOpen || isPeekPillVisible,
+              'pb-20': isTariffsVisible,
+            }"
+          >
             <!-- Тарифы: самодостаточный этап (карусель + оплата + заказ). -->
             <TariffStage
               v-if="isTariffsVisible"
-              :is-ordering="isBusy"
-              :primary-text="primaryText"
+              :moto-consent="motoConsent"
               @add-stop="addStopFromTariffs"
               @edit-route="editRouteFromTariffs"
-              @order="submitTrip"
+              @update:moto-consent="motoConsent = $event"
             />
 
             <!-- Поиск водителя (активная поездка). -->
@@ -696,6 +748,54 @@ function onHandleKeydown(event: KeyboardEvent) {
               @pick-from-map="(mode, stopIndex) => emit('pickFromMap', mode, stopIndex)"
               @select-destination="chooseDestination"
             />
+          </div>
+        </div>
+
+        <!-- Главный CTA всегда доступен поверх прокрутки тарифов и движется
+             вместе со всей шторкой. Нижний padding contentEl не даёт ему
+             перекрыть последние настройки. -->
+        <div
+          v-if="isTariffsVisible && !isPeekPillVisible"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10 from-secondary-950 via-secondary-950/96 to-transparent bg-gradient-to-t px-3 pb-3 pt-6"
+        >
+          <div class="pointer-events-auto flex items-stretch gap-2">
+            <button
+              :aria-label="`Способ оплаты: ${paymentButtonLabel}`"
+              class="h-13 w-13 flex shrink-0 items-center justify-center border border-white/9 rounded-[1.2rem] bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.24)] transition active:scale-[0.96] active:bg-white/14"
+              type="button"
+              @click="isPaymentSheetOpen = true"
+            >
+              <span v-if="trips.paymentMethod === 'cash'" class="i-mdi-cash text-7 text-emerald-300 drop-shadow-[0_3px_8px_rgba(110,231,183,0.2)]" aria-hidden="true" />
+              <span v-else-if="trips.paymentMethod === 'prepaid' && trips.prepaySource === 'apple'" class="i-mdi-apple text-7 drop-shadow-[0_3px_8px_rgba(255,255,255,0.18)]" aria-hidden="true" />
+              <span v-else-if="trips.paymentMethod === 'prepaid'" class="i-mdi-google text-6.5 text-blue-300 drop-shadow-[0_3px_8px_rgba(147,197,253,0.2)]" aria-hidden="true" />
+              <span v-else class="h-7 w-10 flex scale-125 items-center justify-center" aria-hidden="true">
+                <CardBrandMark :brand="wallet.card?.card_brand" />
+              </span>
+            </button>
+
+            <button
+              :disabled="isBusy || needsMotoConsent"
+              class="h-13 min-w-0 flex-1 rounded-[1.35rem] bg-main-500 px-3 text-sm text-white font-950 shadow-[0_12px_30px_rgba(230,173,46,0.3)] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+              type="button"
+              @click="submitTrip"
+            >
+              {{ needsMotoConsent ? 'Подтвердите согласие с рисками' : primaryText }}
+            </button>
+
+            <button
+              :aria-label="preferenceCount ? `Пожелания: выбрано ${preferenceCount}` : 'Пожелания к поездке'"
+              class="relative h-13 w-13 flex shrink-0 items-center justify-center border border-main-400/18 rounded-[1.2rem] bg-main-500/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_24px_rgba(0,0,0,0.24)] transition active:scale-[0.96] active:bg-main-500/16"
+              type="button"
+              @click="isPreferencesOpen = true"
+            >
+              <span class="i-mdi-tune-variant text-7 text-main-300 drop-shadow-[0_3px_8px_rgba(250,191,38,0.28)]" aria-hidden="true" />
+              <span
+                v-if="preferenceCount"
+                class="absolute right-0.5 top-0.5 h-4.5 min-w-4.5 flex items-center justify-center border border-secondary-950 rounded-full bg-main-500 px-1 text-[9px] text-white font-950 shadow-[0_3px_10px_rgba(230,173,46,0.45)]"
+              >
+                {{ preferenceCount }}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -778,6 +878,17 @@ function onHandleKeydown(event: KeyboardEvent) {
       </div>
     </div>
   </section>
+
+  <PaymentMethodSheet v-if="isPaymentSheetOpen" @close="isPaymentSheetOpen = false" />
+  <TripPreferencesSheet
+    v-if="isPreferencesOpen"
+    :friend-order="isFriendOrder"
+    :is-moto-selected="isMotoSelected"
+    :surcharge-child-seat="surchargeChildSeat"
+    :surcharge-pets="surchargePets"
+    @close="isPreferencesOpen = false"
+    @update:friend-order="setFriendOrder"
+  />
 
   <!-- «Кто поедет?»: точка подачи далеко от реальной позиции — уточняем
        пассажира до создания заказа. -->

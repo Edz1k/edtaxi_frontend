@@ -14,11 +14,11 @@ const { t, locale } = useI18n()
 // в шапке выше.
 const MENU_ITEMS = [
   { key: 'bonus', icon: 'i-mdi-gift-outline', to: '/bonus' },
-  { key: 'history', icon: 'i-mdi-clock-outline', to: '/menu/history' },
   { key: 'places', icon: 'i-mdi-heart-outline', to: '/menu/places' },
+  { key: 'history', icon: 'i-mdi-clock-outline', to: '/menu/history' },
   { key: 'safety', icon: 'i-mdi-shield-check-outline', to: '/menu/safety' },
-  { key: 'support', icon: 'i-mdi-headset', to: '/menu/support' },
   { key: 'feedback', icon: 'i-mdi-lightbulb-outline', to: '/menu/feedback' },
+  { key: 'support', icon: 'i-mdi-headset', to: '/menu/support' },
   { key: 'settings', icon: 'i-mdi-cog-outline', to: '/menu/settings' },
   { key: 'about', icon: 'i-mdi-information-outline', to: '/menu/about' },
 ] as const
