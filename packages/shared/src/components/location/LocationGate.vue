@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { startLocationAutoDetect, useLocationAccess } from '../../composables/location/useLocationAccess'
+
+const { t } = useI18n()
 
 // Полноэкранная заглушка на входе: не пускает в основной экран, пока не выдан
 // доступ к геолокации. Заглушка исчезает сама, как только доступ появился:
@@ -40,11 +43,10 @@ async function allow() {
 
       <div class="space-y-2">
         <h2 class="text-xl font-950">
-          Нужен доступ к геолокации
+          {{ t('shared.geoNeeded') }}
         </h2>
         <p class="text-sm text-slate-300 light:text-slate-600 font-700 leading-6">
-          Без геопозиции приложение не сможет работать. Разрешите доступ, чтобы
-          продолжить.
+          {{ t('shared.geoLead') }}
         </p>
       </div>
 
@@ -54,11 +56,11 @@ async function allow() {
         type="button"
         @click="allow"
       >
-        {{ isRequesting ? 'Запрашиваем...' : 'Разрешить доступ' }}
+        {{ isRequesting ? t('shared.requesting') : t('shared.allowAccess') }}
       </button>
 
       <p v-if="status === 'denied'" class="max-w-xs text-xs text-amber-300 font-700 leading-5">
-        Доступ запрещён. Нажмите «Разрешить доступ» и подтвердите в настройках.
+        {{ t('shared.geoDenied') }}
       </p>
     </div>
   </Transition>

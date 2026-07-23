@@ -62,7 +62,8 @@
     "pinia": "catalog:frontend",
     "reka-ui": "catalog:frontend",
     "unocss": "catalog:build",
-    "vue": "catalog:frontend"
+    "vue": "catalog:frontend",
+    "vue-i18n": "catalog:frontend"
   },
   "devDependencies": {
     "jsdom": "catalog:dev",

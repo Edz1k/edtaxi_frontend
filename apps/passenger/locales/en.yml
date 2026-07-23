@@ -579,3 +579,23 @@ activeTrip:
   linkCopied: Link copied
   preparingLink: Preparing link...
   share: Share trip
+shared:
+  geoNeeded: Location access is required
+  geoLead: The app can’t work without your location. Allow access to continue.
+  allowAccess: Allow access
+  requesting: Requesting...
+  geoDenied: Access denied. Tap “Allow access” and confirm in settings.
+  imgOpenFail: Couldn’t open this image. Try another photo.
+  imgProcessFail: Couldn’t process the photo. Try another image.
+  closeEditor: Close editor
+  rotate90: Rotate 90 degrees
+  zoom: Zoom
+  reset: Reset changes
+  saving: Saving...
+  done: Done
+  closePhotoPick: Close photo picker
+  fromGallery: Choose from gallery
+  fromGalleryHint: A ready photo from your phone
+  takePhoto: Take a photo now
+  takePhotoHint: The camera will open
+  mapTheme: Map theme

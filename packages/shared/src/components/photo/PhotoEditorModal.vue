@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 // Полноэкранный редактор фото перед загрузкой: перетаскивание, зум (пинч /
 // колесо / слайдер) и поворот на 90°, чтобы пользователь подогнал снимок по
@@ -26,6 +27,8 @@ const emit = defineEmits<{
   cancel: []
   done: [file: File]
 }>()
+
+const { t } = useI18n()
 
 const viewportEl = ref<HTMLElement | null>(null)
 const imageUrl = ref('')
@@ -196,7 +199,7 @@ watch(() => props.file, (file) => {
   img.onerror = () => {
     URL.revokeObjectURL(url)
     isLoading.value = false
-    loadError.value = 'Не удалось открыть это изображение. Попробуйте другое фото.'
+    loadError.value = t('shared.imgOpenFail')
   }
   img.src = url
 })
@@ -244,7 +247,7 @@ async function confirm() {
     emit('done', new File([blob], 'photo.jpg', { type: 'image/jpeg' }))
   }
   catch {
-    loadError.value = 'Не удалось обработать фото. Попробуйте другое изображение.'
+    loadError.value = t('shared.imgProcessFail')
   }
   finally {
     isExporting.value = false
@@ -264,7 +267,7 @@ async function confirm() {
           {{ title }}
         </h2>
         <button
-          aria-label="Закрыть редактор"
+          :aria-label="t('shared.closeEditor')"
           class="h-10 w-10 flex items-center justify-center rounded-full app-chip transition active:scale-95"
           type="button"
           @click="emit('cancel')"
@@ -324,7 +327,7 @@ async function confirm() {
       <div class="px-5 pb-[calc(var(--app-safe-area-bottom,0px)+1rem)] pt-2 space-y-3">
         <div class="flex items-center gap-3">
           <button
-            aria-label="Повернуть на 90 градусов"
+            :aria-label="t('shared.rotate90')"
             class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full app-chip transition active:scale-95"
             type="button"
             @click="rotate"
@@ -334,7 +337,7 @@ async function confirm() {
 
           <span class="i-mdi-magnify-minus-outline shrink-0 text-4.5 app-muted" aria-hidden="true" />
           <input
-            aria-label="Масштаб"
+            :aria-label="t('shared.zoom')"
             class="h-1.5 w-full appearance-none rounded-full bg-white/15 accent-main-500"
             :max="MAX_ZOOM"
             :min="MIN_ZOOM"
@@ -346,7 +349,7 @@ async function confirm() {
           <span class="i-mdi-magnify-plus-outline shrink-0 text-4.5 app-muted" aria-hidden="true" />
 
           <button
-            aria-label="Сбросить изменения"
+            :aria-label="t('shared.reset')"
             class="h-11 w-11 flex shrink-0 items-center justify-center rounded-full app-chip transition active:scale-95"
             type="button"
             @click="resetView"
@@ -369,7 +372,7 @@ async function confirm() {
             type="button"
             @click="confirm"
           >
-            {{ isExporting ? 'Сохраняем...' : 'Готово' }}
+            {{ isExporting ? t('shared.saving') : t('shared.done') }}
           </button>
         </div>
       </div>

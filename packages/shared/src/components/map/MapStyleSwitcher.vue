@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { MapStyleKey } from '../../composables/mapbox/useMapStyle'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useMapStyle } from '../../composables/mapbox/useMapStyle'
+
+const { t } = useI18n()
 
 // Кнопка «слои» прямо на карте: раскрывает список тем (Схема/Спутник/Ночная),
 // выбор применяется к карте мгновенно и запоминается на устройстве.
@@ -17,7 +20,7 @@ function choose(key: MapStyleKey) {
 <template>
   <div class="pointer-events-auto relative">
     <button
-      aria-label="Тема карты"
+      :aria-label="t('shared.mapTheme')"
       class="h-10 w-10 flex items-center justify-center rounded-full app-sheet text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
       type="button"
       @click="isOpen = !isOpen"

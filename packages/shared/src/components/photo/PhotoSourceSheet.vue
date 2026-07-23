@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 // Шторка выбора источника фото: «Снять на камеру» или «Выбрать из галереи».
 // Раньше стоял один input с capture — iPhone сразу открывал камеру (нельзя
@@ -19,6 +20,8 @@ const emit = defineEmits<{
   close: []
   selected: [file: File]
 }>()
+
+const { t } = useI18n()
 
 const cameraInput = ref<HTMLInputElement | null>(null)
 const galleryInput = ref<HTMLInputElement | null>(null)
@@ -53,7 +56,7 @@ function onFilePicked(event: Event) {
               {{ title }}
             </h2>
             <button
-              aria-label="Закрыть выбор фото"
+              :aria-label="t('shared.closePhotoPick')"
               class="h-9 w-9 flex items-center justify-center rounded-full app-chip"
               type="button"
               @click="emit('close')"
@@ -72,8 +75,8 @@ function onFilePicked(event: Event) {
                 <span class="i-mdi-image-multiple text-5.5" />
               </span>
               <span class="min-w-0">
-                <span class="block text-sm font-900">Выбрать из галереи</span>
-                <span class="block text-xs app-muted font-700">Готовое фото с телефона</span>
+                <span class="block text-sm font-900">{{ t('shared.fromGallery') }}</span>
+                <span class="block text-xs app-muted font-700">{{ t('shared.fromGalleryHint') }}</span>
               </span>
             </button>
 
@@ -86,8 +89,8 @@ function onFilePicked(event: Event) {
                 <span class="i-mdi-camera text-5.5" />
               </span>
               <span class="min-w-0">
-                <span class="block text-sm font-900">Сфотографировать сейчас</span>
-                <span class="block text-xs app-muted font-700">Откроется камера</span>
+                <span class="block text-sm font-900">{{ t('shared.takePhoto') }}</span>
+                <span class="block text-xs app-muted font-700">{{ t('shared.takePhotoHint') }}</span>
               </span>
             </button>
           </div>

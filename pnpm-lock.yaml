@@ -702,6 +702,9 @@ importers:
       vue:
         specifier: catalog:frontend
         version: 3.5.39(typescript@5.9.3)
+      vue-i18n:
+        specifier: catalog:frontend
+        version: 11.4.6(vue@3.5.39(typescript@5.9.3))
     devDependencies:
       jsdom:
         specifier: catalog:dev
