@@ -35,13 +35,14 @@ import { onlineBlockTargetFor } from '~/utils/onlineBlock'
 
 const driver = useDriverStore()
 const toast = useToast()
+const { t, te } = useI18n()
 
 // Куда просят заехать. В заявке лежит ПОЛНЫЙ новый маршрут, а добавленная
 // точка всегда последняя: пассажир дописывает остановку в конец, чтобы не
 // сдвинуть уже пройденные (их прогресс у нас — индекс, а не идентификатор).
 const requestedStopAddress = computed(() => {
   const stops = driver.pendingRouteChange?.stops ?? []
-  return stops.at(-1)?.address ?? 'Новая точка на карте'
+  return stops.at(-1)?.address ?? t('driverMap.newPointOnMap')
 })
 
 // Режим «Домой» (TODO п.7): шит выбора адреса/выключения + пилюля-статус.
@@ -88,11 +89,11 @@ const { isRouteLoading, mapOffer, routeCoordinates } = useOfferRoute(liveCoordin
 // ли его (не чаще 1 раза в 24 часа).
 const verificationReminder = ref<VerificationReminder | null>(null)
 const REMINDER_LABELS: Record<string, string> = {
-  face: 'фото лица',
-  vehicle: 'документы машины',
+  face: 'driverMap.reminderFace',
+  vehicle: 'driverMap.reminderVehicle',
 }
 const reminderPendingLabel = computed(() =>
-  (verificationReminder.value?.pending ?? []).map(item => REMINDER_LABELS[item] ?? item).join(', '),
+  (verificationReminder.value?.pending ?? []).map(item => te(REMINDER_LABELS[item]) ? t(REMINDER_LABELS[item]) : item).join(', '),
 )
 
 // Причина отказа в выходе на линию (403 от POST /driver/status) — показываем
@@ -117,7 +118,7 @@ watch(isDailyCheckActive, (active, wasActive) => {
   if (active || wasActive !== true)
     return
 
-  onlineBlockMessage.value = 'Срок фотоконтроля истёк — вы сняты с линии. Пройдите проверку заново.'
+  onlineBlockMessage.value = t('driverMap.dailyExpiredOff')
   onlineBlockTarget.value = 'daily-check'
 
   if (!driver.isOnline)
@@ -211,16 +212,16 @@ async function confirmParkInvite() {
   isAcceptingInvite.value = true
   try {
     await switchViaParkInvite({ token: prompt.token })
-    toast.success('Готово', prompt.isSwitch
-      ? `Вы перешли в таксопарк «${prompt.parkName}».`
-      : `Вы присоединились к таксопарку «${prompt.parkName}».`)
+    toast.success(t('changePhone.doneTitle'), prompt.isSwitch
+      ? t('driverMap.switchedTo', { name: prompt.parkName })
+      : t('driverMap.joinedTo', { name: prompt.parkName }))
     parkInvitePrompt.value = null
     // Обновляем профиль/членство, чтобы статус линии подтянулся сразу.
     driver.ensureProfile().catch(() => {})
     getDriverOverview().catch(() => {})
   }
   catch (error) {
-    toast.error('Не удалось', getUserErrorMessage(error, 'Попробуйте ещё раз позже.'))
+    toast.error(t('profile.failTitle'), getUserErrorMessage(error, t('driverMap.tryLater')))
   }
   finally {
     isAcceptingInvite.value = false
@@ -303,7 +304,7 @@ watch([isMapReady, isBootDone, hasUserLocation, isBlockedByLocationGate], () => 
 }, { immediate: true })
 
 useHead({
-  title: 'Водитель | Telegram Taxi',
+  title: () => `${t('nav.driver')} | Telegram Taxi`,
 })
 
 watch(
@@ -380,7 +381,7 @@ async function toggleOnline() {
 
   // На линию нельзя без геолокации — без неё диспетчер не видит водителя.
   if (nextOnline && !isLocationGranted.value) {
-    onlineBlockMessage.value = 'Включите геолокацию, чтобы выйти на линию.'
+    onlineBlockMessage.value = t('driverMap.enableGeo')
     onlineBlockTarget.value = 'verification'
     return
   }
@@ -393,7 +394,7 @@ async function toggleOnline() {
     // 403 — не пройден один из гейтов (парк, лицо/машина, фотоконтроль):
     // показываем причину с бэка и ведём на экран, где её можно закрыть.
     if (nextOnline && error instanceof ApiError && error.status === 403) {
-      onlineBlockMessage.value = getUserErrorMessage(error, 'Выход на линию сейчас недоступен.')
+      onlineBlockMessage.value = getUserErrorMessage(error, t('driverMap.onlineUnavailable'))
       onlineBlockTarget.value = onlineBlockTargetFor(onlineBlockMessage.value)
     }
     return
@@ -419,13 +420,13 @@ async function toggleOnline() {
           class="max-w-[68%] flex items-center gap-1.5 truncate rounded-full app-sheet px-4 py-2 text-xs text-white font-800 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl"
         >
           <span class="i-mdi-map-marker inline-block shrink-0 align-middle text-3.5 app-accent" />
-          <span class="truncate">г. {{ city }}</span>
+          <span class="truncate">{{ t('map.city', { city }) }}</span>
           <WeatherBadge :weather="weather" />
         </div>
 
         <RouterLink
           v-if="bonusBalance !== null"
-          aria-label="Бонусы"
+          :aria-label="t('bonus.title')"
           class="pointer-events-auto absolute right-0 top-0 flex items-center gap-1 rounded-full app-sheet px-3 py-2 text-xs text-white font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
           to="/bonus"
         >
@@ -442,15 +443,15 @@ async function toggleOnline() {
              пилюля с дедлайном, тап открывает шит (включить/выключить). -->
         <button
           v-if="!driver.hasActiveTrip"
-          aria-label="Режим «Домой»"
+          :aria-label="t('home.eyebrow')"
           class="pointer-events-auto absolute right-0 top-24 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition active:scale-95"
           :class="driver.isHomeModeActive ? 'bg-amber-400 text-slate-900' : 'app-sheet text-white'"
           type="button"
           @click="isHomeSheetOpen = true"
         >
           <span class="i-mdi-home text-4" aria-hidden="true" />
-          <span v-if="driver.isHomeModeActive">до {{ homeUntilLabel }}</span>
-          <span v-else>Домой</span>
+          <span v-if="driver.isHomeModeActive">{{ t('driverMap.homeUntil', { time: homeUntilLabel }) }}</span>
+          <span v-else>{{ t('driverMap.homeShort') }}</span>
         </button>
       </div>
     </div>
@@ -539,15 +540,14 @@ async function toggleOnline() {
             <span class="text-7" :class="parkInvitePrompt.isSwitch ? 'i-mdi-swap-horizontal' : 'i-mdi-account-plus'" />
           </span>
           <h3 class="mt-4 text-lg font-950">
-            {{ parkInvitePrompt.isSwitch ? 'Сменить таксопарк?' : 'Присоединиться к таксопарку?' }}
+            {{ parkInvitePrompt.isSwitch ? t('driverMap.switchParkQ') : t('driverMap.joinParkQ') }}
           </h3>
           <p class="mt-2 text-sm app-muted leading-5">
             <template v-if="parkInvitePrompt.isSwitch">
-              Перейти из парка «{{ parkInvitePrompt.currentParkName || 'текущего' }}» в
-              «{{ parkInvitePrompt.parkName }}»? Вы сразу станете водителем нового парка.
+              {{ t('driverMap.switchIntro', { from: parkInvitePrompt.currentParkName || t('driverMap.current'), to: parkInvitePrompt.parkName }) }}
             </template>
             <template v-else>
-              Вступить в таксопарк «{{ parkInvitePrompt.parkName }}»? После этого можно выходить на линию.
+              {{ t('driverMap.joinParkText', { name: parkInvitePrompt.parkName }) }}
             </template>
           </p>
 
@@ -557,7 +557,7 @@ async function toggleOnline() {
               type="button"
               @click="parkInvitePrompt = null"
             >
-              Нет
+              {{ t('support.no') }}
             </button>
             <button
               :disabled="isAcceptingInvite"
@@ -565,7 +565,7 @@ async function toggleOnline() {
               type="button"
               @click="confirmParkInvite"
             >
-              {{ isAcceptingInvite ? 'Секунду...' : (parkInvitePrompt.isSwitch ? 'Да, сменить' : 'Да, вступить') }}
+              {{ isAcceptingInvite ? t('driverMap.oneSec') : (parkInvitePrompt.isSwitch ? t('parks.yesSwitch') : t('driverMap.yesJoin')) }}
             </button>
           </div>
         </div>

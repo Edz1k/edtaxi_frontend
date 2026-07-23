@@ -172,6 +172,7 @@ profile:
   loading: Loading profile...
   loadFail: Failed to load data.
   ratingTitle: Driver rating
+  failTitle: Oops
   activityShort: Activity
   trips: Trips
   cancelsToday: Cancels today
@@ -478,3 +479,152 @@ bonus:
   milestone: +{n} bonuses for every {every} orders
   manualAward: You’ll get the reward after the promotion ends — the organizer sends it.
   shareTextDriver: Earn with Telegram Taxi! Open the link and sign in — you’ll get +{reward} bonuses 🚕
+driverStatus:
+  toPickup: Heading to the passenger
+  toPickupText: Drive up to the pickup point and mark your arrival.
+  arrivedAction: I’m here
+  waitingPickup: Waiting for boarding
+  arrivedText: The passenger is in the car. Tap to start the trip.
+  startAction: Start the trip
+  inProgress: Trip in progress
+  inProgressText: Deliver the passenger to the destination and complete the order.
+  completeAction: Complete the trip
+  online: You’re online
+  waitingOrder: Waiting for a suitable order nearby
+  offline: You’re offline
+  offlineText: Choose tariffs and go online for orders
+  tariffsAndOnline: Tariffs and going online
+  connecting: Connecting to the order server…
+  reconnecting: No connection to the order server — reconnecting…
+  waitPaid: 'Waiting {time} · paid: +{fee} ₸'
+  waitFree: 'Waiting {time} · free up to {free}:00, then +{fee} ₸/min'
+  km: '{n} km'
+  m: '{n} m'
+  moveCloser: Get closer to the point — about ~{distance} to go
+  dailyCheck: Pass the photo check
+  topUp: Top up balance
+  openBotChat: Open bot chat
+  choosePark: Choose a taxi park
+  verification: Pass verification
+  dragHandle: Drag to expand or collapse the panel
+  passengerCancelled: The passenger cancelled — we’re finding you the next one…
+  hide: Hide
+  tariffsOnLine: Tariffs online
+  pickTariff: Choose at least one tariff
+  orderDistricts: Order districts
+  wholeCity: Whole city
+  stopPassed: Stop passed — next point
+  navToPassenger: Navigate to the passenger
+  navTo: 'Navigate: {label}'
+  chatWithPassenger: Chat with passenger
+  cancelOrder: Cancel the order
+  restoring: Restoring...
+  updating: Updating...
+  goOffline: Go offline
+  goOnline: Go online
+  reserveGeoUntil: Backup location sharing is active until {time}
+  liveLocationHint: In the chat tap the paperclip → “Location” → “Share” and choose 8 hours.
+  addVehicle: Add a vehicle
+  buildingRoute: Building the order route...
+driverOffer:
+  newOrder: New order
+  perKm: '{rate} ₸/km'
+  pickup: Pickup
+  stop: Stop {n}
+  destination: Destination
+  reject: Decline
+  accept: Accept
+tripOptions:
+  childSeat: Child seat
+  pets: With a pet
+  accessible: Special needs
+  rider: 'Rider: {contact}'
+common:
+  thanks: Thank you
+units:
+  km: '{n} km'
+  m: '{n} m'
+  min: '{n} min'
+stopReq:
+  title: Passenger asks for a stop
+  feeLabel: surcharge for the detour
+  newStop: New stop
+  routeBecomes: The route becomes {dist} · {dur}
+  decline: Decline
+  accept: I’ll stop by
+ratePax:
+  completed: Trip completed
+  title: Rate the passenger
+  closeAria: Close passenger rating
+  starAria: Give a rating of {n}
+  commentAria: Comment on the passenger rating
+  commentPlaceholder: A comment, if you like
+  sending: Sending...
+  submit: Submit rating
+  sent: Passenger rating sent.
+  fail: Failed to send the rating.
+ratingTags:
+  polite: Polite
+  punctual: Punctual
+  late: Was late
+  rude: Rude
+  littered: Littered the car
+home:
+  eyebrow: “Home” mode
+  goingHome: Heading home
+  whereHome: Where are we going home?
+  closeAria: Close
+  home: Home
+  activeHint: Until {until} you’re only offered orders whose destination is within 5 km of home. The mode turns off on the timer or after a trip that ends near home.
+  turnOff: Turn off the mode
+  usedNote: A used activation isn’t refunded ({used} of {limit} today).
+  enableWithAddress: Enable with this address
+  addressAria: Home address
+  addressPlaceholder: Home address
+  offHint: In “Home” mode you only get orders whose destination is within 5 km of home. The mode turns off after 3 hours or after a trip that ends near home.
+  limitReached: Today’s limit reached
+  enable: Enable the mode ({left} of {limit} left)
+catReq:
+  sentTitle: Request sent
+  sentText: Support will review the model and add it to the catalog.
+  pending: The model addition request is under review.
+  rejected: The request was rejected
+  added: The model was added to the catalog.
+  justSent: Request sent — support will review the model.
+  openBtn: Request to add to the catalog
+  commentLabel: Comment (optional)
+  placeholder: Trim, generation, a link — anything that helps verify
+  sending: Sending…
+  submit: Submit
+verBanner:
+  title: Complete verification
+  remaining: 'Left to complete: {items}.'
+  hideAria: Hide reminder
+  goTo: Go to verification
+miniMap:
+  noToken: No VITE_MAPBOX_TOKEN
+  loadFail: The map didn’t load
+addrSug:
+  searching: Searching for the address...
+  degraded: Address search is temporarily unavailable — try later or pick a point on the map.
+map:
+  city: '{city}'
+driverMap:
+  newPointOnMap: New point on the map
+  reminderFace: face photo
+  reminderVehicle: vehicle documents
+  dailyExpiredOff: Your photo check expired — you’ve been taken offline. Pass the check again.
+  switchedTo: You switched to taxi park “{name}”.
+  joinedTo: You joined taxi park “{name}”.
+  tryLater: Please try again later.
+  enableGeo: Enable location to go online.
+  onlineUnavailable: Going online isn’t available right now.
+  switchParkQ: Switch taxi park?
+  joinParkQ: Join the taxi park?
+  current: current
+  switchIntro: Switch from park “{from}” to “{to}”? You’ll immediately become a driver of the new park.
+  joinParkText: Join taxi park “{name}”? After that you can go online.
+  oneSec: One sec...
+  yesJoin: Yes, join
+  homeUntil: until {time}
+  homeShort: Home

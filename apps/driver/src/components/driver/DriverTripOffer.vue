@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { DriverTripOffer } from '~/types/websocket'
 import { tripOptionBadges } from '~/utils/tripOptions'
-import { categoryLabel } from '~/utils/vehicleCategories'
 
 const props = defineProps<{
   isBusy: boolean
@@ -12,9 +11,10 @@ const emit = defineEmits<{
   accept: []
   reject: []
 }>()
+const { locale, t } = useI18n()
 
 function formatFare(value: number) {
-  return `${Math.round(value).toLocaleString('ru-RU')} ₸`
+  return `${Math.round(value).toLocaleString(locale.value)} ₸`
 }
 
 const stops = computed(() => props.offer.stops ?? [])
@@ -22,7 +22,7 @@ const optionBadges = computed(() => tripOptionBadges(props.offer.options))
 // Ставка ₸/км (с сюрджем, п.40). 0/отсутствует у легаси-поездок — бейдж прячем.
 const perKmLabel = computed(() => {
   const rate = props.offer.per_km ?? 0
-  return rate > 0 ? `${Math.round(rate).toLocaleString('ru-RU')} ₸/км` : ''
+  return rate > 0 ? t('driverOffer.perKm', { rate: Math.round(rate).toLocaleString(locale.value) }) : ''
 })
 </script>
 
@@ -33,9 +33,9 @@ const perKmLabel = computed(() => {
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="flex flex-wrap items-center gap-2 text-xs app-accent font-900 uppercase">
-              Новый заказ
+              {{ t('driverOffer.newOrder') }}
               <span v-if="offer.category" class="rounded-full bg-main-500/18 px-2 py-0.5 text-[11px] text-main-200 normal-case light:text-main-700">
-                {{ categoryLabel(offer.category) }}
+                {{ t(`cats.${offer.category}`) }}
               </span>
               <span v-if="perKmLabel" class="rounded-full bg-emerald-500/18 px-2 py-0.5 text-[11px] text-emerald-200 normal-case">
                 {{ perKmLabel }}
@@ -65,7 +65,7 @@ const perKmLabel = computed(() => {
           <div class="min-w-0 space-y-4">
             <div>
               <p class="text-[11px] app-faint font-800 uppercase">
-                Посадка
+                {{ t('driverOffer.pickup') }}
               </p>
               <p class="mt-1 text-sm font-900">
                 {{ offer.pickup_address }}
@@ -75,7 +75,7 @@ const perKmLabel = computed(() => {
             <!-- Промежуточные остановки: водитель видит их ДО принятия -->
             <div v-for="(stop, index) in stops" :key="`stop-${index}`">
               <p class="text-[11px] text-amber-300/80 font-800 uppercase">
-                Остановка {{ index + 1 }}
+                {{ t('driverOffer.stop', { n: index + 1 }) }}
               </p>
               <p class="mt-1 text-sm font-800">
                 {{ stop.address }}
@@ -84,7 +84,7 @@ const perKmLabel = computed(() => {
 
             <div>
               <p class="text-[11px] app-faint font-800 uppercase">
-                Куда
+                {{ t('driverOffer.destination') }}
               </p>
               <p class="mt-1 text-sm font-900">
                 {{ offer.dropoff_address }}
@@ -97,11 +97,11 @@ const perKmLabel = computed(() => {
         <div v-if="optionBadges.length" class="mt-4 flex flex-wrap gap-1.5">
           <span
             v-for="badge in optionBadges"
-            :key="badge.label"
+            :key="badge.labelKey"
             class="inline-flex items-center gap-1.5 rounded-full bg-main-500/14 px-2.5 py-1 text-[12px] text-main-200 font-800 light:text-main-700"
           >
             <span :class="badge.icon" class="text-4" aria-hidden="true" />
-            {{ badge.label }}
+            {{ t(badge.labelKey, badge.params ?? {}) }}
           </span>
         </div>
 
@@ -121,7 +121,7 @@ const perKmLabel = computed(() => {
             type="button"
             @click="emit('reject')"
           >
-            Отклонить
+            {{ t('driverOffer.reject') }}
           </button>
 
           <button
@@ -130,7 +130,7 @@ const perKmLabel = computed(() => {
             type="button"
             @click="emit('accept')"
           >
-            Принять
+            {{ t('driverOffer.accept') }}
           </button>
         </div>
       </section>

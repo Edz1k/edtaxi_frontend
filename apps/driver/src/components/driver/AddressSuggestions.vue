@@ -14,6 +14,8 @@ const emit = defineEmits<{
   select: [place: GeoPlace]
 }>()
 
+const { t } = useI18n()
+
 // Цвет кружка-иконки подсказки: точка А — изумрудный, остановки — янтарный,
 // точка Б — красный.
 const iconColorClass = {
@@ -34,10 +36,10 @@ function formatDistance(m?: null | number) {
   if (m == null)
     return ''
   if (m < 1000)
-    return `${m} м`
+    return t('units.m', { n: m })
   if (m < 10_000)
-    return `${(m / 1000).toFixed(1).replace('.', ',')} км`
-  return `${Math.round(m / 1000)} км`
+    return t('units.km', { n: (m / 1000).toFixed(1).replace('.', ',') })
+  return t('units.km', { n: Math.round(m / 1000) })
 }
 </script>
 
@@ -77,14 +79,14 @@ function formatDistance(m?: null | number) {
       v-if="isLoading && !places.length"
       class="px-2 py-2 text-xs app-muted font-700"
     >
-      Ищем адрес...
+      {{ t('addrSug.searching') }}
     </p>
 
     <p
       v-else-if="failed && !places.length"
       class="px-2 py-2 text-xs text-amber-300/80 font-700 leading-4"
     >
-      Поиск адресов временно недоступен — попробуйте позже или укажите точку на карте.
+      {{ t('addrSug.degraded') }}
     </p>
   </div>
 </template>

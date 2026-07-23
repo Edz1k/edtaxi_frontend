@@ -13,6 +13,7 @@ const props = defineProps<{
 }>()
 
 const toast = useToast()
+const { t } = useI18n()
 
 const isOpen = ref(false)
 const comment = ref('')
@@ -55,11 +56,11 @@ async function submit() {
     })
     submitted.value = true
     isOpen.value = false
-    toast.success('Заявка отправлена', 'Поддержка проверит модель и добавит её в каталог.')
+    toast.success(t('catReq.sentTitle'), t('catReq.sentText'))
     await loadExisting()
   }
   catch (error) {
-    toast.error('Не получилось', carRequestSubmitError(error))
+    toast.error(t('profile.failTitle'), carRequestSubmitError(error))
   }
   finally {
     isSubmitting.value = false
@@ -74,19 +75,19 @@ onMounted(loadExisting)
     <!-- Уже есть заявка на эту модель -->
     <div v-if="existing" class="rounded-xl app-card p-3 text-xs leading-5">
       <p v-if="existing.status === 'pending'" class="text-amber-300 font-800">
-        Заявка на добавление модели на рассмотрении.
+        {{ t('catReq.pending') }}
       </p>
       <p v-else-if="existing.status === 'rejected'" class="text-red-300 font-800">
-        Заявку отклонили{{ existing.rejection_reason ? `: ${existing.rejection_reason}` : '' }}
+        {{ t('catReq.rejected') }}{{ existing.rejection_reason ? `: ` : '' }}
       </p>
       <p v-else class="text-emerald-300 font-800">
-        Модель добавлена в каталог.
+        {{ t('catReq.added') }}
       </p>
     </div>
 
     <!-- Только что отправили -->
     <p v-else-if="submitted" class="rounded-xl bg-emerald-500/10 p-3 text-xs text-emerald-300 font-800 leading-5">
-      Заявка отправлена — поддержка проверит модель.
+      {{ t('catReq.justSent') }}
     </p>
 
     <!-- Кнопка + форма -->
@@ -97,17 +98,17 @@ onMounted(loadExisting)
         type="button"
         @click="isOpen = true"
       >
-        Отправить заявку на добавление в каталог
+        {{ t('catReq.openBtn') }}
       </button>
 
       <div v-else class="space-y-3">
         <label class="block">
-          <span class="mb-1.5 block text-xs app-muted font-600">Комментарий (необязательно)</span>
+          <span class="mb-1.5 block text-xs app-muted font-600">{{ t('catReq.commentLabel') }}</span>
           <textarea
             v-model="comment"
             class="min-h-16 w-full border app-border rounded-xl app-card px-3 py-2 text-sm text-white outline-none focus:border-main-400"
             maxlength="1000"
-            placeholder="Комплектация, поколение, ссылка — что поможет проверить"
+            :placeholder="t('catReq.placeholder')"
           />
         </label>
         <div class="grid grid-cols-2 gap-2">
@@ -116,7 +117,7 @@ onMounted(loadExisting)
             type="button"
             @click="isOpen = false"
           >
-            Отмена
+            {{ t('profile.cancel') }}
           </button>
           <button
             :disabled="!canSubmit"
@@ -124,7 +125,7 @@ onMounted(loadExisting)
             type="button"
             @click="submit"
           >
-            {{ isSubmitting ? 'Отправка…' : 'Отправить' }}
+            {{ isSubmitting ? t('catReq.sending') : t('catReq.submit') }}
           </button>
         </div>
       </div>

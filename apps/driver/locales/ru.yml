@@ -172,6 +172,7 @@ profile:
   loading: Загружаем кабинет...
   loadFail: Не удалось загрузить данные.
   ratingTitle: Рейтинг водителя
+  failTitle: Не получилось
   activityShort: Актив
   trips: Поездок
   cancelsToday: Отмен сег.
@@ -478,3 +479,152 @@ bonus:
   milestone: +{n} бонусов за каждые {every} заказов
   manualAward: Награду получите после завершения акции — её отправит организатор.
   shareTextDriver: Зарабатывай с Telegram Taxi! Открой ссылку и войди — получишь +{reward} бонусов на счёт 🚕
+driverStatus:
+  toPickup: Едем к пассажиру
+  toPickupText: Подъезжайте к точке посадки и отметьте прибытие.
+  arrivedAction: Я на месте
+  waitingPickup: Ожидаем посадку
+  arrivedText: Пассажир сел в автомобиль. После нажатия начнется поездка.
+  startAction: Начать поездку
+  inProgress: Поездка идет
+  inProgressText: Доставьте пассажира до точки назначения и завершите заказ.
+  completeAction: Завершить поездку
+  online: Вы на линии
+  waitingOrder: Ждём подходящий заказ рядом
+  offline: Вы не на линии
+  offlineText: Выберите тарифы и выходите на заказы
+  tariffsAndOnline: Тарифы и выход на линию
+  connecting: Подключаемся к серверу заказов…
+  reconnecting: Нет связи с сервером заказов — переподключаемся…
+  waitPaid: 'Ожидание {time} · платное: +{fee} ₸'
+  waitFree: 'Ожидание {time} · бесплатно до {free}:00, дальше +{fee} ₸/мин'
+  km: '{n} км'
+  m: '{n} м'
+  moveCloser: Подъедьте ближе к точке — сейчас до неё ~{distance}
+  dailyCheck: Пройти фотоконтроль
+  topUp: Пополнить баланс
+  openBotChat: Открыть чат с ботом
+  choosePark: Выбрать таксопарк
+  verification: Пройти верификацию
+  dragHandle: Потяните, чтобы развернуть или свернуть панель
+  passengerCancelled: Пассажир отменил заказ — ищем вам следующий…
+  hide: Скрыть
+  tariffsOnLine: Тарифы на линии
+  pickTariff: Выберите хотя бы один тариф
+  orderDistricts: Районы заказов
+  wholeCity: Весь город
+  stopPassed: Остановка пройдена — следующая точка
+  navToPassenger: Навигатор к пассажиру
+  navTo: 'Навигатор: {label}'
+  chatWithPassenger: Чат с пассажиром
+  cancelOrder: Отменить заказ
+  restoring: Восстанавливаем...
+  updating: Обновляем...
+  goOffline: Уйти с линии
+  goOnline: Выйти на линию
+  reserveGeoUntil: Резервная передача геопозиции активна до {time}
+  liveLocationHint: В чате нажмите скрепку → «Геопозиция» → «Транслировать» и выберите 8 часов.
+  addVehicle: Добавить автомобиль
+  buildingRoute: Строим маршрут заказа...
+driverOffer:
+  newOrder: Новый заказ
+  perKm: '{rate} ₸/км'
+  pickup: Посадка
+  stop: Остановка {n}
+  destination: Куда
+  reject: Отклонить
+  accept: Принять
+tripOptions:
+  childSeat: Детское кресло
+  pets: С животным
+  accessible: Особые потребности
+  rider: 'Едет: {contact}'
+common:
+  thanks: Спасибо
+units:
+  km: '{n} км'
+  m: '{n} м'
+  min: '{n} мин'
+stopReq:
+  title: Пассажир просит заехать
+  feeLabel: доплата за крюк
+  newStop: Новая остановка
+  routeBecomes: Маршрут станет {dist} · {dur}
+  decline: Отказаться
+  accept: Заеду
+ratePax:
+  completed: Поездка завершена
+  title: Оцените пассажира
+  closeAria: Закрыть оценку пассажира
+  starAria: Поставить оценку {n}
+  commentAria: Комментарий к оценке пассажира
+  commentPlaceholder: Комментарий, если хотите
+  sending: Отправляем...
+  submit: Отправить оценку
+  sent: Оценка пассажира отправлена.
+  fail: Не удалось отправить оценку.
+ratingTags:
+  polite: Вежливый
+  punctual: Пунктуальный
+  late: Опоздал
+  rude: Грубость
+  littered: Мусор в салоне
+home:
+  eyebrow: Режим «Домой»
+  goingHome: Едем домой
+  whereHome: Куда едем домой?
+  closeAria: Закрыть
+  home: Дом
+  activeHint: До {until} вам предлагаются только заказы, конечная точка которых — не дальше 5 км от дома. Режим выключится сам по таймеру или после поездки, завершившейся у дома.
+  turnOff: Выключить режим
+  usedNote: Потраченная активация не возвращается ({used} из {limit} за сегодня).
+  enableWithAddress: Включить с этим адресом
+  addressAria: Адрес дома
+  addressPlaceholder: Адрес дома
+  offHint: В режиме «Домой» вы получаете только заказы, конечная точка которых — не дальше 5 км от дома. Режим выключится сам через 3 часа или после поездки, завершившейся у дома.
+  limitReached: Лимит на сегодня исчерпан
+  enable: Включить режим (осталось {left} из {limit})
+catReq:
+  sentTitle: Заявка отправлена
+  sentText: Поддержка проверит модель и добавит её в каталог.
+  pending: Заявка на добавление модели на рассмотрении.
+  rejected: Заявку отклонили
+  added: Модель добавлена в каталог.
+  justSent: Заявка отправлена — поддержка проверит модель.
+  openBtn: Отправить заявку на добавление в каталог
+  commentLabel: Комментарий (необязательно)
+  placeholder: Комплектация, поколение, ссылка — что поможет проверить
+  sending: Отправка…
+  submit: Отправить
+verBanner:
+  title: Пройдите верификацию
+  remaining: 'Осталось завершить: {items}.'
+  hideAria: Скрыть напоминание
+  goTo: Перейти к верификации
+miniMap:
+  noToken: Нет VITE_MAPBOX_TOKEN
+  loadFail: Карта не загрузилась
+addrSug:
+  searching: Ищем адрес...
+  degraded: Поиск адресов временно недоступен — попробуйте позже или укажите точку на карте.
+map:
+  city: г. {city}
+driverMap:
+  newPointOnMap: Новая точка на карте
+  reminderFace: фото лица
+  reminderVehicle: документы машины
+  dailyExpiredOff: Срок фотоконтроля истёк — вы сняты с линии. Пройдите проверку заново.
+  switchedTo: Вы перешли в таксопарк «{name}».
+  joinedTo: Вы присоединились к таксопарку «{name}».
+  tryLater: Попробуйте ещё раз позже.
+  enableGeo: Включите геолокацию, чтобы выйти на линию.
+  onlineUnavailable: Выход на линию сейчас недоступен.
+  switchParkQ: Сменить таксопарк?
+  joinParkQ: Присоединиться к таксопарку?
+  current: текущего
+  switchIntro: Перейти из парка «{from}» в «{to}»? Вы сразу станете водителем нового парка.
+  joinParkText: Вступить в таксопарк «{name}»? После этого можно выходить на линию.
+  oneSec: Секунду...
+  yesJoin: Да, вступить
+  homeUntil: до {time}
+  homeShort: Домой

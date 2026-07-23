@@ -15,12 +15,14 @@ const emit = defineEmits<{
   reject: []
 }>()
 
+const { t, locale } = useI18n()
+
 function formatFare(value: number) {
-  return `${Math.round(value).toLocaleString('ru-RU')} ₸`
+  return `${Math.round(value).toLocaleString(locale.value)} ₸`
 }
 
-const distanceLabel = computed(() => `${props.request.distance_km.toFixed(1)} км`)
-const durationLabel = computed(() => `${Math.round(props.request.duration_min)} мин`)
+const distanceLabel = computed(() => t('units.km', { n: props.request.distance_km.toFixed(1) }))
+const durationLabel = computed(() => t('units.min', { n: Math.round(props.request.duration_min) }))
 </script>
 
 <template>
@@ -35,13 +37,13 @@ const durationLabel = computed(() => `${Math.round(props.request.duration_min)} 
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
             <p class="text-xs app-accent font-900 uppercase">
-              Пассажир просит заехать
+              {{ t('stopReq.title') }}
             </p>
             <h2 class="mt-2 text-3xl font-950">
               +{{ formatFare(request.fee) }}
             </h2>
             <p class="mt-1 text-xs app-muted font-800">
-              доплата за крюк
+              {{ t('stopReq.feeLabel') }}
             </p>
           </div>
 
@@ -52,7 +54,7 @@ const durationLabel = computed(() => `${Math.round(props.request.duration_min)} 
 
         <div class="mt-4 rounded-2xl app-card px-4 py-3">
           <p class="text-[11px] app-faint font-800 uppercase">
-            Новая остановка
+            {{ t('stopReq.newStop') }}
           </p>
           <p class="mt-1 text-sm font-900">
             {{ stopAddress }}
@@ -63,7 +65,7 @@ const durationLabel = computed(() => `${Math.round(props.request.duration_min)} 
              сколько ещё ехать. -->
         <div class="mt-3 flex items-center gap-2 text-[13px] text-slate-300 font-800 light:text-slate-600">
           <span class="i-mdi-map-marker-distance shrink-0 text-4.5 app-accent" aria-hidden="true" />
-          <span>Маршрут станет {{ distanceLabel }} · {{ durationLabel }}</span>
+          <span>{{ t('stopReq.routeBecomes', { dist: distanceLabel, dur: durationLabel }) }}</span>
         </div>
 
         <div class="grid grid-cols-2 mt-6 gap-3">
@@ -73,7 +75,7 @@ const durationLabel = computed(() => `${Math.round(props.request.duration_min)} 
             type="button"
             @click="emit('reject')"
           >
-            Отказаться
+            {{ t('stopReq.decline') }}
           </button>
 
           <button
@@ -82,7 +84,7 @@ const durationLabel = computed(() => `${Math.round(props.request.duration_min)} 
             type="button"
             @click="emit('accept')"
           >
-            Заеду
+            {{ t('stopReq.accept') }}
           </button>
         </div>
       </section>

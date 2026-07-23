@@ -13,6 +13,7 @@ const emit = defineEmits<{
 }>()
 
 const toast = useToast()
+const { t } = useI18n()
 const score = ref(5)
 const comment = ref('')
 const tags = ref<string[]>([])
@@ -37,11 +38,11 @@ async function submit() {
   isSubmitting.value = true
   try {
     await ratePassenger(props.tripId, { score: score.value, comment: comment.value.trim(), tags: tags.value.length ? tags.value : undefined })
-    toast.success('Спасибо!', 'Оценка пассажира отправлена.')
+    toast.success(t('common.thanks'), t('ratePax.sent'))
     emit('close')
   }
   catch (error) {
-    showErrorToast(error, 'Не удалось отправить оценку.')
+    showErrorToast(error, t('ratePax.fail'))
   }
   finally {
     isSubmitting.value = false
@@ -59,13 +60,13 @@ async function submit() {
         <div class="flex items-center justify-between gap-4">
           <div>
             <p class="text-xs app-accent font-900 uppercase">
-              Поездка завершена
+              {{ t('ratePax.completed') }}
             </p>
             <h2 class="mt-1 text-2xl font-950">
-              Оцените пассажира
+              {{ t('ratePax.title') }}
             </h2>
           </div>
-          <button aria-label="Закрыть оценку пассажира" class="h-11 w-11 flex items-center justify-center rounded-full app-chip" type="button" @click="emit('close')">
+          <button :aria-label="t('ratePax.closeAria')" class="h-11 w-11 flex items-center justify-center rounded-full app-chip" type="button" @click="emit('close')">
             <span class="i-mdi-close text-6" />
           </button>
         </div>
@@ -74,7 +75,7 @@ async function submit() {
           <button
             v-for="star in 5"
             :key="star"
-            :aria-label="`Поставить оценку ${star}`"
+            :aria-label="t('ratePax.starAria', { n: star })"
             class="h-11 w-11 flex items-center justify-center rounded-full transition active:scale-[0.94]"
             :class="star <= score ? 'app-accent' : 'text-slate-600'"
             type="button"
@@ -95,17 +96,17 @@ async function submit() {
             type="button"
             @click="toggleTag(tag.value)"
           >
-            {{ tag.label }}
+            {{ t(`ratingTags.`) }}
           </button>
         </div>
 
         <textarea
           v-model="comment"
-          aria-label="Комментарий к оценке пассажира"
+          :aria-label="t('ratePax.commentAria')"
           class="mt-5 min-h-24 w-full resize-none border app-border rounded-2xl app-card p-4 text-sm outline-none focus:border-main-400"
           maxlength="500"
           name="passenger_rating_comment"
-          placeholder="Комментарий, если хотите"
+          :placeholder="t('ratePax.commentPlaceholder')"
         />
 
         <button
@@ -114,7 +115,7 @@ async function submit() {
           type="button"
           @click="submit"
         >
-          {{ isSubmitting ? 'Отправляем...' : 'Отправить оценку' }}
+          {{ isSubmitting ? t('ratePax.sending') : t('ratePax.submit') }}
         </button>
       </section>
     </div>

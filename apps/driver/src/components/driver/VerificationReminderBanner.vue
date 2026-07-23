@@ -1,6 +1,7 @@
 <script setup lang="ts">
 defineProps<{ pendingLabel: string }>()
 defineEmits<{ dismiss: [] }>()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -12,14 +13,14 @@ defineEmits<{ dismiss: [] }>()
         </span>
         <div class="min-w-0 flex-1">
           <p class="text-sm font-950">
-            Пройдите верификацию
+            {{ t('verBanner.title') }}
           </p>
           <p class="mt-0.5 text-xs app-muted leading-4">
-            Осталось завершить: {{ pendingLabel }}.
+            {{ t('verBanner.remaining', { items: pendingLabel }) }}
           </p>
         </div>
         <button
-          aria-label="Скрыть напоминание"
+          :aria-label="t('verBanner.hideAria')"
           class="h-8 w-8 flex shrink-0 items-center justify-center rounded-full app-chip app-muted"
           type="button"
           @click="$emit('dismiss')"
@@ -31,7 +32,7 @@ defineEmits<{ dismiss: [] }>()
         class="mt-3 h-11 flex items-center justify-center rounded-2xl bg-amber-400 text-sm text-#06142f font-950 transition active:scale-[0.98]"
         to="/menu/profile/onboarding"
       >
-        Перейти к верификации
+        {{ t('verBanner.goTo') }}
       </RouterLink>
     </div>
   </section>

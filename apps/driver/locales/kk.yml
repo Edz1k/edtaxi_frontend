@@ -172,6 +172,7 @@ profile:
   loading: Кабинетті жүктеудеміз...
   loadFail: Деректерді жүктеу сәтсіз аяқталды.
   ratingTitle: Жүргізуші рейтингі
+  failTitle: Болмады
   activityShort: Актив
   trips: Сапар
   cancelsToday: Бүгінгі бас тарту
@@ -478,3 +479,152 @@ bonus:
   milestone: Әр {every} тапсырыс үшін +{n} бонус
   manualAward: Сыйақыны акция аяқталған соң аласыз — оны ұйымдастырушы жібереді.
   shareTextDriver: Telegram Taxi-мен таб! Сілтемені ашып кір — шотыңа +{reward} бонус аласың 🚕
+driverStatus:
+  toPickup: Жолаушыға бара жатырмыз
+  toPickupText: Отырғызу нүктесіне жақындап, келгеніңізді белгілеңіз.
+  arrivedAction: Мен жердемін
+  waitingPickup: Отыруды күтудеміз
+  arrivedText: Жолаушы көлікке отырды. Басқаннан кейін сапар басталады.
+  startAction: Сапарды бастау
+  inProgress: Сапар жүріп жатыр
+  inProgressText: Жолаушыны межелі нүктеге жеткізіп, тапсырысты аяқтаңыз.
+  completeAction: Сапарды аяқтау
+  online: Сіз желідесіз
+  waitingOrder: Жақын жерден қолайлы тапсырыс күтудеміз
+  offline: Сіз желіде емессіз
+  offlineText: Тарифтерді таңдап, тапсырыстарға шығыңыз
+  tariffsAndOnline: Тарифтер мен желіге шығу
+  connecting: Тапсырыс серверіне қосылудамыз…
+  reconnecting: Тапсырыс серверімен байланыс жоқ — қайта қосылудамыз…
+  waitPaid: 'Күту {time} · ақылы: +{fee} ₸'
+  waitFree: 'Күту {time} · {free}:00 дейін тегін, әрі қарай +{fee} ₸/мин'
+  km: '{n} км'
+  m: '{n} м'
+  moveCloser: Нүктеге жақындаңыз — қазір оған дейін ~{distance}
+  dailyCheck: Фотобақылаудан өту
+  topUp: Балансты толтыру
+  openBotChat: Ботпен чатты ашу
+  choosePark: Таксопарк таңдау
+  verification: Тексеруден өту
+  dragHandle: Панельді ашу немесе жабу үшін тартыңыз
+  passengerCancelled: Жолаушы тапсырыстан бас тартты — сізге келесісін іздеудеміз…
+  hide: Жасыру
+  tariffsOnLine: Желідегі тарифтер
+  pickTariff: Кемінде бір тариф таңдаңыз
+  orderDistricts: Тапсырыс аудандары
+  wholeCity: Бүкіл қала
+  stopPassed: Аялдама өтті — келесі нүкте
+  navToPassenger: Жолаушыға навигатор
+  navTo: 'Навигатор: {label}'
+  chatWithPassenger: Жолаушымен чат
+  cancelOrder: Тапсырыстан бас тарту
+  restoring: Қалпына келтірудеміз...
+  updating: Жаңартудамыз...
+  goOffline: Желіден шығу
+  goOnline: Желіге шығу
+  reserveGeoUntil: Геопозицияны резервтік беру {time} дейін белсенді
+  liveLocationHint: Чатта қыстырманы басыңыз → «Геопозиция» → «Тарату» → 8 сағатты таңдаңыз.
+  addVehicle: Автокөлік қосу
+  buildingRoute: Тапсырыс маршрутын құрудамыз...
+driverOffer:
+  newOrder: Жаңа тапсырыс
+  perKm: '{rate} ₸/км'
+  pickup: Отырғызу
+  stop: Аялдама {n}
+  destination: Қайда
+  reject: Бас тарту
+  accept: Қабылдау
+tripOptions:
+  childSeat: Балалар креслосы
+  pets: Жануармен
+  accessible: Ерекше қажеттіліктер
+  rider: 'Барады: {contact}'
+common:
+  thanks: Рақмет
+units:
+  km: '{n} км'
+  m: '{n} м'
+  min: '{n} мин'
+stopReq:
+  title: Жолаушы соғып өтуді сұрайды
+  feeLabel: айналым үшін қосымша ақы
+  newStop: Жаңа аялдама
+  routeBecomes: Маршрут {dist} · {dur} болады
+  decline: Бас тарту
+  accept: Соғып өтемін
+ratePax:
+  completed: Сапар аяқталды
+  title: Жолаушыны бағалаңыз
+  closeAria: Жолаушы бағасын жабу
+  starAria: '{n} баға қою'
+  commentAria: Жолаушы бағасына пікір
+  commentPlaceholder: Қаласаңыз пікір
+  sending: Жіберудеміз...
+  submit: Бағаны жіберу
+  sent: Жолаушы бағасы жіберілді.
+  fail: Бағаны жіберу сәтсіз аяқталды.
+ratingTags:
+  polite: Сыпайы
+  punctual: Уақтылы
+  late: Кешікті
+  rude: Дөрекілік
+  littered: Салонда қоқыс
+home:
+  eyebrow: «Үйге» режимі
+  goingHome: Үйге бара жатырмыз
+  whereHome: Үйге қайда барамыз?
+  closeAria: Жабу
+  home: Үй
+  activeHint: '{until} дейін сізге тек межелі нүктесі үйден 5 км-ден алыс емес тапсырыстар ұсынылады. Режим таймермен немесе үйде аяқталған сапардан кейін өзі өшеді.'
+  turnOff: Режимді өшіру
+  usedNote: Жұмсалған белсендіру қайтарылмайды (бүгін {limit} ішінен {used}).
+  enableWithAddress: Осы мекенжаймен қосу
+  addressAria: Үй мекенжайы
+  addressPlaceholder: Үй мекенжайы
+  offHint: «Үйге» режимінде сіз тек межелі нүктесі үйден 5 км-ден алыс емес тапсырыстар аласыз. Режим 3 сағаттан кейін немесе үйде аяқталған сапардан кейін өзі өшеді.
+  limitReached: Бүгінгі лимит таусылды
+  enable: Режимді қосу ({limit} ішінен {left} қалды)
+catReq:
+  sentTitle: Өтінім жіберілді
+  sentText: Қолдау қызметі модельді тексеріп, каталогқа қосады.
+  pending: Модель қосу өтінімі қаралуда.
+  rejected: Өтінім қабылданбады
+  added: Модель каталогқа қосылды.
+  justSent: Өтінім жіберілді — қолдау қызметі модельді тексереді.
+  openBtn: Каталогқа қосу өтінімін жіберу
+  commentLabel: Пікір (міндетті емес)
+  placeholder: Жинақ, буын, сілтеме — тексеруге көмектесетін нәрсе
+  sending: Жіберу…
+  submit: Жіберу
+verBanner:
+  title: Тексеруден өтіңіз
+  remaining: 'Аяқтау қалды: {items}.'
+  hideAria: Еске салуды жасыру
+  goTo: Тексеруге өту
+miniMap:
+  noToken: VITE_MAPBOX_TOKEN жоқ
+  loadFail: Карта жүктелмеді
+addrSug:
+  searching: Мекенжай іздеудеміз...
+  degraded: Мекенжай іздеу уақытша қолжетімсіз — кейінірек көріңіз немесе картадан нүкте көрсетіңіз.
+map:
+  city: '{city} қ.'
+driverMap:
+  newPointOnMap: Картадағы жаңа нүкте
+  reminderFace: бет суреті
+  reminderVehicle: көлік құжаттары
+  dailyExpiredOff: Фотобақылау мерзімі өтті — сіз желіден шығарылдыңыз. Тексеруден қайта өтіңіз.
+  switchedTo: '«{name}» таксопаркіне ауыстыңыз.'
+  joinedTo: '«{name}» таксопаркіне қосылдыңыз.'
+  tryLater: Кейінірек қайталап көріңіз.
+  enableGeo: Желіге шығу үшін геолокацияны қосыңыз.
+  onlineUnavailable: Желіге шығу қазір қолжетімсіз.
+  switchParkQ: Таксопаркті ауыстыру керек пе?
+  joinParkQ: Таксопаркке қосылу керек пе?
+  current: ағымдағы
+  switchIntro: '«{from}» паркінен «{to}» паркіне өту керек пе? Сіз бірден жаңа парктің жүргізушісі боласыз.'
+  joinParkText: '«{name}» таксопаркіне кіру керек пе? Осыдан кейін желіге шығуға болады.'
+  oneSec: Бір сәт...
+  yesJoin: Иә, кіру
+  homeUntil: '{time} дейін'
+  homeShort: Үйге

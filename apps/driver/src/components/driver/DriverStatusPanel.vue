@@ -22,6 +22,7 @@ const props = defineProps<{
   driverCoordinates?: null | UserCoordinates
 }>()
 const emit = defineEmits<{ primaryAction: [], toggleOnline: [] }>()
+const { locale, t } = useI18n()
 
 // Панель — шторка (как у пассажира): свайп за грабер вниз сворачивает её к
 // карте (peek), тап по карте тоже приопускает (collapseToMap из map.vue);
@@ -59,12 +60,12 @@ function onHandleKeydown(event: KeyboardEvent) {
 // парков, просроченный фотоконтроль проходят заново на его собственном экране.
 // Трансляция геопозиции — единственная причина, которая закрывается не на
 // экране апы, а в чате с ботом: у неё вместо маршрута кнопка выхода в Telegram.
-const ONLINE_BLOCK_LINKS: Record<OnlineBlockTarget, { label: string, to?: string }> = {
-  'daily-check': { label: 'Пройти фотоконтроль', to: '/menu/profile/onboarding/daily-check' },
-  'debt': { label: 'Пополнить баланс', to: '/earnings' },
-  'live-location': { label: 'Открыть чат с ботом' },
-  'park': { label: 'Выбрать таксопарк', to: '/menu/parks' },
-  'verification': { label: 'Пройти верификацию', to: '/menu/profile/onboarding' },
+const ONLINE_BLOCK_LINKS: Record<OnlineBlockTarget, { labelKey: string, to?: string }> = {
+  'daily-check': { labelKey: 'driverStatus.dailyCheck', to: '/menu/profile/onboarding/daily-check' },
+  'debt': { labelKey: 'driverStatus.topUp', to: '/earnings' },
+  'live-location': { labelKey: 'driverStatus.openBotChat' },
+  'park': { labelKey: 'driverStatus.choosePark', to: '/menu/parks' },
+  'verification': { labelKey: 'driverStatus.verification', to: '/menu/profile/onboarding' },
 }
 
 const onlineBlockLink = computed(() => ONLINE_BLOCK_LINKS[props.onlineBlockTarget])
@@ -135,8 +136,8 @@ const waitingInfo = computed(() => {
   return {
     accent: fee > 0,
     text: fee > 0
-      ? `Ожидание ${mm}:${ss} · платное: +${fee.toLocaleString('ru-RU')} ₸`
-      : `Ожидание ${mm}:${ss} · бесплатно до ${freeMinutes}:00, дальше +${perMinute} ₸/мин`,
+      ? t('driverStatus.waitPaid', { fee: fee.toLocaleString(locale.value), time: `${mm}:${ss}` })
+      : t('driverStatus.waitFree', { fee: perMinute, free: freeMinutes, time: `${mm}:${ss}` }),
   }
 })
 
@@ -157,27 +158,27 @@ const tripStep = computed(() => {
 
   if (driver.activeTripStep === 'to_pickup') {
     return {
-      action: 'Я на месте',
-      description: 'Подъезжайте к точке посадки и отметьте прибытие.',
+      action: t('driverStatus.arrivedAction'),
+      description: t('driverStatus.toPickupText'),
       icon: 'i-mdi-map-marker-check',
-      title: 'Едем к пассажиру',
+      title: t('driverStatus.toPickup'),
     }
   }
 
   if (driver.activeTripStep === 'arrived') {
     return {
-      action: 'Начать поездку',
-      description: 'Пассажир сел в автомобиль. После нажатия начнется поездка.',
+      action: t('driverStatus.startAction'),
+      description: t('driverStatus.arrivedText'),
       icon: 'i-mdi-play-circle',
-      title: 'Ожидаем посадку',
+      title: t('driverStatus.waitingPickup'),
     }
   }
 
   return {
-    action: 'Завершить поездку',
-    description: 'Доставьте пассажира до точки назначения и завершите заказ.',
+    action: t('driverStatus.completeAction'),
+    description: t('driverStatus.inProgressText'),
     icon: 'i-mdi-flag-checkered',
-    title: 'Поездка идет',
+    title: t('driverStatus.inProgress'),
   }
 })
 
@@ -234,10 +235,10 @@ const geoGateHint = computed(() => {
   if (!check)
     return ''
 
-  const km = check.distance >= 1000
-    ? `${(check.distance / 1000).toFixed(1)} км`
-    : `${check.distance} м`
-  return `Подъедьте ближе к точке — сейчас до неё ~${km}`
+  const distance = check.distance >= 1000
+    ? t('driverStatus.km', { n: (check.distance / 1000).toLocaleString(locale.value, { maximumFractionDigits: 1 }) })
+    : t('driverStatus.m', { n: check.distance })
+  return t('driverStatus.moveCloser', { distance })
 })
 
 // Шапка панели: одно человеческое состояние вместо тех-карточек
@@ -258,8 +259,8 @@ const statusMeta = computed(() => {
       icon: 'i-mdi-radar',
       iconClass: 'bg-emerald-500/14 text-emerald-300',
       pulse: true,
-      subtitle: 'Ждём подходящий заказ рядом',
-      title: 'Вы на линии',
+      subtitle: t('driverStatus.waitingOrder'),
+      title: t('driverStatus.online'),
     }
   }
 
@@ -267,8 +268,8 @@ const statusMeta = computed(() => {
     icon: 'i-mdi-steering',
     iconClass: 'bg-white/7 text-slate-300 light:text-slate-600',
     pulse: false,
-    subtitle: 'Выберите тарифы и выходите на заказы',
-    title: 'Вы не на линии',
+    subtitle: t('driverStatus.offlineText'),
+    title: t('driverStatus.offline'),
   }
 })
 
@@ -283,8 +284,8 @@ const connectionHint = computed(() => {
   if (!driver.isOnline || props.trackingStatus === 'open')
     return ''
   return props.trackingStatus === 'connecting'
-    ? 'Подключаемся к серверу заказов…'
-    : 'Нет связи с сервером заказов — переподключаемся…'
+    ? t('driverStatus.connecting')
+    : t('driverStatus.reconnecting')
 })
 
 // Свёрнутая шторка (peek): вместо обрезанного верха контента — компактная
@@ -302,9 +303,9 @@ const peekPill = computed(() => {
   }
 
   if (driver.isOnline)
-    return { icon: '', pulse: true, subtitle: 'Ждём подходящий заказ рядом', title: 'Вы на линии' }
+    return { icon: '', pulse: true, subtitle: t('driverStatus.waitingOrder'), title: t('driverStatus.online') }
 
-  return { icon: 'i-mdi-steering', pulse: false, subtitle: 'Тарифы и выход на линию', title: 'Вы не на линии' }
+  return { icon: 'i-mdi-steering', pulse: false, subtitle: t('driverStatus.tariffsAndOnline'), title: t('driverStatus.offline') }
 })
 </script>
 
@@ -321,7 +322,7 @@ const peekPill = computed(() => {
       <!-- Грабер: drag/тап для сворачивания и возврата -->
       <div
         ref="handleEl"
-        aria-label="Потяните, чтобы развернуть или свернуть панель"
+        :aria-label="t('driverStatus.dragHandle')"
         class="shrink-0 cursor-grab touch-none select-none px-4 pb-3 pt-3 active:cursor-grabbing"
         role="button"
         tabindex="0"
@@ -374,10 +375,10 @@ const peekPill = computed(() => {
             >
               <span class="i-mdi-account-cancel shrink-0 text-4.5 text-amber-300" aria-hidden="true" />
               <p class="flex-1 text-xs text-amber-200 font-800 leading-4">
-                Пассажир отменил заказ — ищем вам следующий…
+                {{ t('driverStatus.passengerCancelled') }}
               </p>
               <button
-                aria-label="Скрыть"
+                :aria-label="t('driverStatus.hide')"
                 class="shrink-0 text-amber-300/70 transition active:scale-95"
                 type="button"
                 @click="driver.dismissCancelledBanner"
@@ -389,7 +390,7 @@ const peekPill = computed(() => {
             <!-- Тарифы, по которым водитель принимает заказы -->
             <div v-if="!driver.hasActiveTrip && driver.availableCategories.length" class="mt-4">
               <p class="mb-2 text-xs app-muted font-800 uppercase">
-                Тарифы на линии
+                {{ t('driverStatus.tariffsOnLine') }}
               </p>
 
               <div class="flex flex-wrap gap-2">
@@ -419,7 +420,7 @@ const peekPill = computed(() => {
               </div>
 
               <p v-if="blockedByNoCategory" class="mt-2 text-xs text-amber-300 font-700">
-                Выберите хотя бы один тариф
+                {{ t('driverStatus.pickTariff') }}
               </p>
             </div>
 
@@ -432,9 +433,9 @@ const peekPill = computed(() => {
             >
               <span class="i-mdi-map-marker-radius-outline shrink-0 text-5 app-accent" aria-hidden="true" />
               <span class="min-w-0 flex-1">
-                <span class="block text-xs app-muted font-800 uppercase">Районы заказов</span>
+                <span class="block text-xs app-muted font-800 uppercase">{{ t('driverStatus.orderDistricts') }}</span>
                 <span class="mt-0.5 block truncate text-sm font-800">
-                  {{ activeDistricts.length ? activeDistricts.map(d => d.name).join(', ') : 'Весь город' }}
+                  {{ activeDistricts.length ? activeDistricts.map(d => d.name).join(', ') : t('driverStatus.wholeCity') }}
                 </span>
               </span>
               <span class="i-mdi-chevron-right shrink-0 text-5 app-faint" aria-hidden="true" />
@@ -469,11 +470,11 @@ const peekPill = computed(() => {
                 <div v-if="tripBadges.length" class="mt-2.5 flex flex-wrap gap-1.5">
                   <span
                     v-for="badge in tripBadges"
-                    :key="badge.label"
+                    :key="badge.labelKey"
                     class="inline-flex items-center gap-1 rounded-full bg-main-500/14 px-2 py-0.5 text-[11px] text-main-200 font-800 light:text-main-700"
                   >
                     <span :class="badge.icon" class="text-3.5" aria-hidden="true" />
-                    {{ badge.label }}
+                    {{ t(badge.labelKey, badge.params ?? {}) }}
                   </span>
                 </div>
 
@@ -523,7 +524,7 @@ const peekPill = computed(() => {
                 @click="driver.advanceNavPoint()"
               >
                 <span class="i-mdi-map-marker-check-outline text-5" />
-                Остановка пройдена — следующая точка
+                {{ t('driverStatus.stopPassed') }}
               </button>
 
               <!-- Навигатор к текущей точке маршрута во внешнем приложении -->
@@ -534,7 +535,7 @@ const peekPill = computed(() => {
                 @click="isNavSheetOpen = !isNavSheetOpen"
               >
                 <span class="i-mdi-navigation text-5" />
-                {{ driver.activeTripStep === 'to_pickup' ? 'Навигатор к пассажиру' : `Навигатор: ${navTarget?.label}` }}
+                {{ driver.activeTripStep === 'to_pickup' ? t('driverStatus.navToPassenger') : t('driverStatus.navTo', { label: navTarget?.label }) }}
               </button>
               <div v-if="isNavSheetOpen && navApps.length" class="space-y-2">
                 <!-- Точки маршрута: текущая цель подсвечена, пройденные — приглушены -->
@@ -571,7 +572,7 @@ const peekPill = computed(() => {
                 to="/trip-chat"
               >
                 <span class="i-mdi-message-text text-5" />
-                Чат с пассажиром
+                {{ t('driverStatus.chatWithPassenger') }}
                 <span
                   v-if="tripChat.unreadCount"
                   class="absolute right-3 min-w-5 flex items-center justify-center rounded-full bg-main-500 px-1.5 py-0.5 text-[11px] text-white font-900"
@@ -585,7 +586,7 @@ const peekPill = computed(() => {
                 type="button"
                 @click="driver.cancelTrip()"
               >
-                Отменить заказ
+                {{ t('driverStatus.cancelOrder') }}
               </button>
             </div>
 
@@ -603,7 +604,7 @@ const peekPill = computed(() => {
               @click="emit('toggleOnline')"
             >
               <span v-if="!driver.isOnline && !driver.isChangingStatus && !driver.isRestoringActiveTrip" class="i-mdi-steering text-6" aria-hidden="true" />
-              {{ driver.isRestoringActiveTrip ? 'Восстанавливаем...' : driver.isChangingStatus ? 'Обновляем...' : driver.isOnline ? 'Уйти с линии' : 'Выйти на линию' }}
+              {{ driver.isRestoringActiveTrip ? t('driverStatus.restoring') : driver.isChangingStatus ? t('driverStatus.updating') : driver.isOnline ? t('driverStatus.goOffline') : t('driverStatus.goOnline') }}
             </button>
 
             <!-- Пока трансляция жива, водитель виден диспетчеру даже со
@@ -615,7 +616,7 @@ const peekPill = computed(() => {
               class="mt-3 flex items-center justify-center gap-1.5 text-xs app-muted font-800"
             >
               <span class="i-mdi-broadcast text-4 text-emerald-400" aria-hidden="true" />
-              Резервная передача геопозиции активна до {{ driver.liveLocationUntilLabel }}
+              {{ t('driverStatus.reserveGeoUntil', { time: driver.liveLocationUntilLabel }) }}
             </p>
 
             <!-- Причина отказа в выходе на линию (403 с бэка) -->
@@ -624,14 +625,14 @@ const peekPill = computed(() => {
                 {{ onlineBlockMessage }}
               </p>
               <p v-if="onlineBlockTarget === 'live-location'" class="mt-1.5 text-xs text-amber-200/80 font-700">
-                В чате нажмите скрепку → «Геопозиция» → «Транслировать» и выберите 8 часов.
+                {{ t('driverStatus.liveLocationHint') }}
               </p>
               <RouterLink
                 v-if="onlineBlockLink.to"
                 class="mt-2.5 h-10 flex items-center justify-center rounded-xl bg-amber-400 text-sm text-#06142f font-900 transition active:scale-[0.98]"
                 :to="onlineBlockLink.to"
               >
-                {{ onlineBlockLink.label }}
+                {{ t(onlineBlockLink.labelKey) }}
               </RouterLink>
               <button
                 v-else
@@ -639,7 +640,7 @@ const peekPill = computed(() => {
                 type="button"
                 @click="openTelegramChat(TG_BOT_USERNAME)"
               >
-                {{ onlineBlockLink.label }}
+                {{ t(onlineBlockLink.labelKey) }}
               </button>
             </div>
 
@@ -648,11 +649,11 @@ const peekPill = computed(() => {
               class="mt-3 h-12 flex items-center justify-center rounded-2xl app-chip text-sm text-main-100 font-900 light:text-main-700"
               to="/menu/vehicle"
             >
-              Добавить автомобиль
+              {{ t('driverStatus.addVehicle') }}
             </RouterLink>
 
             <p v-if="showRouteLoading" class="mt-3 text-center text-xs app-muted font-800">
-              Строим маршрут заказа...
+              {{ t('driverStatus.buildingRoute') }}
             </p>
           </div>
         </div>

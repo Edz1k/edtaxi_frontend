@@ -16,6 +16,8 @@ const props = withDefaults(defineProps<{
   districts: () => [],
 })
 
+const { t } = useI18n()
+
 const mapContainer = ref<HTMLElement | null>(null)
 const map = shallowRef<MapboxMap>()
 const mapboxglModule = shallowRef<typeof import('mapbox-gl')>()
@@ -61,7 +63,7 @@ onMounted(async () => {
 
   const token = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined
   if (!token) {
-    mapError.value = 'Нет VITE_MAPBOX_TOKEN'
+    mapError.value = t('miniMap.noToken')
     return
   }
 
@@ -83,7 +85,7 @@ onMounted(async () => {
     active.restoreDistricts()
   })
   map.value.on('error', () => {
-    mapError.value = 'Карта не загрузилась'
+    mapError.value = t('miniMap.loadFail')
   })
 })
 
