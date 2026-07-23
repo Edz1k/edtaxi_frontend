@@ -71,6 +71,8 @@ menu:
     feedbackDesc: An idea to improve the service
 feedback:
   eyebrow: Feedback
+  leadDriver: Tell us what to improve in the driver app. We implement the best ideas and thank you with bonuses.
+  placeholderDriver: 'For example: show traffic on the route to the client…'
   title: Suggest an improvement
   lead: Tell us what to improve in the app. We implement the best ideas and thank you with bonuses.
   thanksTitle: Thanks for the idea!
@@ -123,6 +125,9 @@ cats:
   business: Business
   minivan: Minivan
   moto: Moto
+  comfort_plus: Comfort+
+  business_plus: Business+
+  moped: Moped
 trip:
   completed: Completed
   cancelled: Cancelled
@@ -648,3 +653,20 @@ shared:
   takePhoto: Take a photo now
   takePhotoHint: The camera will open
   mapTheme: Map theme
+earnChart:
+  days: Days
+  months: Months
+  years: Years
+  title: Earnings dynamics
+  subtitle: By trip totals, before commission
+  periodAria: Chart period
+  loadingAria: Loading statistics
+  empty: No completed trips yet
+  emptyHint: The chart will appear after your first trip.
+  truncated: The last 500 trips are counted.
+earnBar:
+  chartAria: Earnings chart. Use left and right arrows to select a bar
+  caption: Earnings by period
+  period: Period
+  earnings: Earnings
+  trips: Trips

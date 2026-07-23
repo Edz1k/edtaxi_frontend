@@ -464,6 +464,15 @@ paymentMethods:
   card: Карта
   prepaid: Предоплата
 tariffStage:
+  editRoute: Изменить маршрут
+  tariffGroup: Группа тарифов
+  tariffChoice: Выбор тарифа
+  addStop: Добавить остановку
+  youHaveBonuses: У вас {n} бонусов
+  bonusPrepaid: учтутся при предоплате
+  bonusOnComplete: спишутся при завершении поездки
+  selectedAria: '{name}, выбран. Нажмите ещё раз, чтобы узнать о тарифе'
+  selectAria: Выбрать тариф {name}
   free: бесплатно
   editRouteAria: Изменить маршрут
   tariff: Тариф
@@ -599,3 +608,7 @@ shared:
   takePhoto: Сфотографировать сейчас
   takePhotoHint: Откроется камера
   mapTheme: Тема карты
+payFrame:
+  title: Оплата
+  closeAria: Закрыть оплату
+  iframeTitle: Оплата картой

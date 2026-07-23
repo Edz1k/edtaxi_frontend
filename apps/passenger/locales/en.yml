@@ -464,6 +464,15 @@ paymentMethods:
   card: Card
   prepaid: Prepaid
 tariffStage:
+  editRoute: Edit route
+  tariffGroup: Tariff group
+  tariffChoice: Tariff choice
+  addStop: Add a stop
+  youHaveBonuses: You have {n} bonuses
+  bonusPrepaid: counted at prepayment
+  bonusOnComplete: charged when the trip ends
+  selectedAria: '{name}, selected. Tap again to learn about the tariff'
+  selectAria: Choose tariff {name}
   free: free
   editRouteAria: Edit route
   tariff: Fare
@@ -599,3 +608,7 @@ shared:
   takePhoto: Take a photo now
   takePhotoHint: The camera will open
   mapTheme: Map theme
+payFrame:
+  title: Payment
+  closeAria: Close payment
+  iframeTitle: Card payment

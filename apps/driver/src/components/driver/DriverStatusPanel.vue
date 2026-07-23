@@ -8,7 +8,6 @@ import { useDriverStore } from '~/stores/driver'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
 import { useTripChatStore } from '~/stores/tripChat'
 import { tripOptionBadges } from '~/utils/tripOptions'
-import { categoryLabel } from '~/utils/vehicleCategories'
 
 const props = defineProps<{
   trackingStatus: 'closed' | 'connecting' | 'open'
@@ -400,7 +399,7 @@ const peekPill = computed(() => {
                     :key="cat"
                     class="rounded-full bg-main-500/18 px-3 py-1.5 text-xs text-main-200 font-800 light:text-main-700"
                   >
-                    {{ categoryLabel(cat) }}
+                    {{ t(`cats.`) }}
                   </span>
                 </template>
 
@@ -414,7 +413,7 @@ const peekPill = computed(() => {
                     type="button"
                     @click="driver.toggleCategory(cat)"
                   >
-                    {{ categoryLabel(cat) }}
+                    {{ t(`cats.`) }}
                   </button>
                 </template>
               </div>

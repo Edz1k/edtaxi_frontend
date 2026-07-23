@@ -61,7 +61,7 @@ async function send() {
           {{ t('feedback.title') }}
         </h1>
         <p class="mt-2 text-sm app-muted leading-5">
-          Расскажите, что улучшить в приложении для водителей. Лучшие идеи мы внедряем и благодарим бонусами.
+          {{ t('feedback.leadDriver') }}
         </p>
       </header>
 
@@ -95,7 +95,7 @@ async function send() {
           v-model="message"
           :maxlength="MAX_LENGTH"
           rows="6"
-          placeholder="Например: показывайте пробки на маршруте к клиенту…"
+          :placeholder="t('feedback.placeholderDriver')"
           class="w-full resize-none rounded-2xl app-card px-4 py-3 text-sm text-white outline-none transition focus:app-chip placeholder-slate-500"
         />
         <div class="mt-1 text-right text-xs app-faint font-700">

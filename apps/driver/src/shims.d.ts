@@ -16,3 +16,9 @@ declare module '*.vue' {
   const component: DefineComponent<object, object, any>
   export default component
 }
+
+// yml-словари i18n импортируются как объект сообщений (тесты, unplugin-vue-i18n).
+declare module '*.yml' {
+  const messages: Record<string, unknown>
+  export default messages
+}

@@ -16,6 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const trips = useTripsStore()
+const { t, locale } = useI18n()
 
 // Картинки тарифов из ~/assets/tariffs (economy.png, comfort.png, ...).
 // Имя файла = категория. Файла нет → фолбэк на иконку TARIFF_META.
@@ -154,12 +155,12 @@ function selectOrShowInfo(category: VehicleCategory) {
           @click="emit('addStop')"
         >
           <span class="i-mdi-plus-circle-outline text-4.5" aria-hidden="true" />
-          Добавить остановку
+          {{ t('tariffStage.addStop') }}
         </button>
       </div>
 
       <button
-        aria-label="Изменить маршрут"
+        :aria-label="t('tariffStage.editRoute')"
         class="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-white/8 text-white transition active:scale-95 hover:bg-white/12"
         type="button"
         @click="emit('editRoute')"
@@ -171,7 +172,7 @@ function selectOrShowInfo(category: VehicleCategory) {
     <!-- Тарифы: боковая scroll-snap карусель, одиночный выбор -->
     <div>
       <p class="mb-2 px-1 text-[11px] text-main-300 font-900 uppercase">
-        Тариф
+        {{ t('tariffStage.tariff') }}
       </p>
 
       <!-- Табы групп (п.30): рисуем только когда групп больше одной -->
@@ -179,7 +180,7 @@ function selectOrShowInfo(category: VehicleCategory) {
         v-if="availableGroups.length > 1"
         class="mb-2 flex gap-1 rounded-2xl bg-white/5 p-1"
         role="tablist"
-        aria-label="Группа тарифов"
+        :aria-label="t('tariffStage.tariffGroup')"
       >
         <button
           v-for="group in availableGroups"
@@ -192,14 +193,14 @@ function selectOrShowInfo(category: VehicleCategory) {
           @click="selectGroup(group)"
         >
           <span :class="GROUP_META[group].icon" class="text-4.5" aria-hidden="true" />
-          {{ GROUP_META[group].label }}
+          {{ t(`tariffGroups.`) }}
         </button>
       </div>
 
       <div
         class="[scrollbar-width:none] flex snap-x snap-mandatory gap-2 overflow-x-auto px-3 pb-1 -mx-3 [&::-webkit-scrollbar]:hidden"
         role="radiogroup"
-        aria-label="Выбор тарифа"
+        :aria-label="t('tariffStage.tariffChoice')"
       >
         <button
           v-for="tariff in visibleTariffs"
@@ -211,8 +212,8 @@ function selectOrShowInfo(category: VehicleCategory) {
           role="radio"
           :aria-checked="isSelected(tariff.category)"
           :aria-label="isSelected(tariff.category)
-            ? `${TARIFF_META[tariff.category].label}, выбран. Нажмите ещё раз, чтобы узнать о тарифе`
-            : `Выбрать тариф ${TARIFF_META[tariff.category].label}`"
+            ? t('tariffStage.selectedAria', { name: t(`tariffs..label`) })
+            : t('tariffStage.selectAria', { name: t(`tariffs..label`) })"
           type="button"
           @click="selectOrShowInfo(tariff.category)"
         >
@@ -229,7 +230,7 @@ function selectOrShowInfo(category: VehicleCategory) {
           >
             <img
               :src="imageByCategory[tariff.category]"
-              :alt="TARIFF_META[tariff.category].label"
+              :alt="t(`tariffs..label`)"
               class="max-h-full max-w-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.35)]"
               draggable="false"
             >
@@ -242,7 +243,7 @@ function selectOrShowInfo(category: VehicleCategory) {
             <span :class="TARIFF_META[tariff.category].icon" class="text-6.5" aria-hidden="true" />
           </span>
           <span class="text-sm text-white font-900">
-            {{ TARIFF_META[tariff.category].label }}
+            {{ t(`tariffs..label`) }}
           </span>
           <!-- Бонусы включены: зачёркнутая полная цена + актуальная со скидкой -->
           <template v-if="showBonusPrices && bonusDiscountFor(tariff) > 0">
@@ -260,7 +261,7 @@ function selectOrShowInfo(category: VehicleCategory) {
       </div>
 
       <p class="mt-1.5 truncate px-1 text-[11px] text-slate-400 font-700">
-        {{ TARIFF_META[trips.selectedCategory].caption }}
+        {{ t(`tariffs..caption`) }}
       </p>
 
       <!-- Мототакси: предупреждение о рисках + обязательное согласие.
@@ -272,7 +273,7 @@ function selectOrShowInfo(category: VehicleCategory) {
       >
         <p class="flex items-start gap-2 text-[12px] text-amber-200 leading-4">
           <span class="i-mdi-alert-outline mt-0.5 shrink-0 text-4.5 text-amber-300" aria-hidden="true" />
-          Мото-поездка: только 1 пассажир, водитель обязан выдать вам шлем. Поездка не застрахована — вы едете на свой страх и риск.
+          {{ t('tariffStage.motoWarning') }}
         </p>
         <button
           class="w-full flex items-center gap-2 rounded-xl bg-white/6 px-2.5 py-2 text-left transition active:scale-[0.99]"
@@ -287,7 +288,7 @@ function selectOrShowInfo(category: VehicleCategory) {
             <span v-if="motoConsent" class="i-mdi-check text-4" aria-hidden="true" />
           </span>
           <span class="text-[12px] text-amber-100 font-800 leading-4">
-            Понимаю риски и согласен ехать на мото
+            {{ t('tariffStage.motoConsent') }}
           </span>
         </button>
       </div>
@@ -309,11 +310,11 @@ function selectOrShowInfo(category: VehicleCategory) {
       </span>
       <span class="min-w-0 flex-1">
         <span class="block text-sm text-white font-900">
-          Списать бонусы — до 50% поездки
+          {{ t('tariffStage.useBonuses') }}
         </span>
         <span class="block text-[12px] text-slate-400 leading-4">
-          У вас {{ bonusBalance.toLocaleString('ru-RU') }} бонусов ·
-          {{ trips.paymentMethod === 'prepaid' ? 'учтутся при предоплате' : 'спишутся при завершении поездки' }}
+          {{ t('tariffStage.youHaveBonuses', { n: bonusBalance.toLocaleString(locale) }) }} ·
+          {{ trips.paymentMethod === 'prepaid' ? t('tariffStage.bonusPrepaid') : t('tariffStage.bonusOnComplete') }}
         </span>
       </span>
       <span

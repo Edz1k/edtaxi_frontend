@@ -6,6 +6,8 @@ const props = defineProps<{
   buckets: EarningsBucket[]
 }>()
 
+const { t } = useI18n()
+
 const selectedIndex = defineModel<number>('selectedIndex', { required: true })
 
 // Геометрия чарта: фиксированная высота, ширина — по контейнеру (без
@@ -109,7 +111,7 @@ function moveSelection(delta: number) {
 <template>
   <div
     ref="wrapperEl"
-    aria-label="Диаграмма заработка. Выбирайте столбец стрелками влево и вправо"
+    :aria-label="t('earnBar.chartAria')"
     class="select-none rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-main-400"
     role="group"
     tabindex="0"
@@ -169,17 +171,17 @@ function moveSelection(delta: number) {
 
     <!-- Данные диаграммы для скринридеров -->
     <table class="sr-only">
-      <caption>Заработок по периодам</caption>
+      <caption>{{ t('earnBar.caption') }}</caption>
       <thead>
         <tr>
           <th scope="col">
-            Период
+            {{ t('earnBar.period') }}
           </th>
           <th scope="col">
-            Заработок
+            {{ t('earnBar.earnings') }}
           </th>
           <th scope="col">
-            Поездки
+            {{ t('earnBar.trips') }}
           </th>
         </tr>
       </thead>

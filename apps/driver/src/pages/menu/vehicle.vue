@@ -5,7 +5,7 @@ import { resolveCatalogCar, searchCatalogCars } from '~/api/catalog'
 import AuthButton from '~/components/auth/AuthButton.vue'
 import CatalogRequestBlock from '~/components/vehicle/CatalogRequestBlock.vue'
 import { useDriverOnboardingStore } from '~/stores/driverOnboarding'
-import { categoryLabel, sortCategories } from '~/utils/vehicleCategories'
+import { sortCategories } from '~/utils/vehicleCategories'
 
 const router = useRouter()
 const driver = useDriverOnboardingStore()
@@ -120,11 +120,11 @@ function yearRangeLabel(item: CatalogCarItem) {
 
 function classChipLabel(item: CatalogCarItem) {
   if (item.max_class && item.is_minivan)
-    return `${categoryLabel(item.max_class)} + ${t('cats.minivan')}`
+    return `${t(`cats.${item.max_class}`)} + ${t('cats.minivan')}`
   if (item.is_minivan)
     return t('cats.minivan')
   if (item.max_class)
-    return t('vehicle.upTo', { cat: categoryLabel(item.max_class) })
+    return t('vehicle.upTo', { cat: t(`cats.`) })
   return '—'
 }
 
@@ -269,7 +269,7 @@ async function submitVehicle() {
             :key="cat"
             class="rounded-full bg-emerald-500/16 px-3 py-1.5 text-xs text-emerald-300 font-800"
           >
-            {{ categoryLabel(cat) }}
+            {{ t(`cats.`) }}
           </span>
         </div>
 
@@ -382,7 +382,7 @@ async function submitVehicle() {
               :key="cat"
               class="rounded-full bg-emerald-500/16 px-3 py-1.5 text-xs text-emerald-300 font-800"
             >
-              {{ categoryLabel(cat) }}
+              {{ t(`cats.`) }}
             </span>
           </div>
           <template v-if="!resolveResult.matched">

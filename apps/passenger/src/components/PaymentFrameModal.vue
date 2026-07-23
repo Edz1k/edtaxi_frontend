@@ -12,6 +12,8 @@ const emit = defineEmits<{
   result: [status: 'failure' | 'success']
 }>()
 
+const { t } = useI18n()
+
 // После оплаты FreedomPay редиректит фрейм на нашу страницу возврата
 // (GET /payments/return на API) — она postMessage'ом просит закрыть фрейм,
 // чтобы пользователя не уводило на сторонний сайт из Success URL ЛК.
@@ -38,10 +40,10 @@ onUnmounted(() => window.removeEventListener('message', onMessage))
     <div class="fixed inset-0 z-70 flex flex-col bg-secondary-950">
       <header class="tg-safe-x flex items-center justify-between border-b app-border px-4 pb-3 pt-[calc(var(--app-safe-area-top)+0.75rem)]">
         <p class="text-sm text-white font-900">
-          Оплата
+          {{ t('payFrame.title') }}
         </p>
         <button
-          aria-label="Закрыть оплату"
+          :aria-label="t('payFrame.closeAria')"
           class="h-9 w-9 flex items-center justify-center rounded-full bg-white/10 text-white"
           type="button"
           @click="emit('close')"
@@ -50,7 +52,7 @@ onUnmounted(() => window.removeEventListener('message', onMessage))
         </button>
       </header>
       <!-- allow="payment" — разрешает Payment Request API (Google Pay) внутри фрейма -->
-      <iframe allow="payment *" :src="url" class="w-full flex-1 border-0 bg-white" title="Оплата картой" />
+      <iframe allow="payment *" :src="url" class="w-full flex-1 border-0 bg-white" :title="t('payFrame.iframeTitle')" />
     </div>
   </Teleport>
 </template>

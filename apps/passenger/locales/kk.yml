@@ -464,6 +464,15 @@ paymentMethods:
   card: Карта
   prepaid: Алдын ала төлем
 tariffStage:
+  editRoute: Маршрутты өзгерту
+  tariffGroup: Тариф тобы
+  tariffChoice: Тариф таңдау
+  addStop: Аялдама қосу
+  youHaveBonuses: Сізде {n} бонус
+  bonusPrepaid: алдын ала төлемде есептеледі
+  bonusOnComplete: сапар аяқталғанда шешіледі
+  selectedAria: '{name}, таңдалды. Тариф туралы білу үшін тағы басыңыз'
+  selectAria: '{name} тарифін таңдау'
   free: тегін
   editRouteAria: Бағытты өзгерту
   tariff: Тариф
@@ -599,3 +608,7 @@ shared:
   takePhoto: Қазір суретке түсіру
   takePhotoHint: Камера ашылады
   mapTheme: Карта тақырыбы
+payFrame:
+  title: Төлем
+  closeAria: Төлемді жабу
+  iframeTitle: Картамен төлеу
